@@ -1,0 +1,11 @@
+.ngwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ng{display:grid;grid-template-columns:auto repeat(var(--n),var(--cs));margin:8px auto;width:max-content;font-size:var(--fs);font-weight:700;user-select:none;-webkit-user-select:none}
+.ng .cc{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:3px;line-height:1.15}
+.ng .rc{display:flex;gap:4px;justify-content:flex-end;align-items:center;padding-right:6px;white-space:nowrap}
+.ng .cc.ok span,.ng .rc.ok span{color:var(--ok);text-decoration:line-through;opacity:.65}
+.ng .cc.act,.ng .rc.act{background:var(--sel);border-radius:4px}
+.ng .c{width:var(--cs);height:var(--cs);border:1px solid var(--line);background:var(--card);padding:0;font-size:calc(var(--cs) * .55);line-height:1;color:var(--mut);overflow:hidden;touch-action:none;border-radius:0}
+.ng .c.ha{background:var(--sel)}
+.ng .c.f{background:var(--ink)}
+.ng .c.m5{border-right:2px solid var(--ink)}.ng .c.b5{border-bottom:2px solid var(--ink)}
+.ng.ganado .c.f{background:var(--ok)}

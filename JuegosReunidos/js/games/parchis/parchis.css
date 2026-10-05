@@ -1,0 +1,17 @@
+.pz{width:min(100%,480px);margin:8px auto}
+.pz svg{width:100%;height:auto;display:block;border-radius:8px;border:2px solid var(--ink);touch-action:manipulation}
+.pz .mv{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.2}}
+.pbar{display:flex;gap:14px;align-items:center;margin:8px 0}
+.pbar .msg{margin:0}
+.die{flex:none;width:60px;height:60px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;background:var(--card);border:3px solid var(--pc);border-radius:12px;cursor:pointer}
+.die i{width:10px;height:10px;border-radius:50%;margin:auto}
+.die i.on{background:var(--ink)}
+.die.q{display:flex;align-items:center;justify-content:center;font:800 26px 'Baloo 2',sans-serif;color:var(--mut)}
+.die.roda{animation:giro .35s linear infinite}
+@keyframes giro{50%{transform:rotate(12deg) scale(1.06)}}
+.plog{list-style:none;padding:0;margin:4px 0;font-size:13px;color:var(--mut)}
+.plog li:first-child{color:var(--ink);font-weight:700}
+.prow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0;flex-wrap:wrap}
+.prow .nom{flex:1;min-width:90px;font:inherit;font-family:'Baloo 2',system-ui,sans-serif;font-size:18px;font-weight:600;color:var(--ink);background:none;border:0;border-bottom:1px dashed var(--line);padding:2px 0}
+.dot{width:18px;height:18px;border-radius:50%;flex:none;border:2px solid rgba(0,0,0,.25)}
