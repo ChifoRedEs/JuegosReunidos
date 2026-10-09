@@ -1,19 +1,18 @@
-// Base para juegos de cartas (BlackJack, Póker, Klondike, Brisca…). Se ampliará con esos juegos.
-// Las cartas se dibujan con HTML/CSS (sin imágenes). Estilos en css/cartas.css (se carga con api.css()).
+// Base compartida de juegos de cartas (BlackJack, Klondike, Texas Hold'em…).
+// Una carta es un entero 0..51: palo = id / 13 | 0 (0 ♠, 1 ♥, 2 ♦, 3 ♣), rango = id % 13 (0 = As … 12 = K).
+// Las cartas se dibujan con HTML/CSS (css/cartas.css, se carga con api.css()).
 import { shuffle } from './dom.js';
 
-export const PALOS_FR = [{ id: 'P', s: '♠', rojo: false }, { id: 'C', s: '♥', rojo: true }, { id: 'D', s: '♦', rojo: true }, { id: 'T', s: '♣', rojo: false }];
-export const VALORES_FR = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-export const PALOS_ES = [{ id: 'o', s: '🪙', rojo: false }, { id: 'c', s: '🍷', rojo: true }, { id: 'e', s: '⚔️', rojo: false }, { id: 'b', s: '🪵', rojo: false }];
-export const VALORES_ES = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
-
-export function baraja(tipo = 'francesa', mazos = 1) {
-  const palos = tipo === 'espanola' ? PALOS_ES : PALOS_FR, vals = tipo === 'espanola' ? VALORES_ES : VALORES_FR, out = [];
-  for (let m = 0; m < mazos; m++) for (const p of palos) for (const v of vals) out.push({ palo: p.id, v, rojo: p.rojo, s: p.s });
-  return out;
-}
-export const barajar = shuffle;
-export function cartaHTML(c, { oculta = false, extra = '' } = {}) {
-  if (oculta) return `<div class="carta dorso ${extra}" aria-label="Carta boca abajo"></div>`;
-  return `<div class="carta ${c.rojo ? 'rojo' : ''} ${extra}" aria-label="${c.v} ${c.s}"><span class="cv">${c.v}</span><span class="cp">${c.s}</span></div>`;
+export const PALOS = [{ s: '♠', n: 'picas' }, { s: '♥', n: 'corazones' }, { s: '♦', n: 'diamantes' }, { s: '♣', n: 'tréboles' }];
+export const RANGOS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+export const paloDe = id => id / 13 | 0;
+export const rangoDe = id => id % 13;
+export const esRoja = id => { const p = paloDe(id); return p === 1 || p === 2; };
+export const nombreCarta = id => `${RANGOS[rangoDe(id)]} de ${PALOS[paloDe(id)].n}`;
+export const nuevaBaraja = (mazos = 1) => Array.from({ length: 52 * mazos }, (_, i) => i % 52);
+export const barajar = a => shuffle(a);
+export function cartaHTML(id, { oculta = false, clase = '', estilo = '' } = {}) {
+  if (oculta) return `<div class="carta dorso ${clase}" style="${estilo}" aria-label="Carta boca abajo"></div>`;
+  const p = paloDe(id), r = RANGOS[rangoDe(id)], s = PALOS[p].s;
+  return `<div class="carta p${p} ${clase}" style="${estilo}" aria-label="${nombreCarta(id)}"><b class="cr">${r}</b><i class="cs">${s}</i><span class="cc">${s}</span></div>`;
 }

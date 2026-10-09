@@ -21,5 +21,5 @@ export function aplicarTema() {
   const r = document.documentElement;
   if (A.tema === 'auto') delete r.dataset.theme; else r.dataset.theme = A.tema === 'claro' ? 'light' : 'dark';
   const oscuro = A.tema === 'oscuro' || (A.tema === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = oscuro ? '#14202B' : '#EEF2EF';
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = oscuro ? '#4B2DB8' : '#6A3DF0';
 }

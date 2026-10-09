@@ -19,5 +19,21 @@
 - Comunes: contra CPU (Fácil / Medio / Difícil) o 2 jugadores en el mismo móvil, elegir quién empieza (o alternar), marcador de sesión, deshacer (tu jugada y la respuesta de la CPU), 💡 Pista, estadísticas, partida guardada, accesibilidad por teclado y opciones plegables para dejar más sitio al tablero.
 - La IA es minimax con poda alfa-beta: en 3×3 clásico en Difícil juega perfecto (comprobado: nunca pierde y empata contra sí misma).
 
+## Actualización 2: diseño vivo, apariencia por juego y juegos nuevos
+- **Diseño a todo color**: cabecera con degradado, fichas de inicio brillantes, botones y paneles redondeados, tablero con sombras y colores intensos en todos los juegos.
+- **🎨 Apariencia en cada juego** (botón y menú ⋯): colores del tablero, y según el juego color, forma y diseño de las fichas. Se guarda por juego y se puede restablecer.
+  - Sudoku: 4 paletas + números redondos / clásicos / de colores. Nonogram: paletas, color del relleno y forma (cuadrado, círculo, estrella, corazón…).
+  - Damas: 5 tableros, 4 pares de colores y 4 formas de ficha. 3 en raya: paletas y fichas ✕○ o emojis (animales, espacio, comida, deporte). Conecta 4: 5 tableros, 4 pares de colores y formas (redonda, estrella, diamante, corazón).
+- **Parchís rediseñado**: casillas redondeadas y llamativas, fichas bastante más grandes, casas discretas, 4 tableros, 4 paletas (incluida una para daltonismo), 4 formas de ficha (canica, peón, estrella, diamante) y zoom con desplazamiento automático hacia la acción. Se mantiene el indicador de destino y ahora muestra una ficha fantasma y 💥 si se come.
+- **Sopa de letras**: 7 temas, 3 niveles (8×8 a 12×12, hasta 8 direcciones), arrastrar o tocar inicio y fin, pistas, subrayado de colores y apariencia.
+- **Buscaminas**: 3 niveles, primer toque seguro, banderas con pulsación larga o modo bandera, abrir con un toque sobre un número (acorde), pistas por deducción, cara y contadores, minas y banderas personalizables.
+
+## Actualización 3: los cuatro juegos que faltaban
+- **Crucigramas** (libres, generados al momento): 5 niveles y tamaños (Mini 9×9, Fácil 11×11, Medio 13×13, Difícil 15×15, Experto 17×17), 7 temas más Mezcla con unas 220 palabras y definiciones propias. Teclado propio en pantalla, toque para cambiar horizontal/vertical, ‹ › entre pistas, comprobar, revelar letra o palabra y marcado de errores al instante. Para ampliar los temas edita `js/games/crucigrama/pistas.js`.
+- **BlackJack**: zapato de 6 barajas, pedir, plantarse, doblar, dividir (hasta 4 manos), rendirse y seguro; blackjack 3:2; banca persistente de fichas y consejo de estrategia básica (ventaja de la casa comprobada en torno al 0,4 %).
+- **Klondike**: robar de 1 o de 3, arrastrar cartas o tocar para jugada automática, pista, deshacer, autocompletar y cartas/mesa/dorso personalizables.
+- **Texas Hold'em**: torneo contra 2-5 bots con personalidad (conservador, equilibrado, agresivo y farolero), ciegas crecientes, all-in y botes secundarios, probabilidad de ganar en tiempo real y ranking de manos. Los bots deciden con simulación de Monte Carlo y las probabilidades del bote.
+- Módulo común de cartas (`core/cartas.js`, `css/cartas.css`) con mesa, dorso y colores de palo configurables.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

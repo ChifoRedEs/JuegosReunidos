@@ -1,11 +1,12 @@
 import { $, esc, esperar, fmtTiempo, rnd } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
+import { grupoTablero } from '../../core/aspectos.js';
 import { SIZES, DENS, runs, colsOf, generarAleatorio } from './solver.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 const NCELL = { 5: 52, 10: 34, 15: 26, 20: 20 }, NFONT = { 5: 14, 10: 12, 15: 11, 20: 10 };
-let N = null, api = null, hist = null, crono = null, modo = 'f', tipo = 'azar', banco = null, ocupado = false, rootEl = null;
+let asp = null, N = null, api = null, hist = null, crono = null, modo = 'f', tipo = 'azar', banco = null, ocupado = false, rootEl = null;
 let cel = [], rcEl = [], ccEl = [], drag = null, activo = null;
 const vacia = n => Array.from({ length: n }, () => Array(n).fill(0));
 const copia = g => g.map(r => r.slice());
@@ -27,7 +28,11 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
-  api = a; rootEl = root; hist = new Pila(200); modo = 'f'; ocupado = false; drag = null;
+  api = a; rootEl = root;
+  asp = api.aspecto([grupoTablero(),
+    { clave: 'relleno', titulo: 'Color del relleno', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2F6BFF'] }, { id: 'rosa', nombre: 'Rosa', sw: ['#FF3FA4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0FB56A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#FF7A1A'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#7A4DFF'] }] },
+    { clave: 'forma', titulo: 'Forma de las casillas rellenas', def: 'redondeado', opciones: [{ id: 'redondeado', nombre: '▢ Redondeada' }, { id: 'cuadrado', nombre: '■ Cuadrada' }, { id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'corazon', nombre: '♥ Corazón' }] }]);
+  hist = new Pila(200); modo = 'f'; ocupado = false; drag = null;
   tipo = api.pref('tipo', 'azar');
   await api.css(new URL('./nonogram.css', import.meta.url));
   const g = api.cargar();
@@ -40,13 +45,14 @@ export async function mount(root, a) {
     <div class="info"><span class="mut">Arrastra para pintar · mantén pulsado para el otro modo</span><span id="ngCrono">0:00</span></div>
     <div class="ngwrap"><div class="ng" id="ngTab"></div></div>
     <div class="msg" id="ngMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn" data-ac="nuevo">Nuevo panel</button><button class="btn" data-ac="borrar">Borrar casillas</button></div>`;
+    <div class="bar"><button class="btn" data-ac="nuevo">Nuevo panel</button><button class="btn" data-ac="borrar">Borrar casillas</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
   root.addEventListener('click', clic);
   root.addEventListener('pointerdown', pDown); root.addEventListener('pointermove', pMove);
   root.addEventListener('pointerup', pUp); root.addEventListener('pointercancel', pUp);
   api.menu([
     { texto: 'Nuevo panel', accion: () => nuevo(N.n, N.diff) },
     { texto: 'Borrar casillas', accion: borrar, peligro: true },
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() },
     { texto: 'Reglas', accion: reglas },
   ]);
   crono = new Cronometro(() => { if (N) { N.t = crono.s; $('#ngCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
@@ -200,7 +206,7 @@ function clic(e) {
   if (b.dataset.tipo) { if (b.dataset.tipo === tipo) return; return nuevo(N.n, N.diff, false, b.dataset.tipo); }
   if (b.dataset.m) { modo = b.dataset.m; return pintar(); }
   const ac = b.dataset.ac;
-  if (ac === 'undo') deshacer(); else if (ac === 'nuevo') nuevo(N.n, N.diff); else if (ac === 'borrar') borrar();
+  if (ac === 'undo') deshacer(); else if (ac === 'nuevo') nuevo(N.n, N.diff); else if (ac === 'borrar') borrar(); else if (ac === 'aspecto') asp.abrir();
 }
 function reglas() {
   api.modal('Nonogram', `<ul>

@@ -1,8 +1,12 @@
-.juego-conecta4{--c4:#2457A6;--r:#D6453D;--y:#F2B84B}
-:root[data-theme="dark"] .juego-conecta4{--c4:#1F4A8C}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .juego-conecta4{--c4:#1F4A8C}}
-.ch.c41{background:var(--r)}.ch.c42{background:var(--y)}
-.c4w{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));width:min(100%,470px);margin:12px auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.juego-conecta4{--c4:#2457A6;--c4b:#173F85;--r:#FF4757;--y:#FFC21A}
+.juego-conecta4[data-tablero="morado"]{--c4:#6B3FD4;--c4b:#4A25A8}
+.juego-conecta4[data-tablero="verde"]{--c4:#0B9A6B;--c4b:#06704B}
+.juego-conecta4[data-tablero="negro"]{--c4:#262B4A;--c4b:#12152B}
+.juego-conecta4[data-tablero="coral"]{--c4:#F0572D;--c4b:#C23A12}
+.juego-conecta4[data-colores="frio"]{--r:#2ED3FF;--y:#FF8A00}
+.juego-conecta4[data-colores="neon"]{--r:#FF2E88;--y:#7CFF3A}
+.juego-conecta4[data-colores="bn"]{--r:#F6F7FB;--y:#1B2038}
+.c4w{filter:drop-shadow(0 10px 14px color-mix(in srgb,var(--c4) 45%,transparent));display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));width:min(100%,470px);margin:12px auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .c4w .col{display:flex;flex-direction:column;padding:0;border:0;background:none;cursor:pointer;min-width:0;border-radius:6px}
 .c4w .col:focus-visible{outline:3px solid var(--ok);outline-offset:-2px}
 .pre{display:block;aspect-ratio:1.25;position:relative}
@@ -32,3 +36,8 @@
 @keyframes latido{to{transform:scale(1.1)}}
 .c4w.fin .hole:not(.gana) .d{opacity:.55}
 @media (prefers-reduced-motion:reduce){.d.cae{animation:none}}
+.juego-conecta4[data-forma="estrella"] .d.p1,.juego-conecta4[data-forma="estrella"] .d.p2{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);inset:7%;box-shadow:none}
+.juego-conecta4[data-forma="diamante"] .d.p1,.juego-conecta4[data-forma="diamante"] .d.p2{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);inset:8%;box-shadow:none}
+.juego-conecta4[data-forma="corazon"] .d.p1,.juego-conecta4[data-forma="corazon"] .d.p2{clip-path:polygon(50% 92%,10% 55%,2% 35%,10% 14%,28% 6%,42% 12%,50% 24%,58% 12%,72% 6%,90% 14%,98% 35%,90% 55%);inset:8%;box-shadow:none}
+.juego-conecta4[data-forma="estrella"] .ch,.juego-conecta4[data-forma="diamante"] .ch,.juego-conecta4[data-forma="corazon"] .ch{border-radius:4px}
+.juego-conecta4 .ch.c41{background:var(--r);box-shadow:inset 0 0 0 2px rgba(0,0,0,.2)}.juego-conecta4 .ch.c42{background:var(--y);box-shadow:inset 0 0 0 2px rgba(0,0,0,.2)}

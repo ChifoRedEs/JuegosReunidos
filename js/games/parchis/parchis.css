@@ -1,17 +1,30 @@
-.pz{width:min(100%,480px);margin:8px auto}
-.pz svg{width:100%;height:auto;display:block;border-radius:8px;border:2px solid var(--ink);touch-action:manipulation}
-.pz .mv{animation:pulse 1s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.2}}
+.juego-parchis{--pz-am:#FFC21A;--pz-az:#2F6BFF;--pz-ro:#FF4757;--pz-ve:#0FB56A;--pz-bg:#EAF1FF;--pz-cell:#FFFFFF;--pz-line:#B9C8F0;--pz-star:#9AA9D6;--pz-ink:#17214A}
+.juego-parchis[data-colores="pastel"]{--pz-am:#FFD76A;--pz-az:#7FA8FF;--pz-ro:#FF8FA0;--pz-ve:#7FDDA8}
+.juego-parchis[data-colores="neon"]{--pz-am:#FFE600;--pz-az:#00C8FF;--pz-ro:#FF2E88;--pz-ve:#39E614}
+.juego-parchis[data-colores="accesible"]{--pz-am:#F0E442;--pz-az:#0072B2;--pz-ro:#D55E00;--pz-ve:#009E73}
+.juego-parchis[data-tablero="madera"]{--pz-bg:#C98F53;--pz-cell:#FFEFD0;--pz-line:#8A5A2B;--pz-star:#B5792F;--pz-ink:#3A2410}
+.juego-parchis[data-tablero="oscuro"]{--pz-bg:#0E1430;--pz-cell:#232F63;--pz-line:#3D4F9A;--pz-star:#8FA0E0;--pz-ink:#EEF2FF}
+.juego-parchis[data-tablero="caramelo"]{--pz-bg:#FFD3EA;--pz-cell:#FFF6FB;--pz-line:#FF9ACB;--pz-star:#FF5DAE;--pz-ink:#5A1240}
+.pzv{width:min(100%,480px);aspect-ratio:1;margin:8px auto;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:20px;border:4px solid var(--pz-line);background:var(--pz-bg);box-shadow:0 10px 24px rgba(40,20,90,.28)}
+.pzb{line-height:0}
+.pzs{width:100%;height:auto;display:block;touch-action:manipulation}
+.pzs .bg{fill:var(--pz-bg)}
+.pzs .pzt{fill:var(--pz-ink);font-family:Nunito,sans-serif}
+.pzs .mv{fill:none;stroke:var(--pz-ink);stroke-width:1.2;animation:pulse 1s ease-in-out infinite}
+.pzs .dst{fill:none;stroke-width:1.1;stroke-dasharray:1.6 1.1;animation:giro 6s linear infinite;transform-box:fill-box;transform-origin:center}
+.pzs .turn{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+@keyframes giro{to{transform:rotate(360deg)}}
 .pbar{display:flex;gap:14px;align-items:center;margin:8px 0}
 .pbar .msg{margin:0}
-.die{flex:none;width:60px;height:60px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;background:var(--card);border:3px solid var(--pc);border-radius:12px;cursor:pointer}
-.die i{width:10px;height:10px;border-radius:50%;margin:auto}
+.die{flex:none;width:64px;height:64px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:9px;background:var(--card);border:4px solid var(--pc);border-radius:15px;cursor:pointer;box-shadow:0 4px 0 color-mix(in srgb,var(--pc) 60%,#000)}
+.die i{width:11px;height:11px;border-radius:50%;margin:auto}
 .die i.on{background:var(--ink)}
-.die.q{display:flex;align-items:center;justify-content:center;font:800 26px 'Baloo 2',sans-serif;color:var(--mut)}
-.die.roda{animation:giro .35s linear infinite}
-@keyframes giro{50%{transform:rotate(12deg) scale(1.06)}}
+.die.q{display:flex;align-items:center;justify-content:center;font:800 28px 'Baloo 2',sans-serif;color:var(--mut)}
+.die.roda{animation:giro2 .35s linear infinite}
+@keyframes giro2{50%{transform:rotate(14deg) scale(1.08)}}
 .plog{list-style:none;padding:0;margin:4px 0;font-size:13px;color:var(--mut)}
-.plog li:first-child{color:var(--ink);font-weight:700}
-.prow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0;flex-wrap:wrap}
-.prow .nom{flex:1;min-width:90px;font:inherit;font-family:'Baloo 2',system-ui,sans-serif;font-size:18px;font-weight:600;color:var(--ink);background:none;border:0;border-bottom:1px dashed var(--line);padding:2px 0}
-.dot{width:18px;height:18px;border-radius:50%;flex:none;border:2px solid rgba(0,0,0,.25)}
+.plog li:first-child{color:var(--ink);font-weight:800}
+.prow{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;margin:8px 0;flex-wrap:wrap}
+.prow .nom{flex:1;min-width:90px;font:inherit;font-family:'Baloo 2',system-ui,sans-serif;font-size:18px;font-weight:600;color:var(--ink);background:none;border:0;border-bottom:2px dashed var(--line);padding:2px 0}
+.dot{width:20px;height:20px;border-radius:50%;flex:none;border:2px solid rgba(0,0,0,.25)}

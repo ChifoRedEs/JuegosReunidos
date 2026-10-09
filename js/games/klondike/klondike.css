@@ -1,0 +1,18 @@
+.juego-klondike{--g:4px;--kw:calc((min(100vw,520px) - 40px - 6 * var(--g)) / 7)}
+.juego-klondike .carta{--cw:var(--kw);touch-action:none}
+.kl{padding:10px 6px 14px;min-height:520px}
+.klrow{display:grid;grid-template-columns:repeat(7,var(--kw));gap:var(--g);justify-content:center;margin-bottom:12px}
+.kpile{position:relative;width:var(--kw);height:calc(var(--kw) * 1.4);border-radius:calc(var(--kw) * .13);border:2px dashed rgba(255,255,255,.4);color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:calc(var(--kw) * .55)}
+.kpile.stock{cursor:pointer}
+.kpile.stock.vacio::after{content:"↻";font-size:calc(var(--kw) * .7)}
+.kpile .carta,.kcol .carta{position:absolute;left:calc(var(--kw) * var(--x,0));top:calc(var(--kw) * var(--y,0))}
+.kpile.waste{grid-column:2 / span 2;width:calc(var(--kw) * 2 + var(--g));border-style:none}
+.kcol{position:relative;width:var(--kw)}
+.kcol .vacia{position:absolute;inset:0 0 auto 0;height:calc(var(--kw) * 1.4);border-radius:calc(var(--kw) * .13);border:2px dashed rgba(255,255,255,.3)}
+.kl .carta.pst{outline:3px solid var(--yel);outline-offset:-1px;animation:kpst .7s ease-in-out infinite alternate;z-index:5}
+.kpile.pst,.kcol.pst .vacia{box-shadow:0 0 0 3px var(--yel)}
+@keyframes kpst{to{filter:brightness(1.15)}}
+.kl .carta.ocu{opacity:.25}
+.kdrag{position:fixed;z-index:80;pointer-events:none;width:var(--kw);filter:drop-shadow(0 8px 10px rgba(0,0,0,.45))}
+.kdrag .carta{position:absolute;left:0;top:calc(var(--kw) * var(--y,0));--cw:var(--kw)}
+.kwin{text-align:center;color:#fff;font:800 22px 'Baloo 2',system-ui,sans-serif;margin:30px 0}

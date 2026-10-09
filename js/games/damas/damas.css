@@ -1,14 +1,29 @@
-.ck{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));width:min(100%,440px);aspect-ratio:1;margin:8px auto;border:3px solid var(--dark);border-radius:6px;overflow:hidden;user-select:none;-webkit-user-select:none}
-.ck .sq{display:flex;align-items:center;justify-content:center;background:var(--light);position:relative;min-width:0;min-height:0;overflow:hidden;touch-action:manipulation}
-.ck .sq.d{background:var(--dark)}
-.ck .sq.l{background:#8A6A4A}
-.ck .sq.d.l::before{content:"";position:absolute;inset:0;background:rgba(242,184,75,.28)}
+.juego-damas{--dm-l:#F3DDB6;--dm-d:#8A5A34;--dm-bd:#5E3A1E;--dm-last:rgba(255,194,26,.4);--pw1:#FFFDF6;--pw2:#E4D9BC;--pwi:#9A7A1E;--pb1:#FF5A5F;--pb2:#C21F2A;--pbi:#FFE9A8}
+.juego-damas[data-tablero="esmeralda"]{--dm-l:#E7F6E2;--dm-d:#1F9D68;--dm-bd:#0B6B45}
+.juego-damas[data-tablero="hielo"]{--dm-l:#EAF4FF;--dm-d:#4F8DF0;--dm-bd:#2455B8}
+.juego-damas[data-tablero="caramelo"]{--dm-l:#FFE9F4;--dm-d:#E0409B;--dm-bd:#A1186B}
+.juego-damas[data-tablero="noche"]{--dm-l:#39447A;--dm-d:#141A3D;--dm-bd:#0A0E26;--dm-last:rgba(92,225,255,.4)}
+.juego-damas[data-colores="oceano"]{--pw1:#CFF5FF;--pw2:#52C7F0;--pwi:#0B6E92;--pb1:#FFB347;--pb2:#E26A00;--pbi:#5A2A00}
+.juego-damas[data-colores="bosque"]{--pw1:#D6FFC9;--pw2:#56C94A;--pwi:#17641A;--pb1:#B58CFF;--pb2:#6B2FD1;--pbi:#F4E9FF}
+.juego-damas[data-colores="oro"]{--pw1:#FFE88A;--pw2:#E0A800;--pwi:#6B4A00;--pb1:#4B5578;--pb2:#161B33;--pbi:#FFD65C}
+.ck{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));width:min(100%,440px);aspect-ratio:1;margin:10px auto;border:5px solid var(--dm-bd);border-radius:14px;overflow:hidden;user-select:none;-webkit-user-select:none;box-shadow:0 10px 24px rgba(40,20,80,.35)}
+.ck .sq{display:flex;align-items:center;justify-content:center;background:var(--dm-l);position:relative;min-width:0;min-height:0;overflow:hidden;touch-action:manipulation}
+.ck .sq.d{background:linear-gradient(145deg,var(--dm-d),color-mix(in srgb,var(--dm-d) 78%,#000))}
+.ck .sq.d.l::before{content:"";position:absolute;inset:0;background:var(--dm-last)}
 .ck .sq.s::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 4px var(--yel)}
-.ck .sq.r::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 4px #7FD1AE}
-.ck .sq.t::before{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:var(--yel);opacity:.9}
+.ck .sq.r::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 4px #7FFFC8}
+.ck .sq.t::before{content:"";position:absolute;width:34%;height:34%;border-radius:50%;background:var(--yel);opacity:.95;animation:pdest 1s ease-in-out infinite alternate}
+@keyframes pdest{to{transform:scale(.7)}}
 .ck .sq:focus-visible{outline:3px solid #fff;outline-offset:-3px}
-.pc{width:76%;height:76%;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(12px,4.4vw,20px);line-height:1;overflow:hidden;box-shadow:0 2px 0 rgba(0,0,0,.35);z-index:1}
-.pc.w{background:#F7F3EA;color:#8A6D1E;border:3px solid #D8CFB8}
-.pc.b{background:#B3322B;color:#FFE9A8;border:3px solid #7E211C}
-.cnt{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px;margin:4px auto;width:min(100%,440px)}
-.cnt span{color:var(--mut)}
+.pc{width:80%;height:80%;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(13px,4.8vw,22px);line-height:1;overflow:hidden;box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 -3px 0 rgba(0,0,0,.14);z-index:1}
+.pc.w{background:radial-gradient(circle at 35% 30%,var(--pw1),var(--pw2));color:var(--pwi);border:3px solid var(--pw2)}
+.pc.b{background:radial-gradient(circle at 35% 30%,var(--pb1),var(--pb2));color:var(--pbi);border:3px solid var(--pb2)}
+.juego-damas[data-fichas="anillo"] .pc::before{content:"";position:absolute;inset:20%;border-radius:50%;border:3px solid currentColor;opacity:.55}
+.juego-damas[data-fichas="anillo"] .pc{position:relative}
+.juego-damas[data-fichas="gema"] .pc{border-radius:0;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);border:0;box-shadow:none;width:84%;height:84%}
+.juego-damas[data-fichas="cuadrada"] .pc{border-radius:24%}
+.cnt{display:flex;justify-content:space-between;gap:8px;font-weight:800;font-size:14px;margin:6px auto;width:min(100%,440px);align-items:center}
+.cnt span{color:var(--mut);font-weight:700}
+.pdot{display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:-3px;margin-right:4px;border:2px solid rgba(0,0,0,.25)}
+.pdot.w{background:radial-gradient(circle at 35% 30%,var(--pw1),var(--pw2))}
+.pdot.b{background:radial-gradient(circle at 35% 30%,var(--pb1),var(--pb2))}

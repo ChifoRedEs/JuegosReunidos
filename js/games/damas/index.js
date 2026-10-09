@@ -1,9 +1,10 @@
 import { $ } from '../../core/dom.js';
+import { PALETAS } from '../../core/aspectos.js';
 import { REGLAS, tableroInicial, jugadas, aplicar, contar, clavePos, esRey, dueno } from './reglas.js';
 import { elegir } from './ia.js';
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
-let C = null, api = null, sq = [], timer = null, pensando = false, rootEl = null, anim = null;
+let asp = null, C = null, api = null, sq = [], timer = null, pensando = false, rootEl = null, anim = null;
 const R = () => REGLAS[C.regla];
 const pos = p => p.join();
 const igual = (a, b) => a[0] === b[0] && a[1] === b[1];
@@ -25,12 +26,17 @@ export const migrarV1 = d => ({ b: d.b, turn: d.turn, regla: 'inglesa', nivel: '
 const textoFin = res => res === 'w' ? '¡Ganaste!' : res === 'b' ? 'Perdiste' : 'Tablas';
 export function resumen(d) {
   if (d.over && d.res) return { texto: `${textoFin(d.res)} · ${REGLAS[d.regla].nombre}`, fin: true };
-  const n = contar(d.b); return { texto: `${REGLAS[d.regla].nombre} · ${NIVEL[d.nivel]} · ⚪${n.w} 🔴${n.b}`, fin: false };
+  const n = contar(d.b); return { texto: `${REGLAS[d.regla].nombre} · ${NIVEL[d.nivel]} · ${n.w} vs ${n.b}`, fin: false };
 }
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
   api = a; rootEl = root; pensando = false; anim = null;
+  asp = api.aspecto([
+    { clave: 'tablero', titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
+    { clave: 'colores', titulo: 'Colores de las fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Marfil / Rojo', sw: ['#FFFDF6', '#C21F2A'] }, { id: 'oceano', nombre: 'Celeste / Naranja', sw: ['#52C7F0', '#E26A00'] }, { id: 'bosque', nombre: 'Verde / Morado', sw: ['#56C94A', '#6B2FD1'] }, { id: 'oro', nombre: 'Oro / Negro', sw: ['#E0A800', '#161B33'] }] },
+    { clave: 'fichas', titulo: 'Forma de las fichas', def: 'disco', opciones: [{ id: 'disco', nombre: '● Disco' }, { id: 'anillo', nombre: '◎ Anillo' }, { id: 'gema', nombre: '⬢ Gema' }, { id: 'cuadrada', nombre: '▢ Cuadrada' }] },
+  ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; pintar(); });
   await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
   root.innerHTML = `
@@ -39,7 +45,7 @@ export async function mount(root, a) {
     <div class="msg" id="dmMsg" role="status" aria-live="polite"></div>
     <div class="ck" id="dmTab" role="group" aria-label="Tablero de damas"></div>
     <div class="cnt" id="dmCnt"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button></div>
+    <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
     <p class="note" id="dmReg"></p>`;
   const tab = $('#dmTab');
   tab.innerHTML = Array.from({ length: 64 }, (_, k) => { const r = k >> 3, c = k & 7, d = (r + c) % 2 === 1; return `<div class="sq ${d ? 'd' : ''}" data-r="${r}" data-c="${c}" ${d ? 'tabindex="0" role="button"' : ''}></div>`; }).join('');
@@ -48,6 +54,7 @@ export async function mount(root, a) {
   api.menu([
     { texto: 'Nueva partida', accion: () => nueva(C.regla, C.nivel) },
     { texto: 'Deshacer jugada', accion: deshacer },
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() },
     { texto: 'Reglamento', accion: reglamento },
   ]);
   if (g) { C = { ...g, ruta: null }; C.jug = jugadas(C.b, C.turn, R()); if (!C.over) comprobarFin(); }
@@ -148,6 +155,7 @@ function clic(e) {
   else if (b.dataset.niv) { C.nivel = b.dataset.niv; api.setPref('nivel', C.nivel); pintar(); guardar(); }
   else if (b.dataset.ac === 'nueva') nueva(C.regla, C.nivel);
   else if (b.dataset.ac === 'undo') deshacer();
+  else if (b.dataset.ac === 'aspecto') asp.abrir();
 }
 function tecla(e) { if (e.key !== 'Enter' && e.key !== ' ') return; const s = e.target.closest('.sq'); if (s) { e.preventDefault(); tocar(+s.dataset.r, +s.dataset.c); } }
 
@@ -157,7 +165,7 @@ function mensaje() {
   if (C.turn === 'b' || pensando) return 'Piensa la máquina…';
   const cap = C.jug[0] && C.jug[0].caps.length;
   if (C.ruta && C.ruta.length > 1) return 'Sigue el recorrido: toca la siguiente casilla.';
-  return cap ? `Tu turno: captura obligatoria${R().mayoria && cap > 1 ? ` (debes comer ${cap})` : ''}.` : 'Tu turno (blancas).';
+  return cap ? `Tu turno: captura obligatoria${R().mayoria && cap > 1 ? ` (debes comer ${cap})` : ''}.` : 'Tu turno.';
 }
 function pintarMsg() { const m = $('#dmMsg'); if (m) { m.textContent = mensaje(); m.className = 'msg' + (C.over && C.res === 'w' ? ' win' : C.over && C.res === 'b' ? ' err' : ''); } }
 function pintar() {
@@ -181,7 +189,7 @@ function pintar() {
     anim = null;
   }
   const n = contar(C.b);
-  $('#dmCnt').innerHTML = `<b>⚪ Blancas ${n.w}</b><span>comidas ${12 - n.w}</span><b>🔴 Rojas ${n.b}</b><span>comidas ${12 - n.b}</span>`;
+  $('#dmCnt').innerHTML = `<b><i class="pdot w"></i>Tú ${n.w}</b><span>te han comido ${12 - n.w}</span><b><i class="pdot b"></i>CPU ${n.b}</b><span>has comido ${12 - n.b}</span>`;
   document.querySelectorAll('[data-reg]').forEach(b => b.classList.toggle('on', b.dataset.reg === C.regla));
   document.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === C.nivel));
   $('#dmReg').innerHTML = `<b>${R().nombre}:</b> ${R().texto}`;
@@ -189,7 +197,7 @@ function pintar() {
 }
 function reglamento() {
   api.modal('Damas · ' + R().nombre, `<ul>
-    <li>Juegas con las <b>blancas</b> (abajo). Las fichas se mueven en diagonal hacia delante y coronan al llegar a la última fila.</li>
+    <li>Juegas con las fichas de <b>abajo</b>. Las fichas se mueven en diagonal hacia delante y coronan al llegar a la última fila.</li>
     <li>${R().texto}</li>
     <li><b>Capturas múltiples</b>: toca tu ficha y luego cada casilla del recorrido; se marca el camino. También puedes tocar directamente la casilla final si solo hay un recorrido posible.</li>
     <li><b>Tablas</b>: 20 jugadas por bando solo con damas sin capturar, o la misma posición tres veces.</li>

@@ -1,14 +1,12 @@
-# Hoja de ruta (un juego por sesión)
+# Hoja de ruta
 
-Cada paso = una carpeta nueva en `js/games/` + una línea en `registry.js`. Ver `AÑADIR-JUEGO.md`.
+**Hecho (12 juegos):** Sudoku, Nonogram, Buscaminas, Damas, Parchís, 3 en raya, Conecta 4, Sopa de letras, Crucigramas, BlackJack, Klondike y Texas Hold'em.
 
-**Hecho:** Sudoku, Nonogram, Damas, Parchís, 3 en raya (4 tableros), Conecta 4 (4 tableros).
-
-1. **Sopa de letras** (listas en `data/palabras/*.json`; selección arrastrando) y **Buscaminas**.
-2. **BlackJack** (estrena `core/cartas.js` + `css/cartas.css`).
-3. **Klondike** (arrastrar cartas con pointer events).
-4. **Crucigramas libres** desde bancos palabra + definición en `data/crucigramas/*.json`.
-5. **Texas Hold'em** contra bots (evaluador, apuestas con botes secundarios, bots en Web Worker).
-6. Extras: Wordle en español, Mastermind, Hundir la flota, 2048, Oca, Dominó, Reversi (usa `core/duelo.js`).
+Ideas para seguir (cada una = una carpeta nueva en `js/games/` + una línea en `registry.js`, ver `AÑADIR-JUEGO.md`):
+1. Wordle en español, Mastermind, Hundir la flota, 2048, Ahorcado.
+2. Reversi (usa `core/duelo.js`), Oca, Dominó.
+3. Brisca, Tute, Chinchón y Mus (baraja española: ampliar `core/cartas.js`).
+4. Más temas de crucigrama y de sopa de letras, y más dibujos para el Nonogram.
+5. Ajedrez (reglas completas y motor de IA con `core/ia/minimax.js`).
 
 El multijugador online no es posible con GitHub Pages (solo archivos estáticos).

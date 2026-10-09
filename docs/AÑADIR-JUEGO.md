@@ -21,3 +21,9 @@ Mira `js/games/tresenraya/` y `js/games/conecta4/` como modelo. Solo aportas:
 - `reglas.js`: `VARIANTES`, `estadoInicial`, `jugadas`, `aplicar`, `validarEstado`, `ia` (con `core/ia/minimax.js`) y `reglasHTML`. Sin DOM, así se prueba con Node.
 - `index.js`: la vista (`montar` / `pintar`) y la llamada `crearDuelo({...})`.
 Con eso tienes gratis: varios tableros, contra CPU (3 niveles) o 2 jugadores, quién empieza, marcador, deshacer, pista, estadísticas y guardado.
+
+## Apariencia personalizable
+Cualquier juego puede ofrecer 🎨 Apariencia con una línea: `asp = api.aspecto(defs, alCambiar)`.
+- `defs` = grupos `{ clave, titulo, def, opciones:[{ id, nombre, sw? }] }`. `core/aspectos.js` trae `grupoTablero()` con 4 paletas comunes.
+- El valor elegido de cada grupo se escribe como `data-<clave>` en el contenedor del juego (`.juego-<id>`), así que el estilo se hace en CSS: `.juego-miJuego[data-forma="estrella"] ...`. En JS lees `asp.valores.<clave>`.
+- Añade en tu menú `{ texto: '🎨 Apariencia', accion: () => asp.abrir() }`. En juegos hechos con `core/duelo.js` basta con pasar `aspecto: [...]` en la definición.

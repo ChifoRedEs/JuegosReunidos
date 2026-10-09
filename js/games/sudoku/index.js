@@ -1,10 +1,11 @@
 import { $, esc, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
+import { grupoTablero } from '../../core/aspectos.js';
 import { PARES, candidatos, generar } from './generador.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
-let S = null, api = null, cel = [], hist = null, crono = null, notasOn = false, ocupado = false, onKey = null, rootEl = null;
+let asp = null, S = null, api = null, cel = [], hist = null, crono = null, notasOn = false, ocupado = false, onKey = null, rootEl = null;
 const POP = m => { let n = 0; while (m) { n += m & 1; m >>= 1; } return n; };
 
 /* ---------- validación / migración (también la usa la importación) ---------- */
@@ -31,7 +32,8 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
-  api = a; rootEl = root; hist = new Pila(300); notasOn = false; ocupado = false;
+  api = a; rootEl = root; asp = api.aspecto([grupoTablero(), { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }, { id: 'color', nombre: 'De colores', sw: ['#E5383B', '#F77F00', '#2BA84A', '#2F6BFF', '#7A4DFF'] }] }]);
+  hist = new Pila(300); notasOn = false; ocupado = false;
   await api.css(new URL('./sudoku.css', import.meta.url));
   const guardado = api.cargar();
   S = guardado ? { ...guardado, sel: -1, done: completo(guardado) } : null;
@@ -41,7 +43,7 @@ export async function mount(root, a) {
     <div class="sd" id="sdTab" role="group" aria-label="Tablero de Sudoku">${Array.from({ length: 81 }, (_, i) => `<button type="button" data-i="${i}"></button>`).join('')}</div>
     <div class="msg" id="sdMsg" role="status" aria-live="polite"></div>
     <div class="pad" id="sdPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-n="${n}" aria-label="Poner ${n}">${n}<small></small></button>`).join('')}<button type="button" data-n="0" aria-label="Borrar">⌫</button></div>
-    <div class="pad" id="sdAcc"><button type="button" class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button type="button" class="acc" data-ac="undo">↶ Deshacer</button><button type="button" class="acc" data-ac="pista">💡 Pista</button><button type="button" class="acc" data-ac="nuevo">Nuevo</button><button type="button" class="acc" data-ac="reglas">?</button></div>`;
+    <div class="pad" id="sdAcc"><button type="button" class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button type="button" class="acc" data-ac="undo">↶ Deshacer</button><button type="button" class="acc" data-ac="pista">💡 Pista</button><button type="button" class="acc" data-ac="nuevo">Nuevo</button><button type="button" class="acc" data-ac="aspecto" aria-label="Apariencia">🎨</button></div>`;
   cel = [...root.querySelectorAll('#sdTab button')];
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
@@ -54,6 +56,7 @@ function menuItems() { api.menu([
   { texto: 'Nuevo juego', accion: () => nuevo(S ? S.level : 'medio') },
   { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menuItems(); }, activo: api.pref('errores', false) },
   { texto: 'Reiniciar tablero', accion: reiniciar, peligro: true },
+  { texto: '🎨 Apariencia', accion: () => asp.abrir() },
   { texto: 'Reglas y consejos', accion: reglas },
 ]); }
 export function unmount() {
@@ -141,8 +144,8 @@ function pintar() {
     if (conflicto(S, i)) c += ' x'; else if (errores && v && !S.given[i] && v !== S.sol[i]) c += ' e';
     if (i === S.sel) c += ' s';
     const b = cel[i]; b.className = c;
-    if (v) { if (b.dataset.k !== 'v' + v) { b.textContent = v; b.dataset.k = 'v' + v; } }
-    else { const k = 'n' + S.notas[i]; if (b.dataset.k !== k) { b.dataset.k = k; b.innerHTML = S.notas[i] ? `<span class="nt">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<i>${S.notas[i] & (1 << n) ? n : ''}</i>`).join('')}</span>` : ''; } }
+    if (v) { if (b.dataset.k !== 'v' + v) { b.textContent = v; b.dataset.k = 'v' + v; b.dataset.d = v; } }
+    else { delete b.dataset.d; const k = 'n' + S.notas[i]; if (b.dataset.k !== k) { b.dataset.k = k; b.innerHTML = S.notas[i] ? `<span class="nt">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<i>${S.notas[i] & (1 << n) ? n : ''}</i>`).join('')}</span>` : ''; } }
     b.setAttribute('aria-label', `Fila ${(i / 9 | 0) + 1}, columna ${i % 9 + 1}, ${v ? (S.given[i] ? 'dato ' : '') + v : S.notas[i] ? 'con notas' : 'vacía'}`);
   }
   const cuenta = new Array(10).fill(0); S.cur.forEach(v => { if (v) cuenta[v]++; });
@@ -166,6 +169,7 @@ function clic(e) {
   else if (ac === 'undo') deshacer();
   else if (ac === 'pista') pista();
   else if (ac === 'nuevo') nuevo(S.level);
+  else if (ac === 'aspecto') asp.abrir();
   else if (ac === 'reglas') reglas();
 }
 function teclado(e) {

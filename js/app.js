@@ -56,6 +56,30 @@ function crearApi(j, ent, mod, root) {
     aviso, modal,
     titulo: t => { tit.textContent = t; },
     menu(items) { menuItems = items || []; btnMas.hidden = !menuItems.length; },
+    aspecto(defs, alCambiar) {
+      const gd = aj.pref(id, 'aspecto', {}) || {}, vals = {};
+      const poner = () => defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; });
+      defs.forEach(g => { vals[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
+      poner();
+      const guardar = () => aj.setPref(id, 'aspecto', { ...vals });
+      const abrir = () => {
+        const cuerpo = defs.map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo),
+          el('div', { class: 'seg' }, g.opciones.map(o => el('button', { type: 'button', class: 'btn ap-o' + (vals[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id },
+            (o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.nombre)))));
+        const wrap = el('div', {}, cuerpo);
+        wrap.addEventListener('click', e => {
+          const b = e.target.closest('.ap-o'); if (!b) return;
+          vals[b.dataset.g] = b.dataset.o; poner(); guardar();
+          wrap.querySelectorAll(`.ap-o[data-g="${b.dataset.g}"]`).forEach(x => x.classList.toggle('on', x === b));
+          if (alCambiar) alCambiar({ ...vals });
+        });
+        let cerrar;
+        const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { vals[g.clave] = g.def; }); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
+        const ok = el('button', { class: 'btn on', onclick: () => cerrar() }, 'Listo');
+        cerrar = hoja([el('h2', {}, '🎨 Apariencia'), wrap, el('div', { class: 'bar', style: 'margin-top:14px' }, rest, ok)]);
+      };
+      return { valores: vals, abrir };
+    },
     css(url) {
       const href = String(url);
       if ([...document.querySelectorAll('link[data-juego]')].some(l => l.href === href)) return Promise.resolve();

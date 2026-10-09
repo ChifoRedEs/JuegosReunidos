@@ -1,0 +1,28 @@
+.juego-crucigrama{--cw-font:'Baloo 2',system-ui,sans-serif}
+.juego-crucigrama[data-letras="imprenta"]{--cw-font:ui-monospace,Menlo,Consolas,monospace}
+.juego-crucigrama[data-letras="clasico"]{--cw-font:Georgia,'Times New Roman',serif}
+.cwban{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--tb-acc),var(--tb-strong));color:#fff;border-radius:16px;padding:8px 10px;margin:8px 0;min-height:64px;box-shadow:0 6px 14px color-mix(in srgb,var(--tb-acc) 40%,transparent)}
+.cwban button{flex:none;width:38px;height:38px;border:0;border-radius:12px;background:rgba(255,255,255,.22);color:#fff;font-size:20px;font-weight:800}
+.cwban .tx{flex:1;font-weight:800;font-size:15px;line-height:1.25}
+.cwban .tx small{display:block;opacity:.85;font-size:12px}
+.cwv{overflow:auto;-webkit-overflow-scrolling:touch;margin:8px auto;max-width:100%}
+.cwg{display:grid;grid-template-columns:repeat(var(--w),var(--cs));grid-auto-rows:var(--cs);width:max-content;margin:0 auto;gap:2px;padding:6px;border-radius:16px;background:linear-gradient(145deg,var(--tb-acc),var(--tb-strong));box-shadow:0 10px 24px color-mix(in srgb,var(--tb-acc) 35%,transparent)}
+.cwg .b{border-radius:4px;background:transparent}
+.cwg .c{position:relative;padding:0;border:0;border-radius:6px;background:var(--tb-cell);color:var(--tb-ink);font:800 calc(var(--cs) * .56)/1 var(--cw-font);display:flex;align-items:center;justify-content:center;min-width:0;cursor:pointer;text-transform:uppercase}
+.cwg .c .n{position:absolute;left:3px;top:1px;font:800 calc(var(--cs) * .27)/1 Nunito,sans-serif;color:var(--tb-strong);pointer-events:none}
+.cwg .c.w{background:var(--tb-soft)}
+.cwg .c.s{background:var(--tb-hi);color:#17214A}
+.cwg .c.x{background:var(--bad);color:var(--red)}
+.cwg .c.ok{color:var(--ok)}
+.cwg .c.rv{color:var(--purple)}
+.cwk{display:grid;gap:6px;margin:10px auto;width:min(100%,460px)}
+.cwk .fila{display:flex;gap:5px;justify-content:center}
+.cwk button{flex:1;max-width:44px;min-height:46px;border:2px solid var(--tb-line);border-radius:11px;background:var(--card);font:800 19px 'Baloo 2',system-ui,sans-serif;color:var(--ink);box-shadow:0 3px 0 var(--tb-line);padding:0}
+.cwk button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tb-line)}
+.cwk .del{max-width:60px;font-size:20px}
+.cwl{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;font-size:13px}
+.cwl h3{font-size:16px;margin:6px 0 4px;color:var(--mut)}
+.cwl button{display:block;width:100%;text-align:left;border:0;border-radius:10px;background:var(--card);padding:6px 8px;margin:3px 0;font-weight:700;color:var(--ink);line-height:1.25;border:2px solid transparent}
+.cwl button.on{border-color:var(--tb-acc);background:var(--tb-soft)}
+.cwl button.ok{text-decoration:line-through;opacity:.55}
+.cwl button b{color:var(--tb-strong);margin-right:4px}

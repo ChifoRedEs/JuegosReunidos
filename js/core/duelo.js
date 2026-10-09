@@ -20,7 +20,8 @@ const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
 
 export function crearDuelo(def) {
   const VARS = Object.keys(def.variantes);
-  let S = null, api = null, root = null, timer = null, pensando = false, ctx = null;
+  let S = null, api = null, root = null, timer = null, pensando = false, ctx = null, asp = null;
+  const chip = n => def.chip(n, asp ? asp.valores : {});
   const J = () => def.variantes[S.v];
 
   /* ---------- validación y resumen (los usa también la importación) ---------- */
@@ -57,8 +58,9 @@ export function crearDuelo(def) {
       S = { v: Object.hasOwn(def.variantes, pv) ? pv : VARS[0], modo: api.pref('modo', 'cpu') === 'dos' ? 'dos' : 'cpu', nivel: Object.hasOwn(NIVEL, pn) ? pn : 'medio',
         inicio: Object.hasOwn(INICIO, pi) ? pi : 'alterna', yo: 1, e: null, hist: [], marcador: { p1: 0, p2: 0, t: 0 }, reg: false };
     }
+    asp = api.aspecto(def.aspecto || [], () => { montarTablero(); pintar(); });
     ctx = {
-      pista: null,
+      pista: null, valores: () => asp.valores,
       puedeJugar: () => !!S && !S.e.fin && !pensando && (S.modo === 'dos' || S.e.turn === S.yo),
       jugar: m => {
         if (!ctx.puedeJugar()) return false;
@@ -76,13 +78,14 @@ export function crearDuelo(def) {
       <div class="duM" id="duMarc"></div>
       <div class="msg duMsg" id="duMsg" role="status" aria-live="polite"></div>
       <div id="duTab"></div>
-      <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button></div>
+      <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
       <p class="note" id="duReg"></p>`;
     root.addEventListener('click', clic);
     api.menu([
       { texto: 'Nueva partida', accion: () => nuevaPartida() },
       { texto: 'Deshacer', accion: deshacer },
       { texto: 'Pista', accion: pista },
+      { texto: '🎨 Apariencia', accion: () => asp.abrir() },
       { texto: 'Reiniciar marcador', accion: reiniciarMarcador, peligro: true },
       { texto: 'Reglas', accion: reglas },
     ]);
@@ -93,7 +96,7 @@ export function crearDuelo(def) {
   function unmount() {
     clearTimeout(timer); timer = null; pensando = false;
     if (root) root.removeEventListener('click', clic);
-    S = null; ctx = null; root = null;
+    S = null; ctx = null; root = null; asp = null;
   }
   const montarTablero = () => def.vista.montar($('#duTab'), ctx, S.v);
 
@@ -168,10 +171,10 @@ export function crearDuelo(def) {
     if (e.fin) {
       const w = e.fin.w;
       if (!w) return ['Tablas. ¡Buena partida!', ''];
-      return [`${def.chip(w)} ${cpu ? (w === S.yo ? '¡Has ganado!' : 'Ha ganado la CPU') : `¡Gana ${def.nombres[w - 1]}!`}`, cpu && w !== S.yo ? 'err' : 'win'];
+      return [`${chip(w)} ${cpu ? (w === S.yo ? '¡Has ganado!' : 'Ha ganado la CPU') : `¡Gana ${def.nombres[w - 1]}!`}`, cpu && w !== S.yo ? 'err' : 'win'];
     }
-    if (cpu && e.turn !== S.yo) return [`${def.chip(e.turn)} Piensa la CPU…`, ''];
-    return [`${def.chip(e.turn)} ${cpu ? 'Tu turno' : `Turno de ${def.nombres[e.turn - 1]}`}`, ''];
+    if (cpu && e.turn !== S.yo) return [`${chip(e.turn)} Piensa la CPU…`, ''];
+    return [`${chip(e.turn)} ${cpu ? 'Tu turno' : `Turno de ${def.nombres[e.turn - 1]}`}`, ''];
   }
   function pintarMsg() { const [t, c] = mensaje(), m = $('#duMsg'); if (m) { m.innerHTML = t; m.className = 'msg duMsg ' + c; } }
   function pintar() {
@@ -184,9 +187,9 @@ export function crearDuelo(def) {
     $('#duNiv').style.display = cpu ? '' : 'none';
     $('#duSum').textContent = `⚙️ ${J().corto} · ${cpu ? 'CPU ' + NIVEL[S.nivel] : '2 jugadores'} · empieza ${S.inicio === 'tu' ? 'tú' : S.inicio === 'cpu' ? 'la CPU' : 'alterno'}`;
     const M = S.marcador;
-    $('#duMarc').innerHTML = `<div class="${!e.fin && e.turn === s1 ? 'turno' : ''}"><b>${M.p1}</b><small>${def.chip(s1)} ${cpu ? 'Tú' : 'Jugador 1'}</small></div>
+    $('#duMarc').innerHTML = `<div class="${!e.fin && e.turn === s1 ? 'turno' : ''}"><b>${M.p1}</b><small>${chip(s1)} ${cpu ? 'Tú' : 'Jugador 1'}</small></div>
       <div><b>${M.t}</b><small>Empates</small></div>
-      <div class="${!e.fin && e.turn === s2 ? 'turno' : ''}"><b>${M.p2}</b><small>${def.chip(s2)} ${cpu ? 'CPU' : 'Jugador 2'}</small></div>`;
+      <div class="${!e.fin && e.turn === s2 ? 'turno' : ''}"><b>${M.p2}</b><small>${chip(s2)} ${cpu ? 'CPU' : 'Jugador 2'}</small></div>`;
     pintarMsg();
     root.querySelector('[data-ac="undo"]').disabled = indiceDeshacer() < 0;
     root.querySelector('[data-ac="pista"]').disabled = !ctx.puedeJugar();
@@ -214,6 +217,7 @@ export function crearDuelo(def) {
     } else if (d.ac === 'nueva') nuevaPartida();
     else if (d.ac === 'undo') deshacer();
     else if (d.ac === 'pista') pista();
+    else if (d.ac === 'aspecto') asp.abrir();
   }
   function reglas() { api.modal(J().nombre, def.reglasHTML(S.v)); }
 

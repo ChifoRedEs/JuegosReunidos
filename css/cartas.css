@@ -1,5 +1,18 @@
-/* Cartas dibujadas con CSS. Se carga desde los juegos de cartas con api.css(). */
-.carta{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:52px;height:74px;border-radius:7px;background:#fff;color:#1B2A3A;border:1px solid #9aa7b1;box-shadow:0 1px 2px rgba(0,0,0,.3);font-family:'Baloo 2',sans-serif;line-height:1}
-.carta.rojo{color:#C0322B}
-.carta .cv{font-size:20px;font-weight:800}.carta .cp{font-size:22px}
-.carta.dorso{background:repeating-linear-gradient(45deg,#2B6CB0 0 6px,#1E4F85 6px 12px);border:3px solid #fff}
+/* Cartas dibujadas con CSS. Se cargan desde los juegos de cartas con api.css(new URL('../../../css/cartas.css', import.meta.url)). */
+.juego{--mesa1:#12A05C;--mesa2:#0A6B3C;--d1:#2F6BFF;--d2:#1B3FA8;--p1:#E0243A;--p2:#E0243A;--p3:#1B2340;--p0:#1B2340}
+.juego[data-mesa="azul"]{--mesa1:#2E6BE8;--mesa2:#173F9E}
+.juego[data-mesa="burdeos"]{--mesa1:#B02A47;--mesa2:#701629}
+.juego[data-mesa="noche"]{--mesa1:#3B4468;--mesa2:#171B33}
+.juego[data-dorso="rojo"]{--d1:#FF4757;--d2:#B3182B}
+.juego[data-dorso="verde"]{--d1:#1FBF73;--d2:#0A7040}
+.juego[data-dorso="morado"]{--d1:#8B5CF6;--d2:#4C25B5}
+.juego[data-palos="cuatro"]{--p1:#E0243A;--p2:#1F6BFF;--p3:#12984F;--p0:#1B2340}
+.carta{--cw:52px;position:relative;display:inline-block;width:var(--cw);height:calc(var(--cw) * 1.4);flex:none;border-radius:calc(var(--cw) * .13);background:#fff;color:#1B2340;border:1px solid #AEB8D4;box-shadow:0 2px 4px rgba(0,0,0,.35);font-family:'Baloo 2',system-ui,sans-serif;line-height:1;user-select:none;-webkit-user-select:none;overflow:hidden}
+.carta .cr{position:absolute;left:9%;top:5%;font-size:calc(var(--cw) * .36);font-weight:800}
+.carta .cs{position:absolute;left:10%;top:calc(var(--cw) * .42);font-size:calc(var(--cw) * .27);font-style:normal}
+.carta .cc{position:absolute;right:9%;bottom:4%;font-size:calc(var(--cw) * .62)}
+.carta.p0{color:var(--p0)}.carta.p1{color:var(--p1)}.carta.p2{color:var(--p2)}.carta.p3{color:var(--p3)}
+.carta.dorso{background:repeating-linear-gradient(45deg,var(--d1) 0 5px,var(--d2) 5px 10px);border:calc(var(--cw) * .07) solid #fff}
+.carta.in{animation:cartaIn .32s ease-out both}
+@keyframes cartaIn{from{transform:translateY(-34px) scale(.8);opacity:0}to{transform:none;opacity:1}}
+.mesa{background:radial-gradient(circle at 50% 30%,var(--mesa1),var(--mesa2));border-radius:24px;padding:12px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.14),0 10px 24px rgba(0,0,0,.25)}
