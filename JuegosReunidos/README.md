@@ -1,6 +1,6 @@
 # Juegos Reunidos 2.0
 
-Sudoku, Nonogram, Damas, Parchís, 3 en raya y Conecta 4, con estadísticas, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
+Sudoku, Nonogram, Damas, Parchís, 3 en raya, Conecta 4, Sopa de letras, Buscaminas, Crucigramas, BlackJack, Klondike y Texas Hold'em, con estadísticas, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
 
 ## Probarla en local
 Los módulos JS **no funcionan con doble clic** (`file://`). En esta carpeta:
@@ -20,7 +20,7 @@ y abre http://localhost:8000. (Cualquier otro servidor estático vale.)
     icons/      iconos de la app (tools/generar_iconos.py los regenera)
     js/app.js        rutas (#/juego/<id>), inicio, estadísticas, ajustes, importar/exportar
     js/registry.js   LISTA DE JUEGOS: aquí se da de alta cada juego nuevo
-    js/core/         dom, storage, ajustes, stats, sonido, undo, cronometro, cartas, ia/minimax,
+    js/core/         aspectos (apariencia), dom, storage, ajustes, stats, sonido, undo, cronometro, cartas, ia/minimax,
                      duelo (controlador de juegos de 2 jugadores: marcador, CPU, deshacer, pista, guardado)
     js/games/<id>/   index.js + (reglas/generador/ia) + <id>.css de cada juego
     js/games/_plantilla/   punto de partida para un juego nuevo
