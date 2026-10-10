@@ -1,17 +1,18 @@
 // Motor del Solitario Klondike (sin DOM, probable con Node).
-// Estado: { tab: [{d:[ids boca abajo], u:[ids boca arriba]} ×7], fund: [[ids] ×4 (por palo)], stock: [ids] (el siguiente se saca con pop), waste: [ids], robar: 1|3, mov }
+// Estado: { tab: [{d:[ids boca abajo], u:[ids boca arriba]} ×8 (la 0 es la casilla extra, solo si extra)], extra: bool, fund: [[ids] ×4 (por palo)], stock: [ids] (el siguiente se saca con pop), waste: [ids], robar: 1|3, mov }
 import { nuevaBaraja, barajar, paloDe, rangoDe, esRoja, RANGOS, PALOS } from '../../core/cartas.js';
 
-export function nuevo(robar = 1) {
-  const m = barajar(nuevaBaraja(1)), tab = [];
+export function nuevo(robar = 1, extra = true) {
+  const m = barajar(nuevaBaraja(1)), tab = [{ d: [], u: [] }];           // columna 0: la casilla extra «libre» (admite cualquier carta cuando está vacía)
   for (let i = 0; i < 7; i++) { const cs = m.splice(0, i + 1); tab.push({ d: cs.slice(0, i), u: [cs[i]] }); }
-  return { tab, fund: [[], [], [], []], stock: m, waste: [], robar: robar === 3 ? 3 : 1, mov: 0 };
+  return { tab, fund: [[], [], [], []], stock: m, waste: [], robar: robar === 3 ? 3 : 1, mov: 0, extra: !!extra };
 }
 export const copia = S => JSON.parse(JSON.stringify(S));
 export const gana = S => S.fund.every(f => f.length === 13);
 export const cabeTab = (S, id, col) => {
+  if (col === 0 && !S.extra) return false;
   const c = S.tab[col], top = c.u[c.u.length - 1];
-  if (top === undefined) return !c.d.length && rangoDe(id) === 12;
+  if (top === undefined) return col === 0 ? true : !c.d.length && rangoDe(id) === 12;
   return esRoja(top) !== esRoja(id) && rangoDe(top) === rangoDe(id) + 1;
 };
 export const cabeFund = (S, id) => S.fund[paloDe(id)].length === rangoDe(id);
@@ -47,7 +48,7 @@ export function destinoAuto(S, o) {
   const cs = secuencia(S, o); if (!cs.length || cs[0] === undefined) return null;
   if (puede(S, o, { t: 'fund' })) return { t: 'fund' };
   let mejor = null;
-  for (let col = 0; col < 7; col++) {
+  for (let col = 1; col < 8; col++) {
     if (!puede(S, o, { t: 'tab', col })) continue;
     const vacia = !S.tab[col].u.length;
     if (vacia && o.t === 'tab' && o.idx === 0 && !S.tab[o.col].d.length) continue;   // rey que ya está al fondo: no tiene sentido moverlo
@@ -68,9 +69,10 @@ export function pista(S) {
   S.tab.forEach((col, i) => col.u.forEach((_, idx) => orig.push({ t: 'tab', col: i, idx })));
   for (const o of orig) {
     if (puede(S, o, { t: 'fund' })) c.push({ o, a: { t: 'fund' }, p: 100 });
-    for (let col = 0; col < 7; col++) {
+    for (let col = 0; col < 8; col++) {
       if (!puede(S, o, { t: 'tab', col })) continue;
       const vacia = !S.tab[col].u.length;
+      if (col === 0) { if (o.t === 'tab' && o.idx === 0 && S.tab[o.col].d.length) { c.push({ o, a: { t: 'tab', col }, p: 55 }); } continue; }
       let p = o.t === 'waste' ? 70 : 40;
       if (o.t === 'tab') { const origen = S.tab[o.col]; if (o.idx === 0 && origen.d.length) p = 85; else if (o.idx === 0) { if (vacia) continue; p = 60; } else continue; }
       if (vacia && o.t === 'waste') p = 65;
@@ -87,11 +89,13 @@ export function validar(d) {
   if (!d || typeof d !== 'object') return null;
   const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b, vistos = new Set();
   const lista = (a, max) => Array.isArray(a) && a.length <= max && a.every(v => ent(v, 0, 51) && !vistos.has(v) && vistos.add(v));
-  if (!Array.isArray(d.tab) || d.tab.length !== 7 || !Array.isArray(d.fund) || d.fund.length !== 4) return null;
-  const tab = [];
+  if (!Array.isArray(d.tab) || (d.tab.length !== 7 && d.tab.length !== 8) || !Array.isArray(d.fund) || d.fund.length !== 4) return null;
+  const antigua = d.tab.length === 7, tab = [];       // partidas guardadas de la versión anterior: se añade la casilla extra apagada
+  if (antigua) tab.push({ d: [], u: [] });
   for (const c of d.tab) { if (!c || !lista(c.d, 6) || !lista(c.u, 19)) return null; if (c.d.length && !c.u.length) return null; tab.push({ d: c.d.slice(), u: c.u.slice() }); }
+  if (tab[0].d.length) return null;
   const fund = [];
   for (let p = 0; p < 4; p++) { const f = d.fund[p]; if (!lista(f, 13) || f.some((id, i) => id !== p * 13 + i)) return null; fund.push(f.slice()); }
   if (!lista(d.stock, 24) || !lista(d.waste, 24) || vistos.size !== 52) return null;
-  return { tab, fund, stock: d.stock.slice(), waste: d.waste.slice(), robar: d.robar === 3 ? 3 : 1, mov: ent(d.mov, 0, 1e6) ? d.mov : 0 };
+  return { tab, fund, stock: d.stock.slice(), waste: d.waste.slice(), robar: d.robar === 3 ? 3 : 1, mov: ent(d.mov, 0, 1e6) ? d.mov : 0, extra: antigua ? false : !!d.extra };
 }

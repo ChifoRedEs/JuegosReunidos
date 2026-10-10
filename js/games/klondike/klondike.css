@@ -1,4 +1,4 @@
-.juego-klondike{--g:4px;--kw:calc((min(100vw,520px) - 40px - 6 * var(--g)) / 7)}
+.juego-klondike{--g:4px}
 .juego-klondike .carta{--cw:var(--kw);touch-action:none}
 .kl{padding:10px 6px 14px;min-height:520px}
 .klrow{display:grid;grid-template-columns:repeat(7,var(--kw));gap:var(--g);justify-content:center;margin-bottom:12px}
@@ -16,3 +16,20 @@
 .kdrag{position:fixed;z-index:80;pointer-events:none;width:var(--kw);filter:drop-shadow(0 8px 10px rgba(0,0,0,.45))}
 .kdrag .carta{position:absolute;left:0;top:calc(var(--kw) * var(--y,0));--cw:var(--kw)}
 .kwin{text-align:center;color:#fff;font:800 22px 'Baloo 2',system-ui,sans-serif;margin:30px 0}
+.juego-klondike{--g:4px}
+.kl{--nc:7;--kw:calc((min(100vw,520px) - 40px - (var(--nc) - 1) * var(--g)) / var(--nc))}
+.klrow{grid-template-columns:repeat(var(--nc),var(--kw))!important}
+.kcol.libre .vacia{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.08)}
+.kcol.libre .vacia::after{content:"Libre";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font:800 calc(var(--kw) * .26) Nunito,sans-serif;letter-spacing:.5px;text-transform:uppercase}
+.kcol.libre .carta + .vacia::after,.kcol.libre:has(.carta) .vacia::after{display:none}
+.klprob{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin:8px 0}
+.klprob .kt{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.klprob .kp{font:800 20px 'Baloo 2',system-ui,sans-serif}
+.klprob .kbar{height:8px;border-radius:99px;background:var(--line);margin:6px 0;overflow:hidden}
+.klprob .kbar i{display:block;height:100%;border-radius:99px;background:var(--mut);transition:width .4s}
+.klprob.ok{border-color:var(--ok)}.klprob.ok .kbar i{background:var(--ok)}
+.klprob.mal{border-color:var(--red)}.klprob.mal .kbar i{background:var(--red)}
+.klprob.dud{border-color:var(--yel)}.klprob.dud .kbar i{background:var(--yel)}
+.klprob.calc .kbar i{background:linear-gradient(90deg,var(--purple),var(--blue));animation:kcalc 1s ease-in-out infinite alternate}
+@keyframes kcalc{from{opacity:.3}to{opacity:1}}
+.klprob .ks{font-size:12.5px;color:var(--mut);font-weight:700}

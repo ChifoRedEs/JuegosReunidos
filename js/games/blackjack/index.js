@@ -5,6 +5,8 @@ import * as BJ from './motor.js';
 
 let S = null, api = null, asp = null, root = null, prev = { banca: 0, manos: [] }, bloqueo = false, tBloq = null, regRonda = 0, consejoOn = true;
 const NOMBRE_RES = { gana: 'Gana', bj: '¡Blackjack!', pierde: 'Pierdes', empate: 'Empate', rend: 'Rendida', pasa: 'Te pasas' };
+const netoMano = h => h.res === 'gana' ? h.ap : h.res === 'bj' ? h.ap * 1.5 : h.res === 'pierde' || h.res === 'pasa' ? -h.ap : h.res === 'rend' ? -h.ap / 2 : 0;
+const signo = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -56,8 +58,8 @@ function pintar() {
   $('#bjTB').textContent = !S.banca.length ? '' : jugando ? String(BJ.valor(S.banca[0])) : bloqueo ? '…' : totTxt(S.banca);
   $('#bjManos').innerHTML = S.manos.map((h, i) => {
     const act = S.fase === 'jugador' && i === S.act, fin = S.fase === 'fin' && !bloqueo;
-    return `<div class="mano ${act ? 'act' : ''}"><div class="bjrow">${filaCartas(h.c, prev.manos[i] ?? 0, { inicial })}</div>
-      <span class="bjb">${totTxt(h.c)}</span><span class="bjb apu">🪙 ${h.ap}</span>${fin && h.res ? `<span class="bjb ${h.res === 'bj' ? 'bj' : h.res}">${NOMBRE_RES[h.res]}</span>` : ''}</div>`;
+    return `<div class="mano ${act ? 'act' : ''} ${fin && h.res === 'bj' ? 'bj' : ''}"><div class="bjrow">${filaCartas(h.c, prev.manos[i] ?? 0, { inicial })}</div>
+      <span class="bjb">${totTxt(h.c)}</span><span class="bjb apu">🪙 ${h.ap}</span>${fin && h.res ? `<span class="bjb ${h.res === 'bj' ? 'bj' : h.res}">${NOMBRE_RES[h.res]} ${signo(netoMano(h))}</span>` : ''}</div>`;
   }).join('');
   prev = { banca: S.banca.length, manos: S.manos.map(h => h.c.length) };
   const m = $('#bjMsg');
@@ -65,7 +67,7 @@ function pintar() {
   else if (S.fase === 'seguro') m.textContent = 'La banca enseña un as';
   else if (S.fase === 'jugador') m.textContent = S.manos.length > 1 ? `Mano ${S.act + 1} de ${S.manos.length}` : 'Tu turno';
   else if (bloqueo) m.textContent = 'La banca juega…';
-  else { const r = S.resultado; m.textContent = r.texto === 'victoria' ? `¡Ganas ${r.neto} fichas!` : r.texto === 'derrota' ? `Pierdes ${-r.neto} fichas` : 'Empate: recuperas tu apuesta'; }
+  else { const r = S.resultado, bj = S.manos.find(h => h.res === 'bj'); m.textContent = bj ? `🎉 ¡BLACKJACK! Cobras 3 a 2: ${signo(netoMano(bj))} fichas` : r.texto === 'victoria' ? `¡Ganas ${r.neto} fichas!` : r.texto === 'derrota' ? `Pierdes ${-r.neto} fichas` : 'Empate: recuperas tu apuesta'; }
   panel();
 }
 function panel() {
@@ -73,7 +75,7 @@ function panel() {
   if (bloqueo) { p.innerHTML = ''; return; }
   if (S.fase === 'apuesta') {
     if (S.fichas < BJ.APUESTA_MIN) { p.innerHTML = '<div class="bar"><button class="btn on" data-ac="recargar">Recargar 1000 fichas</button></div>'; return; }
-    p.innerHTML = `<div class="bjapuesta">Apuesta: 🪙 <b>${S.apuesta}</b></div>
+    p.innerHTML = `<div class="bjapuesta">Apuesta: 🪙 <b>${S.apuesta}</b></div><div class="note" style="text-align:center">Victoria normal: <b>+100 %</b> de la apuesta · Blackjack (A + 10, J, Q o K): <b>+150 %</b></div>
       <div class="bjfichas">${BJ.FICHAS.map(f => `<button class="chip c${f}" data-ch="${f}" ${S.apuesta + f > S.fichas ? 'disabled' : ''} aria-label="Añadir ${f} fichas">${f}</button>`).join('')}</div>
       <div class="bar" style="justify-content:center"><button class="btn" data-ac="borrar">Borrar</button><button class="btn" data-ac="todo" ${S.fichas ? '' : 'disabled'}>Todo</button><button class="btn on" data-ac="repartir" ${S.apuesta < BJ.APUESTA_MIN ? 'disabled' : ''}>Repartir</button></div>`;
   } else if (S.fase === 'seguro') {
@@ -93,7 +95,7 @@ async function tras(prevFase) {            // animación de la banca y registro 
     if (regRonda !== S.ronda) {
       regRonda = S.ronda; const r = S.resultado;
       api.registrar({ res: r.texto === 'victoria' ? 'victoria' : r.texto === 'derrota' ? 'derrota' : 'tablas' });
-      api.sonido(r.texto === 'victoria' ? 'ganar' : r.texto === 'derrota' ? 'perder' : 'ok'); if (r.texto === 'victoria') api.vibrar([40, 30, 40]);
+      api.sonido(r.texto === 'victoria' ? 'ganar' : r.texto === 'derrota' ? 'perder' : 'ok'); if (r.texto === 'victoria') api.vibrar(S.manos.some(h => h.res === 'bj') ? [60, 40, 60, 40, 120] : [40, 30, 40]);
     }
   }
   pintar(); guardar();
@@ -114,7 +116,7 @@ function clic(e) {
 }
 function reglas() {
   api.modal('BlackJack', `<ul><li>Suma más que la banca sin pasarte de <b>21</b>. Las figuras valen 10 y el as 1 u 11.</li>
-    <li>Un <b>blackjack</b> (as + figura) paga 3 a 2. La banca se planta con 17 (también con 17 blando) y juega con 6 barajas.</li>
+    <li>Un <b>blackjack</b> (as + 10, J, Q o K con tus dos primeras cartas) paga <b>3 a 2: ganas el 150 % de tu apuesta</b>, mientras que una victoria normal paga el 100 %. Un 21 conseguido con tres o más cartas, o tras dividir, es una victoria normal. La banca se planta con 17 (también con 17 blando) y juega con 6 barajas.</li>
     <li><b>Doblar</b>: duplicas la apuesta y recibes una sola carta. <b>Dividir</b>: con dos cartas de igual valor haces dos manos (hasta 4; con ases solo una carta más por mano).</li>
     <li><b>Rendirse</b>: recuperas la mitad de la apuesta (solo con las dos primeras cartas). <b>Seguro</b>: si la banca enseña un as, apuestas media apuesta a que tiene blackjack.</li>
     <li>💡 El <b>consejo</b> te dice la jugada de la estrategia básica; jugando así la ventaja de la casa baja a menos de un 0,5 %.</li>

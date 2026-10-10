@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-e3f621c4c4';
+const VERSION = 'jr-ae38a943f9';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -50,6 +50,8 @@ const ARCHIVOS = [
 './js/games/klondike/index.js',
 './js/games/klondike/klondike.css',
 './js/games/klondike/motor.js',
+'./js/games/klondike/solver.js',
+'./js/games/klondike/solver.worker.js',
 './js/games/nonogram/index.js',
 './js/games/nonogram/nonogram.css',
 './js/games/nonogram/solver.js',

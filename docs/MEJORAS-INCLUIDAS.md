@@ -35,5 +35,10 @@
 - **Texas Hold'em**: torneo contra 2-5 bots con personalidad (conservador, equilibrado, agresivo y farolero), ciegas crecientes, all-in y botes secundarios, probabilidad de ganar en tiempo real y ranking de manos. Los bots deciden con simulación de Monte Carlo y las probabilidades del bote.
 - Módulo común de cartas (`core/cartas.js`, `css/cartas.css`) con mesa, dorso y colores de palo configurables.
 
+## Actualización 4: mejoras pedidas
+- **Parchís · Salida libre** (casilla en la pantalla de nueva partida): si no tienes fichas en juego, sales con una ficha con cualquier número; con un 5 en tu primera tirada sacas dos fichas de casa.
+- **BlackJack**: el blackjack paga 3 a 2 (+150 %) y la victoria normal +100 %; ahora se ve en pantalla (importe en cada mano, brillo dorado y aviso de pago) y en las reglas.
+- **Klondike**: casilla extra «Libre» a la izquierda de las columnas (admite cualquier carta o grupo cuando está vacía; opcional), analizador que indica si el camino sigue abierto o cerrado y porcentaje de acierto de tus jugadas.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

@@ -23,3 +23,6 @@
 .bjact .btn{min-height:50px;font-size:15px}
 .bjtip{background:var(--card);border:2px solid var(--yel);border-radius:14px;padding:8px 12px;font-size:14px;font-weight:700;margin:8px 0}
 .bjapuesta{display:flex;align-items:center;justify-content:center;gap:10px;font:800 22px 'Baloo 2',system-ui,sans-serif;margin:6px 0}
+.mano.bj{border-color:#FFD33D;box-shadow:0 0 18px 4px rgba(255,211,61,.65);animation:bjglow 1s ease-in-out infinite alternate}
+.bjb.bj{background:linear-gradient(135deg,#FFD33D,#FF9F1C);color:#3A2800;box-shadow:0 0 10px rgba(255,211,61,.9)}
+@keyframes bjglow{to{box-shadow:0 0 28px 8px rgba(255,211,61,.85)}}

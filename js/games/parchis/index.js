@@ -4,7 +4,7 @@ import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, 
 
 const VEL = { rapida: .5, normal: 1, lenta: 1.7 };
 let P = null, api = null, asp = null, rootEl = null, modo = 'setup', timer = null, ivDado = null, ivAnim = null, rodando = false, ptsMov = [], ultFoco = '';
-let cfgSetup = { am: 'h', az: 'c', ro: 'c', ve: 'c' }, nombres = {};
+let cfgSetup = { am: 'h', az: 'c', ro: 'c', ve: 'c' }, nombres = {}, libre = false;
 const velMult = () => VEL[api.pref('vel', 'normal')] || 1;
 const zoom = () => +(asp && asp.valores.zoom) || 1.4;
 const forma = () => (asp && asp.valores.fichas) || 'canica';
@@ -14,15 +14,16 @@ export function validar(x) {
   if (!x || typeof x !== 'object' || !Array.isArray(x.order) || x.order.length < 2 || x.order.length > 4 || new Set(x.order).size !== x.order.length || !x.order.every(c => PC.includes(c))) return null;
   if (!x.cfg || typeof x.cfg !== 'object' || !x.pieces || typeof x.pieces !== 'object' || !x.order.every(c => ['h', 'c'].includes(x.cfg[c]) && Array.isArray(x.pieces[c]) && x.pieces[c].length === 4 && x.pieces[c].every(p => Number.isInteger(p) && p >= -1 && p <= 71))) return null;
   const ok = Number.isInteger(x.turn) && x.turn >= 0 && x.turn < x.order.length && ['roll', 'move', 'pass', 'over'].includes(x.phase)
-    && Number.isInteger(x.step) && x.step >= 0 && x.step <= 20 && ['die', 'bonus'].includes(x.kind)
-    && Array.isArray(x.pend) && x.pend.every(v => v === 10 || v === 20) && Number.isInteger(x.sixes) && x.sixes >= 0 && x.sixes < 3
+    && Number.isInteger(x.step) && x.step >= 0 && x.step <= 20 && ['die', 'bonus', 'libre'].includes(x.kind)
+    && Array.isArray(x.pend) && x.pend.every(v => v === 0 || v === 10 || v === 20) && Number.isInteger(x.sixes) && x.sixes >= 0 && x.sixes < 3
     && (x.die == null || (Number.isInteger(x.die) && x.die >= 1 && x.die <= 6)) && (x.lastMoved == null || [0, 1, 2, 3].includes(x.lastMoved))
     && (x.phase !== 'over' || x.order.includes(x.winner));
   if (!ok) return null;
   const names = {}; if (x.names && typeof x.names === 'object') for (const c of x.order) if (typeof x.names[c] === 'string') names[c] = x.names[c].slice(0, 14);
   const cfg = {}; PC.forEach(c => { cfg[c] = x.order.includes(c) ? x.cfg[c] : null; });
   return { cfg, names, order: x.order.slice(), pieces: Object.fromEntries(x.order.map(c => [c, x.pieces[c].slice()])), turn: x.turn, phase: x.phase, die: x.die ?? null,
-    step: x.step, kind: x.kind, pend: x.pend.slice(), sixes: x.sixes, again: !!x.again, lastMoved: x.lastMoved ?? null, winner: x.phase === 'over' ? x.winner : null };
+    step: x.step, kind: x.kind, pend: x.pend.slice(), sixes: x.sixes, again: !!x.again, lastMoved: x.lastMoved ?? null, winner: x.phase === 'over' ? x.winner : null,
+    salidaLibre: !!x.salidaLibre, primera: Object.fromEntries(x.order.map(c => [c, !!(x.primera && x.primera[c])])), extraSalida: !!x.extraSalida };
 }
 export const migrarV1 = d => d;
 export function resumen(d) {
@@ -37,7 +38,7 @@ function restaurar(d) {
 }
 function guardar() {
   if (!P) return;
-  const d = { cfg: P.cfg, names: P.names, order: P.order, pieces: P.pieces, turn: P.turn, phase: P.phase, die: P.die, step: P.step, kind: P.kind, pend: P.pend, sixes: P.sixes, again: P.again, lastMoved: P.lastMoved, winner: P.winner };
+  const d = { cfg: P.cfg, names: P.names, order: P.order, pieces: P.pieces, turn: P.turn, phase: P.phase, die: P.die, step: P.step, kind: P.kind, pend: P.pend, sixes: P.sixes, again: P.again, lastMoved: P.lastMoved, winner: P.winner, salidaLibre: P.salidaLibre, primera: P.primera, extraSalida: P.extraSalida };
   const r = resumen(d); api.guardar(d, r.texto, r.fin);
 }
 
@@ -58,8 +59,9 @@ export async function mount(root, a) {
   await api.css(new URL('./parchis.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && PC.every(c => ['h', 'c', null].includes(c0[c] ?? null)) && PC.filter(c => c0[c]).length >= 2) cfgSetup = { am: c0.am ?? null, az: c0.az ?? null, ro: c0.ro ?? null, ve: c0.ve ?? null };
+  libre = !!api.pref('libre', false);
   const n0 = api.pref('names', {}); nombres = n0 && typeof n0 === 'object' ? { ...n0 } : {};
-  root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
+  root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('change', alCambiar);
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   const g = api.cargar();
   if (g) { restaurar(g); modo = 'juego'; rJuego(); pintarJuego(); drive(); }
@@ -67,7 +69,7 @@ export async function mount(root, a) {
 }
 export function unmount() {
   clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); timer = ivDado = ivAnim = null; rodando = false;
-  if (rootEl) { rootEl.removeEventListener('click', clic); rootEl.removeEventListener('input', alEscribir); }
+  if (rootEl) { rootEl.removeEventListener('click', clic); rootEl.removeEventListener('input', alEscribir); rootEl.removeEventListener('change', alCambiar); }
   P = null; asp = null;
 }
 
@@ -148,6 +150,7 @@ function rSetup() {
     ${PC.map(c => `<div class="prow"><span class="dot" style="background:var(--pz-${c})"></span>
       <input class="nom" data-name="${c}" maxlength="14" placeholder="${PNAME[c]}" value="${esc(nombres[c] || '')}" aria-label="Nombre del jugador ${PNAME[c]}">
       <div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([t, l]) => `<button class="btn ${(cfgSetup[c] || 'n') === t ? 'on' : ''}" data-cfg="${c},${t}">${l}</button>`).join('')}</div></div>`).join('')}
+    <label class="chk"><input type="checkbox" id="pzLibre" ${libre ? 'checked' : ''}><span><b>Salida libre</b>: si no tienes ninguna ficha en juego, sales con una ficha con cualquier número (no hace falta un 5). Y si en tu primera tirada sacas un 5, sacas dos fichas de casa.</span></label>
     <div class="bar"><span class="lbl">Velocidad CPU</span>${velBotones()}</div>
     <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button>${n < 2 ? '<span class="note">Elige al menos 2 jugadores.</span>' : ''}</div>
     <details><summary>Reglas</summary>${listaReglas()}</details>
@@ -156,7 +159,7 @@ function rSetup() {
 const velBotones = () => `<div class="seg">${[['rapida', 'Rápida'], ['normal', 'Normal'], ['lenta', 'Lenta']].map(([k, l]) => `<button class="btn ${api.pref('vel', 'normal') === k ? 'on' : ''}" data-vel="${k}">${l}</button>`).join('')}</div>`;
 function listaReglas() {
   return `<ul>
-    <li>Sacas ficha de casa con un 5. Si puedes sacar, es obligatorio.</li>
+    <li>Sacas ficha de casa con un 5. Si puedes sacar, es obligatorio. Con la opción <b>Salida libre</b> (al crear la partida), si no tienes fichas en juego sales con una ficha con cualquier número, y con un 5 en tu primera tirada sacas dos.</li>
     <li>Con un 6 vuelves a tirar. Si no te quedan fichas en casa, el 6 cuenta 7.</li>
     <li>Tres 6 seguidos: la última ficha movida vuelve a casa (salvo si está en el pasillo).</li>
     <li>Comer una ficha rival te da 20 casillas extra; meter una en meta, 10.</li>
@@ -186,7 +189,7 @@ function pintarJuego() {
   const over = P.phase === 'over', c = over ? P.winner : actual(P), who = nombre(P, c) + (esCPU(P, c) ? ' (CPU)' : '');
   const humano = !over && !esCPU(P, c);
   const msg = over ? `¡Gana ${nombre(P, P.winner)}!` : rodando ? `${who} tira…` : P.phase === 'pass' ? P.note : P.phase === 'roll' ? (esCPU(P, c) ? `${who} va a tirar…` : `${who}: tira el dado.`) : (esCPU(P, c) ? `${who} está pensando…` : `${who}: toca una ficha resaltada.`);
-  const sub = over || rodando ? '' : P.phase === 'move' ? (P.kind === 'bonus' ? `Premio: cuenta ${P.step}.` : P.step === 7 ? 'El 6 cuenta 7: no quedan fichas en casa.' : `Mueve ${P.step}.`) : '';
+  const sub = over || rodando ? '' : P.phase === 'move' ? (P.kind === 'libre' ? (P.step ? `Salida libre: con el ${P.step} sacas una ficha de casa.` : 'Segunda salida: saca otra ficha de casa.') : P.kind === 'bonus' ? `Premio: cuenta ${P.step}.` : P.step === 7 ? 'El 6 cuenta 7: no quedan fichas en casa.' : `Mueve ${P.step}.`) : '';
   if (!rodando) pintarDado(P.die, c, false);
   const m = $('#pzMsg'); m.textContent = msg; m.className = 'msg' + (over ? ' win' : '');
   $('#pzSub').textContent = sub;
@@ -265,6 +268,7 @@ function pBoard(preview) {
 }
 
 /* ---------- entrada ---------- */
+function alCambiar(e) { if (e.target.id === 'pzLibre') { libre = e.target.checked; api.setPref('libre', libre); } }
 function alEscribir(e) {
   const c = e.target.dataset && e.target.dataset.name; if (!c) return;
   nombres[c] = e.target.value.slice(0, 14); api.setPref('names', nombres);
@@ -281,7 +285,7 @@ function clic(e) {
   if (ac === 'start') {
     if (PC.filter(c => cfgSetup[c]).length < 2) return;
     const nm = {}; PC.forEach(c => { if (cfgSetup[c] && nombres[c] && nombres[c].trim()) nm[c] = nombres[c].trim().slice(0, 14); });
-    P = nuevaPartida(cfgSetup, nm); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
+    P = nuevaPartida(cfgSetup, nm, { salidaLibre: libre }); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
   } else if (ac === 'roll') { if (P && P.phase === 'roll' && !esCPU(P, actual(P))) iniciarTirada(); }
   else if (ac === 'setup') nuevaSetup();
   else if (ac === 'aspecto') asp.abrir();

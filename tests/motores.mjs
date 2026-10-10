@@ -16,6 +16,8 @@ import { BANCOS as BCw } from '../js/games/crucigrama/pistas.js';
 import * as BJ from '../js/games/blackjack/motor.js';
 import * as KL from '../js/games/klondike/motor.js';
 import * as HE from '../js/games/holdem/motor.js';
+import { resolver as resolverKl } from '../js/games/klondike/solver.js';
+import { nuevaPartida as nuevaPz, tirar as tirarPz, mover as moverPz, actual as actualPz } from '../js/games/parchis/reglas.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
 for (const nivel of ['facil', 'medio', 'dificil']) {
@@ -103,4 +105,17 @@ for (let g = 0; g < 2; g++) { const S = HE.crear(2 + g, 'facil'); S.jug.forEach(
   while (S.fase !== 'terminado' && guardia++ < 4000) { if (S.fase === 'fin') { HE.nuevaMano(S); continue; } const i = S.turno; assert.ok(i >= 0); let a = HE.decidir(S, i); if (!HE.actuar(S, i, a)) assert.ok(HE.actuar(S, i, HE.legal(S, i).pasar ? { t: 'check' } : { t: 'call' })); if (S.fase === 'fin') assert.equal(S.jug.reduce((s, p) => s + p.stack, 0), S.total); }
   assert.equal(S.fase, 'terminado'); }
 ok('Hold\'em: torneos completos solo de bots, con conservación de fichas');
+// ---- Parchís: salida libre ----
+{ const P = nuevaPz({ am: 'c', az: 'c' }, {}); P.turn = 0; tirarPz(P, 3); assert.equal(P.phase, 'pass'); }
+for (const v of [1, 2, 3, 4, 6]) { const P = nuevaPz({ am: 'c', az: 'c' }, {}, { salidaLibre: true }); P.turn = 0; tirarPz(P, v); assert.equal(P.kind, 'libre'); moverPz(P, P.moves[0]); assert.equal(P.pieces.am.filter(p => p === 0).length, 1); }
+{ const P = nuevaPz({ am: 'c', az: 'c' }, {}, { salidaLibre: true }); P.turn = 0; tirarPz(P, 5); moverPz(P, P.moves[0]); assert.equal(P.kind, 'libre'); moverPz(P, P.moves[0]); assert.equal(P.pieces.am.filter(p => p === 0).length, 2); assert.equal(actualPz(P), 'az'); }
+ok('Parchís salida libre: cualquier número saca ficha sin fichas en juego y un 5 en la primera tirada saca dos');
+// ---- BlackJack: pago del blackjack (+150 %) frente a victoria normal (+100 %) ----
+{ const mesa = (cartas, ap = 100) => { const S = BJ.nuevoEstado(); S.fichas = 1000; S.apuesta = ap; S.zapato = [...Array(100).fill(20), ...cartas.slice().reverse()]; BJ.repartir(S); return S; };
+  let S = mesa([0, 4, 12, 5]); assert.equal(S.manos[0].res, 'bj'); assert.equal(S.resultado.neto, 150);
+  S = mesa([9, 9, 12, 7]); BJ.accion(S, 'plantarse'); assert.equal(S.resultado.neto, 100); ok('BlackJack: blackjack paga +150 % y la victoria normal +100 %'); }
+// ---- Klondike: casilla extra y analizador ----
+{ const S = KL.nuevo(1, true); assert.equal(S.tab.length, 8); assert.ok(KL.puede(S, { t: 'tab', col: 7, idx: 0 }, { t: 'tab', col: 0 })); const S2 = KL.nuevo(1, false); assert.ok(!KL.puede(S2, { t: 'tab', col: 7, idx: 0 }, { t: 'tab', col: 0 }));
+  const viejo = JSON.parse(JSON.stringify(S)); viejo.tab.shift(); delete viejo.extra; const v = KL.validar(viejo); assert.ok(v && v.tab.length === 8 && v.extra === false);
+  let g = 0; for (let i = 0; i < 6; i++) if (resolverKl(KL.nuevo(1, true), { ms: 1200 }).r === 'ganable') g++; assert.ok(g >= 3); ok(`Klondike: casilla extra, migración de partidas antiguas y analizador (${g}/6 repartos resueltos)`); }
 console.log(`\n${n} pruebas correctas`);
