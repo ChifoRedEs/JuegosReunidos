@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-ce62aee798';
+const VERSION = 'jr-5407594389';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -60,6 +60,9 @@ const ARCHIVOS = [
 './js/games/damas/ia.js',
 './js/games/damas/index.js',
 './js/games/damas/reglas.js',
+'./js/games/flota/flota.css',
+'./js/games/flota/index.js',
+'./js/games/flota/motor.js',
 './js/games/holdem/holdem.css',
 './js/games/holdem/index.js',
 './js/games/holdem/motor.js',

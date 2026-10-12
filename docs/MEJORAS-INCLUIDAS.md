@@ -81,5 +81,8 @@
 - `sw.js` guarda los archivos uno a uno: si alguno falla, los demás se guardan igual (antes, un solo fallo cancelaba todo).
 - **Ajustes → Sin conexión**: indica cuántos juegos están guardados en el dispositivo y permite reintentar la descarga.
 
+## Actualización 14: Hundir la Flota
+- **Hundir la Flota** (Tablero): contra la CPU (3 niveles; la difícil calcula la probabilidad de cada casilla) o 2 jugadores en el mismo móvil con pantalla para pasarlo sin ver la flota del otro. Flotas Española (10 barcos), Internacional (5) y Rápida (8×8); barcos que se tocan o no (con agua marcada sola alrededor de los hundidos) y repetir disparo al acertar. Colocación tocando y girando, recolocar tocando un barco, o al azar. Pista sin trampas, barcos restantes de cada bando, efectos de agua/tocado/hundido, revancha, marcador, estadísticas y partida guardada. 🎨 4 colores de mar y 3 de barcos.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

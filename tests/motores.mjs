@@ -28,6 +28,7 @@ import * as RL from '../js/games/ruleta/motor.js';
 import * as AX from '../js/games/ajedrez/reglas.js';
 import * as CH from '../js/games/chinchon/motor.js';
 import * as MU from '../js/games/mus/motor.js';
+import * as FL from '../js/games/flota/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -210,6 +211,15 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
       assert.ok(MU.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); }
   ok('Mus: lances, 8 reyes, recuento de tantos, envites, órdago y 60 partidas completas'); }
+// ---- Hundir la Flota ----
+{ const S = FL.crear({ flota: 'espanola', tocar: false });
+  assert.ok(FL.colocar(S, 0, 0, 0, false)); assert.ok(!FL.colocar(S, 0, 6, 4, false)); assert.ok(!FL.colocar(S, 0, 6, 12, false)); assert.ok(FL.colocar(S, 0, 6, 15, false)); assert.ok(!FL.colocar(S, 0, 1, 8, false));
+  for (const flota of Object.keys(FL.FLOTAS)) for (const tocar of [false, true]) for (let g = 0; g < 12; g++) {
+    const T = FL.crear({ flota, modo: 'cpu', nivel: ['facil', 'medio', 'dificil'][g % 3], tocar, repetir: g % 2 === 0 }); assert.ok(FL.alAzar(T, 0)); assert.ok(FL.listo(T, 0));
+    let k = 0; while (T.fase === 'jugar' && k++ < 600) { const p = T.turno, i = FL.sugerencia(T, p, ['facil', 'medio', 'dificil'][(g + p) % 3]); assert.ok(FL.disparar(T, p, i)); assert.ok(FL.validar(JSON.parse(JSON.stringify(T)))); }
+    assert.equal(T.fase, 'fin'); assert.ok(FL.quedan(T, 1 - T.ganador).length === 0); }
+  const D = FL.crear({ modo: 'dos', flota: 'rapida' }); FL.alAzar(D, 0); FL.listo(D, 0); assert.equal(D.fase, 'pasar'); FL.continuar(D); assert.equal(D.colocando, 1); FL.alAzar(D, 1); FL.listo(D, 1); FL.continuar(D); assert.equal(D.fase, 'jugar');
+  ok('Hundir la Flota: colocación sin tocarse, 3 flotas, IA, pasar el móvil y partidas completas'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
