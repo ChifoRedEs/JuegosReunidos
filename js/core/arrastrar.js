@@ -77,6 +77,6 @@ export function ordenarMano(mano, ord, { palo, num }) {
 }
 export function validarOrden(o, modos) {
   if (!o || typeof o !== 'object' || !modos.includes(o.modo)) return null;
-  const ids = Array.isArray(o.ids) ? [...new Set(o.ids.filter(c => Number.isInteger(c) && c >= 0 && c <= 39))].slice(0, 10) : [];
+  const ids = Array.isArray(o.ids) ? [...new Set(o.ids.filter(c => Number.isInteger(c) && c >= 0 && c <= 39))].slice(0, 40) : [];
   return { modo: o.modo, ids };
 }

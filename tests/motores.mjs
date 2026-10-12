@@ -31,6 +31,7 @@ import * as MU from '../js/games/mus/motor.js';
 import * as FL from '../js/games/flota/motor.js';
 import * as RM from '../js/games/rummy/motor.js';
 import * as OC from '../js/games/oca/motor.js';
+import * as CQ from '../js/games/cinquillo/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -248,6 +249,15 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
   assert.equal(new Set(OC.ESPIRAL.map(([f, c]) => f * 8 + c)).size, 64);
   for (let g = 0; g < 300; g++) { const T = OC.crear({ jugadores: Array.from({ length: 2 + g % 3 }, (_, k) => ({ nombre: 'J' + k, cpu: true })), dados: 1 + g % 2, pozo: g % 2 ? 'turnos' : 'rescate' }); let k = 0; while (T.fase === 'tirar' && k++ < 5000) { assert.ok(OC.tirar(T)); assert.ok(OC.validar(JSON.parse(JSON.stringify(T)))); } assert.equal(T.fase, 'fin'); }
   ok('Juego de la Oca: ocas, puentes, dados, laberinto, muerte, rebote, posada, pozo y 300 partidas completas'); }
+// ---- Cinquillo ----
+{ const S = CQ.crear({ jugadores: [{ nombre: 'A' }, { nombre: 'B' }, { nombre: 'C' }, { nombre: 'D' }] }), j = S.turno;
+  assert.deepEqual(CQ.jugables(S), [4]); assert.ok(!CQ.pasar(S, j)); assert.ok(CQ.jugar(S, j, 4));
+  assert.ok(CQ.cabe(S, 3) && CQ.cabe(S, 5) && CQ.cabe(S, 14) && !CQ.cabe(S, 13) && !CQ.cabe(S, 6));
+  S.mesa[0] = { lo: 2, hi: 6 }; assert.ok(CQ.cabe(S, 7) && CQ.cabe(S, 1));                 // el 7 enlaza con la sota
+  for (let g = 0; g < 200; g++) { const T = CQ.crear({ jugadores: Array.from({ length: 3 + g % 2 }, (_, k) => ({ nombre: 'J' + k, cpu: true })), nivel: ['facil', 'medio', 'dificil'][g % 3], rondas: [1, 3, 5][g % 3] }); let k = 0;
+    while (T.fase !== 'fin' && k++ < 5000) { if (T.fase === 'finRonda') { CQ.siguienteRonda(T); continue; } const c = CQ.cpuCarta(T); if (c < 0) assert.ok(CQ.pasar(T, T.turno)); else assert.ok(CQ.jugar(T, T.turno, c)); assert.ok(CQ.validar(JSON.parse(JSON.stringify(T)))); }
+    assert.equal(T.fase, 'fin'); }
+  ok('Cinquillo: 5 de oros obligatorio, cartas contiguas, pasar solo sin jugada y 200 partidas completas'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

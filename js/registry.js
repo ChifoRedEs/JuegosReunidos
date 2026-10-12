@@ -24,6 +24,7 @@ export const JUEGOS = [
   { id: 'flota', nombre: 'Hundir la Flota', icono: '🚢', color: '#1B4FA8', categoria: 'tablero', descripcion: 'Coloca tus barcos y hunde la flota rival.', cargar: () => import('./games/flota/index.js') },
   { id: 'rummy', nombre: 'Rummy de fichas', icono: '🀄', color: '#E0243A', categoria: 'tablero', descripcion: 'Grupos y escaleras de fichas: reorganiza la mesa y quédate sin fichas.', cargar: () => import('./games/rummy/index.js') },
   { id: 'oca', nombre: 'Juego de la Oca', icono: '🦢', color: '#7CA83A', categoria: 'tablero', descripcion: 'De oca a oca y tiro porque me toca. De 2 a 4 jugadores.', cargar: () => import('./games/oca/index.js') },
+  { id: 'cinquillo', nombre: 'Cinquillo', icono: '5️⃣', color: '#C0392B', categoria: 'cartas', descripcion: 'Empieza el 5 de oros: abre palos y quédate sin cartas.', cargar: () => import('./games/cinquillo/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: '2-4 jugadores, 450 preguntas en 9 categorías.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
 ];

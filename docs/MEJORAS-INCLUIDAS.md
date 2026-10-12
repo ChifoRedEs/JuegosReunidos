@@ -90,5 +90,9 @@
 ## Actualización 16: Juego de la Oca
 - **Juego de la Oca** (Tablero): tablero clásico en espiral de 63 casillas, de 2 a 4 jugadores (personas y/o CPU), 1 o 2 dados. Ocas, puentes y dados con sus rimas («de oca a oca y tiro porque me toca»), posada, pozo (hasta que te rescaten o 2 turnos), laberinto, cárcel, muerte, llegada exacta con rebote y la primera tirada 6+3 / 5+4 con dos dados. Fichas que avanzan casilla a casilla, dados animados, sonidos, estadísticas y partida guardada. 🎨 3 tableros.
 
+## Actualización 17: Cinquillo
+- **Cinquillo** (Cartas): baraja española de 40 cartas, tú contra 2 o 3 CPU en 3 niveles, partidas a 1, 3 o 5 manos. Empieza el 5 de oros; cada palo se abre con un 5 y crece por arriba y por abajo (7 → sota); si puedes jugar, debes hacerlo. Mesa con las cuatro filas y los huecos donde encajan tus cartas iluminados, cartas jugables marcadas en la mano, mano ordenable por palo/número y con arrastre, recuento de cada mano, marcador y estadísticas. La CPU difícil evita abrir camino a los rivales.
+- `core/arrastrar.js`: el orden libre guarda hasta 40 cartas (antes 10).
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
