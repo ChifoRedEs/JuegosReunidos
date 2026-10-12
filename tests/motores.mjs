@@ -18,6 +18,12 @@ import * as KL from '../js/games/klondike/motor.js';
 import * as HE from '../js/games/holdem/motor.js';
 import { resolver as resolverKl } from '../js/games/klondike/solver.js';
 import { nuevaPartida as nuevaPz, tirar as tirarPz, mover as moverPz, actual as actualPz } from '../js/games/parchis/reglas.js';
+import { generar as generarKk, contar as contarKk, TAMANOS as TKk, DIFICULTADES as DKk } from '../js/games/kenken/generador.js';
+import * as BR from '../js/games/brisca/motor.js';
+import { elegir as elegirBr } from '../js/games/brisca/ia.js';
+import * as TV from '../js/games/trivial/motor.js';
+import { candidatas as candAh, NIVELES as NAh } from '../js/games/ahorcado/palabras.js';
+import { BLOQUES } from '../js/core/definiciones.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
 for (const nivel of ['facil', 'medio', 'dificil']) {
@@ -118,4 +124,19 @@ ok('Parchís salida libre: cualquier número saca ficha sin fichas en juego y un
 { const S = KL.nuevo(1, true); assert.equal(S.tab.length, 8); assert.ok(KL.puede(S, { t: 'tab', col: 7, idx: 0 }, { t: 'tab', col: 0 })); const S2 = KL.nuevo(1, false); assert.ok(!KL.puede(S2, { t: 'tab', col: 7, idx: 0 }, { t: 'tab', col: 0 }));
   const viejo = JSON.parse(JSON.stringify(S)); viejo.tab.shift(); delete viejo.extra; const v = KL.validar(viejo); assert.ok(v && v.tab.length === 8 && v.extra === false);
   let g = 0; for (let i = 0; i < 6; i++) if (resolverKl(KL.nuevo(1, true), { ms: 1200 }).r === 'ganable') g++; assert.ok(g >= 3); ok(`Klondike: casilla extra, migración de partidas antiguas y analizador (${g}/6 repartos resueltos)`); }
+// ---- Banco de definiciones del PDF ----
+assert.equal(BLOQUES.length, 9); assert.ok(BLOQUES.every(b => b.fichas.length === 50)); ok('Banco de definiciones: 9 bloques × 50 fichas = 450');
+// ---- KenKen ----
+for (const dif of Object.keys(DKk)) for (const t of [3, 4, 5, 6]) { const p = generarKk(t, dif); assert.equal(contarKk(t, p.cages, 2, 4000), 1); }
+ok('KenKen: paneles de 3×3 a 6×6 en 4 dificultades con solución única');
+// ---- Brisca ----
+for (const nj of [2, 3, 4]) for (let i = 0; i < 25; i++) { const S = BR.nueva(nj, 'medio', i % 2 === 0); let g = 0; while (S.fase !== 'fin' && g++ < 500) { if (S.fase === 'baza') { BR.cerrarBaza(S); continue; } const j = S.turno; if (S.cambio && BR.puedeCambiar(S, j) && Math.random() < .5) BR.cambiar(S, j); assert.ok(BR.jugar(S, j, j === 0 ? S.manos[0][0] : elegirBr(S, j, i % 3 === 0 ? 'dificil' : 'medio'))); }
+  assert.equal(S.fase, 'fin'); assert.equal(BR.puntosEquipo(S).reduce((a, b) => a + b, 0), 120); }
+ok('Brisca: partidas de 2, 3 y 4 jugadores (con cambio del 7 y las tres IA) suman siempre 120 puntos');
+// ---- Trivial ----
+for (const [nj, nc, modo] of [[4, 6, 'opciones'], [3, 9, 'escribir']]) { const S = TV.crear({ nCat: nc, modo, nivel: 'dificil', jugadores: Array.from({ length: nj }, (_, k) => ({ nombre: 'J' + k, cpu: true })) }); let g = 0;
+  while (S.fase !== 'fin' && g++ < 20000) { if (S.fase === 'tirar') TV.tirar(S); else if (S.fase === 'mover') TV.mover(S, TV.cpuSentido(S)); else if (S.fase === 'pregunta') TV.responder(S, TV.cpuRespuesta(S)); else TV.continuar(S); } assert.equal(S.fase, 'fin'); }
+assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas completas de 3 y 4 jugadores y respuestas escritas tolerantes');
+// ---- Ahorcado ----
+for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
