@@ -1,0 +1,54 @@
+/* Chinchón · usa css/cartas.css (mesa, dorso y baraja española) */
+.juego-chinchon{--hw:min(54px,calc((min(100vw,520px) - 72px) / 8.6))}
+.chtop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;font-size:13.5px;margin:6px 0;color:var(--mut)}
+.chm{color:#fff;padding:10px 8px 12px;display:flex;flex-direction:column;gap:10px}
+.chopps{display:grid;grid-template-columns:repeat(var(--no),minmax(0,1fr));gap:6px}
+.chseat{background:rgba(0,0,0,.28);border:3px solid transparent;border-radius:14px;padding:5px 4px 6px;text-align:center;min-width:0}
+.chseat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.chseat.fuera{opacity:.55}
+.chseat .nom{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chseat .cs{display:flex;justify-content:center;margin:4px 0;min-height:calc(28px * 1.55);align-items:center}
+.chseat .carta{--cw:28px;margin:0 -8px}
+.chseat .elim{font-size:12px;font-weight:800;color:#FFD0D5}
+.chseat .pts{font-size:12px;font-weight:700;color:#FFE08A}
+.chseat .pts b{font-size:15px}
+.chcentro{display:flex;justify-content:center;gap:22px;margin:4px 0}
+.chpila{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;padding:6px;border-radius:14px;color:#fff}
+.chpila .carta{--cw:58px}
+.chpila small{font-size:11.5px;font-weight:800;opacity:.9}
+.chpila .vacio{width:58px;height:calc(58px * 1.55);border:2px dashed rgba(255,255,255,.4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;opacity:.7}
+.chpila.activa{cursor:pointer;background:rgba(255,194,26,.18);box-shadow:0 0 0 3px var(--yel)}
+.chpila.activa:active{transform:scale(.96)}
+.chpila:disabled{cursor:default}
+.chmsg{text-align:center;font-weight:800;font-size:14.5px;min-height:20px}
+.chmano{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 8px;min-height:calc(var(--hw) * 1.55 + 12px);padding-top:8px}
+.chg{display:flex;gap:2px;padding:3px;border-radius:10px}
+.chg.liga{background:rgba(31,191,115,.32);box-shadow:inset 0 0 0 2px rgba(150,255,200,.55)}
+.chc{transition:transform .15s;cursor:default}
+.chc .carta{--cw:var(--hw);display:block}
+.chmano.turno .chc{cursor:pointer}
+.chc.sel{transform:translateY(-12px)}
+.chc.sel .carta{box-shadow:0 0 0 3px var(--yel),0 6px 10px rgba(0,0,0,.4)}
+.chc.nueva .carta{animation:cartaIn .32s ease-out both}
+.chc.nueva::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--yel);margin:3px auto 0}
+.chc.bloq .carta{opacity:.75}
+.chc.bloq::after{content:"🔒";display:block;text-align:center;font-size:11px;margin-top:1px}
+.chmano.turno .chc.cierra .carta{box-shadow:0 0 0 3px #3DDC97,0 2px 4px rgba(0,0,0,.35)}
+.chmano.turno .chc.sel.cierra .carta{box-shadow:0 0 0 3px var(--yel),0 0 0 6px #3DDC97,0 6px 10px rgba(0,0,0,.4)}
+.chc:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:8px}
+.chsue{text-align:center;font-size:12.5px;font-weight:800;opacity:.92}
+.chacc{justify-content:center}
+.chacc[hidden]{display:none}
+.chres{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:10px 12px;margin:10px 0}
+.chres h3{font-size:19px;margin-bottom:8px}
+.chrf{border-top:1px solid var(--line);padding:8px 0}
+.chrf.cierra .chrh b{color:var(--purple)}
+.chrh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:700;margin-bottom:5px}
+.chrc{display:flex;flex-wrap:wrap;gap:6px}
+.chrc .g{display:flex;gap:1px;padding:2px;border-radius:7px}
+.chrc .carta{--cw:30px}
+.chrc .g.liga{background:color-mix(in srgb,var(--ok) 30%,transparent)}
+.chrc .g.coloca{background:color-mix(in srgb,var(--blue) 30%,transparent)}
+.chrc .g.suelta{background:color-mix(in srgb,var(--red) 28%,transparent)}
+.chlog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
+.chlog li:first-child{color:var(--ink);font-weight:800}
