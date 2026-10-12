@@ -15,6 +15,7 @@ export const JUEGOS = [
   { id: 'klondike', nombre: 'Klondike', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Solitario: arrastra o toca. Pista y autocompletar.', cargar: () => import('./games/klondike/index.js') },
   { id: 'holdem', nombre: "Texas Hold'em", icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: 'Torneo contra 2-5 bots con personalidad.', cargar: () => import('./games/holdem/index.js') },
   { id: 'kenken', nombre: 'KenKen', icono: '➗', color: '#7A4DFF', categoria: 'logica', descripcion: 'Sudoku con operaciones: 5 tamaños y 4 niveles.', cargar: () => import('./games/kenken/index.js') },
+  { id: 'ruleta', nombre: 'Ruleta de la Suerte', icono: '🎡', color: '#F59E0B', categoria: 'palabras', descripcion: 'Gira, di consonantes, compra vocales y resuelve.', cargar: () => import('./games/ruleta/index.js') },
   { id: 'ahorcado', nombre: 'El Ahorcado', icono: '🪢', color: '#E5622B', categoria: 'palabras', descripcion: '4 niveles, 4 dibujos y pistas con definiciones.', cargar: () => import('./games/ahorcado/index.js') },
   { id: 'brisca', nombre: 'Brisca', icono: '🂡', color: '#C2410C', categoria: 'cartas', descripcion: 'Baraja española: 2, 3 o 4 jugadores en parejas.', cargar: () => import('./games/brisca/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: '2-4 jugadores, 450 preguntas en 9 categorías.', cargar: () => import('./games/trivial/index.js') },
