@@ -27,6 +27,7 @@ import { BLOQUES } from '../js/core/definiciones.js';
 import * as RL from '../js/games/ruleta/motor.js';
 import * as AX from '../js/games/ajedrez/reglas.js';
 import * as CH from '../js/games/chinchon/motor.js';
+import * as MU from '../js/games/mus/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -191,6 +192,24 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
       if (S.fase !== 'fin') assert.ok(CH.validar(JSON.parse(JSON.stringify(S)))); }
     assert.equal(S.fase, 'fin'); assert.ok(CH.validar(JSON.parse(JSON.stringify(S)))); }
   ok('Chinchón: mejores jugadas, chinchón y 150 partidas completas de 2 a 4 jugadores con estados válidos'); }
+// ---- Mus ----
+{ const id = (p, r) => p * 10 + [1, 2, 3, 4, 5, 6, 7, 10, 11, 12].indexOf(r);
+  assert.equal(MU.cmpGrande([id(0, 3), id(0, 5), id(0, 1), id(0, 4)], [id(1, 12), id(1, 5), id(1, 1), id(1, 4)], 8), 0);   // con 8 reyes el 3 es rey
+  assert.equal(MU.pares([id(0, 12), id(1, 3), id(2, 12), id(3, 12)], 8).tipo, 3);
+  assert.ok(MU.cmpJuego([id(0, 12), id(1, 11), id(2, 10), id(3, 1)], [id(0, 11), id(1, 12), id(2, 10), id(3, 10)], 8) > 0);   // 31 gana a 40
+  const prep = () => { const S = MU.crear({ reyes: 8 }); S.manos = [[id(0, 12), id(1, 12), id(0, 11), id(0, 1)], [id(0, 4), id(1, 5), id(2, 6), id(3, 7)], [id(1, 1), id(2, 1), id(1, 4), id(2, 5)], [id(0, 10), id(1, 10), id(2, 11), id(1, 7)]]; MU.decirMus(S, 0, false); return S; };
+  let S = prep(); while (S.fase === 'lance') MU.hablar(S, MU.quienHabla(S), 'paso'); assert.deepEqual(S.pts, [7, 0]);         // grande 1 + chica 1 + pares 2 + juego 3
+  S = prep(); MU.hablar(S, 0, 'paso'); MU.hablar(S, 1, 'envido', 2); MU.hablar(S, 0, 'envido', 3); MU.hablar(S, MU.quienHabla(S), 'noquiero'); assert.deepEqual(S.pts, [2, 0]);
+  S = prep(); MU.hablar(S, 0, 'ordago'); MU.hablar(S, MU.quienHabla(S), 'quiero'); assert.equal(S.ganador, 0);
+  for (let i = 0; i < 60; i++) { const T = MU.crear({ nivel: ['facil', 'medio', 'dificil'][i % 3], meta: [30, 40][i % 2], juegos: [1, 2][i % 2], reyes: [8, 4][(i >> 1) % 2] }); let g = 0;
+    while (T.fase !== 'fin' && g++ < 5000) {
+      if (T.fase === 'recuento') assert.ok(MU.siguienteMano(T));
+      else if (T.fase === 'mus') assert.ok(MU.decirMus(T, T.turno, MU.cpuMus(T)));
+      else if (T.fase === 'descarte') { for (let k = 0; k < 4; k++) if (!T.descSel[k]) assert.ok(MU.elegirDescarte(T, k, MU.cpuDescarte(T, k))); }
+      else { const s = MU.quienHabla(T), d = MU.cpuHablar(T); assert.ok(MU.hablar(T, s, d.tipo, d.n)); }
+      assert.ok(MU.validar(JSON.parse(JSON.stringify(T)))); }
+    assert.equal(T.fase, 'fin'); }
+  ok('Mus: lances, 8 reyes, recuento de tantos, envites, órdago y 60 partidas completas'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
