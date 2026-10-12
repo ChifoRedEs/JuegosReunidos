@@ -100,3 +100,24 @@ details li{margin:3px 0}
 .ops .bar{margin:6px 0}
 
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* teclado emergente y arrastrable (core/teclado.js) */
+.tkflot{position:fixed;z-index:40;width:min(calc(100vw - 12px),400px);background:var(--card);border:2px solid var(--line);border-radius:18px;box-shadow:0 14px 34px rgba(30,20,90,.35);padding:0 6px 8px;touch-action:none;user-select:none;-webkit-user-select:none}
+.tkflot[hidden]{display:none}
+.tkflot.mov{box-shadow:0 20px 44px rgba(30,20,90,.48);opacity:.94}
+.tkbar{display:flex;align-items:center;gap:8px;padding:6px 2px 6px 8px;cursor:grab;touch-action:none}
+.tkflot.mov .tkbar{cursor:grabbing}
+.tkasa{width:34px;height:5px;border-radius:99px;background:var(--line);flex:none}
+.tktit{flex:1;font-size:12px;font-weight:800;color:var(--mut)}
+.tkx{flex:none;width:34px;height:34px;border:0;border-radius:11px;background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);font-size:16px;font-weight:800;line-height:1}
+.tkfilas{display:grid;gap:5px}
+.tkfila{display:flex;gap:4px;justify-content:center}
+.tkk{flex:1;max-width:36px;min-width:0;height:40px;padding:0;border:2px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:800 17px 'Baloo 2',system-ui,sans-serif;box-shadow:0 2px 0 var(--line);touch-action:manipulation}
+.tkk.pul,.tkk:active:not(:disabled){transform:translateY(2px);box-shadow:none;background:var(--sel)}
+.tkk.tkdel{max-width:54px;font-size:18px}
+.tkk.ok{background:var(--ok);border-color:transparent;color:#fff;box-shadow:none}
+.tkk.mal{background:var(--red);border-color:transparent;color:#fff;box-shadow:none;opacity:.7}
+.tkk.vocal{border-color:color-mix(in srgb,var(--orange) 60%,var(--line))}
+.tkk:disabled{opacity:.35;cursor:default}
+.tkk.ok:disabled,.tkk.mal:disabled{opacity:.6}
+.tkabrir{display:inline-flex;align-items:center;gap:6px}
