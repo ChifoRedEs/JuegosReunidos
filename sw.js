@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-0b69819f54';
+const VERSION = 'jr-ef41793a45';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -91,7 +91,9 @@ const ARCHIVOS = [
 './js/games/trivial/trivial.css'
 /*ARCHIVOS-FIN*/
 ];
-self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())); });
+// cache: 'reload' obliga a bajar cada archivo del servidor: sin esto, la caché HTTP del navegador (GitHub Pages guarda ~10 min)
+// podía meter archivos ANTIGUOS en la versión nueva y los cambios no se veían.
+self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
