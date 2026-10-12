@@ -26,6 +26,7 @@ import { candidatas as candAh, NIVELES as NAh } from '../js/games/ahorcado/palab
 import { BLOQUES } from '../js/core/definiciones.js';
 import * as RL from '../js/games/ruleta/motor.js';
 import * as AX from '../js/games/ajedrez/reglas.js';
+import * as CH from '../js/games/chinchon/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -179,6 +180,17 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
   assert.ok(AX.materialInsuficiente(AX.desdeFEN('8/8/4k3/8/8/2B5/4K3/8 w - - 0 1').b));
   for (let i = 0; i < 4; i++) { let g = AX.estadoInicial(), k = 0; while (!g.fin && k++ < 400) g = AX.aplicar(g, AX.ia(g, 'clasico', 'facil')); assert.ok(AX.validarEstado(JSON.parse(JSON.stringify(g)))); }
   ok('Ajedrez: perft en 5 posiciones de referencia, mate, ahogado, material insuficiente, IA y partidas completas'); }
+// ---- Chinchón ----
+{ const id = (p, r) => p * 10 + [1, 2, 3, 4, 5, 6, 7, 10, 11, 12].indexOf(r);
+  assert.equal(CH.mejor([id(0, 5), id(1, 5), id(2, 5), id(3, 6), id(3, 7), id(3, 10), id(0, 12)]).puntos, 10);   // trío de 5 + escalera 6-7-sota
+  assert.ok(CH.esChinchon([5, 6, 7, 10, 11, 12, 4].map(x => id(1, x)))); assert.ok(!CH.esChinchon([1, 2, 3, 4, 5, 6, 10].map(x => id(1, x))));
+  for (let i = 0; i < 150; i++) { const S = CH.crear({ jugadores: Array.from({ length: 2 + i % 3 }, (_, k) => ({ nombre: 'J' + k, cpu: true })), nivel: ['facil', 'medio', 'dificil'][i % 3], limite: [50, 100][i % 2], cierre: [3, 5][i % 2] }); let g = 0;
+    while (S.fase !== 'fin' && g++ < 20000) {
+      if (S.fase === 'recuento') { CH.siguienteMano(S); continue; }
+      if (S.fase === 'robar') assert.notEqual(CH.robar(S, CH.cpuRobar(S)), false); else { const t = CH.cpuTirar(S); assert.ok(t.cerrar ? CH.cerrar(S, t.c) : CH.tirar(S, t.c)); }
+      if (S.fase !== 'fin') assert.ok(CH.validar(JSON.parse(JSON.stringify(S)))); }
+    assert.equal(S.fase, 'fin'); assert.ok(CH.validar(JSON.parse(JSON.stringify(S)))); }
+  ok('Chinchón: mejores jugadas, chinchón y 150 partidas completas de 2 a 4 jugadores con estados válidos'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
