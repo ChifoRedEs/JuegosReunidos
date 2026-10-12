@@ -24,6 +24,8 @@ import { elegir as elegirBr } from '../js/games/brisca/ia.js';
 import * as TV from '../js/games/trivial/motor.js';
 import { candidatas as candAh, NIVELES as NAh } from '../js/games/ahorcado/palabras.js';
 import { BLOQUES } from '../js/core/definiciones.js';
+import * as RL from '../js/games/ruleta/motor.js';
+import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
 for (const nivel of ['facil', 'medio', 'dificil']) {
@@ -124,6 +126,13 @@ ok('Parchís salida libre: cualquier número saca ficha sin fichas en juego y un
 { const S = KL.nuevo(1, true); assert.equal(S.tab.length, 8); assert.ok(KL.puede(S, { t: 'tab', col: 7, idx: 0 }, { t: 'tab', col: 0 })); const S2 = KL.nuevo(1, false); assert.ok(!KL.puede(S2, { t: 'tab', col: 7, idx: 0 }, { t: 'tab', col: 0 }));
   const viejo = JSON.parse(JSON.stringify(S)); viejo.tab.shift(); delete viejo.extra; const v = KL.validar(viejo); assert.ok(v && v.tab.length === 8 && v.extra === false);
   let g = 0; for (let i = 0; i < 6; i++) if (resolverKl(KL.nuevo(1, true), { ms: 1200 }).r === 'ganable') g++; assert.ok(g >= 3); ok(`Klondike: casilla extra, migración de partidas antiguas y analizador (${g}/6 repartos resueltos)`); }
+// ---- Klondike: auto-relleno (sin cartas boca abajo, el resto sube solo a las bases) ----
+{ let n = 0; for (let i = 0; i < 200 && n < 25; i++) { const S = KL.nuevo(1, true); let p = 0, sin = 0;
+    while (p++ < 1500 && !KL.gana(S) && !KL.sinOcultas(S)) { const h = KL.pista(S); if (!h) break; if (h.o.t === 'stock') { KL.robarStock(S); if (++sin > 60) break; } else { KL.mover(S, h.o, h.a); sin = 0; } }
+    if (!KL.sinOcultas(S) || KL.gana(S)) continue; n++; assert.ok(KL.autoResoluble(S));
+    let s2 = 0; for (let g = 0; g < 2000 && !KL.gana(S); g++) { const q = KL.pasoAuto(S, s2); assert.ok(q); if (q.o) { assert.ok(KL.mover(S, q.o, q.a)); s2 = 0; } else { KL.robarStock(S); s2++; } }
+    assert.ok(KL.gana(S)); }
+  assert.ok(n >= 10); ok(`Klondike: auto-relleno completa las partidas sin cartas ocultas (${n}/${n})`); }
 // ---- Banco de definiciones del PDF ----
 assert.equal(BLOQUES.length, 9); assert.ok(BLOQUES.every(b => b.fichas.length === 50)); ok('Banco de definiciones: 9 bloques × 50 fichas = 450');
 // ---- KenKen ----
@@ -137,6 +146,27 @@ ok('Brisca: partidas de 2, 3 y 4 jugadores (con cambio del 7 y las tres IA) suma
 for (const [nj, nc, modo] of [[4, 6, 'opciones'], [3, 9, 'escribir']]) { const S = TV.crear({ nCat: nc, modo, nivel: 'dificil', jugadores: Array.from({ length: nj }, (_, k) => ({ nombre: 'J' + k, cpu: true })) }); let g = 0;
   while (S.fase !== 'fin' && g++ < 20000) { if (S.fase === 'tirar') TV.tirar(S); else if (S.fase === 'mover') TV.mover(S, TV.cpuSentido(S)); else if (S.fase === 'pregunta') TV.responder(S, TV.cpuRespuesta(S)); else TV.continuar(S); } assert.equal(S.fase, 'fin'); }
 assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas completas de 3 y 4 jugadores y respuestas escritas tolerantes');
+// ---- Trivial: ronda final (una pregunta de cada categoría seguidas; si falla, empieza de nuevo en su siguiente turno) ----
+{ const S = TV.crear({ nCat: 6, modo: 'opciones', nivel: 'medio', jugadores: [{ nombre: 'A' }, { nombre: 'B' }] }); const p = S.jug[0]; p.q.fill(true); p.centro = true;
+  TV.tirar(S); assert.equal(S.fase, 'pregunta'); assert.ok(S.pregunta.final);
+  const vistas = new Set();
+  for (let k = 0; k < 5; k++) { vistas.add(S.pregunta.cat); TV.responder(S, S.pregunta.correcta); TV.continuar(S); assert.equal(S.fase, 'pregunta'); assert.equal(S.turno, 0); assert.equal(p.final.length, k + 1); assert.ok(!vistas.has(S.pregunta.cat)); }
+  TV.responder(S, (S.pregunta.correcta + 1) % 4); TV.continuar(S); assert.equal(S.turno, 1); assert.equal(p.final.length, 0); assert.equal(S.ganador, -1);
+  S.turno = 0; S.fase = 'tirar'; TV.tirar(S); for (let k = 0; k < 6; k++) { TV.responder(S, S.pregunta.correcta); TV.continuar(S); } assert.equal(S.fase, 'fin'); assert.equal(S.ganador, 0);
+  assert.ok(TV.validar(JSON.parse(JSON.stringify(S)))); ok('Trivial: ronda final de 6 preguntas sin fallar y reintento en el siguiente turno'); }
+// ---- Ruleta de la Suerte ----
+{ assert.ok(PRL.length >= 100); assert.ok(PRL.every(p => /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ,.¡!¿?]{2,48}$/.test(p.t)));
+  for (let i = 0; i < 300; i++) { const S = RL.crear({ jugadores: [{ nombre: 'A', cpu: true }, { nombre: 'B', cpu: true }, { nombre: 'C', cpu: true }], rondas: 3, nivel: ['facil', 'medio', 'dificil'][i % 3] }); let g = 0;
+    while (S.fase !== 'fin' && g++ < 5000) {
+      if (S.fase === 'ronda') RL.siguienteRonda(S);
+      else if (S.fase === 'girar') { const d = RL.cpuDecidir(S); if (d === 'girar') RL.caer(S, Math.floor(Math.random() * RL.SEGS.length)); else if (d === 'vocal') assert.ok(RL.comprarVocal(S)); else RL.resolver(S, RL.cpuAcierta(S) ? RL.panel(S).t : ''); }
+      else assert.ok(RL.pedir(S, RL.cpuLetra(S)) >= 0);
+      assert.ok(S.jug.every(j => j.banco >= 0)); }
+    assert.equal(S.fase, 'fin'); assert.ok(RL.validar(JSON.parse(JSON.stringify(S)))); }
+  const S = RL.crear({ jugadores: [{ nombre: 'Yo' }] }); S.panel = PRL.findIndex(p => p.t === 'Pez payaso'); S.usadas = '';
+  assert.equal(RL.caer(S, 0), 300); assert.equal(RL.pedir(S, 'Z'), 1); assert.equal(S.jug[0].banco, 300); assert.equal(RL.pedir(S, 'P'), -1);
+  assert.ok(RL.resolver(S, 'pez PAYASO')); assert.equal(S.jug[0].total, 300); assert.equal(S.fase, 'ronda');
+  ok('Ruleta: 300 partidas completas de CPU, premios, vocales, resolver y validación'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
