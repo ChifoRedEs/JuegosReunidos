@@ -253,5 +253,12 @@ async function migrarV1() {
 }
 
 /* ---------- arranque ---------- */
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => {});
+// Service worker: comprueba si hay versión nueva en cada arranque y, cuando la nueva toma el control, recarga una vez
+// para que se vea al momento (sin esto, la versión nueva solo aparecía en la siguiente apertura de la app).
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  const habiaVersion = !!navigator.serviceWorker.controller;
+  let recargado = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaVersion && !recargado) { recargado = true; location.reload(); } });
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
+}
 migrarV1().then(render);
