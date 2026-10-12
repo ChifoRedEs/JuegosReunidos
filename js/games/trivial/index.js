@@ -71,8 +71,9 @@ function tablero() {
   // centro: quesitos del jugador en turno
   h += `<circle class="hub" cx="${CX}" cy="${CY}" r="${RI - 4}"/>`;
   const R1 = 34, R2 = 74, dc = 2 * Math.PI / S.nCat;
-  cats.forEach((cat, k) => { const tiene = yo.q[k]; h += `<path d="${sector(R1, R2, -Math.PI / 2 + k * dc + .03, -Math.PI / 2 + (k + 1) * dc - .03)}" fill="${tiene ? cat.color : 'none'}" stroke="${cat.color}" stroke-width="2" opacity="${tiene ? 1 : .45}"/>`; });
-  h += `<text class="hn" x="${CX}" y="${CY - 3}">${esc(yo.nombre)}</text><text class="hs" x="${CX}" y="${CY + 11}">${yo.centro ? '¡al centro!' : `${yo.q.filter(Boolean).length}/${S.nCat} quesitos`}</text>`;
+  const enFinal = yo.centro && (S.fase === 'pregunta' || S.fase === 'resultado') && S.pregunta && S.pregunta.final;
+  cats.forEach((cat, k) => { const tiene = enFinal ? yo.final.includes(k) : yo.q[k]; h += `<path d="${sector(R1, R2, -Math.PI / 2 + k * dc + .03, -Math.PI / 2 + (k + 1) * dc - .03)}" fill="${tiene ? cat.color : 'none'}" stroke="${cat.color}" stroke-width="2" opacity="${tiene ? 1 : .45}"/>`; });
+  h += `<text class="hn" x="${CX}" y="${CY - 3}">${esc(yo.nombre)}</text><text class="hs" x="${CX}" y="${CY + 11}">${yo.centro ? `final ${yo.final.length}/${S.nCat}` : `${yo.q.filter(Boolean).length}/${S.nCat} quesitos`}</text>`;
   // fichas
   const porCasilla = {}; S.jug.forEach((p, j) => { (porCasilla[p.pos] = porCasilla[p.pos] || []).push(j); });
   S.jug.forEach((p, j) => { const grupo = porCasilla[p.pos], k = grupo.indexOf(j), a = a0(p.pos) + da / 2, r = (RO + RI) / 2 + (grupo.length > 1 ? (k - (grupo.length - 1) / 2) * 13 : 0), [x, y] = P(r, a); h += ficha(asp.valores.ficha, x, y, T.COLORES_J[j], p.nombre.trim()[0] ? p.nombre.trim()[0].toUpperCase() : '?', j === S.turno && S.fase !== 'fin'); });
@@ -85,7 +86,7 @@ function pintar() {
   if (!S || !$('#tvB')) return;
   const cats = T.categorias(S.nCat), yo = S.jug[S.turno];
   $('#tvJ').style.setProperty('--nj', S.jug.length);
-  $('#tvJ').innerHTML = S.jug.map((p, j) => `<div class="tvp ${j === S.turno && S.fase !== 'fin' ? 'turno' : ''}" style="--c:${T.COLORES_J[j]}"><div class="nom"><i></i>${esc(p.nombre)}</div><div class="qs">${cats.map((c, k) => `<b class="${p.q[k] ? 'on' : ''}" style="--qc:${c.color}" title="${c.nombre}"></b>`).join('')}</div></div>`).join('');
+  $('#tvJ').innerHTML = S.jug.map((p, j) => `<div class="tvp ${j === S.turno && S.fase !== 'fin' ? 'turno' : ''}" style="--c:${T.COLORES_J[j]}"><div class="nom"><i></i>${esc(p.nombre)}${p.centro ? ' 🏆' : ''}</div><div class="qs">${cats.map((c, k) => `<b class="${p.q[k] ? 'on' : ''}" style="--qc:${c.color}" title="${c.nombre}"></b>`).join('')}</div></div>`).join('');
   tablero();
   $('#tvL').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
   panel();
@@ -97,7 +98,7 @@ function panel() {
     p.innerHTML = `<div class="tvres"><h3>🏆 ¡Gana ${esc(ganador.nombre)}!</h3><table>${S.jug.map((j, k) => `<tr><td>${esc(j.nombre)}</td><td>${j.q.filter(Boolean).length} quesitos · ${S.aciertos[k]} aciertos · ${S.fallos[k]} fallos</td></tr>`).join('')}</table></div><div class="bar" style="justify-content:center"><button class="btn on" data-ac="setup">Nueva partida</button></div>`; return;
   }
   if (S.fase === 'tirar') {
-    p.innerHTML = rodando ? '<div class="tvdado">🎲 …</div>' : yo.centro ? (cpu ? `<div class="msg">${esc(yo.nombre)} va al centro…</div>` : '<div class="bar" style="justify-content:center"><button class="btn on" data-ac="centro">🏆 Ir al centro: pregunta final</button></div>')
+    p.innerHTML = rodando ? '<div class="tvdado">🎲 …</div>' : yo.centro ? (cpu ? `<div class="msg">${esc(yo.nombre)} juega la ronda final en el centro…</div>` : `<div class="tvfin0">🏆 Ronda final: acierta <b>${S.nCat} preguntas seguidas</b>, una de cada categoría. Si fallas una, lo intentas de nuevo en tu próximo turno.</div><div class="bar" style="justify-content:center"><button class="btn on" data-ac="centro">🏆 Empezar la ronda final</button></div>`)
       : cpu ? `<div class="msg">${esc(yo.nombre)} tira el dado…</div>` : '<div class="bar" style="justify-content:center"><button class="btn on" data-ac="tirar">🎲 Tirar el dado</button></div>';
   } else if (S.fase === 'mover') {
     const t = pos => { const c = T.casilla(S, pos); return c.tipo === 'repite' ? '🎲 tira otra vez' : `${cats[c.cat].icono} ${cats[c.cat].nombre}${c.tipo === 'quesito' ? ' · quesito' : ''}`; };
@@ -107,10 +108,16 @@ function panel() {
     let cuerpo = '';
     if (S.modo === 'opciones') cuerpo = `<div class="ops">${q.opciones.map((o, i) => `<button class="op ${resuelta ? (i === q.correcta ? 'ok' : i === q.respuesta ? 'mal' : '') : ''}" data-op="${i}" ${resuelta || cpu ? 'disabled' : ''}>${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`;
     else cuerpo = resuelta ? '' : (cpu ? '' : `<div class="esc"><input id="tvTxt" type="text" autocomplete="off" autocapitalize="sentences" placeholder="Escribe el término…" aria-label="Tu respuesta"><div class="tvdir"><button class="btn" data-ac="nosé">No lo sé</button><button class="btn on" data-ac="resp">Responder</button></div></div>`);
-    const fb = resuelta ? `<div class="fb ${q.acierto ? 'ok' : 'mal'}">${q.acierto ? '✔ ¡Correcto!' : '✘ Incorrecto'} · ${S.modo === 'escribir' || !q.acierto ? `Respuesta: ${esc(q.resp)}` : esc(q.resp)}${S.modo === 'escribir' && q.respuesta ? `<br><small style="color:var(--mut)">Tu respuesta: ${esc(String(q.respuesta))}</small>` : ''}</div>` : '';
-    p.innerHTML = `<div class="tvq" style="--c:${cat.color}"><div class="cab"><span>${cat.icono} ${cat.nombre}${q.final ? ' · PREGUNTA FINAL' : ''}</span><small>${esc(q.tema)}</small></div><div class="def">${esc(q.def)}</div>${cuerpo}${fb}</div>${resuelta && !cpu ? '<div class="bar" style="justify-content:center"><button class="btn on" data-ac="seguir">Continuar</button></div>' : ''}${cpu && !resuelta ? `<div class="msg" style="text-align:center">${esc(yo.nombre)} piensa…</div>` : ''}`;
+    const extraFin = !q.final || !resuelta ? '' : q.acierto ? (yo.final.length + 1 >= S.nCat ? ' · ¡Ronda final completada!' : ` · ¡Vas ${yo.final.length + 1}/${S.nCat}! Siguiente categoría…`) : ' · Ronda final fallida: lo intentarás de nuevo en tu próximo turno';
+    const fb = resuelta ? `<div class="fb ${q.acierto ? 'ok' : 'mal'}">${q.acierto ? '✔ ¡Correcto!' : '✘ Incorrecto'}${extraFin} · ${S.modo === 'escribir' || !q.acierto ? `Respuesta: ${esc(q.resp)}` : esc(q.resp)}${S.modo === 'escribir' && q.respuesta ? `<br><small style="color:var(--mut)">Tu respuesta: ${esc(String(q.respuesta))}</small>` : ''}</div>` : '';
+    p.innerHTML = `<div class="tvq" style="--c:${cat.color}"><div class="cab"><span>${cat.icono} ${cat.nombre}${q.final ? ` · FINAL ${yo.final.length + 1}/${S.nCat}` : ''}</span><small>${esc(q.tema)}</small></div>${q.final ? progresoFinal(yo, cats, q, resuelta) : ''}<div class="def">${esc(q.def)}</div>${cuerpo}${fb}</div>${resuelta && !cpu ? `<div class="bar" style="justify-content:center"><button class="btn on" data-ac="seguir">${q.final && q.acierto && yo.final.length + 1 < S.nCat ? 'Siguiente pregunta final' : 'Continuar'}</button></div>` : ''}${cpu && !resuelta ? `<div class="msg" style="text-align:center">${esc(yo.nombre)} piensa…</div>` : ''}`;
     if (!resuelta && !cpu && S.modo === 'escribir') setTimeout(() => { const i = $('#tvTxt'); if (i) i.focus({ preventScroll: true }); }, 50);
   }
+}
+
+function progresoFinal(yo, cats, q, resuelta) {
+  return `<div class="tvfin" aria-label="Progreso de la ronda final">${cats.map((c, k) => { const hecha = yo.final.includes(k) || (resuelta && q.acierto && k === q.cat), actual = k === q.cat && !hecha, fallada = resuelta && !q.acierto && k === q.cat;
+    return `<b class="${hecha ? 'on' : ''}${actual && !fallada ? ' act' : ''}${fallada ? ' mal' : ''}" style="--qc:${c.color}" title="${c.nombre}">${hecha ? '✓' : fallada ? '✕' : c.icono}</b>`; }).join('')}</div>`;
 }
 
 /* ---------- flujo ---------- */
@@ -157,7 +164,7 @@ function reglas() {
     <li>La casilla donde caes decide la categoría de la pregunta (cada color es una categoría). Te dan una <b>definición</b> y tienes que decir de qué término se trata, eligiendo entre 4 opciones o escribiéndolo.</li>
     <li>Si <b>aciertas</b> vuelves a tirar; si fallas, pasa el turno. Las casillas <b>🎲</b> te dejan tirar otra vez sin pregunta.</li>
     <li>Si aciertas en una casilla de <b>quesito</b> (la marcada con un círculo blanco), ganas el quesito de esa categoría.</li>
-    <li>Con <b>todos los quesitos</b> vas al centro: aciertas la <b>pregunta final</b> y ganas la partida; si fallas, lo intentas en tu siguiente turno.</li>
+    <li>Con <b>todos los quesitos</b> vas al centro y juegas la <b>ronda final</b>: una pregunta de <b>cada categoría</b>, seguidas y sin fallar. Si las aciertas todas, ganas la partida. Si fallas una, pasa el turno y en tu <b>siguiente turno</b> vuelves a intentarlo desde el principio.</li>
     <li>Escribiendo, no importan las mayúsculas ni las tildes, valen las alternativas entre paréntesis y se perdonan erratas leves.</li>
     <li>Las preguntas salen de un banco de 450 definiciones en 9 categorías y no se repiten hasta agotarlas.</li></ul>`);
 }
