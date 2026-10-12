@@ -1,1 +1,79 @@
+/* Ajedrez · colores por 🎨 Apariencia: data-tablero y data-piezas en .juego-ajedrez */
+.juego-ajedrez{--ax-l:#F0D9B5;--ax-d:#B58863;--ax-bd:#6B4426;--ax-ult:rgba(255,213,0,.42);--ax-sel:rgba(255,194,26,.7);
+  --pzb:#FFFFFF;--pzb-l:#26262E;--pzn:#1E1E24;--pzn-l:#F2F2F2;
+  --ax-tam:min(calc(100vw - 40px),440px)}
+.juego-ajedrez[data-tablero="torneo"]{--ax-l:#EEEED2;--ax-d:#769656;--ax-bd:#3F5A2A}
+.juego-ajedrez[data-tablero="oceano"]{--ax-l:#E4EDFF;--ax-d:#5B7FD6;--ax-bd:#2648A6}
+.juego-ajedrez[data-tablero="uva"]{--ax-l:#F3E8FF;--ax-d:#8B5CF6;--ax-bd:#5B2DD4}
+.juego-ajedrez[data-tablero="noche"]{--ax-l:#4A5486;--ax-d:#232A55;--ax-bd:#10142E;--ax-ult:rgba(92,225,255,.35);--ax-sel:rgba(92,225,255,.6)}
+.juego-ajedrez[data-piezas="marfil"]{--pzb:#FFF4DC;--pzb-l:#5A3B1F;--pzn:#4A2E17;--pzn-l:#FFE7BD}
+.juego-ajedrez[data-piezas="colores"]{--pzb:#FFD43B;--pzb-l:#7A4A00;--pzn:#5B2DD4;--pzn-l:#EDE3FF}
 
+.axw{width:var(--ax-tam);margin:6px auto}
+.axtw{position:relative}
+.axtab{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;aspect-ratio:1;border:6px solid var(--ax-bd);border-radius:14px;overflow:hidden;box-shadow:0 10px 24px rgba(40,20,80,.32);user-select:none;-webkit-user-select:none;touch-action:none}
+.axtab .sq{position:relative;padding:0;border:0;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;cursor:default;touch-action:none}
+.axtab .sq.cla{background:var(--ax-l)}
+.axtab .sq.osc{background:var(--ax-d)}
+.axtab.on .sq.mia{cursor:grab}
+.axtab .sq.ult::before{content:"";position:absolute;inset:0;background:var(--ax-ult)}
+.axtab .sq.sel::before{content:"";position:absolute;inset:0;background:var(--ax-sel)}
+.axtab .sq.jaque{background:radial-gradient(circle,#FF4757 0%,#E0243A 45%,transparent 78%),var(--ax-l)}
+.axtab .sq.osc.jaque{background:radial-gradient(circle,#FF4757 0%,#E0243A 45%,transparent 78%),var(--ax-d)}
+.axtab .sq.dest::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:rgba(20,20,40,.32);z-index:2;pointer-events:none}
+.axtab .sq.dcap::after{content:"";position:absolute;inset:4%;border-radius:50%;border:calc(var(--ax-tam) / 8 * .08) solid rgba(20,20,40,.32);z-index:2;pointer-events:none}
+.axtab .sq.pista{box-shadow:inset 0 0 0 4px var(--ok)}
+.axtab .sq.pista::after{animation:axpul .8s ease-in-out infinite alternate}
+.axtab .sq.sobre{box-shadow:inset 0 0 0 4px #fff}
+.axtab .sq.orig .pc{opacity:.3}
+.axtab .sq:focus-visible{outline:3px solid var(--yel);outline-offset:-3px;z-index:3}
+@keyframes axpul{to{opacity:.4}}
+.axtab .cr,.axtab .cf{position:absolute;font:800 calc(var(--ax-tam) / 8 * .2)/1 Nunito,sans-serif;pointer-events:none;z-index:1;opacity:.85}
+.axtab .cr{left:3px;top:3px}
+.axtab .cf{right:3px;bottom:2px}
+.axtab .sq.cla .cr,.axtab .sq.cla .cf{color:var(--ax-d)}
+.axtab .sq.osc .cr,.axtab .sq.osc .cf{color:var(--ax-l)}
+.axtab .pc{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%;pointer-events:none}
+
+/* piezas: glifos sólidos coloreados con contorno */
+.pz{font-family:'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','DejaVu Sans','Arial Unicode MS',serif;font-variant-emoji:text;line-height:1;font-weight:400;display:inline-block}
+.axtab .pz,.axghost .pz{font-size:calc(var(--ax-tam) / 8 * .8);transform:translateY(2%)}
+.pz.b{color:var(--pzb);-webkit-text-stroke:1.4px var(--pzb-l);paint-order:stroke fill;text-shadow:0 2px 2px rgba(0,0,0,.28)}
+.pz.n{color:var(--pzn);-webkit-text-stroke:1px var(--pzn-l);paint-order:stroke fill;text-shadow:0 2px 2px rgba(0,0,0,.3)}
+.axtab .sq.mia:active .pz{transform:scale(1.08)}
+.axghost{position:fixed;z-index:90;pointer-events:none;transform:translate(-50%,-62%) scale(1.25);filter:drop-shadow(0 8px 8px rgba(0,0,0,.35))}
+.axghost .pz{font-size:calc(var(--tam) * .8)}
+
+/* coronación */
+.axprom{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(15,10,50,.55);border-radius:14px}
+.axprom[hidden]{display:none}
+.axpc{background:var(--card);border-radius:18px;padding:14px;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.4);width:min(92%,330px)}
+.axpc>b{display:block;font:800 18px 'Baloo 2',system-ui,sans-serif;margin-bottom:8px}
+.axpo{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.axpo button{border:2px solid var(--line);border-radius:12px;background:var(--ax-l);padding:6px 0 4px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.axpo button:hover,.axpo button:focus-visible{border-color:var(--purple)}
+.axpo .pz{font-size:40px}
+.axpo small{font-size:11px;font-weight:800;color:#17214A}
+
+/* capturas, estado y jugadas */
+.axcap{display:flex;align-items:center;flex-wrap:wrap;min-height:26px;gap:0;margin:4px 2px}
+.axcap .pz{font-size:21px;margin-right:-5px}
+.axcap b{margin-left:10px;font:800 14px Nunito,sans-serif;color:var(--mut)}
+.axest{text-align:center;font-weight:800;min-height:24px;margin:4px 0}
+.axest.jq{color:var(--red);animation:axpul .6s ease-in-out 3 alternate}
+.axest.fin{color:var(--purple);font-size:17px}
+.axjug{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:6px 12px;margin:8px 0}
+.axjug summary{padding:4px 0}
+.axlista{margin:4px 0 6px;padding-left:34px;max-height:150px;overflow:auto;font:700 14px Nunito,sans-serif;color:var(--ink);columns:2;column-gap:18px}
+.axlista li{padding:2px 0;break-inside:avoid}
+.axlista li span{display:inline-block;min-width:58px}
+.axlista .ultj{background:color-mix(in srgb,var(--yel) 45%,transparent);border-radius:6px;padding:0 4px;min-width:0}
+.axlista .vac{color:var(--mut)}
+.axlista .vacio{list-style:none;margin-left:-34px;color:var(--mut)}
+
+/* ficha del marcador */
+.ch.axch1,.ch.axch2{background:none;font-family:'Segoe UI Symbol','Noto Sans Symbols 2','DejaVu Sans',serif;font-size:19px;font-weight:400;width:auto}
+.ch.axch1{color:var(--pzb);-webkit-text-stroke:1px var(--pzb-l);paint-order:stroke fill}
+.ch.axch2{color:var(--pzn);-webkit-text-stroke:.8px var(--pzn-l);paint-order:stroke fill}
+.juego-ajedrez #duOps > .bar:first-of-type{display:none}
+.axcap .pz.b{-webkit-text-stroke-width:.8px}.axcap .pz.n{-webkit-text-stroke-width:.5px}
