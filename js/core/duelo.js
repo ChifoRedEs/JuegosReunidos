@@ -10,7 +10,8 @@
 //   validarEstado(x, v) -> e normalizado | null
 //   ia(e, v, nivel, rapido) -> mov
 //   reglasHTML(v) -> html
-//   vista: { montar(cont, ctx, v), pintar(e, ctx, v) }   ctx = { jugar(mov), puedeJugar(), pista }
+//   vista: { montar(cont, ctx, v), pintar(e, ctx, v) }   ctx = { jugar(mov), puedeJugar(), pista, yo(), modo(), sonido(n) }
+//   rendirse(e) -> e con fin (opcional: añade «Abandonar» al menú)
 // }
 import { $ } from './dom.js';
 
@@ -61,6 +62,8 @@ export function crearDuelo(def) {
     asp = api.aspecto(def.aspecto || [], () => { montarTablero(); pintar(); });
     ctx = {
       pista: null, valores: () => asp.valores,
+      yo: () => (S ? S.yo : 1), modo: () => (S ? S.modo : 'cpu'), sonido: n => api.sonido(n),
+      rendirse: def.rendirse ? () => rendirse() : null,
       puedeJugar: () => !!S && !S.e.fin && !pensando && (S.modo === 'dos' || S.e.turn === S.yo),
       jugar: m => {
         if (!ctx.puedeJugar()) return false;
@@ -86,6 +89,7 @@ export function crearDuelo(def) {
       { texto: 'Deshacer', accion: deshacer },
       { texto: 'Pista', accion: pista },
       { texto: '🎨 Apariencia', accion: () => asp.abrir() },
+      ...(def.rendirse ? [{ texto: '🏳️ Abandonar la partida', accion: () => rendirse(), peligro: true }] : []),
       { texto: 'Reiniciar marcador', accion: reiniciarMarcador, peligro: true },
       { texto: 'Reglas', accion: reglas },
     ]);
@@ -154,6 +158,13 @@ export function crearDuelo(def) {
     if (!ctx.puedeJugar()) return;
     const m = def.ia(S.e, S.v, 'dificil', true);
     if (m != null) { ctx.pista = m; pintar(); }
+  }
+  function rendirse() {
+    if (!S || S.e.fin || !S.hist.length) { api.aviso('No hay ninguna partida en juego'); return; }
+    if (!api.confirmar('¿Abandonar la partida? Contará como derrota.')) return;
+    clearTimeout(timer); pensando = false;
+    if (S.modo === 'cpu' && S.e.turn !== S.yo) S.e = { ...S.e, turn: S.yo };   // abandona quien juega, no la CPU
+    S.e = def.rendirse(S.e); terminar(); pintar(); guardar();
   }
   function reiniciarMarcador() {
     if (!api.confirmar('¿Poner el marcador a cero?')) return;
