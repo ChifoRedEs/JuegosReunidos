@@ -25,3 +25,14 @@
 .carta.es .fig{position:absolute;left:55%;top:38%;transform:translate(-50%,-50%);width:calc(var(--cw) * .5);height:calc(var(--cw) * .5);border-radius:50%;border:calc(var(--cw) * .04) solid #8A6A1E;background:#fff;display:flex;align-items:center;justify-content:center;font:800 calc(var(--cw) * .34)/1 'Baloo 2',sans-serif;color:#8A5A00}
 .carta.es.e1 .cr,.carta.es.e0 .cr{color:#A31528}
 .carta.es.dorso{background:repeating-linear-gradient(45deg,var(--d1) 0 5px,var(--d2) 5px 10px);border:calc(var(--cw) * .07) solid #fff}
+
+/* ordenar la mano y arrastrar cartas (core/arrastrar.js) */
+.ordbar{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:800;color:#fff}
+.ordbar[hidden]{display:none}
+.ordbar span{opacity:.85}
+.ordbar button{border:0;border-radius:99px;padding:4px 11px;background:rgba(0,0,0,.25);color:#fff;font:800 12px Nunito,sans-serif;min-height:28px}
+.ordbar button.on{background:#fff;color:#1B2340}
+.ordbar em{font-style:normal;opacity:.8}
+.ordbar em[hidden]{display:none}
+.arrorig{opacity:.3}
+.arrfantasma{position:fixed;z-index:95;pointer-events:none;margin:0;transform:scale(1.1) rotate(-4deg);filter:drop-shadow(0 10px 12px rgba(0,0,0,.45));transition:none}
