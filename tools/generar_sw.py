@@ -12,7 +12,9 @@ EXT = {'.html', '.css', '.js', '.json', '.webmanifest', '.svg', '.png', '.ico', 
 
 archivos = []
 for base, dirs, files in os.walk(RAIZ):
-    dirs[:] = sorted(d for d in dirs if d not in EXCLUIR_DIRS)
+    # Las carpetas que empiezan por "_" (js/games/_plantilla) no se publican en GitHub Pages si Jekyll está activo:
+    # si entraran en la lista, la instalación sin conexión fallaría entera. Además la plantilla no se usa para jugar.
+    dirs[:] = sorted(d for d in dirs if d not in EXCLUIR_DIRS and not d.startswith('_') and not d.startswith('.'))
     for f in sorted(files):
         if f in EXCLUIR_ARCHIVOS or os.path.splitext(f)[1].lower() not in EXT:
             continue
