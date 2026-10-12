@@ -53,5 +53,10 @@
 - **Klondike · analizador plegado**: el analizador «Camino abierto» pasa a una burbuja en la esquina con el porcentaje; al tocarla se abre a tamaño normal. Si una jugada cierra el camino, avisa.
 - **Klondike · auto-relleno**: cuando no quedan cartas boca abajo y el resto puede subir solo, las cartas van a las bases y la partida termina sola (automático o con botón, en ⚙️).
 
+## Actualización 8: Inicio por categorías y Ajedrez
+- **Inicio con categorías plegables**: cada categoría es una pestaña; al abrir una se cierran las demás, se recuerda la última abierta y se avisa de las partidas en curso.
+- **Actualizaciones fiables**: el service worker descarga los archivos nuevos sin pasar por la caché del navegador y la app se recarga sola una vez al detectar una versión nueva.
+- **Ajedrez** (Tablero): todas las reglas (enroques, captura al paso, coronación a elección, jaque, mate, ahogado, triple repetición, 50 movimientos y material insuficiente), comprobadas con pruebas *perft* de referencia. Contra CPU en 3 niveles (alfa-beta con búsqueda de capturas) o 2 jugadores; tocar o arrastrar piezas, casillas posibles marcadas, rey en jaque en rojo, piezas capturadas con ventaja de material, lista de jugadas en notación española, abandonar, deshacer, pista y tablero girado al jugar con negras. 🎨 5 tableros y 3 juegos de colores de piezas.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
