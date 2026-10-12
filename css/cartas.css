@@ -16,3 +16,12 @@
 .carta.in{animation:cartaIn .32s ease-out both}
 @keyframes cartaIn{from{transform:translateY(-34px) scale(.8);opacity:0}to{transform:none;opacity:1}}
 .mesa{background:radial-gradient(circle at 50% 30%,var(--mesa1),var(--mesa2));border-radius:24px;padding:12px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.14),0 10px 24px rgba(0,0,0,.25)}
+
+/* baraja española */
+.carta.es{height:calc(var(--cw) * 1.55);background:linear-gradient(#FFFBEF,#F7EBC9);border-color:#C9B27A;color:#3A2A10}
+.carta.es .cr{position:absolute;left:8%;top:3%;font-size:calc(var(--cw) * .3);line-height:1}
+.carta.es .mini{position:absolute;left:9%;top:calc(var(--cw) * .36);width:calc(var(--cw) * .22);height:calc(var(--cw) * .22)}
+.carta.es .pip{position:absolute;width:calc(var(--cw) * .27 * var(--k,1));height:calc(var(--cw) * .27 * var(--k,1));transform:translate(-50%,-50%)}
+.carta.es .fig{position:absolute;left:55%;top:38%;transform:translate(-50%,-50%);width:calc(var(--cw) * .5);height:calc(var(--cw) * .5);border-radius:50%;border:calc(var(--cw) * .04) solid #8A6A1E;background:#fff;display:flex;align-items:center;justify-content:center;font:800 calc(var(--cw) * .34)/1 'Baloo 2',sans-serif;color:#8A5A00}
+.carta.es.e1 .cr,.carta.es.e0 .cr{color:#A31528}
+.carta.es.dorso{background:repeating-linear-gradient(45deg,var(--d1) 0 5px,var(--d2) 5px 10px);border:calc(var(--cw) * .07) solid #fff}
