@@ -64,5 +64,11 @@
 ## Actualización 10: Mus
 - **Mus** (Cartas): por parejas, tú y tu compañero CPU contra dos CPU (3 niveles). Fase de mus con descartes, lances de Grande, Chica, Pares (par, medias, duples) y Juego (31, 32, 40, 37…) o Punto, envites con paso, envido, subir, quiero, no quiero y órdago. Los tantos se cuentan en orden y el juego acaba en cuanto una pareja llega a la meta. Opciones: a 30 o 40 tantos, un juego o al mejor de 3, 8 o 4 reyes. La CPU estima sus opciones simulando manos posibles y respeta lo que cada uno ha declarado en pares y juego. Recuento con las cartas de todos, marcador, estadísticas y partida guardada.
 
+## Actualización 11: ordenar y arrastrar cartas (Chinchón y Mus)
+- Nuevo módulo común `core/arrastrar.js`: las cartas de tu mano se pueden **arrastrar** para colocarlas donde quieras (un toque corto sigue eligiendo la carta).
+- **Chinchón**: botones Ordenar por *Jugadas* (agrupa tus combinaciones, como antes), *Palo* o *Número*; al ordenar o arrastrar, las cartas que forman jugada llevan una marca verde. Las cartas nuevas se añaden al final en el orden libre.
+- **Mus**: Ordenar por *Palo* o *Número* (de mayor a menor) y arrastre libre.
+- El orden elegido se guarda con la partida y el modo preferido se recuerda para las siguientes.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
