@@ -2,9 +2,10 @@ import { $, esc } from '../../core/dom.js';
 import { grupoTablero } from '../../core/aspectos.js';
 import { NIVELES, temasDe, elegir, base, mayus } from './palabras.js';
 import { DISENOS, TOTAL } from './dibujos.js';
+import { crearTeclado } from '../../core/teclado.js';
 
 const FILAS = ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM'], ALFABETO = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', LETRA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
-let S = null, api = null, asp = null, root = null, onKey = null, recienRevelada = new Set(), faseAnterior = 0;
+let S = null, api = null, asp = null, root = null, onKey = null, recienRevelada = new Set(), faseAnterior = 0, tk = null;
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -37,16 +38,17 @@ export async function mount(r, a) {
       <div class="bar"><span class="lbl">Tema</span><div class="seg" id="ahTemas"></div></div><p class="note" id="ahAyuda"></p></details>
     <div class="ahinfo"><span class="ahvidas" id="ahVidas" aria-live="polite"></span><span id="ahMarc"></span></div>
     <div class="ahfig" id="ahFig"></div>
-    <div class="ahword" id="ahWord" role="img"></div>
+    <div class="ahword" id="ahWord" role="button" tabindex="0" data-ac="teclado"></div>
+    <p class="ahtoca" id="ahToca">⌨️ Toca las casillas para escribir</p>
     <div class="ahpista" id="ahPista"></div>
     <div class="msg" id="ahMsg" role="status" aria-live="polite"></div>
-    <div class="ahkeys" id="ahKeys">${FILAS.map(f => `<div class="fila">${[...f].map(l => `<button data-l="${l}">${l}</button>`).join('')}</div>`).join('')}</div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Otra palabra</button><button class="btn" data-ac="letra" id="ahLetra">💡 Letra</button><button class="btn" data-ac="pista" id="ahBtnPista">🔎 Pista</button><button class="btn" data-ac="aspecto">🎨</button></div>`;
-  root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
+    <div class="bar"><button class="btn on" data-ac="nueva">Otra palabra</button><button class="btn" data-ac="letra" id="ahLetra">💡 Letra</button><button class="btn" data-ac="pista" id="ahBtnPista">🔎 Pista</button><button class="btn tkabrir" data-ac="teclado" id="ahTk" aria-label="Abrir teclado">⌨️</button><button class="btn" data-ac="aspecto">🎨</button></div>`;
+  tk = crearTeclado({ filas: FILAS, alPulsar: adivinar, titulo: 'El Ahorcado · elige una letra' });
+  root.addEventListener('click', clic); root.addEventListener('keydown', teclaPalabra); onKey = teclado; document.addEventListener('keydown', onKey);
   api.menu([{ texto: 'Otra palabra', accion: () => nueva(S.nivel, S.tema) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (!S) { $('#ahOps').open = true; nueva(api.pref('nivel', 'facil'), 'mezcla', true); } else { faseAnterior = fase(); temas(); pintar(false); }
 }
-export function unmount() { document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
+export function unmount() { document.removeEventListener('keydown', onKey); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', teclaPalabra); } if (tk) { tk.destruir(); tk = null; } S = null; asp = null; }
 function guardar() { if (!S) return; const d = { ...S }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- partida ---------- */
@@ -103,7 +105,8 @@ function pintar(anima) {
   $('#ahPista').innerHTML = faltaPista ? `<small>Pista oculta</small>Ver la pista cuesta un fallo. ${S.palabra.replace(/[ -]/g, '').length} letras${S.palabra.includes(' ') ? ` en ${S.palabra.split(' ').length} palabras` : ''}.` : `<small>Pista</small>${esc(S.pista)}`;
   $('#ahBtnPista').style.display = faltaPista && !S.fin ? '' : 'none';
   $('#ahLetra').disabled = !!S.fin; $('#ahLetra').textContent = cfg.letra === 'gratis' && !S.letraGratis ? '💡 Letra gratis' : '💡 Letra (−1)';
-  root.querySelectorAll('#ahKeys [data-l]').forEach(b => { const l = b.dataset.l, usada = S.usadas.includes(l), en = letrasDe(S.palabra).includes(l); b.disabled = usada || !!S.fin; b.className = usada ? (en ? 'ok' : 'mal') : ''; });
+  if (tk) { const ls = letrasDe(S.palabra); tk.actualizar((l, b) => { const usada = S.usadas.includes(l); b.disabled = usada || !!S.fin; b.className = 'tkk' + (usada ? (ls.includes(l) ? ' ok' : ' mal') : ''); }); if (S.fin) tk.cerrar(); }
+  $('#ahWord').classList.toggle('activa', !S.fin); $('#ahToca').hidden = !!S.fin; $('#ahTk').disabled = !!S.fin;
   root.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.nivel));
   $('#ahSum').textContent = `⚙️ ${cfg.nombre} · ${t.icono} ${t.nombre}`; $('#ahAyuda').textContent = cfg.ayuda;
   const m = $('#ahMsg'); m.className = 'msg' + (S.fin === 'gana' ? ' win' : S.fin === 'pierde' ? ' err' : '');
@@ -116,15 +119,16 @@ function teclado(e) {
   const l = e.key.length === 1 ? e.key.toUpperCase() : ''; if (l && ALFABETO.includes(l)) adivinar(l);
 }
 function clic(e) {
-  const b = e.target.closest('button'); if (!b || !S) return; const d = b.dataset;
-  if (d.l) return adivinar(d.l);
+  const b = e.target.closest('button,[data-ac]'); if (!b || !S) return; const d = b.dataset;
+  if (d.ac === 'teclado') { if (!S.fin) tk.abrir(); return; }
   if (d.niv) return nueva(d.niv, 'mezcla'); if (d.tema) return nueva(S.nivel, d.tema);
   const a = d.ac; if (a === 'nueva') nueva(S.nivel, S.tema, !!S.fin); else if (a === 'letra') ayudaLetra(); else if (a === 'pista') verPista(); else if (a === 'aspecto') asp.abrir();
 }
+function teclaPalabra(e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'ahWord') { e.preventDefault(); if (S && !S.fin) tk.abrir(); } }
 function reglas() {
   api.modal('El Ahorcado', `<ul><li>Adivina la palabra eligiendo letras. Cada letra que no está en la palabra suma un fallo y completa el dibujo; si se completa, pierdes.</li>
     <li><b>Fácil y Medio</b> usan palabras cotidianas del crucigrama; <b>Difícil y Experto</b> usan términos del banco de 450 definiciones (geografía, historia, ciencia, arte, gastronomía…), con la pista oculta.</li>
     <li>La <b>pista</b> es la definición de la palabra. En Difícil y Experto verla cuesta un fallo, igual que 💡 Letra (en Fácil tienes una letra gratis).</li>
-    <li>Las tildes no importan: la A vale para «á». Con el teclado del ordenador también puedes escribir las letras.</li>
+    <li>Las tildes no importan: la A vale para «á». Toca las casillas de la palabra (o ⌨️) para abrir el teclado: puedes arrastrarlo por la pantalla desde su barra y cerrarlo con ✕. Con el teclado del ordenador también puedes escribir las letras.</li>
     <li>En 🎨 Apariencia eliges paleta y dibujo: clásico, robot, globos o flor.</li></ul>`);
 }
