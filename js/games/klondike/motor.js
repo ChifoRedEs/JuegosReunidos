@@ -62,6 +62,27 @@ export function autoSiguiente(S) {                                    // siguien
   for (const o of orig) { if (o.t === 'tab' && o.idx < 0) continue; if (o.t === 'waste' && !S.waste.length) continue; if (puede(S, o, { t: 'fund' })) return o; }
   return null;
 }
+// Auto-relleno: sin cartas boca abajo en las columnas, las que quedan (columnas, mazo y descartes) se pueden subir solas.
+export const sinOcultas = S => S.tab.every(c => !c.d.length);
+// Siguiente paso del auto-relleno: una carta a la base; si ninguna sube, la del descarte a una columna donde encaje; si no, pasar el mazo. null si no queda nada útil.
+export function pasoAuto(S, sinAvance = 0) {
+  const o = autoSiguiente(S); if (o) return { o, a: { t: 'fund' } };
+  if (S.waste.length) for (let col = 1; col < 8; col++) if (S.tab[col].u.length && puede(S, { t: 'waste' }, { t: 'tab', col })) return { o: { t: 'waste' }, a: { t: 'tab', col } };   // desatasca el robo de 3 en 3
+  const resto = S.stock.length + S.waste.length;
+  if (resto && sinAvance <= 2 * resto + 2) return { robar: true };
+  return null;
+}
+// ¿Se completa la partida subiendo cartas a las bases (y pasando el mazo) sin ninguna otra jugada? Se simula sobre una copia.
+export function autoResoluble(S) {
+  if (gana(S) || !sinOcultas(S)) return false;
+  const T = copia(S); let sin = 0;
+  for (let g = 0; g < 2000; g++) {
+    const p = pasoAuto(T, sin); if (!p) return false;
+    if (p.o) { mover(T, p.o, p.a); sin = 0; if (gana(T)) return true; } else { robarStock(T); sin++; }
+  }
+  return false;
+}
+
 // Pista: la mejor jugada razonable
 export function pista(S) {
   const c = [], orig = [];
