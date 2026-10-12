@@ -52,3 +52,7 @@
 .chrc .g.suelta{background:color-mix(in srgb,var(--red) 28%,transparent)}
 .chlog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .chlog li:first-child{color:var(--ink);font-weight:800}
+.chg.plano{gap:4px}
+.chc{touch-action:none}
+.chc.enliga .carta{box-shadow:inset 0 -5px 0 #1FBF73,0 2px 4px rgba(0,0,0,.35)}
+.chmano.turno .chc.cierra.enliga .carta{box-shadow:inset 0 -5px 0 #1FBF73,0 0 0 3px #3DDC97}

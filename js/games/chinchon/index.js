@@ -2,15 +2,18 @@ import { $, esc } from '../../core/dom.js';
 import { cartaEsHTML, asegurarSprites, nombreEs } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso } from '../../core/aspectos.js';
 import * as C from './motor.js';
+import { hacerOrdenable, ordenarMano, validarOrden } from '../../core/arrastrar.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, sel = null, robada = -1, ocupado = false;
+const MODOS = ['jugadas', 'palo', 'numero', 'libre'];
+let ord = { modo: 'jugadas', ids: [] }, arr = null;
 let cfg = { rivales: 1, nivel: 'medio', limite: 100, cierre: 5 }, marcador = { g: 0, p: 0 };
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
   const s = d && C.validar(d.s); if (!s) return null;
   const m = d.marcador && typeof d.marcador === 'object' ? d.marcador : {}, e = v => (Number.isInteger(v) && v >= 0 && v <= 99999 ? v : 0);
-  return { s, marcador: { g: e(m.g), p: e(m.p) }, reg: !!d.reg };
+  return { s, marcador: { g: e(m.g), p: e(m.p) }, reg: !!d.reg, ord: validarOrden(d.ord, MODOS) };
 }
 export const migrarV1 = d => d;
 export function resumen(d) {
@@ -27,13 +30,15 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null);
   if (c0 && [1, 2, 3].includes(c0.rivales) && C.NIVEL[c0.nivel] && C.LIMITES.includes(c0.limite) && C.CIERRES.includes(c0.cierre)) cfg = { ...c0 };
   const g = api.cargar();
-  if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
+  const modoPref = MODOS.includes(api.pref('orden', 'jugadas')) ? api.pref('orden', 'jugadas') : 'jugadas';
+  ord = { modo: modoPref, ids: [] }; arr = null;
+  if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; } else S = null;
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
-function guardar() { if (!S) return; const d = { s: S, marcador, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
+export function unmount() { if (arr) { arr.destruir(); arr = null; } clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
+function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
 function setup() {
@@ -56,6 +61,7 @@ function armar() {
         <button type="button" class="chpila" data-ac="descarte" id="chDesc" aria-label="Robar del descarte"></button>
       </div>
       <div class="chmsg" id="chMsg" role="status" aria-live="polite"></div>
+      <div class="ordbar" id="chOrd"><span>Ordenar:</span><button type="button" data-ord="jugadas">Jugadas</button><button type="button" data-ord="palo">Palo</button><button type="button" data-ord="numero">Número</button><em id="chOrdLibre">✋ a tu gusto</em></div>
       <div class="chmano" id="chMano"></div>
       <div class="chsue" id="chSue"></div>
     </div>
@@ -63,12 +69,18 @@ function armar() {
     <div id="chRec"></div>
     <ul class="chlog" id="chLog"></ul>
     <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+  montarArrastre();
+}
+function montarArrastre() {
+  if (arr) arr.destruir();
+  arr = hacerOrdenable($('#chMano'), { sel: '.chc', puede: () => !!S && S.fase !== 'recuento' && S.fase !== 'fin',
+    alSoltar: ids => { ord = { modo: 'libre', ids }; api.sonido('click'); pintar(); guardar(); } });
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   api.setPref('cfg', cfg);
   const jugadores = [{ nombre: 'Tú', cpu: false }, ...Array.from({ length: cfg.rivales }, (_, k) => ({ nombre: cfg.rivales === 1 ? 'CPU' : `CPU ${k + 1}`, cpu: true }))];
-  S = C.crear({ jugadores, nivel: cfg.nivel, limite: cfg.limite, cierre: cfg.cierre }); reg = false; sel = null; robada = -1;
+  S = C.crear({ jugadores, nivel: cfg.nivel, limite: cfg.limite, cierre: cfg.cierre }); reg = false; sel = null; robada = -1; ord = { modo: ord.modo === 'libre' ? 'jugadas' : ord.modo, ids: [] };
   armar(); pintar(); guardar(); bucle();
 }
 
@@ -98,7 +110,16 @@ function pintar() {
   const cartaMano = c => `<div class="chc ${sel === c ? 'sel' : ''} ${c === robada ? 'nueva' : ''} ${c === S.cogida ? 'bloq' : ''} ${cierra.has(c) ? 'cierra' : ''}" data-c="${c}" role="button" tabindex="0" aria-label="${nombreEs(c)}${c === S.cogida ? ' (recién cogida del descarte: no se puede tirar)' : ''}">${carta(c)}</div>`;
   const vista = S.fase === 'recuento' || S.fase === 'fin';
   $('#chMano').className = 'chmano' + (miTurno && S.fase === 'descartar' ? ' turno' : '');
-  $('#chMano').innerHTML = vista ? '' : r.ligas.map(l => `<div class="chg liga" title="${l.every(c => C.pos(c) === C.pos(l[0])) ? 'Trío / cuarteto' : 'Escalera'}">${l.map(cartaMano).join('')}</div>`).join('') + (r.sueltas.length ? `<div class="chg">${r.sueltas.map(cartaMano).join('')}</div>` : '');
+  root.querySelectorAll('#chOrd [data-ord]').forEach(b => b.classList.toggle('on', b.dataset.ord === ord.modo));
+  $('#chOrdLibre').hidden = ord.modo !== 'libre'; $('#chOrd').hidden = vista;
+  if (!(arr && arr.activo())) {                       // nunca repintar la mano mientras se arrastra una carta
+    if (vista) $('#chMano').innerHTML = '';
+    else if (ord.modo === 'jugadas') $('#chMano').innerHTML = r.ligas.map(l => `<div class="chg liga" title="${l.every(c => C.pos(c) === C.pos(l[0])) ? 'Trío / cuarteto' : 'Escalera'}">${l.map(cartaMano).join('')}</div>`).join('') + (r.sueltas.length ? `<div class="chg">${r.sueltas.map(cartaMano).join('')}</div>` : '');
+    else {
+      const enLiga = new Set(r.ligas.flat());
+      $('#chMano').innerHTML = `<div class="chg plano">${ordenarMano(yo, ord, { palo: C.palo, num: C.pos }).map(c => cartaMano(c).replace('class="chc ', `class="chc ${enLiga.has(c) ? 'enliga ' : ''}`)).join('')}</div>`;
+    }
+  }
   $('#chSue').textContent = vista ? '' : `Sueltas: ${r.puntos} punto${r.puntos === 1 ? '' : 's'} · Tienes ${S.jug[0].total} de ${S.limite}`;
   // acciones
   const desc = miTurno && S.fase === 'descartar';
@@ -203,6 +224,7 @@ function clic(e) {
   const k = e.target.closest('[data-c]'); if (k && S) return elegir(+k.dataset.c);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) { const v = d.cfg === 'nivel' ? d.v : +d.v; cfg[d.cfg] = v; return setup(); }
+  if (d.ord) { ord = { modo: d.ord, ids: [] }; api.setPref('orden', d.ord); api.sonido('click'); if (S) { pintar(); guardar(); } return; }
   const a = d.ac;
   if (a === 'start') empezar(); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
   else if (a === 'setup') { api.borrar(); setup(); }
@@ -216,6 +238,7 @@ function reglas() {
     <li><b>Jugadas</b>: tríos o cuartetos del mismo número, y escaleras de 3 o más cartas seguidas del mismo palo (el 7 va seguido de la sota). Tu mano se ordena sola mostrando tus jugadas.</li>
     <li>En tu turno <b>robas</b> una carta (del mazo o la de arriba del descarte) y <b>tiras</b> una. No puedes tirar la carta que acabas de coger del descarte.</li>
     <li>Toca una carta para elegirla y pulsa 🗑️ Tirar (o tócala otra vez).</li>
+    <li><b>Ordenar tu mano</b>: «Jugadas» agrupa solo tus combinaciones; «Palo» y «Número» ordenan las cartas (las que forman jugada llevan una marca verde). También puedes <b>arrastrar</b> cualquier carta para colocarla donde quieras.</li>
     <li><b>Cerrar</b>: al tirar, si las cartas que no forman jugada suman ${S ? S.cierre : cfg.cierre} o menos, puedes cerrar la mano. Las cartas con las que se puede cerrar se marcan en verde. Cerrar sin ninguna suelta <b>resta 10 puntos</b>.</li>
     <li>Al cerrar, los demás enseñan sus cartas: las que no forman jugada suman puntos (del 1 al 7 su valor; sota, caballo y rey, 10). Se colocan solas en las jugadas de quien cierra si encajan.</li>
     <li><b>¡Chinchón!</b>: escalera de 7 cartas del mismo palo. Gana la partida al instante.</li>
