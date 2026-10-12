@@ -18,6 +18,7 @@ export const JUEGOS = [
   { id: 'ruleta', nombre: 'Ruleta de la Suerte', icono: '🎡', color: '#F59E0B', categoria: 'palabras', descripcion: 'Gira, di consonantes, compra vocales y resuelve.', cargar: () => import('./games/ruleta/index.js') },
   { id: 'ahorcado', nombre: 'El Ahorcado', icono: '🪢', color: '#E5622B', categoria: 'palabras', descripcion: '4 niveles, 4 dibujos y pistas con definiciones.', cargar: () => import('./games/ahorcado/index.js') },
   { id: 'brisca', nombre: 'Brisca', icono: '🂡', color: '#C2410C', categoria: 'cartas', descripcion: 'Baraja española: 2, 3 o 4 jugadores en parejas.', cargar: () => import('./games/brisca/index.js') },
+  { id: 'ajedrez', nombre: 'Ajedrez', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Todas las reglas, CPU de 3 niveles o 2 jugadores.', cargar: () => import('./games/ajedrez/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: '2-4 jugadores, 450 preguntas en 9 categorías.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
 ];
