@@ -59,3 +59,4 @@
 .mrtot b{font-size:18px}
 .mslog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .mslog li:first-child{color:var(--ink);font-weight:800}
+.msc{touch-action:none}

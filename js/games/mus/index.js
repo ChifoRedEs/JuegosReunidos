@@ -2,16 +2,18 @@ import { $, esc } from '../../core/dom.js';
 import { cartaEsHTML, asegurarSprites, nombreEs } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso } from '../../core/aspectos.js';
 import * as M from './motor.js';
+import { hacerOrdenable, ordenarMano, validarOrden } from '../../core/arrastrar.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, selDesc = new Set(), dichos = {}, lanceVisto = -9, manoVista = -1;
 let cfg = { nivel: 'medio', meta: 40, juegos: 1, reyes: 8 }, marcador = { g: 0, p: 0 };
-const NOM = M.NOMBRES;
+const NOM = M.NOMBRES, MODOS = ['libre', 'palo', 'numero'];
+let ord = { modo: 'libre', ids: [] }, arr = null;
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
   const s = d && M.validar(d.s); if (!s) return null;
   const m = d.marcador && typeof d.marcador === 'object' ? d.marcador : {}, e = v => (Number.isInteger(v) && v >= 0 && v <= 99999 ? v : 0);
-  return { s, marcador: { g: e(m.g), p: e(m.p) }, reg: !!d.reg };
+  return { s, marcador: { g: e(m.g), p: e(m.p) }, reg: !!d.reg, ord: validarOrden(d.ord, MODOS) };
 }
 export const migrarV1 = d => d;
 export function resumen(d) {
@@ -28,13 +30,15 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null);
   if (c0 && M.NIVEL[c0.nivel] && M.METAS.includes(c0.meta) && M.JUEGOS.includes(c0.juegos) && M.REYES.includes(c0.reyes)) cfg = { ...c0 };
   const g = api.cargar();
-  if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
+  const modoPref = MODOS.includes(api.pref('orden', 'libre')) ? api.pref('orden', 'libre') : 'libre';
+  ord = { modo: modoPref, ids: [] }; arr = null;
+  if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; } else S = null;
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
-function guardar() { if (!S) return; const d = { s: S, marcador, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
+export function unmount() { if (arr) { arr.destruir(); arr = null; } clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
+function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
 function setup() {
@@ -56,12 +60,15 @@ function armar() {
       <div class="msmsg" id="msMsg" role="status" aria-live="polite"></div>
       <div class="msyo" id="msS0"></div>
       <div class="msmano" id="msMano"></div>
+      <div class="ordbar" id="msOrd"><span>Ordenar:</span><button type="button" data-ord="palo">Palo</button><button type="button" data-ord="numero">Número</button><em>✋ o arrástralas</em></div>
       <div class="msinfo" id="msInfo"></div>
     </div>
     <div class="bar msacc" id="msAcc"></div>
     <div id="msRec"></div>
     <ul class="mslog" id="msLog"></ul>
     <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+  if (arr) arr.destruir();
+  arr = hacerOrdenable($('#msMano'), { sel: '.msc', alSoltar: ids => { ord = { modo: 'libre', ids }; api.sonido('click'); pintar(); guardar(); } });
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
@@ -99,7 +106,9 @@ function pintar() {
   $('#msS0').innerHTML = `<span class="nom">${S.mano === 0 ? '<i class="mn" title="Eres mano">M</i>' : ''}Tú</span>${yoD.filter(Boolean).map(t => `<span class="dl">${t}</span>`).join('')}${dichos[0] ? `<span class="bocadillo">${esc(dichos[0])}</span>` : ''}`;
   const desc = S.fase === 'descarte' && !S.descSel[0];
   $('#msMano').className = 'msmano' + (desc ? ' desc' : '');
-  $('#msMano').innerHTML = S.manos[0].map(c => `<div class="msc ${selDesc.has(c) ? 'sel' : ''}" data-c="${c}" ${desc ? 'role="button" tabindex="0"' : ''} aria-label="${nombreEs(c)}${selDesc.has(c) ? ', para descartar' : ''}">${cartaEsHTML(c)}</div>`).join('');
+  root.querySelectorAll('#msOrd [data-ord]').forEach(b => b.classList.toggle('on', b.dataset.ord === ord.modo));
+  const mia = ordenarMano(S.manos[0], ord, { palo: c => c / 10 | 0, num: c => -M.fuerza(c, r) });
+  if (!(arr && arr.activo())) $('#msMano').innerHTML = mia.map(c => `<div class="msc ${selDesc.has(c) ? 'sel' : ''}" data-c="${c}" ${desc ? 'role="button" tabindex="0"' : ''} aria-label="${nombreEs(c)}${selDesc.has(c) ? ', para descartar' : ''}">${cartaEsHTML(c)}</div>`).join('');
   const sm = M.suma(S.manos[0], r);
   $('#msInfo').textContent = `Tu mano: ${M.nombrePares(S.manos[0], r)} · ${sm >= 31 ? `juego de ${sm}` : `${sm} al punto`}`;
   pintarAcciones(habla); pintarMensaje(habla); pintarRecuento();
@@ -189,6 +198,7 @@ function clic(e) {
   const k = e.target.closest('[data-c]'); if (k && S) return toggleCarta(+k.dataset.c);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) { cfg[d.cfg] = d.cfg === 'nivel' ? d.v : +d.v; return setup(); }
+  if (d.ord) { ord = { modo: ord.modo === d.ord ? 'libre' : d.ord, ids: ord.modo === d.ord ? ordenarMano(S ? S.manos[0] : [], ord, { palo: c => c / 10 | 0, num: c => -M.fuerza(c, S ? S.reyes : 8) }) : [] }; api.setPref('orden', ord.modo); api.sonido('click'); if (S) { pintar(); guardar(); } return; }
   const a = d.ac;
   if (a === 'start') empezar(); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
   else if (a === 'setup') { api.borrar(); setup(); }
@@ -210,5 +220,6 @@ function reglas() {
     <li>En cada lance puedes <b>pasar</b> o <b>envidar</b>. Si te envidan: <b>quiero</b> (se cobra al final quien gane), <b>no quiero</b> (el que envidó cobra ya 1 o lo que estaba querido antes) o <b>subir</b>. Grande y chica en paso valen 1 al ganador.</li>
     <li><b>Órdago</b>: si lo quieren, se enseñan las cartas y quien gane ese lance gana el juego entero.</li>
     <li>Con <b>8 reyes</b>, los treses cuentan como reyes y los doses como ases. Gana el juego la pareja que llegue antes a ${S ? S.meta : cfg.meta} tantos (los tantos se cuentan en orden: grande, chica, pares y juego).</li>
+    <li><b>Ordenar tus cartas</b>: «Palo» o «Número» (de mayor a menor) las ordenan; vuelve a pulsar para dejarlas como estén. También puedes <b>arrastrar</b> cualquier carta para colocarla donde quieras.</li>
     <li>En tu pareja decides tú cuando os envidan. Tu compañero (CPU) habla por su cuenta cuando le toca.</li></ul>`);
 }
