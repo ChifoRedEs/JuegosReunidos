@@ -74,5 +74,12 @@
 - El service worker guarda también las tipografías de Google Fonts (Baloo 2 y Nunito) en una caché propia (`jr-fuentes`) que no se borra al actualizar: sin conexión la app se ve igual que con internet. Si al instalar no hay conexión, la app se instala igual y las fuentes se guardan la próxima vez que se carguen.
 - `tools/generar_sw.py` incluye ahora la lógica del propio `sw.js` en la VERSION, para que cualquier cambio en el service worker llegue a los móviles.
 
+## Actualización 13: arreglo del modo sin conexión en GitHub Pages
+- **Causa del fallo**: GitHub Pages pasa la web por Jekyll, que no publica las carpetas que empiezan por «_». La plantilla `js/games/_plantilla/` estaba en la lista del service worker; al no existir en la web, la instalación sin conexión fallaba entera y los juegos no abrían sin internet.
+- Archivo `.nojekyll` en la raíz: GitHub Pages publica todo tal cual, sin Jekyll.
+- `tools/generar_sw.py` deja fuera de la lista las carpetas que empiezan por «_» o «.».
+- `sw.js` guarda los archivos uno a uno: si alguno falla, los demás se guardan igual (antes, un solo fallo cancelaba todo).
+- **Ajustes → Sin conexión**: indica cuántos juegos están guardados en el dispositivo y permite reintentar la descarga.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
