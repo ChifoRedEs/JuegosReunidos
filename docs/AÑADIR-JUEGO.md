@@ -27,3 +27,8 @@ Cualquier juego puede ofrecer 🎨 Apariencia con una línea: `asp = api.aspecto
 - `defs` = grupos `{ clave, titulo, def, opciones:[{ id, nombre, sw? }] }`. `core/aspectos.js` trae `grupoTablero()` con 4 paletas comunes.
 - El valor elegido de cada grupo se escribe como `data-<clave>` en el contenedor del juego (`.juego-<id>`), así que el estilo se hace en CSS: `.juego-miJuego[data-forma="estrella"] ...`. En JS lees `asp.valores.<clave>`.
 - Añade en tu menú `{ texto: '🎨 Apariencia', accion: () => asp.abrir() }`. En juegos hechos con `core/duelo.js` basta con pasar `aspecto: [...]` en la definición.
+
+## Teclado emergente para juegos de letras
+Si tu juego necesita escribir letras en casillas, no pongas un teclado fijo bajo el tablero: usa `core/teclado.js`.
+`const tk = crearTeclado({ filas: ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM'], borrar: true, alPulsar: l => …, titulo: '…' })`.
+Ábrelo con `tk.abrir()` al tocar una casilla; se arrastra desde su barra y se cierra con ✕. Con `tk.actualizar((letra, boton) => …)` marcas teclas usadas o desactivadas, `tk.titulo(texto)` cambia el rótulo y `tk.destruir()` va en `unmount`. Modelos: Crucigrama, El Ahorcado y Ruleta de la Suerte.

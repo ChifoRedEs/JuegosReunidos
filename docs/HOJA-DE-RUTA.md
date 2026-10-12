@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-**Hecho (16 juegos):** Sudoku, Nonogram, Buscaminas, KenKen, Damas, Parchís, 3 en raya, Conecta 4, Trivial, Sopa de letras, Crucigramas, El Ahorcado, BlackJack, Klondike, Texas Hold'em y Brisca.
+**Hecho (17 juegos):** Sudoku, Nonogram, Buscaminas, KenKen, Damas, Parchís, 3 en raya, Conecta 4, Trivial, Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, BlackJack, Klondike, Texas Hold'em y Brisca.
 
 Ideas para seguir (cada una = una carpeta nueva en `js/games/` + una línea en `registry.js`, ver `AÑADIR-JUEGO.md`):
 1. Wordle en español, Mastermind, Hundir la flota, 2048, Ahorcado.

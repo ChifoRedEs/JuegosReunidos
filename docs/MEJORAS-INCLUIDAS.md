@@ -46,5 +46,12 @@
 - **El Ahorcado** (Palabras): 4 niveles con distinto número de fallos, palabras cotidianas (Fácil y Medio) o vocabulario culto del PDF (Difícil y Experto) con la definición como pista, 4 dibujos (clásico, robot, globos y flor) y 7 + 9 temas.
 - **Trivial** (Tablero): 2 a 4 jugadores (personas o CPU), tablero circular con casillas de quesito y «tira otra vez», 6 o 9 categorías, respuestas con 4 opciones o escritas (tolerantes con tildes y erratas), pregunta final en el centro. Las 450 preguntas salen de las definiciones del PDF aportado (`js/core/definiciones.js`).
 
+## Actualización 7: Ruleta de la Suerte y mejoras de juego
+- **Ruleta de la Suerte** (Palabras): de 1 a 3 jugadores (personas o CPU con 3 niveles), 3, 4 o 5 rondas y 116 paneles en 10 categorías. Ruleta animada con Quiebra y Pierde turno, consonantes con premio, vocales a 250 €, y para resolver se escriben las letras que faltan directamente en las casillas del panel. Partida guardada, estadísticas y 🎨 Apariencia (colores del panel y de la ruleta).
+- **Teclado emergente** (`core/teclado.js`) en Crucigramas, El Ahorcado y Ruleta: ya no hay teclado fijo bajo el tablero. Aparece al tocar las casillas, se arrastra por la pantalla desde su barra, se cierra con ✕ y recuerda su posición.
+- **Trivial · ronda final**: con todos los quesitos, en el centro hay que acertar una pregunta de cada categoría seguidas y sin fallar (con indicador de progreso). Si fallas una, pasa el turno y en tu siguiente turno empiezas de nuevo.
+- **Klondike · analizador plegado**: el analizador «Camino abierto» pasa a una burbuja en la esquina con el porcentaje; al tocarla se abre a tamaño normal. Si una jugada cierra el camino, avisa.
+- **Klondike · auto-relleno**: cuando no quedan cartas boca abajo y el resto puede subir solo, las cartas van a las bases y la partida termina sola (automático o con botón, en ⚙️).
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
