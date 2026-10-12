@@ -70,5 +70,9 @@
 - **Mus**: Ordenar por *Palo* o *Número* (de mayor a menor) y arrastre libre.
 - El orden elegido se guarda con la partida y el modo preferido se recuerda para las siguientes.
 
+## Actualización 12: tipografías sin conexión
+- El service worker guarda también las tipografías de Google Fonts (Baloo 2 y Nunito) en una caché propia (`jr-fuentes`) que no se borra al actualizar: sin conexión la app se ve igual que con internet. Si al instalar no hay conexión, la app se instala igual y las fuentes se guardan la próxima vez que se carguen.
+- `tools/generar_sw.py` incluye ahora la lógica del propio `sw.js` en la VERSION, para que cualquier cambio en el service worker llegue a los móviles.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
