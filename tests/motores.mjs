@@ -29,6 +29,7 @@ import * as AX from '../js/games/ajedrez/reglas.js';
 import * as CH from '../js/games/chinchon/motor.js';
 import * as MU from '../js/games/mus/motor.js';
 import * as FL from '../js/games/flota/motor.js';
+import * as RM from '../js/games/rummy/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -220,6 +221,19 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     assert.equal(T.fase, 'fin'); assert.ok(FL.quedan(T, 1 - T.ganador).length === 0); }
   const D = FL.crear({ modo: 'dos', flota: 'rapida' }); FL.alAzar(D, 0); FL.listo(D, 0); assert.equal(D.fase, 'pasar'); FL.continuar(D); assert.equal(D.colocando, 1); FL.alAzar(D, 1); FL.listo(D, 1); FL.continuar(D); assert.equal(D.fase, 'jugar');
   ok('Hundir la Flota: colocación sin tocarse, 3 flotas, IA, pasar el móvil y partidas completas'); }
+// ---- Rummy de fichas ----
+{ const f = (c, n, k = 0) => k * 52 + c * 13 + n - 1;
+  assert.equal(RM.analizar([f(0, 5), f(1, 5), f(2, 5)]).tipo, 'grupo'); assert.ok(!RM.valida([f(0, 5), f(0, 5, 1), f(2, 5)]));
+  assert.deepEqual(RM.analizar([f(3, 12), f(3, 13), 104]).orden, [104, f(3, 12), f(3, 13)]); assert.ok(!RM.valida([f(3, 13), f(3, 1), f(3, 2)]));
+  const S = RM.crear({ jugadores: [{ nombre: 'A' }, { nombre: 'B' }] }); S.turno = 0; S.mesa = [];
+  S.jug[0].fichas = [f(0, 1), f(0, 2), f(0, 3), f(1, 10), f(2, 10), f(3, 10), f(0, 7)];
+  assert.match(RM.comprobar(S, 0, [[f(0, 1), f(0, 2), f(0, 3)]], [f(1, 10), f(2, 10), f(3, 10), f(0, 7)]), /30/);            // 6 puntos: no llega
+  assert.equal(RM.comprobar(S, 0, [[f(0, 1), f(0, 2), f(0, 3)], [f(1, 10), f(2, 10), f(3, 10)]], [f(0, 7)]), '');            // 6 + 30 = 36: vale
+  assert.match(RM.comprobar(S, 0, [[f(0, 1), f(0, 2)], [f(1, 10), f(2, 10), f(3, 10)]], [f(0, 3), f(0, 7)]), /no válidas/);   // jugada de 2 fichas
+  for (let g = 0; g < 30; g++) { const T = RM.crear({ jugadores: Array.from({ length: 2 + g % 3 }, (_, k) => ({ nombre: 'J' + k, cpu: true })), nivel: ['facil', 'medio', 'dificil'][g % 3] }); let k = 0;
+    while (T.fase === 'jugar' && k++ < 3000) { const p = T.turno, s = RM.sugerir(T, p); if (s) assert.equal(RM.jugar(T, p, s.mesa, s.mano), ''); else assert.ok(RM.robar(T, p)); assert.ok(RM.validar(JSON.parse(JSON.stringify(T)))); }
+    assert.equal(T.fase, 'fin'); }
+  ok('Rummy de fichas: grupos, escaleras con comodín, bajada de 30 y partidas completas de 2 a 4 jugadores'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

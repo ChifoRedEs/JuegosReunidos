@@ -84,5 +84,8 @@
 ## Actualización 14: Hundir la Flota
 - **Hundir la Flota** (Tablero): contra la CPU (3 niveles; la difícil calcula la probabilidad de cada casilla) o 2 jugadores en el mismo móvil con pantalla para pasarlo sin ver la flota del otro. Flotas Española (10 barcos), Internacional (5) y Rápida (8×8); barcos que se tocan o no (con agua marcada sola alrededor de los hundidos) y repetir disparo al acertar. Colocación tocando y girando, recolocar tocando un barco, o al azar. Pista sin trampas, barcos restantes de cada bando, efectos de agua/tocado/hundido, revancha, marcador, estadísticas y partida guardada. 🎨 4 colores de mar y 3 de barcos.
 
+## Actualización 15: Rummy de fichas
+- **Rummy de fichas** (Tablero, las reglas del clásico de fichas numeradas): 106 fichas con 2 comodines, tú contra 1–3 CPU en 3 niveles. Grupos y escaleras con comodín en cualquier hueco, primera bajada de 30 puntos solo con fichas propias y reorganización libre de la mesa (se valida al terminar el turno; las jugadas incorrectas se marcan en rojo). Mover tocando fichas (varias a la vez) y su destino, deshacer cambios del turno, atril ordenable por color o número y con arrastre, 💡 Sugerir jugada, fichas nuevas de la CPU resaltadas, recuento final, marcador y estadísticas. La CPU difícil parte escaleras y aprovecha fichas sobrantes de la mesa.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
