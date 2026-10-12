@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-ae38a943f9';
+const VERSION = 'jr-d1db64edde';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -19,6 +19,7 @@ const ARCHIVOS = [
 './js/core/aspectos.js',
 './js/core/cartas.js',
 './js/core/cronometro.js',
+'./js/core/definiciones.js',
 './js/core/dom.js',
 './js/core/duelo.js',
 './js/core/sonido.js',
@@ -27,9 +28,17 @@ const ARCHIVOS = [
 './js/core/undo.js',
 './js/core/ia/minimax.js',
 './js/games/_plantilla/index.js',
+'./js/games/ahorcado/ahorcado.css',
+'./js/games/ahorcado/dibujos.js',
+'./js/games/ahorcado/index.js',
+'./js/games/ahorcado/palabras.js',
 './js/games/blackjack/blackjack.css',
 './js/games/blackjack/index.js',
 './js/games/blackjack/motor.js',
+'./js/games/brisca/brisca.css',
+'./js/games/brisca/ia.js',
+'./js/games/brisca/index.js',
+'./js/games/brisca/motor.js',
 './js/games/buscaminas/buscaminas.css',
 './js/games/buscaminas/index.js',
 './js/games/buscaminas/motor.js',
@@ -47,6 +56,9 @@ const ARCHIVOS = [
 './js/games/holdem/holdem.css',
 './js/games/holdem/index.js',
 './js/games/holdem/motor.js',
+'./js/games/kenken/generador.js',
+'./js/games/kenken/index.js',
+'./js/games/kenken/kenken.css',
 './js/games/klondike/index.js',
 './js/games/klondike/klondike.css',
 './js/games/klondike/motor.js',
@@ -68,7 +80,10 @@ const ARCHIVOS = [
 './js/games/sudoku/sudoku.css',
 './js/games/tresenraya/index.js',
 './js/games/tresenraya/reglas.js',
-'./js/games/tresenraya/tresenraya.css'
+'./js/games/tresenraya/tresenraya.css',
+'./js/games/trivial/index.js',
+'./js/games/trivial/motor.js',
+'./js/games/trivial/trivial.css'
 /*ARCHIVOS-FIN*/
 ];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())); });
