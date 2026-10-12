@@ -21,10 +21,11 @@ for base, dirs, files in os.walk(RAIZ):
 h = hashlib.sha1()
 for a in archivos:
     h.update(a.encode()); h.update(open(os.path.join(RAIZ, a), 'rb').read())
-version = 'jr-' + h.hexdigest()[:10]
-
 ruta = os.path.join(RAIZ, 'sw.js')
 s = open(ruta, encoding='utf-8').read()
+# La lógica del propio sw.js también cuenta (sin la lista ni la versión), para que un cambio en él genere versión nueva.
+h.update(re.sub(r"/\*ARCHIVOS-INICIO\*/.*?/\*ARCHIVOS-FIN\*/|const VERSION = '[^']*';", '', s, flags=re.S).encode())
+version = 'jr-' + h.hexdigest()[:10]
 lista = ',\n'.join("'./%s'" % a for a in archivos)
 s = re.sub(r"/\*ARCHIVOS-INICIO\*/.*?/\*ARCHIVOS-FIN\*/", "/*ARCHIVOS-INICIO*/\n'./',\n%s\n/*ARCHIVOS-FIN*/" % lista, s, flags=re.S)
 s = re.sub(r"const VERSION = '[^']*';", "const VERSION = '%s';" % version, s)
