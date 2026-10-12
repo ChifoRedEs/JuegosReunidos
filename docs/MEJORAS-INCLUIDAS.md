@@ -40,5 +40,11 @@
 - **BlackJack**: el blackjack paga 3 a 2 (+150 %) y la victoria normal +100 %; ahora se ve en pantalla (importe en cada mano, brillo dorado y aviso de pago) y en las reglas.
 - **Klondike**: casilla extra «Libre» a la izquierda de las columnas (admite cualquier carta o grupo cuando está vacía; opcional), analizador que indica si el camino sigue abierto o cerrado y porcentaje de acierto de tus jugadas.
 
+## Actualización 6: cuatro juegos nuevos
+- **KenKen** (Lógica): paneles de 3×3 a 7×7 en 4 dificultades (Fácil, Medio, Difícil, Experto) con solución única garantizada; notas, deshacer, comprobar, pistas, jaulas con bordes o de colores y errores al instante opcionales.
+- **Brisca** (Cartas): baraja española dibujada con SVG; 2 jugadores, 3 jugadores o 4 en parejas contra la CPU; 3 niveles (Fácil, Medio y Difícil, que simula el resto de la partida con las cartas aún no vistas); cambio opcional del 7 del triunfo; marcador de manos.
+- **El Ahorcado** (Palabras): 4 niveles con distinto número de fallos, palabras cotidianas (Fácil y Medio) o vocabulario culto del PDF (Difícil y Experto) con la definición como pista, 4 dibujos (clásico, robot, globos y flor) y 7 + 9 temas.
+- **Trivial** (Tablero): 2 a 4 jugadores (personas o CPU), tablero circular con casillas de quesito y «tira otra vez», 6 o 9 categorías, respuestas con 4 opciones o escritas (tolerantes con tildes y erratas), pregunta final en el centro. Las 450 preguntas salen de las definiciones del PDF aportado (`js/core/definiciones.js`).
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
