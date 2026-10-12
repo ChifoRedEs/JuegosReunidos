@@ -27,6 +27,21 @@ nav a.on{color:var(--purple);background:color-mix(in srgb,var(--purple) 14%,tran
 /* inicio: fichas de juego a todo color */
 .cat{display:flex;align-items:center;gap:8px;font-size:21px;margin:22px 2px 10px;color:var(--ink)}
 .cat::before{content:"";width:7px;height:22px;border-radius:5px;background:linear-gradient(var(--purple),var(--blue))}
+/* categorías plegables del Inicio */
+.catd{background:var(--card);border:2px solid var(--line);border-radius:20px;margin:10px 0;box-shadow:0 4px 12px rgba(60,40,200,.07);overflow:hidden}
+.catd[open]{border-color:color-mix(in srgb,var(--purple) 45%,var(--line))}
+.catd>summary.cat{list-style:none;cursor:pointer;margin:0;padding:12px 14px;min-height:56px;font-family:'Baloo 2',system-ui,sans-serif;font-weight:800;user-select:none;-webkit-user-select:none}
+.catd>summary.cat::-webkit-details-marker{display:none}
+.catd>summary.cat::before{display:none}
+.catd>summary.cat::after{content:"›";margin-left:4px;font-size:26px;line-height:1;color:var(--mut);transition:transform .2s}
+.catd[open]>summary.cat::after{transform:rotate(90deg);color:var(--purple)}
+.cico{width:36px;height:36px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--purple) 22%,transparent),color-mix(in srgb,var(--blue) 22%,transparent));flex:none}
+.cnom{flex:1}
+.cact{font:800 11.5px Nunito,sans-serif;color:#fff;background:var(--ok);padding:3px 9px;border-radius:99px}
+.cnum{font:800 13px Nunito,sans-serif;color:var(--mut);background:var(--bg);border:1px solid var(--line);min-width:28px;text-align:center;padding:2px 8px;border-radius:99px}
+.catd>.rejilla{padding:2px 12px 14px}
+.catd[open]>.rejilla{animation:catab .22s ease-out}
+@keyframes catab{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .rejilla{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .ficha{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:3px;min-height:132px;padding:14px;border-radius:22px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 78%,#fff),var(--c) 70%);box-shadow:0 8px 18px color-mix(in srgb,var(--c) 45%,transparent)}
 .ficha::after{content:"";position:absolute;right:-26px;top:-26px;width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.17)}
