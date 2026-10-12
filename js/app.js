@@ -177,6 +177,20 @@ function vStats() {
 
 /* ---------- ajustes y copia de seguridad ---------- */
 let msgAj = { t: '', err: false };
+// Ajustes → «Sin conexión»: cuántos juegos están guardados en el móvil para jugar sin internet.
+async function estadoSinConexion() {
+  const el = $('#gOff'), bar = $('#gOffBar'); if (!el) return;
+  if (!('serviceWorker' in navigator) || !('caches' in window)) { el.textContent = '⚠️ Este navegador no permite jugar sin conexión.'; return; }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const listos = (await Promise.all(JUEGOS.map(j => caches.match(new URL(`js/games/${j.id}/index.js`, location.href).href)))).filter(Boolean).length;
+    if (!$('#gOff')) return;
+    const activo = !!(reg && reg.active);
+    if (activo && listos === JUEGOS.length) { el.textContent = `✅ Lista para jugar sin conexión: los ${JUEGOS.length} juegos están guardados en este dispositivo.`; bar.hidden = true; }
+    else if (activo && listos) { el.textContent = `⚠️ Solo ${listos} de ${JUEGOS.length} juegos están guardados. Con internet, pulsa «Volver a intentarlo».`; bar.hidden = false; }
+    else { el.textContent = reg && (reg.installing || reg.waiting) ? '⏳ Guardando los juegos para usarlos sin conexión… espera unos segundos.' : '⚠️ El modo sin conexión aún no está listo. Abre la app con internet y pulsa «Volver a intentarlo».'; bar.hidden = false; if (reg && (reg.installing || reg.waiting)) setTimeout(estadoSinConexion, 3000); }
+  } catch { el.textContent = '⚠️ No se pudo comprobar el modo sin conexión.'; }
+}
 function vAjustes() {
   tit.textContent = 'Ajustes';
   const A = aj.ajustes();
@@ -192,10 +206,17 @@ function vAjustes() {
       <label class="btn file">Importar .json<input type="file" id="gImp" accept=".json,application/json"></label>
       <button class="btn danger" id="gBor">Borrar partidas</button></div>
     <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
-  <div class="panel"><h3>Acerca de</h3><p class="note">Juegos Reunidos · versión 2.0. Funciona sin conexión una vez cargada${matchMedia('(display-mode: standalone)').matches ? '' : '; puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p></div>`;
+  <div class="panel"><h3>Sin conexión</h3><p class="note" id="gOff" role="status">Comprobando…</p><div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
+  <div class="panel"><h3>Acerca de</h3><p class="note">Juegos Reunidos · versión 2.0${matchMedia('(display-mode: standalone)').matches ? '' : '; puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p></div>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); vAjustes();
   }));
+  estadoSinConexion();
+  $('#gOffRe').addEventListener('click', async () => {
+    $('#gOff').textContent = 'Descargando los juegos… deja la app abierta unos segundos.';
+    try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); else await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }); } catch { /* sin red */ }
+    setTimeout(estadoSinConexion, 4000);
+  });
   $('#gExp').addEventListener('click', exportar);
   $('#gBor').addEventListener('click', () => {
     if (!confirm('¿Borrar todas las partidas guardadas en este navegador? (Las estadísticas se conservan.)')) return;
