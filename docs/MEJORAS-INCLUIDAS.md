@@ -61,5 +61,8 @@
 ## Actualización 9: Chinchón
 - **Chinchón** (Cartas): baraja española de 40 cartas, tú contra 1, 2 o 3 CPU en 3 niveles. Tríos, cuartetos y escaleras (el 7 enlaza con la sota); la mano se ordena sola en jugadas y muestra los puntos sueltos. Robar del mazo o del descarte (sin poder tirar la carta recién cogida), cerrar con 3 o 5 puntos sueltos como máximo (−10 si cierras sin sueltas), las cartas de los demás se colocan solas en las jugadas de quien cierra, ¡chinchón! (escalera de 7) gana la partida, eliminación al pasar de 50 o 100 puntos y mano nula si el mazo se agota dos veces. Recuento visual de cada mano, marcador, estadísticas y partida guardada.
 
+## Actualización 10: Mus
+- **Mus** (Cartas): por parejas, tú y tu compañero CPU contra dos CPU (3 niveles). Fase de mus con descartes, lances de Grande, Chica, Pares (par, medias, duples) y Juego (31, 32, 40, 37…) o Punto, envites con paso, envido, subir, quiero, no quiero y órdago. Los tantos se cuentan en orden y el juego acaba en cuanto una pareja llega a la meta. Opciones: a 30 o 40 tantos, un juego o al mejor de 3, 8 o 4 reyes. La CPU estima sus opciones simulando manos posibles y respeta lo que cada uno ha declarado en pares y juego. Recuento con las cartas de todos, marcador, estadísticas y partida guardada.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
