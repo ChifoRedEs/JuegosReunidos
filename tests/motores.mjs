@@ -25,6 +25,7 @@ import * as TV from '../js/games/trivial/motor.js';
 import { candidatas as candAh, NIVELES as NAh } from '../js/games/ahorcado/palabras.js';
 import { BLOQUES } from '../js/core/definiciones.js';
 import * as RL from '../js/games/ruleta/motor.js';
+import * as AX from '../js/games/ajedrez/reglas.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -167,6 +168,17 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
   assert.equal(RL.caer(S, 0), 300); assert.equal(RL.pedir(S, 'Z'), 1); assert.equal(S.jug[0].banco, 300); assert.equal(RL.pedir(S, 'P'), -1);
   assert.ok(RL.resolver(S, 'pez PAYASO')); assert.equal(S.jug[0].total, 300); assert.equal(S.fase, 'ronda');
   ok('Ruleta: 300 partidas completas de CPU, premios, vocales, resolver y validación'); }
+// ---- Ajedrez ----
+{ const casos = [[null, 4, 197281], ['r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1', 3, 97862], ['8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1', 4, 43238],
+    ['r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1', 3, 9467], ['rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8', 3, 62379]];
+  for (const [fen, d, n] of casos) assert.equal(AX.perft(fen ? AX.desdeFEN(fen) : AX.estadoInicial(), d), n);
+  let e = AX.estadoInicial(); for (const s of ['f3', 'e5', 'g4', 'Dh4#']) { const m = AX.jugadas(e).find(x => AX.aplicar(e, x).san.at(-1) === s); assert.ok(m != null, s); e = AX.aplicar(e, m); }
+  assert.deepEqual(e.fin, { w: 2, motivo: 'Jaque mate' }); assert.ok(AX.validarEstado(JSON.parse(JSON.stringify(e))));
+  { const p = AX.desdeFEN('k7/8/8/2Q5/8/8/8/7K w - - 0 1'), ah = AX.aplicar(p, AX.jugadas(p).find(m => AX.de(m) === 26 && AX.a(m) === 10)); assert.equal(ah.fin.motivo, 'Rey ahogado'); assert.equal(ah.fin.w, 0); }
+  assert.equal(AX.aplicar(AX.desdeFEN('6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1'), AX.ia(AX.desdeFEN('6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1'), 'clasico', 'medio')).fin.motivo, 'Jaque mate');
+  assert.ok(AX.materialInsuficiente(AX.desdeFEN('8/8/4k3/8/8/2B5/4K3/8 w - - 0 1').b));
+  for (let i = 0; i < 4; i++) { let g = AX.estadoInicial(), k = 0; while (!g.fin && k++ < 400) g = AX.aplicar(g, AX.ia(g, 'clasico', 'facil')); assert.ok(AX.validarEstado(JSON.parse(JSON.stringify(g)))); }
+  ok('Ajedrez: perft en 5 posiciones de referencia, mate, ahogado, material insuficiente, IA y partidas completas'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
