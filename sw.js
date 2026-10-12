@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-dae92e3900';
+const VERSION = 'jr-ce62aee798';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -29,7 +29,6 @@ const ARCHIVOS = [
 './js/core/teclado.js',
 './js/core/undo.js',
 './js/core/ia/minimax.js',
-'./js/games/_plantilla/index.js',
 './js/games/ahorcado/ahorcado.css',
 './js/games/ahorcado/dibujos.js',
 './js/games/ahorcado/index.js',
@@ -114,11 +113,25 @@ async function guardarFuentes() {                 // descarga la hoja de estilos
   await Promise.all(urls.map(u => c.match(u).then(ya => ya || fetch(u).then(r => (r.ok ? c.put(u, r) : null)))));
 }
 
+// Guarda los archivos uno a uno: si alguno falla (por ejemplo, uno que no se ha subido a GitHub), los demás se guardan igual
+// y la app sigue funcionando sin conexión. (Con addAll, un solo fallo cancelaba la instalación entera.)
+async function guardarApp() {
+  const c = await caches.open(VERSION);
+  const r = await Promise.allSettled(ARCHIVOS.map(async u => {
+    const res = await fetch(new Request(u, { cache: 'reload' }));
+    if (!res.ok) throw new Error(u + ' → ' + res.status);
+    await c.put(u, res);
+  }));
+  const fallos = r.filter(x => x.status === 'rejected');
+  if (fallos.length) console.warn('Sin conexión no estarán disponibles:', fallos.map(x => x.reason && x.reason.message));
+  if (fallos.length > ARCHIVOS.length / 2) throw new Error('Demasiados archivos fallidos: se reintentará');   // probablemente sin red
+}
+
 // cache: 'reload' obliga a bajar cada archivo del servidor: sin esto, la caché HTTP del navegador (GitHub Pages guarda ~10 min)
 // podía meter archivos ANTIGUOS en la versión nueva y los cambios no se veían.
 self.addEventListener('install', e => {
   e.waitUntil(Promise.all([
-    caches.open(VERSION).then(c => c.addAll(ARCHIVOS.map(u => new Request(u, { cache: 'reload' })))),
+    guardarApp(),
     guardarFuentes().catch(() => {}),             // sin conexión o si Google falla, la app se instala igual
   ]).then(() => self.skipWaiting()));
 });
