@@ -134,13 +134,28 @@ function ficha(j) {
   const sub = curso ? 'Continuar · ' + esc(e.resumen) : e && e.fin && e.resumen ? esc(e.resumen) : esc(j.descripcion);
   return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${sub}</small></a>`;
 }
+// Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
+const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤' };
 function vInicio() {
   tit.textContent = 'Juegos Reunidos';
-  const grupos = Object.entries(CATEGORIAS).map(([k, n]) => {
+  const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
+  let abierta = store.leer('inicio:cat', null);
+  if (abierta !== '' && !cats.some(([k]) => k === abierta)) abierta = cats.length ? cats[0][0] : '';
+  const grupos = cats.map(([k, n]) => {
     const js = JUEGOS.filter(j => j.categoria === k);
-    return js.length ? `<section><h2 class="cat">${n}</h2><div class="rejilla">${js.map(ficha).join('')}</div></section>` : '';
+    const enCurso = js.filter(j => { const e = store.getJuego(j.id); return e && !e.fin && e.resumen; }).length;
+    return `<details class="catd" name="categorias" data-cat="${k}" ${k === abierta ? 'open' : ''}>
+      <summary class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${n}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}<span class="cnum">${js.length}</span></summary>
+      <div class="rejilla">${js.map(ficha).join('')}</div></details>`;
   }).join('');
   app.innerHTML = grupos + (PROXIMAMENTE.length ? `<div class="soon">Próximamente: ${PROXIMAMENTE.map(esc).join(' · ')}.</div>` : '');
+  app.querySelectorAll('details.catd').forEach(d => d.addEventListener('toggle', () => {
+    if (d.open) {
+      app.querySelectorAll('details.catd[open]').forEach(o => { if (o !== d) o.open = false; });   // por si el navegador no admite name=""
+      store.escribir('inicio:cat', d.dataset.cat);
+      requestAnimationFrame(() => d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+    } else if (!app.querySelector('details.catd[open]')) store.escribir('inicio:cat', '');
+  }));
 }
 
 /* ---------- estadísticas ---------- */
