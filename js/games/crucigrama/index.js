@@ -3,10 +3,11 @@ import { Cronometro } from '../../core/cronometro.js';
 import { grupoTablero } from '../../core/aspectos.js';
 import { BANCOS } from './pistas.js';
 import { NIVELES, generar, numerar, celdasDe } from './generador.js';
+import { crearTeclado } from '../../core/teclado.js';
 
 const LVL = { mini: 'Mini', facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', experto: 'Experto' };
 const FILAS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
-let S = null, api = null, asp = null, root = null, crono = null, ocupado = false, cel = [], info = null, onKey = null, malas = new Set();
+let S = null, api = null, asp = null, root = null, crono = null, ocupado = false, cel = [], info = null, onKey = null, malas = new Set(), tk = null;
 const temaNombre = t => t === 'mezcla' ? 'Mezcla' : BANCOS[t].nombre;
 
 /* ---------- validación / resumen ---------- */
@@ -52,9 +53,9 @@ export async function mount(r, a) {
     <div class="cwban"><button data-ac="prev" aria-label="Pista anterior">‹</button><div class="tx" id="cwPista" aria-live="polite"></div><button data-ac="next" aria-label="Pista siguiente">›</button></div>
     <div class="cwv"><div class="cwg" id="cwGrid" role="group" aria-label="Crucigrama"></div></div>
     <div class="msg" id="cwMsg" role="status" aria-live="polite"></div>
-    <div class="cwk" id="cwKeys">${FILAS.map((f, i) => `<div class="fila">${[...f].map(l => `<button data-l="${l}">${l}</button>`).join('')}${i === 2 ? '<button class="del" data-l="⌫" aria-label="Borrar">⌫</button>' : ''}</div>`).join('')}</div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Nuevo</button><button class="btn" data-ac="comprobar">✔ Comprobar</button><button class="btn" data-ac="letra">💡 Letra</button><button class="btn" data-ac="palabra">💡 Palabra</button><button class="btn" data-ac="aspecto">🎨</button></div>
+    <div class="bar"><button class="btn on" data-ac="nueva">Nuevo</button><button class="btn" data-ac="comprobar">✔ Comprobar</button><button class="btn" data-ac="letra">💡 Letra</button><button class="btn" data-ac="palabra">💡 Palabra</button><button class="btn tkabrir" data-ac="teclado" aria-label="Abrir teclado">⌨️</button><button class="btn" data-ac="aspecto">🎨</button></div>
     <details><summary>Todas las pistas</summary><div class="cwl" id="cwLista"></div></details>`;
+  tk = crearTeclado({ filas: FILAS, borrar: true, alPulsar: escribir, titulo: 'Crucigrama · escribe en la casilla' });
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
   api.menu([
@@ -77,6 +78,7 @@ export function unmount() {
   if (crono) crono.detener();
   document.removeEventListener('keydown', onKey);
   if (root) root.removeEventListener('click', clic);
+  if (tk) { tk.destruir(); tk = null; }
   S = null; crono = null; cel = []; asp = null;
 }
 function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.detener(); $('#cwCrono').textContent = fmtTiempo(S.t); }
@@ -125,6 +127,7 @@ function pintar() {
     api.registrar({ res: 'victoria', tiempo: S.t, variante: LVL[S.nivel], limpio: S.pistas === 0 });
     api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar();
   }
+  if (S.done && tk) tk.cerrar();
   cel.forEach((b, i) => {
     if (!b.dataset.i) return;
     const ii = +b.dataset.i, v = S.cur[ii];
@@ -161,7 +164,7 @@ function tocarCelda(i) {
   const p = info.porCelda[i];
   if (S.sel.i === i && p.H >= 0 && p.V >= 0) S.sel.dir = S.sel.dir === 'H' ? 'V' : 'H';
   else { S.sel.i = i; if (p[S.sel.dir] < 0) S.sel.dir = S.sel.dir === 'H' ? 'V' : 'H'; }
-  pintar();
+  tk.abrir(); pintar();
 }
 function irPista(delta) { const pos = info.orden.indexOf(palActiva()), wi = info.orden[(pos + delta + info.orden.length) % info.orden.length], x = S.palabras[wi]; const vacia = celdasDe(S.w, x).find(c => !S.cur[c]); S.sel = { i: vacia ?? x.f, dir: x.d }; pintar(); }
 function comprobar() {
@@ -189,17 +192,17 @@ function clic(e) {
   const b = e.target.closest('button'); if (!b || !S) return;
   const d = b.dataset;
   if (d.i != null && b.classList.contains('c')) return tocarCelda(+d.i);
-  if (d.l) return escribir(d.l);
-  if (d.w != null) { const x = S.palabras[+d.w]; S.sel = { i: x.f, dir: x.d }; return pintar(); }
+  if (d.w != null) { const x = S.palabras[+d.w]; S.sel = { i: x.f, dir: x.d }; if (!S.done) tk.abrir(); return pintar(); }
   if (d.tema) return nueva(d.tema, S.nivel);
   if (d.niv) return nueva(S.tema, d.niv);
   const ac = d.ac;
+  if (ac === 'teclado') { if (!S.done) tk.abrir(); return; }
   if (ac === 'nueva') nueva(S.tema, S.nivel); else if (ac === 'prev') irPista(-1); else if (ac === 'next') irPista(1);
   else if (ac === 'comprobar') comprobar(); else if (ac === 'letra') revelar('letra'); else if (ac === 'palabra') revelar('palabra'); else if (ac === 'aspecto') asp.abrir();
 }
 function reglas() {
   api.modal('Crucigrama', `<ul><li>Rellena las palabras que se cruzan usando las pistas. El número de cada casilla indica a qué pista corresponde.</li>
-    <li>Toca una casilla para elegirla; <b>tócala otra vez</b> para cambiar entre horizontal y vertical. Con ‹ › saltas de pista en pista.</li>
+    <li>Toca una casilla para elegirla y se abre el <b>teclado emergente</b>: arrástralo desde su barra a donde no estorbe y ciérralo con ✕ (también con ⌨️). <b>Tócala otra vez</b> para cambiar entre horizontal y vertical. Con ‹ › saltas de pista en pista.</li>
     <li><b>✔ Comprobar</b> marca en rojo lo que está mal. <b>💡 Letra / Palabra</b> revelan ayuda (con ayudas no cuenta el récord de tiempo).</li>
     <li>En el menú ⋯ puedes activar «Marcar errores al instante». Con el teclado: letras, Borrar, flechas y Tab.</li>
     <li>Los temas tienen definiciones propias; en 🎨 Apariencia cambias colores y letras.</li></ul>`);

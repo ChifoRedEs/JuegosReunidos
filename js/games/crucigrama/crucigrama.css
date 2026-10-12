@@ -15,11 +15,6 @@
 .cwg .c.x{background:var(--bad);color:var(--red)}
 .cwg .c.ok{color:var(--ok)}
 .cwg .c.rv{color:var(--purple)}
-.cwk{display:grid;gap:6px;margin:10px auto;width:min(100%,460px)}
-.cwk .fila{display:flex;gap:5px;justify-content:center}
-.cwk button{flex:1;max-width:44px;min-height:46px;border:2px solid var(--tb-line);border-radius:11px;background:var(--card);font:800 19px 'Baloo 2',system-ui,sans-serif;color:var(--ink);box-shadow:0 3px 0 var(--tb-line);padding:0}
-.cwk button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tb-line)}
-.cwk .del{max-width:60px;font-size:20px}
 .cwl{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;font-size:13px}
 .cwl h3{font-size:16px;margin:6px 0 4px;color:var(--mut)}
 .cwl button{display:block;width:100%;text-align:left;border:0;border-radius:10px;background:var(--card);padding:6px 8px;margin:3px 0;font-weight:700;color:var(--ink);line-height:1.25;border:2px solid transparent}
