@@ -1,11 +1,11 @@
 # Hoja de ruta
 
-**Hecho (18 juegos):** Sudoku, Nonogram, Buscaminas, KenKen, Damas, Ajedrez, Parchís, 3 en raya, Conecta 4, Trivial, Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, BlackJack, Klondike, Texas Hold'em y Brisca.
+**Hecho (19 juegos):** Sudoku, Nonogram, Buscaminas, KenKen, Damas, Ajedrez, Parchís, 3 en raya, Conecta 4, Trivial, Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, BlackJack, Klondike, Texas Hold'em, Brisca y Chinchón.
 
 Ideas para seguir (cada una = una carpeta nueva en `js/games/` + una línea en `registry.js`, ver `AÑADIR-JUEGO.md`):
 1. Wordle en español, Mastermind, Hundir la flota, 2048, Ahorcado.
 2. Reversi (usa `core/duelo.js`), Oca, Dominó.
-3. Chinchón y Mus (la baraja española y su dibujo ya están en `core/cartas.js`); Tute.
+3. Mus (la baraja española y su dibujo ya están en `core/cartas.js`); Tute.
 4. Más temas de crucigrama y de sopa de letras, y más dibujos para el Nonogram.
 5. Hundir la flota (categoría Tablero).
 

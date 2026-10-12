@@ -58,5 +58,8 @@
 - **Actualizaciones fiables**: el service worker descarga los archivos nuevos sin pasar por la caché del navegador y la app se recarga sola una vez al detectar una versión nueva.
 - **Ajedrez** (Tablero): todas las reglas (enroques, captura al paso, coronación a elección, jaque, mate, ahogado, triple repetición, 50 movimientos y material insuficiente), comprobadas con pruebas *perft* de referencia. Contra CPU en 3 niveles (alfa-beta con búsqueda de capturas) o 2 jugadores; tocar o arrastrar piezas, casillas posibles marcadas, rey en jaque en rojo, piezas capturadas con ventaja de material, lista de jugadas en notación española, abandonar, deshacer, pista y tablero girado al jugar con negras. 🎨 5 tableros y 3 juegos de colores de piezas.
 
+## Actualización 9: Chinchón
+- **Chinchón** (Cartas): baraja española de 40 cartas, tú contra 1, 2 o 3 CPU en 3 niveles. Tríos, cuartetos y escaleras (el 7 enlaza con la sota); la mano se ordena sola en jugadas y muestra los puntos sueltos. Robar del mazo o del descarte (sin poder tirar la carta recién cogida), cerrar con 3 o 5 puntos sueltos como máximo (−10 si cierras sin sueltas), las cartas de los demás se colocan solas en las jugadas de quien cierra, ¡chinchón! (escalera de 7) gana la partida, eliminación al pasar de 50 o 100 puntos y mano nula si el mazo se agota dos veces. Recuento visual de cada mano, marcador, estadísticas y partida guardada.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
