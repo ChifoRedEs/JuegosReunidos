@@ -30,6 +30,7 @@ import * as CH from '../js/games/chinchon/motor.js';
 import * as MU from '../js/games/mus/motor.js';
 import * as FL from '../js/games/flota/motor.js';
 import * as RM from '../js/games/rummy/motor.js';
+import * as OC from '../js/games/oca/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -234,6 +235,19 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     while (T.fase === 'jugar' && k++ < 3000) { const p = T.turno, s = RM.sugerir(T, p); if (s) assert.equal(RM.jugar(T, p, s.mesa, s.mano), ''); else assert.ok(RM.robar(T, p)); assert.ok(RM.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); }
   ok('Rummy de fichas: grupos, escaleras con comodín, bajada de 30 y partidas completas de 2 a 4 jugadores'); }
+// ---- Juego de la Oca ----
+{ const nuevo = (o = {}) => OC.crear({ jugadores: [{ nombre: 'A' }, { nombre: 'B' }, { nombre: 'C' }], ...o });
+  let S = nuevo(); assert.ok(OC.tirar(S, [5]).otra); assert.equal(S.jug[0].pos, 9); OC.tirar(S, [3]); assert.equal(S.jug[0].pos, 6);   // oca → 9; 12 puente → 6
+  S = nuevo(); S.jug[0].pos = 40; OC.tirar(S, [2]); assert.equal(S.jug[0].pos, 30);
+  S = nuevo(); S.jug[0].pos = 55; OC.tirar(S, [3]); assert.equal(S.jug[0].pos, 1);
+  S = nuevo(); S.jug[0].pos = 60; OC.tirar(S, [6]); assert.equal(S.jug[0].pos, 60);
+  S = nuevo(); S.jug[0].pos = 57; OC.tirar(S, [2]); assert.equal(S.fase, 'fin');
+  S = nuevo(); S.jug[0].pos = 13; OC.tirar(S, [6]); OC.tirar(S, [1]); OC.tirar(S, [1]); assert.equal(S.turno, 1);
+  S = nuevo(); S.jug[0].pos = 28; OC.tirar(S, [3]); assert.ok(S.jug[0].pozo); S.jug[1].pos = 29; OC.tirar(S, [2]); assert.ok(!S.jug[0].pozo && S.jug[1].pozo);
+  S = nuevo({ dados: 2 }); OC.tirar(S, [6, 3]); assert.equal(S.jug[0].pos, 26);
+  assert.equal(new Set(OC.ESPIRAL.map(([f, c]) => f * 8 + c)).size, 64);
+  for (let g = 0; g < 300; g++) { const T = OC.crear({ jugadores: Array.from({ length: 2 + g % 3 }, (_, k) => ({ nombre: 'J' + k, cpu: true })), dados: 1 + g % 2, pozo: g % 2 ? 'turnos' : 'rescate' }); let k = 0; while (T.fase === 'tirar' && k++ < 5000) { assert.ok(OC.tirar(T)); assert.ok(OC.validar(JSON.parse(JSON.stringify(T)))); } assert.equal(T.fase, 'fin'); }
+  ok('Juego de la Oca: ocas, puentes, dados, laberinto, muerte, rebote, posada, pozo y 300 partidas completas'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

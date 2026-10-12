@@ -87,5 +87,8 @@
 ## Actualización 15: Rummy de fichas
 - **Rummy de fichas** (Tablero, las reglas del clásico de fichas numeradas): 106 fichas con 2 comodines, tú contra 1–3 CPU en 3 niveles. Grupos y escaleras con comodín en cualquier hueco, primera bajada de 30 puntos solo con fichas propias y reorganización libre de la mesa (se valida al terminar el turno; las jugadas incorrectas se marcan en rojo). Mover tocando fichas (varias a la vez) y su destino, deshacer cambios del turno, atril ordenable por color o número y con arrastre, 💡 Sugerir jugada, fichas nuevas de la CPU resaltadas, recuento final, marcador y estadísticas. La CPU difícil parte escaleras y aprovecha fichas sobrantes de la mesa.
 
+## Actualización 16: Juego de la Oca
+- **Juego de la Oca** (Tablero): tablero clásico en espiral de 63 casillas, de 2 a 4 jugadores (personas y/o CPU), 1 o 2 dados. Ocas, puentes y dados con sus rimas («de oca a oca y tiro porque me toca»), posada, pozo (hasta que te rescaten o 2 turnos), laberinto, cárcel, muerte, llegada exacta con rebote y la primera tirada 6+3 / 5+4 con dos dados. Fichas que avanzan casilla a casilla, dados animados, sonidos, estadísticas y partida guardada. 🎨 3 tableros.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

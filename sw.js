@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-cd558ac5e2';
+const VERSION = 'jr-3f392fa17f';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -80,6 +80,9 @@ const ARCHIVOS = [
 './js/games/nonogram/index.js',
 './js/games/nonogram/nonogram.css',
 './js/games/nonogram/solver.js',
+'./js/games/oca/index.js',
+'./js/games/oca/motor.js',
+'./js/games/oca/oca.css',
 './js/games/parchis/index.js',
 './js/games/parchis/parchis.css',
 './js/games/parchis/reglas.js',
