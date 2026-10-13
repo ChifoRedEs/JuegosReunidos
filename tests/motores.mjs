@@ -34,6 +34,8 @@ import * as OC from '../js/games/oca/motor.js';
 import * as CQ from '../js/games/cinquillo/motor.js';
 import * as CN from '../js/games/continental/motor.js';
 import * as RC from '../js/games/rosco/motor.js';
+import * as EN from '../js/games/encadenadas/motor.js';
+import { silabas } from '../js/games/encadenadas/silabas.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -280,6 +282,17 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     while (T.fase === 'jugar' && k++ < 500) { const c = RC.cpuPiensa(T); RC.descontar(T, c.ms); if (T.fase !== 'jugar' || T.jug[T.turno].fin) continue; if (c.tipo === 'pasa') RC.pasapalabra(T); else RC.responder(T, c.tipo === 'ok' ? c.texto : 'zzz'); assert.ok(RC.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); }
   ok('El Rosco: 25 letras (empieza/contiene), respuestas sin tildes, pasapalabra, duelo con reloj y CPU'); }
+// ---- Encadenadas ----
+{ const casos = { casa: 'ca-sa', perro: 'pe-rro', camión: 'ca-mión', león: 'le-ón', día: 'dí-a', cielo: 'cie-lo', obstáculo: 'obs-tá-cu-lo', perspectiva: 'pers-pec-ti-va', rey: 'rey', ayer: 'a-yer', pingüino: 'pin-güi-no', biblioteca: 'bi-blio-te-ca', construir: 'cons-truir', búho: 'bú-ho', ciudad: 'ciu-dad' };
+  for (const [w, esp] of Object.entries(casos)) assert.equal(silabas(w).join('-'), esp, w);
+  assert.equal(EN.requisito('casa').req, 'sa'); assert.equal(EN.requisito('perro').req, 'ro'); assert.equal(EN.requisito('mueble').req, 'le'); assert.equal(EN.requisito('casa', 'letra').req, 'a');
+  const S = EN.crear({ modo: 'cpu' }); S.turno = 0; S.req = 'sa';
+  assert.match(EN.comprobar(S, 'perro'), /empezar/); assert.equal(EN.comprobar(S, 'sapo'), ''); assert.equal(EN.comprobar(S, 'saxofonista'), 'NO_DIC'); assert.equal(EN.comprobar(S, 'saxofonista', true), '');
+  assert.equal(EN.jugar(S, 'sapo'), ''); assert.equal(S.req, 'po'); assert.equal(S.turno, 1);
+  for (let g = 0; g < 90; g++) { const T = EN.crear({ modo: g % 4 ? 'cpu' : 'solo', nivel: ['facil', 'normal', 'dificil'][g % 3], enlace: ['silaba', 'dos', 'letra'][g % 3] }); let k = 0;
+    while (T.fase === 'jugar' && k++ < 2000) { const w = EN.cpuPalabra(T); if (w) assert.equal(EN.jugar(T, w), ''); else EN.fallar(T); assert.ok(EN.validar(JSON.parse(JSON.stringify(T)))); }
+    assert.equal(T.fase, 'fin'); }
+  ok(`Encadenadas: sílabas, enlaces (rr → r, sílabas imposibles), diccionario de ${EN.diccionario().size} palabras y partidas completas`); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

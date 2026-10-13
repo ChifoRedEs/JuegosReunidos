@@ -100,5 +100,8 @@
 ## Actualización 19: El Rosco
 - **El Rosco** (Palabras, la prueba final de los concursos de definiciones): rosco de 25 letras con «empieza por» o «contiene la», banco propio de 250 palabras con definiciones (más las del Crucigrama y, en Difícil, las del Trivial) y sin repetir palabras de roscos recientes. Contrarreloj (2:30, 3:20 o 5:00) o duelo contra la CPU con dos roscos y dos relojes: al fallar o decir pasapalabra le toca al rival. Respuesta con el teclado emergente (con teclas ✔ y ⏩), sin importar las tildes; el reloj se pausa al salir de la app. Soluciones al final, mejor marca, estadísticas y partida guardada.
 
+## Actualización 20: Encadenadas
+- **Encadenadas** (Palabras): cada palabra empieza por la última sílaba de la anterior (o la última letra / las dos últimas). Separador de sílabas del español (diptongos, hiatos, grupos consonánticos), diccionario propio de unas 2.500 palabras más las de los demás bancos, «rr» enlaza con «r» y las sílabas sin continuación se relajan a sus dos últimas letras (con aviso). Contra la CPU (la difícil busca dejarte sílabas complicadas), solo (récord de cadena) o en grupo de 2–4 personas. Tiempo por turno (15/30/60 s o sin límite), 3 vidas, teclado emergente, cadena visible con las sílabas de enlace resaltadas. Si una palabra válida no está en el diccionario, la app pregunta y la aprende.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
