@@ -94,5 +94,8 @@
 - **Cinquillo** (Cartas): baraja española de 40 cartas, tú contra 2 o 3 CPU en 3 niveles, partidas a 1, 3 o 5 manos. Empieza el 5 de oros; cada palo se abre con un 5 y crece por arriba y por abajo (7 → sota); si puedes jugar, debes hacerlo. Mesa con las cuatro filas y los huecos donde encajan tus cartas iluminados, cartas jugables marcadas en la mano, mano ordenable por palo/número y con arrastre, recuento de cada mano, marcador y estadísticas. La CPU difícil evita abrir camino a los rivales.
 - `core/arrastrar.js`: el orden libre guarda hasta 40 cartas (antes 10).
 
+## Actualización 18: Continental
+- **Continental** (Cartas): 2 barajas francesas + 4 comodines, tú contra 1–3 CPU en 3 niveles. 7 rondas de 7 a 13 cartas con los contratos clásicos (dos tríos → tres escaleras). Tríos de 3+, escaleras de 4+ con As abajo o arriba, comodines (nunca más que cartas normales). Botón ⬇️ Bajarse que elige la mejor combinación (cartas del contrato marcadas en verde), colocar cartas en cualquier jugada de la mesa desde el turno siguiente (o ✨ Colocar lo posible), no se puede tirar la carta recién cogida del descarte. Puntuación (2–9 su valor, 10 y figuras 10, As 20, comodín 50), tabla de las 7 rondas, mano ordenable y con arrastre. Si el mazo se agota dos veces, la ronda termina y todos suman.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

@@ -32,6 +32,7 @@ import * as FL from '../js/games/flota/motor.js';
 import * as RM from '../js/games/rummy/motor.js';
 import * as OC from '../js/games/oca/motor.js';
 import * as CQ from '../js/games/cinquillo/motor.js';
+import * as CN from '../js/games/continental/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -258,6 +259,17 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     while (T.fase !== 'fin' && k++ < 5000) { if (T.fase === 'finRonda') { CQ.siguienteRonda(T); continue; } const c = CQ.cpuCarta(T); if (c < 0) assert.ok(CQ.pasar(T, T.turno)); else assert.ok(CQ.jugar(T, T.turno, c)); assert.ok(CQ.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); }
   ok('Cinquillo: 5 de oros obligatorio, cartas contiguas, pasar solo sin jugada y 200 partidas completas'); }
+// ---- Continental ----
+{ const c = (p, r, m = 0) => m * 52 + p * 13 + r;
+  assert.equal(CN.analizar([c(0, 4), c(1, 4), c(2, 4, 1)]).tipo, 'trio'); assert.ok(!CN.valida([c(0, 4), 104, 105]));
+  assert.equal(CN.analizar([c(1, 10), c(1, 11), c(1, 12), c(1, 0)]).inicio, 10); assert.equal(CN.analizar([c(1, 0), c(1, 1), c(1, 2), c(1, 3)]).inicio, 0); assert.ok(!CN.valida([c(1, 11), c(1, 12), c(1, 0), c(1, 1)]));
+  const mano = [c(0, 4), c(1, 4), c(2, 4), c(3, 6), c(3, 7), c(3, 8), c(3, 9), c(0, 12)], b = CN.mejorBajada(mano, CN.CONTRATOS[1]);
+  assert.ok(b && b.jugadas.length === 2); assert.deepEqual(b.resto, [c(0, 12)]); assert.equal(CN.mejorBajada(mano.slice(0, 7), CN.CONTRATOS[1]), null);
+  assert.ok(CN.mejorBajada([c(0, 1), 104, c(0, 3), c(0, 4), c(1, 6), c(1, 7), 105, c(1, 9), c(2, 9), c(2, 10), c(2, 11), c(2, 12), c(3, 0)], CN.CONTRATOS[6]));
+  for (let g = 0; g < 24; g++) { const S = CN.crear({ jugadores: Array.from({ length: 2 + g % 3 }, (_, k) => ({ nombre: 'J' + k, cpu: true })), nivel: ['facil', 'medio', 'dificil'][g % 3] }); let k = 0;
+    while (S.fase !== 'fin' && k++ < 20000) { if (S.fase === 'finRonda') { CN.siguienteRonda(S); continue; } CN.cpuTurno(S, S.turno); assert.ok(CN.validar(JSON.parse(JSON.stringify(S)))); }
+    assert.equal(S.fase, 'fin'); assert.equal(S.jug[0].rondas.length, 7); }
+  ok('Continental: tríos, escaleras con As alto/bajo y comodín, contratos, bajada óptima y partidas completas de 7 rondas'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

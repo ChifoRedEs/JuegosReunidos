@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-76b2b51c70';
+const VERSION = 'jr-68ef93e614';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -55,6 +55,9 @@ const ARCHIVOS = [
 './js/games/conecta4/conecta4.css',
 './js/games/conecta4/index.js',
 './js/games/conecta4/reglas.js',
+'./js/games/continental/continental.css',
+'./js/games/continental/index.js',
+'./js/games/continental/motor.js',
 './js/games/crucigrama/crucigrama.css',
 './js/games/crucigrama/generador.js',
 './js/games/crucigrama/index.js',
