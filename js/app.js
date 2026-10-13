@@ -50,6 +50,7 @@ function crearApi(j, ent, mod, root) {
     guardar: (datos, resumen = null, fin = false) => store.setJuego(id, datos, resumen, fin),
     borrar: () => store.borrarJuego(id),
     registrar: r => stats.registrar(id, r),
+    record: variante => stats.record(id, variante),
     pref: (k, d) => aj.pref(id, k, d), setPref: (k, v) => aj.setPref(id, k, v),
     sonido: son.play, vibrar: son.vibrar,
     confirmar: txt => window.confirm(txt),
@@ -135,7 +136,7 @@ function ficha(j) {
   return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${sub}</small></a>`;
 }
 // Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
-const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤' };
+const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio() {
   tit.textContent = 'Juegos Reunidos';
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
@@ -165,7 +166,8 @@ function vStats() {
   const cards = JUEGOS.map(j => {
     const s = T[j.id];
     if (!s || !s.partidas) return `<div class="panel"><h3>${j.icono} ${esc(j.nombre)}</h3><p class="note">Todavía sin partidas terminadas.</p></div>`;
-    const tiempos = Object.entries(s.tiempos || {}).map(([k, v]) => `<tr><td>Mejor tiempo · ${esc(k)}</td><td>${fmtTiempo(v)}</td></tr>`).join('');
+    const tiempos = Object.entries(s.tiempos || {}).map(([k, v]) => `<tr><td>Mejor tiempo · ${esc(k)}</td><td>${fmtTiempo(v)}</td></tr>`).join('')
+      + Object.entries(s.records || {}).map(([k, v]) => `<tr><td>🏆 Récord · ${esc(k)}</td><td>${v.toLocaleString('es-ES')}</td></tr>`).join('');
     return `<div class="panel"><h3>${j.icono} ${esc(j.nombre)}</h3><table class="tabla">
       <tr><td>Partidas</td><td>${s.partidas}</td></tr>
       ${s.victorias || s.derrotas || s.tablas ? `<tr><td>Victorias · derrotas · tablas</td><td>${s.victorias} · ${s.derrotas} · ${s.tablas}</td></tr><tr><td>Racha actual · mejor racha</td><td>${s.racha} · ${s.mejorRacha}</td></tr>` : ''}

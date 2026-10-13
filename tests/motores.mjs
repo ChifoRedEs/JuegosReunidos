@@ -36,6 +36,7 @@ import * as CN from '../js/games/continental/motor.js';
 import * as RC from '../js/games/rosco/motor.js';
 import * as EN from '../js/games/encadenadas/motor.js';
 import { silabas } from '../js/games/encadenadas/silabas.js';
+import * as SN from '../js/games/serpiente/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -293,6 +294,15 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     while (T.fase === 'jugar' && k++ < 2000) { const w = EN.cpuPalabra(T); if (w) assert.equal(EN.jugar(T, w), ''); else EN.fallar(T); assert.ok(EN.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); }
   ok(`Encadenadas: sílabas, enlaces (rr → r, sílabas imposibles), diccionario de ${EN.diccionario().size} palabras y partidas completas`); }
+// ---- Serpiente ----
+{ let S = SN.crear({ modo: 'clasico', tam: 'pequeno' }); const n = S.n;
+  assert.equal(SN.paso(S, 3), 'mover'); assert.equal(S.dir, 1);                                       // no gira 180°
+  S = SN.crear({ tam: 'pequeno' }); S.comida = S.serp[0] + 1; assert.equal(SN.paso(S), 'comer'); SN.paso(S); assert.equal(S.serp.length, 4);
+  S = SN.crear({ tam: 'pequeno' }); let ev; for (let k = 0; k < 20 && S.fase === 'jugar'; k++) { S.comida = 0; ev = SN.paso(S, 1); } assert.equal(S.motivo, 'pared');
+  S = SN.crear({ modo: 'libre', tam: 'pequeno' }); for (let k = 0; k < n + 2; k++) { S.comida = 0; assert.notEqual(SN.paso(S, 1), 'muerte'); }
+  S = SN.crear(); { const m = S.n; S.serp = [5 * m + 5, 5 * m + 6, 6 * m + 6, 6 * m + 5, 6 * m + 4]; S.dir = 3; S.comida = 0; assert.equal(SN.paso(S, 2), 'muerte'); assert.equal(S.motivo, 'cuerpo'); }
+  for (const modo of Object.keys(SN.MODOS)) { const T = SN.crear({ modo, tam: 'grande' }); assert.ok(!T.muros.includes(T.serp[0]) && SN.validar(JSON.parse(JSON.stringify(T)))); }
+  ok('Serpiente: giros, crecer, paredes, sin paredes, choque con el cuerpo y laberinto'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
