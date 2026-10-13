@@ -97,5 +97,8 @@
 ## Actualización 18: Continental
 - **Continental** (Cartas): 2 barajas francesas + 4 comodines, tú contra 1–3 CPU en 3 niveles. 7 rondas de 7 a 13 cartas con los contratos clásicos (dos tríos → tres escaleras). Tríos de 3+, escaleras de 4+ con As abajo o arriba, comodines (nunca más que cartas normales). Botón ⬇️ Bajarse que elige la mejor combinación (cartas del contrato marcadas en verde), colocar cartas en cualquier jugada de la mesa desde el turno siguiente (o ✨ Colocar lo posible), no se puede tirar la carta recién cogida del descarte. Puntuación (2–9 su valor, 10 y figuras 10, As 20, comodín 50), tabla de las 7 rondas, mano ordenable y con arrastre. Si el mazo se agota dos veces, la ronda termina y todos suman.
 
+## Actualización 19: El Rosco
+- **El Rosco** (Palabras, la prueba final de los concursos de definiciones): rosco de 25 letras con «empieza por» o «contiene la», banco propio de 250 palabras con definiciones (más las del Crucigrama y, en Difícil, las del Trivial) y sin repetir palabras de roscos recientes. Contrarreloj (2:30, 3:20 o 5:00) o duelo contra la CPU con dos roscos y dos relojes: al fallar o decir pasapalabra le toca al rival. Respuesta con el teclado emergente (con teclas ✔ y ⏩), sin importar las tildes; el reloj se pausa al salir de la app. Soluciones al final, mejor marca, estadísticas y partida guardada.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

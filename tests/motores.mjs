@@ -33,6 +33,7 @@ import * as RM from '../js/games/rummy/motor.js';
 import * as OC from '../js/games/oca/motor.js';
 import * as CQ from '../js/games/cinquillo/motor.js';
 import * as CN from '../js/games/continental/motor.js';
+import * as RC from '../js/games/rosco/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -270,6 +271,15 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     while (S.fase !== 'fin' && k++ < 20000) { if (S.fase === 'finRonda') { CN.siguienteRonda(S); continue; } CN.cpuTurno(S, S.turno); assert.ok(CN.validar(JSON.parse(JSON.stringify(S)))); }
     assert.equal(S.fase, 'fin'); assert.equal(S.jug[0].rondas.length, 7); }
   ok('Continental: tríos, escaleras con As alto/bajo y comodín, contratos, bajada óptima y partidas completas de 7 rondas'); }
+// ---- El Rosco ----
+{ assert.ok(RC.correcta('arbol', ['ÁRBOL'])); assert.ok(RC.correcta('nevera', ['FRIGORÍFICO', 'NEVERA'])); assert.ok(!RC.correcta('', ['A']));
+  for (const nivel of Object.keys(RC.NIVEL)) for (let i = 0; i < 60; i++) for (const l of RC.nuevoRosco(nivel)) { const w = RC.base(l.resp[0]); assert.ok(l.tipo === 'empieza' ? w[0] === l.L : w.includes(l.L), `${l.L} ${w}`); }
+  let S = RC.crear({ modo: 'solo', nivel: 'facil' }); while (S.fase === 'jugar') RC.responder(S, RC.actual(S).resp[0]); assert.equal(RC.aciertos(S.jug[0]), 25);
+  S = RC.crear({ modo: 'cpu' }); RC.responder(S, 'mal'); assert.equal(S.turno, 1);
+  for (let g = 0; g < 100; g++) { const T = RC.crear({ modo: 'cpu', nivel: ['facil', 'normal', 'dificil'][g % 3], tiempo: 150 }); let k = 0;
+    while (T.fase === 'jugar' && k++ < 500) { const c = RC.cpuPiensa(T); RC.descontar(T, c.ms); if (T.fase !== 'jugar' || T.jug[T.turno].fin) continue; if (c.tipo === 'pasa') RC.pasapalabra(T); else RC.responder(T, c.tipo === 'ok' ? c.texto : 'zzz'); assert.ok(RC.validar(JSON.parse(JSON.stringify(T)))); }
+    assert.equal(T.fase, 'fin'); }
+  ok('El Rosco: 25 letras (empieza/contiene), respuestas sin tildes, pasapalabra, duelo con reloj y CPU'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

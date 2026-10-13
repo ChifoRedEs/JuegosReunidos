@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-68ef93e614';
+const VERSION = 'jr-a101955211';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -93,6 +93,10 @@ const ARCHIVOS = [
 './js/games/parchis/parchis.css',
 './js/games/parchis/reglas.js',
 './js/games/parchis/tablero.js',
+'./js/games/rosco/index.js',
+'./js/games/rosco/motor.js',
+'./js/games/rosco/palabras.js',
+'./js/games/rosco/rosco.css',
 './js/games/ruleta/index.js',
 './js/games/ruleta/motor.js',
 './js/games/ruleta/paneles.js',

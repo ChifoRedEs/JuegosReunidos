@@ -1,6 +1,6 @@
 # Juegos Reunidos 2.0
 
-Sudoku, Nonogram, Damas, Parchís, 3 en raya, Conecta 4, Sopa de letras, Buscaminas, Crucigramas, BlackJack, Klondike, Texas Hold'em, KenKen, Brisca, El Ahorcado, Trivial, Ruleta de la Suerte, Ajedrez, Chinchón, Mus, Hundir la Flota, Rummy de fichas, Juego de la Oca, Cinquillo y Continental, con estadísticas, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
+Sudoku, Nonogram, Damas, Parchís, 3 en raya, Conecta 4, Sopa de letras, Buscaminas, Crucigramas, BlackJack, Klondike, Texas Hold'em, KenKen, Brisca, El Ahorcado, Trivial, Ruleta de la Suerte, Ajedrez, Chinchón, Mus, Hundir la Flota, Rummy de fichas, Juego de la Oca, Cinquillo, Continental y El Rosco, con estadísticas, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
 
 ## Probarla en local
 Los módulos JS **no funcionan con doble clic** (`file://`). En esta carpeta:
