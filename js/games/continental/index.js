@@ -5,7 +5,7 @@ import { hacerOrdenable, ordenarMano } from '../../core/arrastrar.js';
 import * as K from './motor.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, arr = null, sel = null, robada = -1;
-let cfg = { rivales: 2, nivel: 'medio' }, marcador = { g: 0, p: 0 }, ord = { modo: 'palo', ids: [] };
+let cfg = { rivales: 2, nivel: 'medio', comodines: true }, marcador = { g: 0, p: 0 }, ord = { modo: 'palo', ids: [] };
 const MODOS = ['palo', 'numero', 'libre'];
 const pl = (n, x) => `${n} ${x}${n === 1 ? '' : 's'}`;
 
@@ -28,7 +28,7 @@ export async function mount(r, a) {
   api = a; root = r; arr = null; sel = null; robada = -1;
   asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./continental.css', import.meta.url));
-  const c0 = api.pref('cfg', null); if (c0 && [1, 2, 3].includes(c0.rivales) && K.NIVEL[c0.nivel]) cfg = { ...c0 };
+  const c0 = api.pref('cfg', null); if (c0 && [1, 2, 3].includes(c0.rivales) && K.NIVEL[c0.nivel]) cfg = { ...c0, comodines: c0.comodines !== false };
   ord = { modo: MODOS.includes(api.pref('orden', 'palo')) ? api.pref('orden', 'palo') : 'palo', ids: [] };
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; } else S = null;
@@ -43,13 +43,15 @@ function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord }; con
 function setup() {
   S = null; clearTimeout(timer);
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  root.innerHTML = `<p class="note">Continental con dos barajas francesas y 4 comodines: 7 rondas con un <b>contrato</b> cada vez más difícil. Bájate cuando lo tengas, coloca cartas en la mesa y quédate sin cartas. Gana quien menos puntos sume al final.</p>
+  root.innerHTML = `<p class="note">Continental con dos barajas francesas y comodines opcionales: 7 rondas con un <b>contrato</b> cada vez más difícil. Bájate cuando lo tengas, coloca cartas en la mesa y quédate sin cartas. Gana quien menos puntos sume al final.</p>
     <div class="bar"><span class="lbl">Rivales</span>${seg('rivales', [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']])}</div>
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(K.NIVEL))}</div>
+    ${chkComodines()}
     <ol class="cnlista">${K.CONTRATOS.map((c, i) => `<li>${c.nombre} <small>(${K.cartasRonda(i)} cartas)</small></li>`).join('')}</ol>
     <p class="note">Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
     <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
 }
+const chkComodines = () => `<label class="chk"><input type="checkbox" data-chk="comodines" ${cfg.comodines ? 'checked' : ''}><span><b>Jugar con comodines</b>: ${K.numComodines(cfg.rivales + 1, true)} con ${cfg.rivales + 1} jugadores (3 con 2 o 3 jugadores, 4 con 4).</span></label>`;
 function armar() {
   root.innerHTML = `<div class="cntop" id="cnTop"></div>
     <div class="mesa cnm">
@@ -72,7 +74,7 @@ function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar
 function empezar() {
   api.setPref('cfg', cfg);
   const jugadores = [{ nombre: 'Tú', cpu: false }, ...Array.from({ length: cfg.rivales }, (_, k) => ({ nombre: cfg.rivales === 1 ? 'CPU' : `CPU ${k + 1}`, cpu: true }))];
-  S = K.crear({ jugadores, nivel: cfg.nivel }); reg = false; sel = null; robada = -1; ord = { modo: ord.modo === 'libre' ? 'palo' : ord.modo, ids: [] };
+  S = K.crear({ jugadores, nivel: cfg.nivel, comodines: cfg.comodines }); reg = false; sel = null; robada = -1; ord = { modo: ord.modo === 'libre' ? 'palo' : ord.modo, ids: [] };
   armar(); pintar(); guardar(); bucle();
 }
 
@@ -172,7 +174,7 @@ function bucle() {
 function cierre() {
   if (!reg) {
     reg = true; const gano = S.ganador === 0; if (gano) marcador.g++; else marcador.p++;
-    api.registrar({ res: gano ? 'victoria' : 'derrota', variante: `${S.jug.length} jugadores · ${K.NIVEL[S.nivel]}` });
+    api.registrar({ res: gano ? 'victoria' : 'derrota', variante: `${S.jug.length} jugadores · ${K.NIVEL[S.nivel]}${S.nCom ? '' : ' · sin comodines'}` });
     api.sonido(gano ? 'ganar' : 'perder'); if (gano) api.vibrar([60, 40, 60]);
   }
   pintar(); guardar();
@@ -184,6 +186,7 @@ function tecla(e) {
   const t = e.target; if (t.dataset && t.dataset.c != null) { e.preventDefault(); elegir(+t.dataset.c); } else if (t.dataset && t.dataset.col != null) { e.preventDefault(); colocarYo(+t.dataset.col); }
 }
 function clic(e) {
+  const ck = e.target.closest('input[data-chk]'); if (ck) { cfg[ck.dataset.chk] = ck.checked; return setup(); }
   const col = e.target.closest('[data-col]'); if (col && S) return colocarYo(+col.dataset.col);
   const k = e.target.closest('[data-c]'); if (k && S) return elegir(+k.dataset.c);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
@@ -198,7 +201,7 @@ function clic(e) {
   else if (a === 'siguiente') { if (K.siguienteRonda(S)) { sel = null; robada = -1; api.sonido('click'); pintar(); guardar(); bucle(); } }
 }
 function reglas() {
-  api.modal('Continental', `<ul><li>Dos barajas francesas con 4 comodines. Son <b>7 rondas</b>, cada una con un contrato y más cartas: ${K.CONTRATOS.map((c, i) => `${i + 1}) ${c.nombre.toLowerCase()} (${K.cartasRonda(i)})`).join('; ')}.</li>
+  api.modal('Continental', `<ul><li>Dos barajas francesas, con comodines si lo eliges al repartir (3 con 2 o 3 jugadores, 4 con 4). Son <b>7 rondas</b>, cada una con un contrato y más cartas: ${K.CONTRATOS.map((c, i) => `${i + 1}) ${c.nombre.toLowerCase()} (${K.cartasRonda(i)})`).join('; ')}.</li>
     <li><b>Trío</b>: 3 o más cartas del mismo número. <b>Escalera</b>: 4 o más cartas seguidas del mismo palo; el As puede ir abajo (A-2-3-4) o arriba (J-Q-K-A), pero no da la vuelta. Los comodines rellenan huecos (en cada jugada, al menos tantas cartas normales como comodines).</li>
     <li>En tu turno: <b>roba</b> del mazo o la carta de arriba del descarte, y <b>tira</b> una (no la que acabas de coger del descarte). Toca una carta para elegirla y pulsa 🗑️ Tirar, o tócala dos veces.</li>
     <li><b>Bajarse</b>: cuando tienes el contrato exacto, pulsa ⬇️ Bajarse (la app elige la mejor combinación; tus cartas del contrato se marcan en verde). Hay que quedarse al menos con una carta para tirar.</li>

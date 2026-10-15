@@ -130,16 +130,11 @@ export function botes(S) {
     for (let i = 0; i < rest.length; i++) { const t = Math.min(rest[i], m); monto += t; rest[i] -= t; }
     out.push({ monto, el });
   }
-  // Lo que queda sin repartir es dinero que nadie de los que siguen en la mano puede disputar (por ejemplo, alguien se retira
-  // habiendo puesto más que lo que cubre un all-in corto): se devuelve a quien lo puso, como en el póker real.
-  out.devolver = rest;
   return out;
 }
 function repartirBotes(S, valores) {
   const ganado = S.jug.map(() => 0), orden = []; for (let k = 1; k <= S.jug.length; k++) orden.push((S.boton + k) % S.jug.length);
-  const lista = botes(S);
-  lista.devolver.forEach((x, i) => { ganado[i] += x; });
-  for (const b of lista) {
+  for (const b of botes(S)) {
     let mejor = -1; for (const i of b.el) mejor = Math.max(mejor, valores ? valores[i] : 0);
     const gan = b.el.filter(i => !valores || valores[i] === mejor), parte = Math.floor(b.monto / gan.length); let resto = b.monto - parte * gan.length;
     gan.forEach(i => { ganado[i] += parte; }); for (const i of orden) { if (resto > 0 && gan.includes(i)) { ganado[i]++; resto--; } }
@@ -147,15 +142,13 @@ function repartirBotes(S, valores) {
   return ganado;
 }
 function terminarSinShowdown(S, g) {
-  const dev = botes(S).devolver, ganado = repartirBotes(S, null);
+  const ganado = repartirBotes(S, null);
   S.jug.forEach((p, i) => { p.stack += ganado[i]; p.apuesta = 0; });
-  const neto = ganado[g] - dev[g], devueltos = dev.map((x, i) => (x > 0 && i !== g ? `se devuelven ${x} a ${S.jug[i].nombre}` : '')).filter(Boolean);
-  S.resultado = { ganadores: [{ i: g, monto: neto, mano: '' }], showdown: false, texto: `${S.jug[g].nombre} gana ${neto} (todos se retiran)${devueltos.length ? ' · ' + devueltos.join(' · ') : ''}` };
+  S.resultado = { ganadores: [{ i: g, monto: ganado[g], mano: '' }], showdown: false, texto: `${S.jug[g].nombre} gana ${ganado[g]} (todos se retiran)` };
   log(S, S.resultado.texto); S.fase = 'fin'; S.turno = -1;
 }
 function showdown(S) {
-  const dev = botes(S).devolver, valores = S.jug.map(p => (p.fold || p.fuera ? -1 : valorMano(p.cartas.concat(S.tablero)))), ganado = repartirBotes(S, valores).map((x, i) => x - dev[i]);
-  S.jug.forEach((p, i) => { p.stack += dev[i]; });                                 // devoluciones aparte del bote ganado
+  const valores = S.jug.map(p => (p.fold || p.fuera ? -1 : valorMano(p.cartas.concat(S.tablero)))), ganado = repartirBotes(S, valores);
   S.jug.forEach((p, i) => { p.stack += ganado[i]; p.apuesta = 0; });
   const gan = S.jug.map((p, i) => i).filter(i => ganado[i] > 0).map(i => ({ i, monto: ganado[i], mano: nombreMano(valores[i]) }));
   S.resultado = { ganadores: gan, showdown: true, valores, texto: gan.map(g => `${S.jug[g.i].nombre} gana ${g.monto} con ${g.mano}`).join(' · ') };

@@ -11,7 +11,7 @@ Todo lo que pongas aquí aparece en **🎨 Apariencia** de los juegos de cartas.
 ## Nombres de archivo (respeta mayúsculas)
 - **Española** (`NN-X`): `01-O.webp` … `12-O.webp`. NN = 01–07, 10, 11, 12 (los 08 y 09 se permiten pero no se usan). X = **O** oros · **C** copas · **E** espadas · **B** bastos.
 - **Francesa** (`NN-X`): `01-P.webp` … `13-P.webp`. NN = 01 (As) … 11 (J), 12 (Q), 13 (K). X = **P** picas · **C** corazones · **D** diamantes · **T** tréboles.
-- `00.webp` dentro de un mazo = comodín (opcional; lo usa Continental).
+- `00.webp` dentro de un mazo = comodín (opcional). Lo usan Continental (francesas) y Chinchón (españolas) cuando se juega con comodines; si falta, se dibuja uno.
 - `info.json` dentro de un mazo (opcional): `{"nombre": "Mi baraja"}` cambia el nombre que se ve en la app.
 - Dorsos: cualquier nombre (`azul.webp`, `rojo.webp`…). El nombre del archivo es el que se ve; `dorsos/nombres.json` permite poner tildes.
 

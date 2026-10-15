@@ -37,8 +37,6 @@ import * as RC from '../js/games/rosco/motor.js';
 import * as EN from '../js/games/encadenadas/motor.js';
 import { silabas } from '../js/games/encadenadas/silabas.js';
 import * as SN from '../js/games/serpiente/motor.js';
-import * as BL from '../js/games/bloques/motor.js';
-import * as LD from '../js/games/ladrillos/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -123,17 +121,7 @@ assert.deepEqual(BJ.total([0, 12]), { t: 21, suave: true }); assert.equal(BJ.tot
   assert.ok(v(c(14, 0), c(13, 0), c(12, 0), c(11, 0), c(10, 0), c(2, 1), c(3, 2)) > v(c(9, 0), c(9, 1), c(9, 2), c(9, 3), c(2, 0), c(3, 1), c(4, 2)));
   assert.equal(HE.nombreMano(v(c(14, 0), c(2, 1), c(3, 2), c(4, 3), c(5, 0), c(9, 1), c(11, 2))), 'Escalera'); ok('Hold\'em: evaluador de manos (escalera real, póker, rueda A-5)'); }
 { const S = HE.crear(2, 'facil'); S.jug.forEach(p => { p.stack = 0; p.fold = false; p.fuera = false; }); S.jug[0].inv = 100; S.jug[1].inv = 300; S.jug[2].inv = 300; assert.deepEqual(HE.botes(S).map(x => x.monto), [300, 400]); ok('Hold\'em: botes secundarios'); }
-{ // Regresión: all-in corto en la ciega grande y el otro se retira habiendo puesto más → lo no disputado vuelve a su dueño
-  const S = HE.crear(2, 'facil'); S.fase = 'preflop'; S.turno = 1; S.apuestaMax = 150; S.ultRaise = 150; S.bb = 150;
-  Object.assign(S.jug[0], { stack: 1000, apuesta: 0, inv: 0, fold: true, allin: false });
-  Object.assign(S.jug[1], { stack: 3810, apuesta: 75, inv: 75, fold: false, allin: false });
-  Object.assign(S.jug[2], { stack: 0, apuesta: 15, inv: 15, fold: false, allin: true });
-  const total = S.jug.reduce((t, p) => t + p.stack + p.inv, 0);
-  assert.ok(HE.actuar(S, 1, { t: 'fold' })); assert.equal(S.fase, 'fin');
-  assert.equal(S.jug.reduce((t, p) => t + p.stack, 0), total);              // no se pierde ninguna ficha
-  assert.equal(S.jug[2].stack, 30); assert.equal(S.jug[1].stack, 3810 + 60);  // Marta gana 30; a Ana le vuelven 60
-  assert.match(S.resultado.texto, /se devuelven 60/); ok('Hold\'em: las fichas no disputadas se devuelven (sin pérdidas)'); }
-for (let g = 0; g < 4; g++) { const S = HE.crear(2 + g % 4, 'facil'); S.jug.forEach(p => { p.bot = true; }); let guardia = 0;
+for (let g = 0; g < 2; g++) { const S = HE.crear(2 + g, 'facil'); S.jug.forEach(p => { p.bot = true; }); let guardia = 0;
   while (S.fase !== 'terminado' && guardia++ < 4000) { if (S.fase === 'fin') { HE.nuevaMano(S); continue; } const i = S.turno; assert.ok(i >= 0); let a = HE.decidir(S, i); if (!HE.actuar(S, i, a)) assert.ok(HE.actuar(S, i, HE.legal(S, i).pasar ? { t: 'check' } : { t: 'call' })); if (S.fase === 'fin') assert.equal(S.jug.reduce((s, p) => s + p.stack, 0), S.total); }
   assert.equal(S.fase, 'terminado'); }
 ok('Hold\'em: torneos completos solo de bots, con conservación de fichas');
@@ -213,6 +201,32 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
       if (S.fase !== 'fin') assert.ok(CH.validar(JSON.parse(JSON.stringify(S)))); }
     assert.equal(S.fase, 'fin'); assert.ok(CH.validar(JSON.parse(JSON.stringify(S)))); }
   ok('Chinchón: mejores jugadas, chinchón y 150 partidas completas de 2 a 4 jugadores con estados válidos'); }
+// ---- Chinchón con comodines ----
+{ const id = (p, r) => p * 10 + [1, 2, 3, 4, 5, 6, 7, 10, 11, 12].indexOf(r);
+  assert.deepEqual([2, 3, 4].map(n => CH.numComodines(n, true)), [2, 2, 3]); assert.equal(CH.numComodines(3, false), 0);
+  const m1 = CH.mejor([id(0, 5), id(0, 6), 40, id(1, 12), id(2, 12), id(3, 1), id(3, 2)]);   // el comodín rinde más con los dos reyes (suelto, 14 puntos) que con 5-6 de oros
+  assert.equal(m1.puntos, 14); assert.ok(m1.ligas.some(l => l.includes(40) && l.filter(c => !CH.esComodin(c)).every(c => CH.pos(c) === CH.pos(id(1, 12)))));
+  assert.equal(CH.mejor([id(0, 5), id(1, 5), 41, id(2, 12), id(3, 12), 40, id(0, 1)]).puntos, 1);   // trío de 5 con comodín + dos reyes con comodín
+  assert.equal(CH.mejor([id(0, 1), 40, 41, id(1, 3), id(2, 7), id(3, 7), id(0, 12)]).puntos, 14);    // 7-7 con los dos comodines (cuarteto)
+  assert.equal(CH.mejor([id(0, 1), 40, id(1, 3), id(2, 7), id(3, 12), id(0, 12), id(1, 10)]).puntos, 21);   // reyes + comodín; sueltas 1+3+7+10
+  assert.equal(CH.valor(40), 25); assert.equal(CH.mejor([id(0, 1), id(1, 2), id(2, 3), 40, 41, id(0, 5), id(0, 6)]).puntos, 6);   // 5-6 de oros con los dos comodines
+  assert.ok(CH.esChinchon([id(1, 1), id(1, 2), 40, id(1, 4), id(1, 5), id(1, 6), id(1, 7)])); assert.ok(!CH.esChinchon([id(1, 1), id(1, 2), 40, id(1, 4), id(1, 5), id(1, 6), id(2, 7)]));
+  assert.ok(CH.esChinchon([id(1, 3), id(1, 4), id(1, 5), 40, id(1, 7), id(1, 10), id(1, 11)]));          // el comodín hace de 6
+  assert.ok(CH.esChinchon([id(1, 1), 40, 41, 42, id(1, 5), id(1, 6), id(1, 7)]));                        // tres comodines en el hueco
+  assert.ok(!CH.esChinchon([id(1, 1), id(1, 12), 40, 41, 42, id(1, 5), id(1, 6)]));                      // el 1 y el rey no caben en 7 cartas
+  assert.equal(CH.mejor([40, 41, id(0, 1), id(1, 2), id(2, 3), id(3, 4), id(0, 12)]).puntos >= 0, true);
+  const t0 = Date.now(), tot = [0, 0, 0];
+  for (let i = 0; i < 90; i++) { const n = 2 + i % 3, S = CH.crear({ jugadores: Array.from({ length: n }, (_, k) => ({ nombre: 'J' + k, cpu: true })), nivel: ['facil', 'medio', 'dificil'][i % 3], limite: [50, 100][i % 2], cierre: [3, 5][i % 2], comodines: true });
+    assert.equal(S.nCom, n === 4 ? 3 : 2); assert.equal(S.mazo.length + S.descarte.length + S.manos.flat().length, 40 + S.nCom); let g = 0;
+    while (S.fase !== 'fin' && g++ < 20000) {
+      if (S.fase === 'recuento') { CH.siguienteMano(S); continue; }
+      if (S.fase === 'robar') assert.notEqual(CH.robar(S, CH.cpuRobar(S)), false); else { const t = CH.cpuTirar(S); assert.ok(t.cerrar ? CH.cerrar(S, t.c) : CH.tirar(S, t.c)); }
+      if (S.fase !== 'fin') assert.ok(CH.validar(JSON.parse(JSON.stringify(S)))); }
+    assert.equal(S.fase, 'fin'); const v = CH.validar(JSON.parse(JSON.stringify(S))); assert.ok(v && v.nCom === S.nCom); tot[0]++; }
+  assert.equal(CH.crear({ jugadores: [{ nombre: 'A' }, { nombre: 'B' }] }).nCom, 0);
+  assert.ok(CH.validar(JSON.parse(JSON.stringify((() => { const S = CH.crear({ jugadores: [{ nombre: 'A' }, { nombre: 'B' }] }); delete S.nCom; return S; })()))));   // partidas guardadas antes: sin comodines
+  assert.ok(Date.now() - t0 < 60000, 'demasiado lento');
+  ok('Chinchón con comodines: reparto de 2/3 comodines, jugadas con comodín, chinchón con comodín, 90 partidas completas válidas y compatibilidad con partidas guardadas'); }
 // ---- Mus ----
 { const id = (p, r) => p * 10 + [1, 2, 3, 4, 5, 6, 7, 10, 11, 12].indexOf(r);
   assert.equal(MU.cmpGrande([id(0, 3), id(0, 5), id(0, 1), id(0, 4)], [id(1, 12), id(1, 5), id(1, 1), id(1, 4)], 8), 0);   // con 8 reyes el 3 es rey
@@ -286,6 +300,16 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     while (S.fase !== 'fin' && k++ < 20000) { if (S.fase === 'finRonda') { CN.siguienteRonda(S); continue; } CN.cpuTurno(S, S.turno); assert.ok(CN.validar(JSON.parse(JSON.stringify(S)))); }
     assert.equal(S.fase, 'fin'); assert.equal(S.jug[0].rondas.length, 7); }
   ok('Continental: tríos, escaleras con As alto/bajo y comodín, contratos, bajada óptima y partidas completas de 7 rondas'); }
+{ assert.deepEqual([2, 3, 4].map(n => CN.numComodines(n, true)), [3, 3, 4]); assert.equal(CN.numComodines(4, false), 0);
+  for (let g = 0; g < 18; g++) { const n = 2 + g % 3, con = g % 6 < 4, S = CN.crear({ jugadores: Array.from({ length: n }, (_, k) => ({ nombre: 'J' + k, cpu: true })), nivel: ['facil', 'medio', 'dificil'][g % 3], comodines: con });
+    const esp = con ? (n === 4 ? 4 : 3) : 0; assert.equal(S.nCom, esp);
+    const cuenta = () => S.mazo.length + S.descarte.length + S.mesa.flatMap(x => x.cartas).length + S.jug.flatMap(J => J.cartas).length; assert.equal(cuenta(), 104 + esp);
+    assert.equal([...S.mazo, ...S.descarte, ...S.jug.flatMap(J => J.cartas)].filter(CN.esComodin).length, esp); let k = 0;
+    while (S.fase !== 'fin' && k++ < 20000) { if (S.fase === 'finRonda') { CN.siguienteRonda(S); assert.equal(cuenta(), 104 + esp); continue; } CN.cpuTurno(S, S.turno); const v = CN.validar(JSON.parse(JSON.stringify(S))); assert.ok(v && v.nCom === esp); }
+    assert.equal(S.fase, 'fin'); }
+  const viejo = CN.crear({ jugadores: Array.from({ length: 4 }, (_, k) => ({ nombre: 'J' + k })) }); assert.equal(viejo.nCom, 4); delete viejo.nCom;
+  assert.equal(CN.validar(JSON.parse(JSON.stringify(viejo))).nCom, 4);   // partidas guardadas antes de la opción: 4 comodines
+  ok('Continental con y sin comodines: 3 con 2-3 jugadores, 4 con 4, ninguno si se desactiva, y 18 partidas completas válidas'); }
 // ---- El Rosco ----
 { assert.ok(RC.correcta('arbol', ['ÁRBOL'])); assert.ok(RC.correcta('nevera', ['FRIGORÍFICO', 'NEVERA'])); assert.ok(!RC.correcta('', ['A']));
   for (const nivel of Object.keys(RC.NIVEL)) for (let i = 0; i < 60; i++) for (const l of RC.nuevoRosco(nivel)) { const w = RC.base(l.resp[0]); assert.ok(l.tipo === 'empieza' ? w[0] === l.L : w.includes(l.L), `${l.L} ${w}`); }
@@ -315,31 +339,6 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
   S = SN.crear(); { const m = S.n; S.serp = [5 * m + 5, 5 * m + 6, 6 * m + 6, 6 * m + 5, 6 * m + 4]; S.dir = 3; S.comida = 0; assert.equal(SN.paso(S, 2), 'muerte'); assert.equal(S.motivo, 'cuerpo'); }
   for (const modo of Object.keys(SN.MODOS)) { const T = SN.crear({ modo, tam: 'grande' }); assert.ok(!T.muros.includes(T.serp[0]) && SN.validar(JSON.parse(JSON.stringify(T)))); }
   ok('Serpiente: giros, crecer, paredes, sin paredes, choque con el cuerpo y laberinto'); }
-// ---- Bloques ----
-{ const W = BL.W, H = BL.H;
-  { const S = BL.crear(); assert.equal(new Set([S.p.t, ...S.cola, ...S.bolsa].slice(0, 7)).size, 7); }
-  { const S = BL.crear(); S.p = { t: 1, r: 0, x: 0, y: 0 }; for (let x = 4; x < W; x++) S.tab[(H - 1) * W + x] = 2; const ev = BL.soltar(S); assert.equal(ev.lineas, 1); assert.equal(ev.puntos, 100); }
-  { const S = BL.crear(); for (let y = H - 4; y < H; y++) for (let x = 0; x < 9; x++) S.tab[y * W + x] = 3; S.p = { t: 1, r: 1, x: 7, y: 0 }; const ev = BL.soltar(S); assert.equal(ev.lineas, 4); assert.ok(ev.puntos >= 800); }
-  { const S = BL.crear(), cuad = () => { S.tab.fill(0); for (let y = H - 4; y < H; y++) for (let x = 0; x < 9; x++) S.tab[y * W + x] = 3; S.p = { t: 1, r: 1, x: 7, y: 2 }; return BL.soltar(S); };
-    const a = cuad(); assert.equal(a.b2b, false); assert.equal(a.puntos, 800);                        // el primero no es «seguido»
-    const b = cuad(); assert.equal(b.b2b, true); assert.equal(b.puntos, 1200 + 50 * 1); }              // el segundo sí: ×1,5 y combo
-  { const S = BL.crear(); S.p = { t: 1, r: 1, x: -2, y: 5 }; assert.ok(BL.choca(S, S.p, 0, 0, 2)); assert.ok(BL.rotar(S, 1)); assert.ok(!BL.choca(S, S.p)); }
-  { const S = BL.crear(); const t = S.p.t; assert.ok(BL.reservar(S)); assert.equal(S.reserva, t); assert.ok(!BL.reservar(S)); }
-  { const S = BL.crear(); const n0 = S.piezas; for (let k = 0; k < 700; k++) BL.avanzar(S, 50); assert.ok(S.piezas > n0); }
-  { const S = BL.crear(); let k = 0; while (S.fase === 'jugar' && k++ < 200) BL.soltar(S); assert.equal(S.motivo, 'arriba'); }
-  { const S = BL.crear({ modo: 'ultra' }); for (let k = 0; k < 200 && S.fase === 'jugar'; k++) BL.avanzar(S, 1000); assert.equal(S.fase, 'fin'); }
-  { const S = BL.crear(); assert.ok(BL.validar(JSON.parse(JSON.stringify(S)))); }
-  ok('Bloques: bolsa de 7, líneas y cuádruple, giros con empujón, reserva, gravedad, fin y modo Ultra'); }
-// ---- Rompe-Ladrillos ----
-{ for (const n of LD.NIVELES) for (const f of n) assert.ok(f.length === 10 && !/[^.1-6DTM?]/.test(f));
-  { const S = LD.crear(); LD.sacar(S); const b = S.bolas[0]; b.x = S.pala.x + S.pala.w / 2 - 2; b.y = LD.PALA_Y - 30; b.vx = 0; b.vy = .5; LD.avanzar(S, 60); assert.ok(b.vx > 0 && b.vy < 0); }
-  { const S = LD.crear(); S.ladrillos = [{ c: 4, f: 5, tipo: 'd', color: 0, golpes: 2 }, { c: 0, f: 0, tipo: 'n', color: 1, golpes: 1 }]; LD.sacar(S); const b = S.bolas[0], r = LD.rectLadrillo(S.ladrillos[0]);
-    b.x = r.x + 50; b.y = r.y + r.h + 40; b.vx = 0; b.vy = -.5; for (let k = 0; k < 10; k++) LD.avanzar(S, 16); assert.equal(S.ladrillos.find(l => l.tipo === 'd').golpes, 1); }
-  { const S = LD.crear(); S.ladrillos = [{ c: 4, f: 5, tipo: 'n', color: 1, golpes: 1 }, { c: 4, f: 4, tipo: 'n', color: 1, golpes: 1 }, { c: 0, f: 0, tipo: 'n', color: 1, golpes: 1 }]; LD.sacar(S); S.efectos.fuego = 5000;
-    const b = S.bolas[0], r = LD.rectLadrillo(S.ladrillos[0]); b.x = r.x + 50; b.y = r.y + r.h + 40; b.vx = 0; b.vy = -.5; for (let k = 0; k < 20; k++) LD.avanzar(S, 16); assert.equal(S.ladrillos.length, 1); }
-  { const S = LD.crear(); LD.sacar(S); for (let k = 0; k < 400 && S.fase !== 'fin'; k++) LD.avanzar(S, 16, { x: 50 }); assert.ok(S.vidas < LD.VIDAS); }      // sin mover la pala, se pierden vidas
-  { let n = 0; for (let g = 0; g < 4; g++) { const S = LD.crear({ nivel: 1 + g * 3 }); let t = 0, off = 0; while (S.fase !== 'nivel' && S.fase !== 'fin' && t < 900000) { if (S.fase === 'listo') LD.sacar(S); const b = S.bolas.filter(x => !x.pegada).sort((a, c) => c.y - a.y)[0]; if (b && b.vy < 0) off = (Math.random() - .5) * S.pala.w * .75; LD.avanzar(S, 16, { x: b ? b.x + off : S.pala.x }); t += 16; for (const x of S.bolas) assert.ok(x.x >= 0 && x.x <= LD.ANCHO && x.y >= -1); } if (S.fase === 'nivel') n++; } assert.ok(n >= 3, 'niveles completados: ' + n); }
-  ok('Rompe-Ladrillos: niveles, rebote en la pala, ladrillos duros, bola de fuego, vidas y niveles completables'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

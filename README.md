@@ -1,6 +1,6 @@
 # Juegos Reunidos 2.0
 
-Sudoku, Nonogram, Damas, Parchís, 3 en raya, Conecta 4, Sopa de letras, Buscaminas, Crucigramas, BlackJack, Klondike, Texas Hold'em, KenKen, Brisca, El Ahorcado, Trivial, Ruleta de la Suerte, Ajedrez, Chinchón, Mus, Hundir la Flota, Rummy de fichas, Juego de la Oca, Cinquillo, Continental, El Rosco, Encadenadas, Serpiente, Bloques y Rompe-Ladrillos, con estadísticas, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
+Sudoku, Nonogram, Damas, Parchís, 3 en raya, Conecta 4, Sopa de letras, Buscaminas, Crucigramas, BlackJack, Klondike, Texas Hold'em, KenKen, Brisca, El Ahorcado, Trivial, Ruleta de la Suerte, Ajedrez, Chinchón, Mus, Hundir la Flota, Rummy de fichas, Juego de la Oca, Cinquillo, Continental, El Rosco, Encadenadas y Serpiente, con estadísticas, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
 
 ## Probarla en local
 Los módulos JS **no funcionan con doble clic** (`file://`). En esta carpeta:
@@ -37,3 +37,7 @@ Una clave de localStorage por juego (`jr2:juego:<id>`, versión 2). Tus partidas
 En 🎨 Apariencia de los juegos de cartas se puede elegir una baraja de imágenes (española: Brisca, Chinchón, Mus, Cinquillo · francesa: BlackJack, Klondike, Hold'em, Continental) y un dorso de imagen.
 Sube las imágenes a `img/cartas/espanola/<MAZO>/`, `img/cartas/francesa/<MAZO>/` o `img/cartas/dorsos/` (nombres y formato en `img/cartas/LEEME.md`).
 GitHub Actions regenera solo `img/cartas/barajas.json` y `sw.js`; en local: `python tools/generar_barajas.py && python tools/generar_sw.py`.
+
+## Comodines (Continental y Chinchón)
+Al repartir hay un check «Jugar con comodines». Continental: 3 comodines con 2 o 3 jugadores, 4 con 4 (activado por defecto). Chinchón: 2 con 2 o 3 jugadores, 3 con 4 (desactivado por defecto).
+El comodín usa la imagen `00` de la baraja elegida (si existe en `img/cartas/...`) y, si no, se dibuja.

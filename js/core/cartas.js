@@ -57,17 +57,19 @@ const urlImg = r => new URL(r.split('/').map(encodeURIComponent).join('/'), RAIZ
 export const urlCarta = (b, clave) => urlImg(`${b.ruta}/${clave.slice(1)}-${clave[0]}.${b.ext}`);
 export const urlMuestra = b => urlImg(`${b.ruta}/${b.muestra}.${b.ext}`);
 export const urlDorso = d => urlImg(d.archivo);
+const urlJoker = b => urlImg(`${b.ruta}/00.${EXT_OK.includes(b.joker) ? b.joker : b.ext}`);   // joker: extensión del comodín (o true si es la del mazo)
 
 function cssBarajas() {
   const r = [], ESP = 'background-size:100% 100%', RAD = 'border-radius:calc(var(--cw) * .09)';
   for (const b of BARAJAS.espanola) {
     const sel = `.juego[data-barajaes="${b.id}"]`;
     for (const rg of RANGOS_ES) for (const l of ESP_L) r.push(`${sel} .carta.es[data-k="${l}${n2(rg)}"]{background-image:url("${urlCarta(b, l + n2(rg))}")}`);
+    if (b.joker) r.push(`${sel} .carta.es.comodin{background:url("${urlJoker(b)}") center/100% 100% no-repeat;border:0;${RAD}}${sel} .carta.es.comodin>*{display:none}`);
   }
   for (const b of BARAJAS.francesa) {
     const sel = `.juego[data-barajafr="${b.id}"]`;
     for (let rg = 1; rg <= 13; rg++) for (const l of FR_L) r.push(`${sel} .carta:not(.es)[data-k="${l}${n2(rg)}"]{background-image:url("${urlCarta(b, l + n2(rg))}")}`);
-    if (b.joker) r.push(`${sel} .carta.comodin{background:url("${urlImg(`${b.ruta}/00.${b.ext}`)}") center/100% 100% no-repeat;border:0;${RAD}}${sel} .carta.comodin>*{display:none}`);
+    if (b.joker) r.push(`${sel} .carta.comodin{background:url("${urlJoker(b)}") center/100% 100% no-repeat;border:0;${RAD}}${sel} .carta.comodin>*{display:none}`);
   }
   for (const d of BARAJAS.dorsos) r.push(`.juego[data-dorso="${d.id}"] .carta.dorso{background:#fff url("${urlDorso(d)}") center/cover no-repeat;border:0;${RAD}}`);
   return r.join('\n');

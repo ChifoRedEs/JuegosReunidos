@@ -7,7 +7,7 @@ import { hacerOrdenable, ordenarMano, validarOrden } from '../../core/arrastrar.
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, sel = null, robada = -1, ocupado = false;
 const MODOS = ['jugadas', 'palo', 'numero', 'libre'];
 let ord = { modo: 'jugadas', ids: [] }, arr = null;
-let cfg = { rivales: 1, nivel: 'medio', limite: 100, cierre: 5 }, marcador = { g: 0, p: 0 };
+let cfg = { rivales: 1, nivel: 'medio', limite: 100, cierre: 5, comodines: false }, marcador = { g: 0, p: 0 };
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -28,7 +28,7 @@ export async function mount(r, a) {
   asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaEs()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./chinchon.css', import.meta.url));
   const c0 = api.pref('cfg', null);
-  if (c0 && [1, 2, 3].includes(c0.rivales) && C.NIVEL[c0.nivel] && C.LIMITES.includes(c0.limite) && C.CIERRES.includes(c0.cierre)) cfg = { ...c0 };
+  if (c0 && [1, 2, 3].includes(c0.rivales) && C.NIVEL[c0.nivel] && C.LIMITES.includes(c0.limite) && C.CIERRES.includes(c0.cierre)) cfg = { ...c0, comodines: c0.comodines === true };
   const g = api.cargar();
   const modoPref = MODOS.includes(api.pref('orden', 'jugadas')) ? api.pref('orden', 'jugadas') : 'jugadas';
   ord = { modo: modoPref, ids: [] }; arr = null;
@@ -44,11 +44,12 @@ function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord }; con
 function setup() {
   S = null; clearTimeout(timer);
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  root.innerHTML = `<p class="note">Chinchón con baraja española de 40 cartas. Forma tríos, cuartetos y escaleras del mismo palo, y cierra cuando te queden pocas cartas sueltas. Si pasas del límite de puntos quedas eliminado: gana el último que quede… o quien haga <b>chinchón</b> (escalera de 7).</p>
+  root.innerHTML = `<p class="note">Chinchón con baraja española de 40 cartas (y comodines si quieres). Forma tríos, cuartetos y escaleras del mismo palo, y cierra cuando te queden pocas cartas sueltas. Si pasas del límite de puntos quedas eliminado: gana el último que quede… o quien haga <b>chinchón</b> (escalera de 7).</p>
     <div class="bar"><span class="lbl">Rivales</span>${seg('rivales', [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']])}</div>
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(C.NIVEL))}</div>
     <div class="bar"><span class="lbl">Límite</span>${seg('limite', C.LIMITES.map(v => [v, `${v} puntos`]))}</div>
     <div class="bar"><span class="lbl">Cerrar con</span>${seg('cierre', C.CIERRES.map(v => [v, `≤ ${v} sueltos`]))}</div>
+    <label class="chk"><input type="checkbox" data-chk="comodines" ${cfg.comodines ? 'checked' : ''}><span><b>Jugar con comodines</b>: ${C.numComodines(cfg.rivales + 1, true)} con ${cfg.rivales + 1} jugadores (2 con 2 o 3 jugadores, 3 con 4). Sustituyen a cualquier carta de una jugada.</span></label>
     <p class="note">Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
     <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
 }
@@ -80,12 +81,13 @@ function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar
 function empezar() {
   api.setPref('cfg', cfg);
   const jugadores = [{ nombre: 'Tú', cpu: false }, ...Array.from({ length: cfg.rivales }, (_, k) => ({ nombre: cfg.rivales === 1 ? 'CPU' : `CPU ${k + 1}`, cpu: true }))];
-  S = C.crear({ jugadores, nivel: cfg.nivel, limite: cfg.limite, cierre: cfg.cierre }); reg = false; sel = null; robada = -1; ord = { modo: ord.modo === 'libre' ? 'jugadas' : ord.modo, ids: [] };
+  S = C.crear({ jugadores, nivel: cfg.nivel, limite: cfg.limite, cierre: cfg.cierre, comodines: cfg.comodines }); reg = false; sel = null; robada = -1; ord = { modo: ord.modo === 'libre' ? 'jugadas' : ord.modo, ids: [] };
   armar(); pintar(); guardar(); bucle();
 }
 
 /* ---------- pintado ---------- */
-const carta = (c, extra = '') => cartaEsHTML(c, { clase: extra });
+const nombre = c => (C.esComodin(c) ? 'Comodín' : nombreEs(c));
+const carta = (c, extra = '') => (C.esComodin(c) ? `<div class="carta es comodin ${extra}" aria-label="Comodín"><b class="cr">★</b><span class="cc">🃏</span></div>` : cartaEsHTML(c, { clase: extra }));
 const fila = cs => cs.map(c => carta(c)).join('');
 function pintar() {
   if (!S || !$('#chOpps')) return;
@@ -103,18 +105,18 @@ function pintar() {
   $('#chDesc').innerHTML = `${top != null ? carta(top) : '<div class="vacio"></div>'}<small>Descarte</small>`;
   $('#chMazo').classList.toggle('activa', puedeRobar); $('#chDesc').classList.toggle('activa', puedeRobar && top != null);
   $('#chMazo').disabled = !puedeRobar; $('#chDesc').disabled = !puedeRobar || top == null;
-  $('#chDesc').setAttribute('aria-label', top != null ? `Robar del descarte: ${nombreEs(top)}` : 'Descarte vacío');
+  $('#chDesc').setAttribute('aria-label', top != null ? `Robar del descarte: ${nombre(top)}` : 'Descarte vacío');
   // mi mano ordenada en jugadas
   const r = C.mejor(yo), cierres = miTurno && S.fase === 'descartar' ? C.cierres(S, 0) : [], cierra = new Set(cierres.map(x => x.c));
   if (sel != null && !yo.includes(sel)) sel = null;
-  const cartaMano = c => `<div class="chc ${sel === c ? 'sel' : ''} ${c === robada ? 'nueva' : ''} ${c === S.cogida ? 'bloq' : ''} ${cierra.has(c) ? 'cierra' : ''}" data-c="${c}" role="button" tabindex="0" aria-label="${nombreEs(c)}${c === S.cogida ? ' (recién cogida del descarte: no se puede tirar)' : ''}">${carta(c)}</div>`;
+  const cartaMano = c => `<div class="chc ${sel === c ? 'sel' : ''} ${c === robada ? 'nueva' : ''} ${c === S.cogida ? 'bloq' : ''} ${cierra.has(c) ? 'cierra' : ''}" data-c="${c}" role="button" tabindex="0" aria-label="${nombre(c)}${c === S.cogida ? ' (recién cogida del descarte: no se puede tirar)' : ''}">${carta(c)}</div>`;
   const vista = S.fase === 'recuento' || S.fase === 'fin';
   $('#chMano').className = 'chmano' + (miTurno && S.fase === 'descartar' ? ' turno' : '');
   root.querySelectorAll('#chOrd [data-ord]').forEach(b => b.classList.toggle('on', b.dataset.ord === ord.modo));
   $('#chOrdLibre').hidden = ord.modo !== 'libre'; $('#chOrd').hidden = vista;
   if (!(arr && arr.activo())) {                       // nunca repintar la mano mientras se arrastra una carta
     if (vista) $('#chMano').innerHTML = '';
-    else if (ord.modo === 'jugadas') $('#chMano').innerHTML = r.ligas.map(l => `<div class="chg liga" title="${l.every(c => C.pos(c) === C.pos(l[0])) ? 'Trío / cuarteto' : 'Escalera'}">${l.map(cartaMano).join('')}</div>`).join('') + (r.sueltas.length ? `<div class="chg">${r.sueltas.map(cartaMano).join('')}</div>` : '');
+    else if (ord.modo === 'jugadas') $('#chMano').innerHTML = r.ligas.map(l => `<div class="chg liga" title="${C.esGrupo(l) ? 'Trío / cuarteto' : 'Escalera'}">${l.map(cartaMano).join('')}</div>`).join('') + (r.sueltas.length ? `<div class="chg">${r.sueltas.map(cartaMano).join('')}</div>` : '');
     else {
       const enLiga = new Set(r.ligas.flat());
       $('#chMano').innerHTML = `<div class="chg plano">${ordenarMano(yo, ord, { palo: C.palo, num: C.pos }).map(c => cartaMano(c).replace('class="chc ', `class="chc ${enLiga.has(c) ? 'enliga ' : ''}`)).join('')}</div>`;
@@ -136,7 +138,7 @@ function pintar() {
   else if (S.fase === 'robar') t = 'Tu turno: roba del mazo o del descarte.';
   else if (cierres.some(x => x.chinchon)) t = '¡Tienes CHINCHÓN! Elige la carta que sobra y pulsa el botón.';
   else if (cierres.length) t = '¡Puedes cerrar! Elige la carta a tirar (marcadas en verde).';
-  else t = sel == null ? 'Elige una carta para tirar.' : `Vas a tirar: ${nombreEs(sel)}.`;
+  else t = sel == null ? 'Elige una carta para tirar.' : `Vas a tirar: ${nombre(sel)}.`;
   m.innerHTML = t;
   pintarRecuento();
   $('#chLog').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
@@ -204,7 +206,7 @@ function cierre() {
   if (!reg) {
     reg = true; const gano = S.ganador === 0;
     if (gano) marcador.g++; else marcador.p++;
-    api.registrar({ res: gano ? 'victoria' : 'derrota', variante: `${S.jug.length} jugadores · ${S.limite} puntos` });
+    api.registrar({ res: gano ? 'victoria' : 'derrota', variante: `${S.jug.length} jugadores · ${S.limite} puntos${S.nCom ? ' · con comodines' : ''}` });
     api.sonido(gano ? 'ganar' : 'perder'); if (gano) api.vibrar([60, 40, 60]);
   }
   pintar(); guardar();
@@ -221,6 +223,7 @@ function elegir(c) {
 }
 function tecla(e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.c != null) { e.preventDefault(); elegir(+e.target.dataset.c); } }
 function clic(e) {
+  const ck = e.target.closest('input[data-chk]'); if (ck) { cfg[ck.dataset.chk] = ck.checked; return setup(); }
   const k = e.target.closest('[data-c]'); if (k && S) return elegir(+k.dataset.c);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) { const v = d.cfg === 'nivel' ? d.v : +d.v; cfg[d.cfg] = v; return setup(); }
@@ -243,5 +246,6 @@ function reglas() {
     <li>Al cerrar, los demás enseñan sus cartas: las que no forman jugada suman puntos (del 1 al 7 su valor; sota, caballo y rey, 10). Se colocan solas en las jugadas de quien cierra si encajan.</li>
     <li><b>¡Chinchón!</b>: escalera de 7 cartas del mismo palo. Gana la partida al instante.</li>
     <li>Quien pasa del límite (50 o 100 puntos) queda <b>eliminado</b>. Gana el último jugador que quede.</li>
-    <li>Si el mazo se agota dos veces sin que nadie cierre, la mano es nula y se reparte de nuevo.</li></ul>`);
+    <li>Si el mazo se agota dos veces sin que nadie cierre, la mano es nula y se reparte de nuevo.</li>
+    <li><b>Comodines</b> (opcional, al repartir): 2 con 2 o 3 jugadores y 3 con 4. Sustituyen a cualquier carta en una jugada, que debe llevar al menos 2 cartas normales y no más comodines que normales. Un comodín suelto suma <b>25 puntos</b>. Una escalera de 7 con comodines también es ¡chinchón!</li></ul>`);
 }

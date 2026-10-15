@@ -104,8 +104,9 @@ def barajas(tipo):
                           % (tipo, carpeta, ratio, cfg['ratio']))
         info = leer_json(os.path.join(ruta, 'info.json'))
         nombre = info.get('nombre') if isinstance(info.get('nombre'), str) and info.get('nombre').strip() else bonito(carpeta)
+        jok = nombres.get('00')                                    # el comodín puede tener otra extensión que el resto del mazo
         salida.append({'id': slug(carpeta), 'nombre': nombre[:40], 'ruta': '%s/%s' % (tipo, carpeta), 'ext': ext[1:],
-                       'ratio': ratio, 'joker': nombres.get('00') == ext, 'muestra': cfg['muestra']})
+                       'ratio': ratio, 'joker': jok[1:] if jok else False, 'muestra': cfg['muestra']})
     ids = [b['id'] for b in salida]
     for i in set(ids):
         if ids.count(i) > 1:

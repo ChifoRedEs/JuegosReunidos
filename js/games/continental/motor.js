@@ -1,4 +1,4 @@
-// Motor del Continental (2 barajas francesas + 4 comodines = 108 cartas). Sin DOM, probable con Node.
+// Motor del Continental (2 barajas francesas = 104 cartas + comodines opcionales: 3 con 2 o 3 jugadores, 4 con 4 jugadores). Sin DOM, probable con Node.
 // id 0..103 → carta id % 52 de core/cartas.js (palo = c / 13 | 0, rango = c % 13: 0 = As … 12 = K); 104..107 = comodines.
 // 7 rondas con contrato creciente. TRÍO = 3+ cartas del mismo número. ESCALERA = 4+ cartas seguidas del mismo palo (As abajo o arriba).
 // Los comodines rellenan huecos, pero en cada jugada debe haber al menos tantas cartas naturales como comodines (y mínimo 2).
@@ -11,6 +11,7 @@ export const CONTRATOS = [
 ];
 export const cartasRonda = r => 7 + r;                     // r = 0..6 → 7..13 cartas
 export const esComodin = id => id >= 104;
+export const numComodines = (nJugadores, con) => (con ? (nJugadores >= 4 ? 4 : 3) : 0);
 export const carta = id => id % 52;
 export const palo = id => carta(id) / 13 | 0;
 export const rango = id => carta(id) % 13;                 // 0 = As
@@ -41,16 +42,17 @@ export const valida = ids => !!analizar(ids);
 /* ---------- partida ---------- */
 const v = (J, el, tu) => (J.nombre === 'Tú' ? tu : el);
 const log = (S, t) => { S.log.unshift(t); if (S.log.length > 7) S.log.length = 7; };
-export function crear({ jugadores, nivel = 'medio' }) {
-  const S = { nivel: NIVEL[nivel] ? nivel : 'medio', ronda: -1, turno: 0, mano: 0, fase: 'robar', mazo: [], descarte: [], mesa: [], cogida: -1, ganadorRonda: -1, ganador: -1, log: [],
+export function crear({ jugadores, nivel = 'medio', comodines = true }) {
+  const S = { nCom: 0, nivel: NIVEL[nivel] ? nivel : 'medio', ronda: -1, turno: 0, mano: 0, fase: 'robar', mazo: [], descarte: [], mesa: [], cogida: -1, ganadorRonda: -1, ganador: -1, log: [],
     jug: jugadores.slice(0, 4).map(j => ({ nombre: String(j.nombre).slice(0, 14), cpu: !!j.cpu, cartas: [], bajado: false, bajadoEn: -1, total: 0, rondas: [] })) };
+  S.nCom = numComodines(S.jug.length, comodines);
   S.mano = Math.floor(Math.random() * S.jug.length) - 1; if (S.mano < 0) S.mano = S.jug.length - 1;
   siguienteRonda(S, true); return S;
 }
 export function siguienteRonda(S, inicio = false) {
   if (!inicio && S.fase !== 'finRonda') return false;
   S.ronda++; S.mano = (S.mano + 1) % S.jug.length;
-  const m = shuffle(Array.from({ length: 108 }, (_, i) => i)), n = cartasRonda(S.ronda);
+  const m = shuffle(Array.from({ length: 104 + S.nCom }, (_, i) => i)), n = cartasRonda(S.ronda);
   S.jug.forEach(J => { J.cartas = m.splice(0, n); J.bajado = false; J.bajadoEn = -1; });
   S.descarte = [m.pop()]; S.mazo = m; S.mesa = []; S.turno = S.mano; S.fase = 'robar'; S.cogida = -1; S.ganadorRonda = -1; S.nTurno = 0; S.rebarajes = 0;
   log(S, `Ronda ${S.ronda + 1} de 7: ${CONTRATOS[S.ronda].nombre.toLowerCase()} (${n} cartas). ${S.jug[S.turno].nombre === 'Tú' ? 'Empiezas tú' : 'Empieza ' + S.jug[S.turno].nombre}.`);
@@ -200,7 +202,9 @@ export function cpuTurno(S, j) {                             // juega el turno c
 /* ---------- validación ---------- */
 export function validar(d) {
   if (!d || typeof d !== 'object' || !NIVEL[d.nivel] || !Array.isArray(d.jug) || d.jug.length < 2 || d.jug.length > 4) return null;
-  const ent = (x, a, b) => Number.isInteger(x) && x >= a && x <= b, lista = a => Array.isArray(a) && a.every(x => ent(x, 0, 107));
+  const ent = (x, a, b) => Number.isInteger(x) && x >= a && x <= b, nCom = d.nCom === undefined ? 4 : d.nCom;   // partidas guardadas antes de la opción: 4 comodines
+  if (!ent(nCom, 0, 4)) return null;
+  const lista = a => Array.isArray(a) && a.every(x => ent(x, 0, 103 + nCom));
   const jug = [];
   for (const J of d.jug) { if (!J || typeof J.nombre !== 'string' || !lista(J.cartas) || !ent(J.total, 0, 99999) || !Array.isArray(J.rondas) || !J.rondas.every(x => ent(x, 0, 9999))) return null; jug.push({ nombre: J.nombre.slice(0, 14), cpu: !!J.cpu, cartas: J.cartas.slice(), bajado: !!J.bajado, bajadoEn: ent(J.bajadoEn, -1, 99999) ? J.bajadoEn : -1, total: J.total, rondas: J.rondas.slice(0, 7) }); }
   if (!ent(d.ronda, 0, 6) || !['robar', 'descartar', 'finRonda', 'fin'].includes(d.fase) || !ent(d.turno, 0, jug.length - 1) || !ent(d.mano, 0, jug.length - 1)) return null;
@@ -208,9 +212,9 @@ export function validar(d) {
   const mesa = [];
   for (const s of d.mesa) { if (!s || !lista(s.cartas) || !['trio', 'escalera'].includes(s.tipo) || !ent(s.dueno, 0, jug.length - 1)) return null; const a = analizar(s.cartas, s.tipo); if (!a) return null; mesa.push({ tipo: s.tipo, cartas: a.orden, dueno: s.dueno }); }
   const todas = [...d.mazo, ...d.descarte, ...mesa.flatMap(s => s.cartas), ...jug.flatMap(J => J.cartas)];
-  if (todas.length !== 108 || new Set(todas).size !== 108) return null;
-  return { nivel: d.nivel, ronda: d.ronda, turno: d.turno, mano: d.mano, fase: d.fase, mazo: d.mazo.slice(), descarte: d.descarte.slice(), mesa, jug,
-    cogida: ent(d.cogida, -1, 107) ? d.cogida : -1, nTurno: ent(d.nTurno, 0, 99999) ? d.nTurno : 0, rebarajes: ent(d.rebarajes, 0, 5) ? d.rebarajes : 0,
+  if (todas.length !== 104 + nCom || new Set(todas).size !== 104 + nCom) return null;
+  return { nCom, nivel: d.nivel, ronda: d.ronda, turno: d.turno, mano: d.mano, fase: d.fase, mazo: d.mazo.slice(), descarte: d.descarte.slice(), mesa, jug,
+    cogida: ent(d.cogida, -1, 103 + nCom) ? d.cogida : -1, nTurno: ent(d.nTurno, 0, 99999) ? d.nTurno : 0, rebarajes: ent(d.rebarajes, 0, 5) ? d.rebarajes : 0,
     ganadorRonda: ent(d.ganadorRonda, -1, jug.length - 1) ? d.ganadorRonda : -1, ganador: ent(d.ganador, -1, jug.length - 1) ? d.ganador : -1,
     log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 7).map(x => x.slice(0, 160)) : [] };
 }

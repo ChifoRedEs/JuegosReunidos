@@ -7,7 +7,7 @@
    "ruta": "espanola/ESP-01",
    "ext": "webp",
    "ratio": 1.558,
-   "joker": true,
+   "joker": "webp",
    "muestra": "01-O"
   },
   {
@@ -16,7 +16,7 @@
    "ruta": "espanola/ESP-02",
    "ext": "webp",
    "ratio": 1.542,
-   "joker": true,
+   "joker": "webp",
    "muestra": "01-O"
   }
  ],
@@ -27,7 +27,7 @@
    "ruta": "francesa/FR-01",
    "ext": "webp",
    "ratio": 1.4,
-   "joker": true,
+   "joker": "webp",
    "muestra": "01-P"
   },
   {
@@ -36,7 +36,7 @@
    "ruta": "francesa/FR-02",
    "ext": "webp",
    "ratio": 1.4,
-   "joker": true,
+   "joker": "webp",
    "muestra": "01-P"
   }
  ],
