@@ -27,7 +27,7 @@
    "ruta": "francesa/FR-01",
    "ext": "webp",
    "ratio": 1.4,
-   "joker": false,
+   "joker": true,
    "muestra": "01-P"
   },
   {
