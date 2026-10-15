@@ -108,5 +108,9 @@
 - Las estadísticas guardan **récords de puntuación** por modalidad (`api.registrar({ puntos })`, `api.record(variante)`), se muestran en 📊 Estadísticas y viajan en la copia de seguridad.
 - **Serpiente**: modos Clásico, Sin paredes y Laberinto; 3 velocidades (puntúan distinto) que se aceleran al comer; 3 tamaños de tablero; manzanas y estrella dorada temporal. Control deslizando el dedo (con giros encadenados), cruceta en pantalla o teclado (flechas/WASD, espacio = pausa) con cola de giros. Pausa automática al salir y partida guardada. Dibujo en canvas con 3 estilos (Jardín, Retro, Neón), ojos que miran hacia donde va, destellos y temblor al chocar.
 
+## Actualización 22: Bloques y naipes sin conexión
+- **Bloques** (Arcade, el clásico de piezas que caen): tablero 10×20, bolsa de 7 piezas, giros SRS con empujones en paredes, pieza fantasma, reserva, 3 piezas siguientes y medio segundo de gracia al tocar el suelo. Puntuación por líneas (sencilla → cuádruple), combos, cuádruples seguidos y T-giros; nivel y velocidad cada 10 líneas. Modos Maratón (nivel inicial a elegir), Sprint 40 líneas (récord de tiempo) y Ultra 2 minutos. Gestos táctiles (tocar = girar, arrastrar = mover, golpe abajo = dejar caer, golpe arriba = reservar), botones con repetición y teclado. 3 paletas, letreros de líneas y destellos, pausa automática y partida guardada.
+- **Naipes de imagen sin conexión**: las imágenes de `img/cartas` se guardan en su propia caché (`jr-cartas`), que no se borra al actualizar. La app las descarga en segundo plano (solo las que falten) leyendo `barajas.json`, y quita las de barajas que ya no estén.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

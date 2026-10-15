@@ -37,6 +37,7 @@ import * as RC from '../js/games/rosco/motor.js';
 import * as EN from '../js/games/encadenadas/motor.js';
 import { silabas } from '../js/games/encadenadas/silabas.js';
 import * as SN from '../js/games/serpiente/motor.js';
+import * as BL from '../js/games/bloques/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -303,6 +304,21 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
   S = SN.crear(); { const m = S.n; S.serp = [5 * m + 5, 5 * m + 6, 6 * m + 6, 6 * m + 5, 6 * m + 4]; S.dir = 3; S.comida = 0; assert.equal(SN.paso(S, 2), 'muerte'); assert.equal(S.motivo, 'cuerpo'); }
   for (const modo of Object.keys(SN.MODOS)) { const T = SN.crear({ modo, tam: 'grande' }); assert.ok(!T.muros.includes(T.serp[0]) && SN.validar(JSON.parse(JSON.stringify(T)))); }
   ok('Serpiente: giros, crecer, paredes, sin paredes, choque con el cuerpo y laberinto'); }
+// ---- Bloques ----
+{ const W = BL.W, H = BL.H;
+  { const S = BL.crear(); assert.equal(new Set([S.p.t, ...S.cola, ...S.bolsa].slice(0, 7)).size, 7); }
+  { const S = BL.crear(); S.p = { t: 1, r: 0, x: 0, y: 0 }; for (let x = 4; x < W; x++) S.tab[(H - 1) * W + x] = 2; const ev = BL.soltar(S); assert.equal(ev.lineas, 1); assert.equal(ev.puntos, 100); }
+  { const S = BL.crear(); for (let y = H - 4; y < H; y++) for (let x = 0; x < 9; x++) S.tab[y * W + x] = 3; S.p = { t: 1, r: 1, x: 7, y: 0 }; const ev = BL.soltar(S); assert.equal(ev.lineas, 4); assert.ok(ev.puntos >= 800); }
+  { const S = BL.crear(), cuad = () => { S.tab.fill(0); for (let y = H - 4; y < H; y++) for (let x = 0; x < 9; x++) S.tab[y * W + x] = 3; S.p = { t: 1, r: 1, x: 7, y: 2 }; return BL.soltar(S); };
+    const a = cuad(); assert.equal(a.b2b, false); assert.equal(a.puntos, 800);                        // el primero no es «seguido»
+    const b = cuad(); assert.equal(b.b2b, true); assert.equal(b.puntos, 1200 + 50 * 1); }              // el segundo sí: ×1,5 y combo
+  { const S = BL.crear(); S.p = { t: 1, r: 1, x: -2, y: 5 }; assert.ok(BL.choca(S, S.p, 0, 0, 2)); assert.ok(BL.rotar(S, 1)); assert.ok(!BL.choca(S, S.p)); }
+  { const S = BL.crear(); const t = S.p.t; assert.ok(BL.reservar(S)); assert.equal(S.reserva, t); assert.ok(!BL.reservar(S)); }
+  { const S = BL.crear(); const n0 = S.piezas; for (let k = 0; k < 700; k++) BL.avanzar(S, 50); assert.ok(S.piezas > n0); }
+  { const S = BL.crear(); let k = 0; while (S.fase === 'jugar' && k++ < 200) BL.soltar(S); assert.equal(S.motivo, 'arriba'); }
+  { const S = BL.crear({ modo: 'ultra' }); for (let k = 0; k < 200 && S.fase === 'jugar'; k++) BL.avanzar(S, 1000); assert.equal(S.fase, 'fin'); }
+  { const S = BL.crear(); assert.ok(BL.validar(JSON.parse(JSON.stringify(S)))); }
+  ok('Bloques: bolsa de 7, líneas y cuádruple, giros con empujón, reserva, gravedad, fin y modo Ultra'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);
