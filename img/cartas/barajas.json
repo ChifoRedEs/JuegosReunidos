@@ -20,7 +20,26 @@
    "muestra": "01-O"
   }
  ],
- "francesa": [],
+ "francesa": [
+  {
+   "id": "fr-01",
+   "nombre": "Fr 01",
+   "ruta": "francesa/FR-01",
+   "ext": "webp",
+   "ratio": 1.4,
+   "joker": true,
+   "muestra": "01-P"
+  },
+  {
+   "id": "fr-02",
+   "nombre": "Fr 02",
+   "ruta": "francesa/FR-02",
+   "ext": "webp",
+   "ratio": 1.4,
+   "joker": false,
+   "muestra": "01-P"
+  }
+ ],
  "dorsos": [
   {
    "id": "i-amarillo",
@@ -28,9 +47,19 @@
    "archivo": "dorsos/amarillo.webp"
   },
   {
+   "id": "i-fr-amarillo",
+   "nombre": "Amarillo (adamascado)",
+   "archivo": "dorsos/fr-amarillo.webp"
+  },
+  {
    "id": "i-arcoiris",
    "nombre": "Arcoíris",
    "archivo": "dorsos/arcoiris.webp"
+  },
+  {
+   "id": "i-fr-arcoiris",
+   "nombre": "Arcoíris (adamascado)",
+   "archivo": "dorsos/fr-arcoiris.webp"
   },
   {
    "id": "i-azul",
@@ -38,9 +67,39 @@
    "archivo": "dorsos/azul.webp"
   },
   {
+   "id": "i-fr-azul",
+   "nombre": "Azul (adamascado)",
+   "archivo": "dorsos/fr-azul.webp"
+  },
+  {
+   "id": "i-fr-blanco",
+   "nombre": "Blanco (adamascado)",
+   "archivo": "dorsos/fr-blanco.webp"
+  },
+  {
+   "id": "i-fr-flor-claro",
+   "nombre": "Flor clara",
+   "archivo": "dorsos/fr-flor-claro.webp"
+  },
+  {
+   "id": "i-fr-flor-oscuro",
+   "nombre": "Flor oscura",
+   "archivo": "dorsos/fr-flor-oscuro.webp"
+  },
+  {
+   "id": "i-fr-marron",
+   "nombre": "Marrón (adamascado)",
+   "archivo": "dorsos/fr-marron.webp"
+  },
+  {
    "id": "i-morado",
    "nombre": "Morado",
    "archivo": "dorsos/morado.webp"
+  },
+  {
+   "id": "i-fr-morado",
+   "nombre": "Morado (adamascado)",
+   "archivo": "dorsos/fr-morado.webp"
   },
   {
    "id": "i-naranja",
@@ -48,9 +107,19 @@
    "archivo": "dorsos/naranja.webp"
   },
   {
+   "id": "i-fr-naranja",
+   "nombre": "Naranja (adamascado)",
+   "archivo": "dorsos/fr-naranja.webp"
+  },
+  {
    "id": "i-rojo",
    "nombre": "Rojo",
    "archivo": "dorsos/rojo.webp"
+  },
+  {
+   "id": "i-fr-rojo",
+   "nombre": "Rojo (adamascado)",
+   "archivo": "dorsos/fr-rojo.webp"
   },
   {
    "id": "i-turquesa",
@@ -58,9 +127,19 @@
    "archivo": "dorsos/turquesa.webp"
   },
   {
+   "id": "i-fr-turquesa",
+   "nombre": "Turquesa (adamascado)",
+   "archivo": "dorsos/fr-turquesa.webp"
+  },
+  {
    "id": "i-verde",
    "nombre": "Verde",
    "archivo": "dorsos/verde.webp"
+  },
+  {
+   "id": "i-fr-verde",
+   "nombre": "Verde (adamascado)",
+   "archivo": "dorsos/fr-verde.webp"
   }
  ]
 }

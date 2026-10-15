@@ -125,6 +125,7 @@ def dorsos():
             continue
         nom = nombres.get(n) if isinstance(nombres.get(n), str) else bonito(n)
         salida.append({'id': 'i-' + slug(n), 'nombre': nom[:30], 'archivo': 'dorsos/' + f})
+    salida.sort(key=lambda d: d['nombre'].lower())   # agrupa por color en la lista de la app
     return salida
 
 
