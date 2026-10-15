@@ -115,5 +115,10 @@
 ## Actualización 23: Rompe-Ladrillos
 - **Rompe-Ladrillos** (Arcade): 12 niveles diseñados (más un modo de niveles aleatorios simétricos), que vuelven a empezar más rápidos tras el último; los niveles alcanzados se desbloquean para empezar desde ellos. Ladrillos de colores, resistentes de 2 y 3 golpes (con grietas), de metal y sorpresa. 6 cápsulas: pala ancha, multibola, bola lenta, láser, bola de fuego y vida extra. Ángulo según el punto de la pala, aceleración progresiva, física por subpasos (la bola nunca atraviesa un ladrillo) y desvío automático si la bola queda atrapada en un circuito sin romper nada. Control con el dedo en movimiento relativo (no tapa la pala), ratón o teclado. Partículas, avisos de cápsula, combos, bonus por vidas, récords, pausa automática y partida guardada. 🎨 3 fondos.
 
+## Actualización 24: arreglo de fichas perdidas en Texas Hold'em
+- **Fallo**: cuando un jugador quedaba all-in con menos de lo apostado (por ejemplo, una ciega grande corta) y otro se retiraba habiendo puesto más de lo que ese all-in podía cubrir, el exceso no se repartía a nadie y esas fichas desaparecían de la partida.
+- **Arreglo**: el dinero que ningún jugador en la mano puede disputar se devuelve a quien lo apostó, como en el póker real; el resultado lo indica («se devuelven 60 a Ana»).
+- Prueba de regresión con el caso exacto, y comprobado en más de 100.000 manos simuladas sin perder ninguna ficha.
+
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.

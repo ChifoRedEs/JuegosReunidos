@@ -123,7 +123,17 @@ assert.deepEqual(BJ.total([0, 12]), { t: 21, suave: true }); assert.equal(BJ.tot
   assert.ok(v(c(14, 0), c(13, 0), c(12, 0), c(11, 0), c(10, 0), c(2, 1), c(3, 2)) > v(c(9, 0), c(9, 1), c(9, 2), c(9, 3), c(2, 0), c(3, 1), c(4, 2)));
   assert.equal(HE.nombreMano(v(c(14, 0), c(2, 1), c(3, 2), c(4, 3), c(5, 0), c(9, 1), c(11, 2))), 'Escalera'); ok('Hold\'em: evaluador de manos (escalera real, póker, rueda A-5)'); }
 { const S = HE.crear(2, 'facil'); S.jug.forEach(p => { p.stack = 0; p.fold = false; p.fuera = false; }); S.jug[0].inv = 100; S.jug[1].inv = 300; S.jug[2].inv = 300; assert.deepEqual(HE.botes(S).map(x => x.monto), [300, 400]); ok('Hold\'em: botes secundarios'); }
-for (let g = 0; g < 2; g++) { const S = HE.crear(2 + g, 'facil'); S.jug.forEach(p => { p.bot = true; }); let guardia = 0;
+{ // Regresión: all-in corto en la ciega grande y el otro se retira habiendo puesto más → lo no disputado vuelve a su dueño
+  const S = HE.crear(2, 'facil'); S.fase = 'preflop'; S.turno = 1; S.apuestaMax = 150; S.ultRaise = 150; S.bb = 150;
+  Object.assign(S.jug[0], { stack: 1000, apuesta: 0, inv: 0, fold: true, allin: false });
+  Object.assign(S.jug[1], { stack: 3810, apuesta: 75, inv: 75, fold: false, allin: false });
+  Object.assign(S.jug[2], { stack: 0, apuesta: 15, inv: 15, fold: false, allin: true });
+  const total = S.jug.reduce((t, p) => t + p.stack + p.inv, 0);
+  assert.ok(HE.actuar(S, 1, { t: 'fold' })); assert.equal(S.fase, 'fin');
+  assert.equal(S.jug.reduce((t, p) => t + p.stack, 0), total);              // no se pierde ninguna ficha
+  assert.equal(S.jug[2].stack, 30); assert.equal(S.jug[1].stack, 3810 + 60);  // Marta gana 30; a Ana le vuelven 60
+  assert.match(S.resultado.texto, /se devuelven 60/); ok('Hold\'em: las fichas no disputadas se devuelven (sin pérdidas)'); }
+for (let g = 0; g < 4; g++) { const S = HE.crear(2 + g % 4, 'facil'); S.jug.forEach(p => { p.bot = true; }); let guardia = 0;
   while (S.fase !== 'terminado' && guardia++ < 4000) { if (S.fase === 'fin') { HE.nuevaMano(S); continue; } const i = S.turno; assert.ok(i >= 0); let a = HE.decidir(S, i); if (!HE.actuar(S, i, a)) assert.ok(HE.actuar(S, i, HE.legal(S, i).pasar ? { t: 'check' } : { t: 'call' })); if (S.fase === 'fin') assert.equal(S.jug.reduce((s, p) => s + p.stack, 0), S.total); }
   assert.equal(S.fase, 'terminado'); }
 ok('Hold\'em: torneos completos solo de bots, con conservación de fichas');
