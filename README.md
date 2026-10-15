@@ -17,6 +17,7 @@ y abre http://localhost:8000. (Cualquier otro servidor estático vale.)
 ## Estructura
     index.html · manifest.webmanifest · sw.js
     css/        base.css (global) · cartas.css (para juegos de cartas)
+    img/cartas/ imágenes de barajas (espanola/ · francesa/) y dorsos (dorsos/) para 🎨 Apariencia; ver img/cartas/LEEME.md
     icons/      iconos de la app (tools/generar_iconos.py los regenera)
     js/app.js        rutas (#/juego/<id>), inicio, estadísticas, ajustes, importar/exportar
     js/registry.js   LISTA DE JUEGOS: aquí se da de alta cada juego nuevo
@@ -25,9 +26,14 @@ y abre http://localhost:8000. (Cualquier otro servidor estático vale.)
     js/games/<id>/   index.js + (reglas/generador/ia) + <id>.css de cada juego
     js/games/_plantilla/   punto de partida para un juego nuevo
     data/            palabras/ · crucigramas/ · nonogramas/ (contenido de los juegos)
-    tools/           generar_sw.py · generar_iconos.py · verificar_nonogramas.mjs
+    tools/           generar_sw.py · generar_barajas.py · optimizar_imagenes.py · generar_iconos.py · verificar_nonogramas.mjs
     tests/motores.mjs   pruebas de los motores:  node tests/motores.mjs
     docs/            AÑADIR-JUEGO.md · MEJORAS-INCLUIDAS.md · HOJA-DE-RUTA.md
 
 ## Guardado
 Una clave de localStorage por juego (`jr2:juego:<id>`, versión 2). Tus partidas de la versión 1 (`juegos-reunidos-save`) se migran solas la primera vez; la clave antigua no se borra. Los archivos .json exportados de la versión 1 también se pueden importar.
+
+## Barajas e imágenes de cartas
+En 🎨 Apariencia de los juegos de cartas se puede elegir una baraja de imágenes (española: Brisca, Chinchón, Mus, Cinquillo · francesa: BlackJack, Klondike, Hold'em, Continental) y un dorso de imagen.
+Sube las imágenes a `img/cartas/espanola/<MAZO>/`, `img/cartas/francesa/<MAZO>/` o `img/cartas/dorsos/` (nombres y formato en `img/cartas/LEEME.md`).
+GitHub Actions regenera solo `img/cartas/barajas.json` y `sw.js`; en local: `python tools/generar_barajas.py && python tools/generar_sw.py`.

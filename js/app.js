@@ -5,6 +5,7 @@ import * as store from './core/storage.js';
 import * as aj from './core/ajustes.js';
 import * as stats from './core/stats.js';
 import * as son from './core/sonido.js';
+import { cargarBarajas, precargarSeleccion } from './core/cartas.js';
 
 const app = $('#app'), tit = $('#titulo'), btnAtras = $('#atras'), btnMas = $('#mas'), nav = $('#nav');
 const RUTAS = [['inicio', '🏠', 'Inicio', '#/'], ['stats', '📊', 'Estadísticas', '#/stats'], ['ajustes', '⚙️', 'Ajustes', '#/ajustes']];
@@ -59,14 +60,14 @@ function crearApi(j, ent, mod, root) {
     menu(items) { menuItems = items || []; btnMas.hidden = !menuItems.length; },
     aspecto(defs, alCambiar) {
       const gd = aj.pref(id, 'aspecto', {}) || {}, vals = {};
-      const poner = () => defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; });
+      const poner = () => { defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; }); precargarSeleccion(vals); };
       defs.forEach(g => { vals[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
       poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...vals });
       const abrir = () => {
         const cuerpo = defs.map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo),
           el('div', { class: 'seg' }, g.opciones.map(o => el('button', { type: 'button', class: 'btn ap-o' + (vals[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id },
-            (o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.nombre)))));
+            (o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.img ? el('img', { class: 'ap-th', src: o.img, alt: '', loading: 'lazy' }) : null, o.nombre)))));
         const wrap = el('div', {}, cuerpo);
         wrap.addEventListener('click', e => {
           const b = e.target.closest('.ap-o'); if (!b) return;
@@ -117,6 +118,7 @@ async function abrirJuego(id, t) {
   tit.textContent = j.nombre; btnAtras.hidden = false; btnMas.hidden = true;
   app.innerHTML = '<p class="note">Cargando…</p>';
   let mod;
+  await cargarBarajas();                       // índice de barajas/dorsos de imagen (no falla: sin él solo salen las cartas dibujadas)
   try { mod = await j.cargar(); } catch (e) { console.error(e); if (t === token) app.innerHTML = '<p class="msg err">No se pudo cargar el juego. Comprueba la conexión y recarga.</p>'; return; }
   if (t !== token) return;
   const root = el('div', { class: 'juego juego-' + id });

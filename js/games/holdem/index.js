@@ -1,6 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso, grupoPalos } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
 import * as H from './motor.js';
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -18,7 +18,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./holdem.css', import.meta.url));
   const g = api.cargar(); S = g; consejo = api.pref('consejo', true);
   const c0 = api.pref('cfg', null); if (c0 && c0.bots >= 2 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel };

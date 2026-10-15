@@ -1,6 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import { cartaEsHTML, asegurarSprites, nombreEs, PALOS_ES } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaEs } from '../../core/aspectos.js';
 import { hacerOrdenable, ordenarMano, validarOrden } from '../../core/arrastrar.js';
 import * as C from './motor.js';
 
@@ -25,7 +25,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; arr = null; nueva = -1; asegurarSprites();
-  asp = api.aspecto([grupoMesa(), grupoDorso()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaEs()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./cinquillo.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [2, 3].includes(c0.rivales) && C.NIVEL[c0.nivel] && C.RONDAS.includes(c0.rondas)) cfg = { ...c0 };
   ord = { modo: MODOS.includes(api.pref('orden', 'palo')) ? api.pref('orden', 'palo') : 'palo', ids: [] };

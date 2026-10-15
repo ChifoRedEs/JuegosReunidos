@@ -1,6 +1,6 @@
 import { $, esperar } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso, grupoPalos } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
 import * as BJ from './motor.js';
 
 let S = null, api = null, asp = null, root = null, prev = { banca: 0, manos: [] }, bloqueo = false, tBloq = null, regRonda = 0, consejoOn = true;
@@ -20,7 +20,7 @@ export const resumen = d => ({ texto: `${d.s.fichas} fichas · mejor ${d.s.pico}
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; bloqueo = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./blackjack.css', import.meta.url));
   const g = api.cargar(); S = g ? g.s : BJ.nuevoEstado(); regRonda = g ? g.regRonda : 0; consejoOn = api.pref('consejo', true);
   prev = { banca: S.banca.length, manos: S.manos.map(h => h.c.length) };

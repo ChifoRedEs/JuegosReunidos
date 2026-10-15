@@ -1,6 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML, nombreCarta } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso, grupoPalos } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
 import { hacerOrdenable, ordenarMano } from '../../core/arrastrar.js';
 import * as K from './motor.js';
 
@@ -26,7 +26,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; arr = null; sel = null; robada = -1;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./continental.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [1, 2, 3].includes(c0.rivales) && K.NIVEL[c0.nivel]) cfg = { ...c0 };
   ord = { modo: MODOS.includes(api.pref('orden', 'palo')) ? api.pref('orden', 'palo') : 'palo', ids: [] };

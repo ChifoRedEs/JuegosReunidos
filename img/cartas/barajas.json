@@ -1,0 +1,66 @@
+{
+ "version": 1,
+ "espanola": [
+  {
+   "id": "esp-01",
+   "nombre": "Esp 01",
+   "ruta": "espanola/ESP-01",
+   "ext": "webp",
+   "ratio": 1.558,
+   "joker": true,
+   "muestra": "01-O"
+  },
+  {
+   "id": "esp-02",
+   "nombre": "Esp 02",
+   "ruta": "espanola/ESP-02",
+   "ext": "webp",
+   "ratio": 1.542,
+   "joker": true,
+   "muestra": "01-O"
+  }
+ ],
+ "francesa": [],
+ "dorsos": [
+  {
+   "id": "i-amarillo",
+   "nombre": "Amarillo",
+   "archivo": "dorsos/amarillo.webp"
+  },
+  {
+   "id": "i-arcoiris",
+   "nombre": "Arcoíris",
+   "archivo": "dorsos/arcoiris.webp"
+  },
+  {
+   "id": "i-azul",
+   "nombre": "Azul",
+   "archivo": "dorsos/azul.webp"
+  },
+  {
+   "id": "i-morado",
+   "nombre": "Morado",
+   "archivo": "dorsos/morado.webp"
+  },
+  {
+   "id": "i-naranja",
+   "nombre": "Naranja",
+   "archivo": "dorsos/naranja.webp"
+  },
+  {
+   "id": "i-rojo",
+   "nombre": "Rojo",
+   "archivo": "dorsos/rojo.webp"
+  },
+  {
+   "id": "i-turquesa",
+   "nombre": "Turquesa",
+   "archivo": "dorsos/turquesa.webp"
+  },
+  {
+   "id": "i-verde",
+   "nombre": "Verde",
+   "archivo": "dorsos/verde.webp"
+  }
+ ]
+}

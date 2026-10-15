@@ -1,6 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import { cartaEsHTML, asegurarSprites, PALOS_ES } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaEs } from '../../core/aspectos.js';
 import * as B from './motor.js';
 import { elegir } from './ia.js';
 
@@ -23,7 +23,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; prevMesa = 0; asegurarSprites();
-  asp = api.aspecto([grupoMesa(), grupoDorso()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaEs()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./brisca.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [2, 3, 4].includes(c0.n) && NIVEL[c0.nivel]) cfg = { n: c0.n, nivel: c0.nivel, cambio: !!c0.cambio };
   const g = api.cargar();

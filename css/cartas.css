@@ -36,3 +36,9 @@
 .ordbar em[hidden]{display:none}
 .arrorig{opacity:.3}
 .arrfantasma{position:fixed;z-index:95;pointer-events:none;margin:0;transform:scale(1.1) rotate(-4deg);filter:drop-shadow(0 10px 12px rgba(0,0,0,.45));transition:none}
+
+/* cartas de imagen (img/cartas): la regla con la imagen de cada carta la inyecta core/cartas.js; aquí, lo común */
+.juego[data-barajaes]:not([data-barajaes="css"]) .carta.es:not(.dorso),
+.juego[data-barajafr]:not([data-barajafr="css"]) .carta:not(.es):not(.dorso):not(.comodin){background-color:transparent;background-size:100% 100%;background-position:center;background-repeat:no-repeat;border:0;border-radius:calc(var(--cw) * .09)}
+.juego[data-barajaes]:not([data-barajaes="css"]) .carta.es:not(.dorso)>*,
+.juego[data-barajafr]:not([data-barajafr="css"]) .carta:not(.es):not(.dorso):not(.comodin)>*{display:none}

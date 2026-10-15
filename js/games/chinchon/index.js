@@ -1,6 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import { cartaEsHTML, asegurarSprites, nombreEs } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaEs } from '../../core/aspectos.js';
 import * as C from './motor.js';
 import { hacerOrdenable, ordenarMano, validarOrden } from '../../core/arrastrar.js';
 
@@ -25,7 +25,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; sel = null; robada = -1; ocupado = false; asegurarSprites();
-  asp = api.aspecto([grupoMesa(), grupoDorso()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaEs()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./chinchon.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && [1, 2, 3].includes(c0.rivales) && C.NIVEL[c0.nivel] && C.LIMITES.includes(c0.limite) && C.CIERRES.includes(c0.cierre)) cfg = { ...c0 };
