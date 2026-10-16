@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-9a6f860de8';
+const VERSION = 'jr-707cc40545';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -137,7 +137,22 @@ const ARCHIVOS = [
 ];
 // Tipografías de Google Fonts (Baloo 2 y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
 // para que sin conexión los textos se vean igual que con internet. Debe ser la MISMA dirección que en index.html.
-const FUENTES = 'jr-fuentes';
+const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas';      // cachés que se conservan entre versiones
+// Imágenes de los naipes (img/cartas): no van en la lista de arriba para no volver a bajar 5 MB en cada actualización.
+// Se guardan en su propia caché: al usarlas y, en segundo plano, todas las del índice barajas.json (solo las que falten).
+const esImgCarta = url => url.origin === location.origin && url.pathname.includes('/img/cartas/') && /\.(webp|png|jpe?g)$/i.test(url.pathname);
+async function guardarCartas() {
+  const base = new URL('./img/cartas/', self.registration.scope), r = await fetch(new URL('barajas.json', base), { cache: 'no-cache' });
+  if (!r.ok) return;
+  const d = await r.json(), rutas = new Set(), n2 = n => String(n).padStart(2, '0');
+  for (const b of d.espanola || []) { for (const rg of [1, 2, 3, 4, 5, 6, 7, 10, 11, 12]) for (const l of 'OCEB') rutas.add(`${b.ruta}/${n2(rg)}-${l}.${b.ext}`); rutas.add(`${b.ruta}/${b.muestra}.${b.ext}`); }
+  for (const b of d.francesa || []) { for (let rg = 1; rg <= 13; rg++) for (const l of 'PCDT') rutas.add(`${b.ruta}/${n2(rg)}-${l}.${b.ext}`); if (b.joker) rutas.add(`${b.ruta}/00.${b.ext}`); rutas.add(`${b.ruta}/${b.muestra}.${b.ext}`); }
+  for (const x of d.dorsos || []) rutas.add(x.archivo);
+  const urls = [...rutas].filter(x => typeof x === 'string' && !x.includes('..')).map(x => new URL(x.split('/').map(encodeURIComponent).join('/'), base).href), c = await caches.open(CARTAS);
+  for (const req of await c.keys()) if (!urls.includes(req.url)) await c.delete(req);   // barajas que ya no están
+  for (let i = 0; i < urls.length; i += 6) await Promise.all(urls.slice(i, i + 6).map(async u => { if (await c.match(u)) return; try { const res = await fetch(u); if (res.ok) await c.put(u, res); } catch { /* sin red: otra vez será */ } }));
+}
+self.addEventListener('message', e => { if (e.data === 'guardar-cartas') e.waitUntil(guardarCartas().catch(() => {})); });
 const FUENTES_CSS = 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap';
 const esFuente = url => url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 async function guardarFuentes() {                 // descarga la hoja de estilos y todos los archivos de letra que enlaza
@@ -171,7 +186,7 @@ self.addEventListener('install', e => {
   ]).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== FUENTES).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== FUENTES && k !== CARTAS).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const req = e.request; if (req.method !== 'GET') return;
@@ -181,6 +196,10 @@ self.addEventListener('fetch', e => {
       if (res.ok || res.type === 'opaque') c.put(req, res.clone());
       return res;
     }))).catch(() => new Response('', { status: 200, headers: { 'Content-Type': url.hostname === 'fonts.googleapis.com' ? 'text/css' : 'font/woff2' } })));
+    return;
+  }
+  if (esImgCarta(url)) {                          // naipes: primero la copia guardada; si no está, se descarga y se guarda
+    e.respondWith(caches.open(CARTAS).then(c => c.match(req, { ignoreSearch: true }).then(r => r || fetch(req).then(res => { if (res.ok) c.put(req, res.clone()); return res; }))));
     return;
   }
   if (url.origin !== location.origin) return;

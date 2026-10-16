@@ -37,6 +37,8 @@ import * as RC from '../js/games/rosco/motor.js';
 import * as EN from '../js/games/encadenadas/motor.js';
 import { silabas } from '../js/games/encadenadas/silabas.js';
 import * as SN from '../js/games/serpiente/motor.js';
+import * as BL from '../js/games/bloques/motor.js';
+import * as LD from '../js/games/ladrillos/motor.js';
 import { PANELES as PRL } from '../js/games/ruleta/paneles.js';
 let n = 0; const ok = t => { n++; console.log('✓', t); };
 
@@ -121,7 +123,17 @@ assert.deepEqual(BJ.total([0, 12]), { t: 21, suave: true }); assert.equal(BJ.tot
   assert.ok(v(c(14, 0), c(13, 0), c(12, 0), c(11, 0), c(10, 0), c(2, 1), c(3, 2)) > v(c(9, 0), c(9, 1), c(9, 2), c(9, 3), c(2, 0), c(3, 1), c(4, 2)));
   assert.equal(HE.nombreMano(v(c(14, 0), c(2, 1), c(3, 2), c(4, 3), c(5, 0), c(9, 1), c(11, 2))), 'Escalera'); ok('Hold\'em: evaluador de manos (escalera real, póker, rueda A-5)'); }
 { const S = HE.crear(2, 'facil'); S.jug.forEach(p => { p.stack = 0; p.fold = false; p.fuera = false; }); S.jug[0].inv = 100; S.jug[1].inv = 300; S.jug[2].inv = 300; assert.deepEqual(HE.botes(S).map(x => x.monto), [300, 400]); ok('Hold\'em: botes secundarios'); }
-for (let g = 0; g < 2; g++) { const S = HE.crear(2 + g, 'facil'); S.jug.forEach(p => { p.bot = true; }); let guardia = 0;
+{ // Regresión: all-in corto en la ciega grande y el otro se retira habiendo puesto más → lo no disputado vuelve a su dueño
+  const S = HE.crear(2, 'facil'); S.fase = 'preflop'; S.turno = 1; S.apuestaMax = 150; S.ultRaise = 150; S.bb = 150;
+  Object.assign(S.jug[0], { stack: 1000, apuesta: 0, inv: 0, fold: true, allin: false });
+  Object.assign(S.jug[1], { stack: 3810, apuesta: 75, inv: 75, fold: false, allin: false });
+  Object.assign(S.jug[2], { stack: 0, apuesta: 15, inv: 15, fold: false, allin: true });
+  const total = S.jug.reduce((t, p) => t + p.stack + p.inv, 0);
+  assert.ok(HE.actuar(S, 1, { t: 'fold' })); assert.equal(S.fase, 'fin');
+  assert.equal(S.jug.reduce((t, p) => t + p.stack, 0), total);              // no se pierde ninguna ficha
+  assert.equal(S.jug[2].stack, 30); assert.equal(S.jug[1].stack, 3810 + 60);  // Marta gana 30; a Ana le vuelven 60
+  assert.match(S.resultado.texto, /se devuelven 60/); ok('Hold\'em: las fichas no disputadas se devuelven (sin pérdidas)'); }
+for (let g = 0; g < 4; g++) { const S = HE.crear(2 + g % 4, 'facil'); S.jug.forEach(p => { p.bot = true; }); let guardia = 0;
   while (S.fase !== 'terminado' && guardia++ < 4000) { if (S.fase === 'fin') { HE.nuevaMano(S); continue; } const i = S.turno; assert.ok(i >= 0); let a = HE.decidir(S, i); if (!HE.actuar(S, i, a)) assert.ok(HE.actuar(S, i, HE.legal(S, i).pasar ? { t: 'check' } : { t: 'call' })); if (S.fase === 'fin') assert.equal(S.jug.reduce((s, p) => s + p.stack, 0), S.total); }
   assert.equal(S.fase, 'terminado'); }
 ok('Hold\'em: torneos completos solo de bots, con conservación de fichas');
@@ -339,6 +351,31 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
   S = SN.crear(); { const m = S.n; S.serp = [5 * m + 5, 5 * m + 6, 6 * m + 6, 6 * m + 5, 6 * m + 4]; S.dir = 3; S.comida = 0; assert.equal(SN.paso(S, 2), 'muerte'); assert.equal(S.motivo, 'cuerpo'); }
   for (const modo of Object.keys(SN.MODOS)) { const T = SN.crear({ modo, tam: 'grande' }); assert.ok(!T.muros.includes(T.serp[0]) && SN.validar(JSON.parse(JSON.stringify(T)))); }
   ok('Serpiente: giros, crecer, paredes, sin paredes, choque con el cuerpo y laberinto'); }
+// ---- Bloques ----
+{ const W = BL.W, H = BL.H;
+  { const S = BL.crear(); assert.equal(new Set([S.p.t, ...S.cola, ...S.bolsa].slice(0, 7)).size, 7); }
+  { const S = BL.crear(); S.p = { t: 1, r: 0, x: 0, y: 0 }; for (let x = 4; x < W; x++) S.tab[(H - 1) * W + x] = 2; const ev = BL.soltar(S); assert.equal(ev.lineas, 1); assert.equal(ev.puntos, 100); }
+  { const S = BL.crear(); for (let y = H - 4; y < H; y++) for (let x = 0; x < 9; x++) S.tab[y * W + x] = 3; S.p = { t: 1, r: 1, x: 7, y: 0 }; const ev = BL.soltar(S); assert.equal(ev.lineas, 4); assert.ok(ev.puntos >= 800); }
+  { const S = BL.crear(), cuad = () => { S.tab.fill(0); for (let y = H - 4; y < H; y++) for (let x = 0; x < 9; x++) S.tab[y * W + x] = 3; S.p = { t: 1, r: 1, x: 7, y: 2 }; return BL.soltar(S); };
+    const a = cuad(); assert.equal(a.b2b, false); assert.equal(a.puntos, 800);                        // el primero no es «seguido»
+    const b = cuad(); assert.equal(b.b2b, true); assert.equal(b.puntos, 1200 + 50 * 1); }              // el segundo sí: ×1,5 y combo
+  { const S = BL.crear(); S.p = { t: 1, r: 1, x: -2, y: 5 }; assert.ok(BL.choca(S, S.p, 0, 0, 2)); assert.ok(BL.rotar(S, 1)); assert.ok(!BL.choca(S, S.p)); }
+  { const S = BL.crear(); const t = S.p.t; assert.ok(BL.reservar(S)); assert.equal(S.reserva, t); assert.ok(!BL.reservar(S)); }
+  { const S = BL.crear(); const n0 = S.piezas; for (let k = 0; k < 700; k++) BL.avanzar(S, 50); assert.ok(S.piezas > n0); }
+  { const S = BL.crear(); let k = 0; while (S.fase === 'jugar' && k++ < 200) BL.soltar(S); assert.equal(S.motivo, 'arriba'); }
+  { const S = BL.crear({ modo: 'ultra' }); for (let k = 0; k < 200 && S.fase === 'jugar'; k++) BL.avanzar(S, 1000); assert.equal(S.fase, 'fin'); }
+  { const S = BL.crear(); assert.ok(BL.validar(JSON.parse(JSON.stringify(S)))); }
+  ok('Bloques: bolsa de 7, líneas y cuádruple, giros con empujón, reserva, gravedad, fin y modo Ultra'); }
+// ---- Rompe-Ladrillos ----
+{ for (const n of LD.NIVELES) for (const f of n) assert.ok(f.length === 10 && !/[^.1-6DTM?]/.test(f));
+  { const S = LD.crear(); LD.sacar(S); const b = S.bolas[0]; b.x = S.pala.x + S.pala.w / 2 - 2; b.y = LD.PALA_Y - 30; b.vx = 0; b.vy = .5; LD.avanzar(S, 60); assert.ok(b.vx > 0 && b.vy < 0); }
+  { const S = LD.crear(); S.ladrillos = [{ c: 4, f: 5, tipo: 'd', color: 0, golpes: 2 }, { c: 0, f: 0, tipo: 'n', color: 1, golpes: 1 }]; LD.sacar(S); const b = S.bolas[0], r = LD.rectLadrillo(S.ladrillos[0]);
+    b.x = r.x + 50; b.y = r.y + r.h + 40; b.vx = 0; b.vy = -.5; for (let k = 0; k < 10; k++) LD.avanzar(S, 16); assert.equal(S.ladrillos.find(l => l.tipo === 'd').golpes, 1); }
+  { const S = LD.crear(); S.ladrillos = [{ c: 4, f: 5, tipo: 'n', color: 1, golpes: 1 }, { c: 4, f: 4, tipo: 'n', color: 1, golpes: 1 }, { c: 0, f: 0, tipo: 'n', color: 1, golpes: 1 }]; LD.sacar(S); S.efectos.fuego = 5000;
+    const b = S.bolas[0], r = LD.rectLadrillo(S.ladrillos[0]); b.x = r.x + 50; b.y = r.y + r.h + 40; b.vx = 0; b.vy = -.5; for (let k = 0; k < 20; k++) LD.avanzar(S, 16); assert.equal(S.ladrillos.length, 1); }
+  { const S = LD.crear(); LD.sacar(S); for (let k = 0; k < 20000 && S.vidas === LD.VIDAS; k++) { if (S.fase === 'listo') LD.sacar(S); LD.avanzar(S, 16, { x: 50 }); } assert.ok(S.vidas < LD.VIDAS); }      // sin mover la pala, acaba perdiéndose una vida
+  { let n = 0; for (let g = 0; g < 4; g++) { const S = LD.crear({ nivel: 1 + g * 3 }); let t = 0, off = 0; while (S.fase !== 'nivel' && S.fase !== 'fin' && t < 900000) { if (S.fase === 'listo') LD.sacar(S); const b = S.bolas.filter(x => !x.pegada).sort((a, c) => c.y - a.y)[0]; if (b && b.vy < 0) off = (Math.random() - .5) * S.pala.w * .75; LD.avanzar(S, 16, { x: b ? b.x + off : S.pala.x }); t += 16; for (const x of S.bolas) assert.ok(x.x >= 0 && x.x <= LD.ANCHO && x.y >= -1); } if (S.fase === 'nivel') n++; } assert.ok(n >= 3, 'niveles completados: ' + n); }
+  ok('Rompe-Ladrillos: niveles, rebote en la pala, ladrillos duros, bola de fuego, vidas y niveles completables'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
 console.log(`\n${n} pruebas correctas`);

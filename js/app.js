@@ -285,5 +285,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   let recargado = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaVersion && !recargado) { recargado = true; location.reload(); } });
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
+  // en segundo plano: guardar las imágenes de los naipes para jugar sin conexión (solo baja las que falten)
+  navigator.serviceWorker.ready.then(r => setTimeout(() => r.active && r.active.postMessage('guardar-cartas'), 4000)).catch(() => {});
 }
 migrarV1().then(render);

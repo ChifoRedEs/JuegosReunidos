@@ -29,6 +29,8 @@ export const JUEGOS = [
   { id: 'rosco', nombre: 'El Rosco', icono: '🔵', color: '#1E4FD8', categoria: 'palabras', descripcion: 'Una definición por letra contra el reloj. ¡Pasapalabra!', cargar: () => import('./games/rosco/index.js') },
   { id: 'encadenadas', nombre: 'Encadenadas', icono: '🔗', color: '#12B76A', categoria: 'palabras', descripcion: 'Cada palabra empieza por la última sílaba de la anterior.', cargar: () => import('./games/encadenadas/index.js') },
   { id: 'serpiente', nombre: 'Serpiente', icono: '🐍', color: '#4E7CF6', categoria: 'arcade', descripcion: 'Come, crece y no te muerdas. 3 modos y récords.', cargar: () => import('./games/serpiente/index.js') },
+  { id: 'bloques', nombre: 'Bloques', icono: '🧱', color: '#A24DE0', categoria: 'arcade', descripcion: 'Encaja las piezas que caen y completa líneas.', cargar: () => import('./games/bloques/index.js') },
+  { id: 'ladrillos', nombre: 'Rompe-Ladrillos', icono: '🏓', color: '#FF4757', categoria: 'arcade', descripcion: 'Rompe todos los ladrillos con la bola. 12 niveles y premios.', cargar: () => import('./games/ladrillos/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: '2-4 jugadores, 450 preguntas en 9 categorías.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
 ];
