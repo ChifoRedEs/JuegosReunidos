@@ -171,3 +171,9 @@ main{padding-top:14px}
   .stats-tabs{gap:4px}
   .stats-tab{padding:8px 1px;font-size:10px}
 }
+
+/* Categorías de inicio sin desplegables */
+.cat-seccion{margin:8px 0 24px}
+.cat-seccion>.cat{margin:12px 2px 12px;display:flex;align-items:center;gap:8px}
+.cat-seccion>.cat .cnom{flex:1}
+.cat-seccion .rejilla{margin:0}

@@ -100,7 +100,8 @@ function crearApi(j, ent, mod, root) {
 
 /* ---------- rutas ---------- */
 function ruta() {
-  const [a, b] = location.hash.replace(/^#\/?/, '').split('/');
+  const rutaHash = location.hash.replace(/^#\/?/, '').split('?')[0];
+  const [a, b] = rutaHash.split('/');
   if (a === 'juego' && JUEGOS.some(j => j.id === b)) return { v: 'juego', id: b };
   if (a === 'cat' && Object.keys(CATEGORIAS).includes(b)) return { v: 'inicio', cat: b };
   return { v: a === 'stats' || a === 'ajustes' ? a : 'inicio', cat: null };
@@ -149,28 +150,20 @@ function ficha(j) {
   const sub = curso ? 'Continuar · ' + esc(e.resumen) : e && e.fin && e.resumen ? esc(e.resumen) : esc(j.descripcion);
   return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${sub}</small></a>`;
 }
-// Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
+// Inicio: las categorías del menú muestran directamente todas sus fichas, sin desplegables.
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio(filtro = null) {
-  tit.textContent = 'Juegos Reunidos';
+  const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
+  tit.textContent = nombreFiltro || 'Juegos Reunidos';
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
-  let abierta = store.leer('inicio:cat', null);
-  if (abierta !== '' && !cats.some(([k]) => k === abierta)) abierta = cats.length ? cats[0][0] : '';
   const grupos = cats.map(([k, n]) => {
     const js = JUEGOS.filter(j => j.categoria === k);
     const enCurso = js.filter(j => { const e = store.getJuego(j.id); return e && !e.fin && e.resumen; }).length;
-    return `<details class="catd" name="categorias" data-cat="${k}" ${k === abierta ? 'open' : ''}>
-      <summary class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${n}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}<span class="cnum">${js.length}</span></summary>
-      <div class="rejilla">${js.map(ficha).join('')}</div></details>`;
+    return `<section class="cat-seccion" data-cat="${k}">
+      <h2 class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}<span class="cnum">${js.length}</span></h2>
+      <div class="rejilla">${js.map(ficha).join('')}</div></section>`;
   }).join('');
-  app.innerHTML = grupos + (PROXIMAMENTE.length ? `<div class="soon">Próximamente: ${PROXIMAMENTE.map(esc).join(' · ')}.</div>` : '');
-  app.querySelectorAll('details.catd').forEach(d => d.addEventListener('toggle', () => {
-    if (d.open) {
-      app.querySelectorAll('details.catd[open]').forEach(o => { if (o !== d) o.open = false; });   // por si el navegador no admite name=""
-      store.escribir('inicio:cat', d.dataset.cat);
-      requestAnimationFrame(() => d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
-    } else if (!app.querySelector('details.catd[open]')) store.escribir('inicio:cat', '');
-  }));
+  app.innerHTML = grupos + (!filtro && PROXIMAMENTE.length ? `<div class="soon">Próximamente: ${PROXIMAMENTE.map(esc).join(' · ')}.</div>` : '');
 }
 
 /* ---------- estadísticas ---------- */
@@ -178,7 +171,8 @@ function vStats() {
   tit.textContent = 'Estadísticas';
   const T = stats.todas();
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
-  const elegida = new URLSearchParams(location.hash.split('?')[1] || '').get('categoria') || cats[0]?.[0];
+  const solicitada = new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
+  const elegida = cats.some(([k]) => k === solicitada) ? solicitada : cats[0]?.[0];
   const tabs = `<div class="stats-tabs" role="tablist" aria-label="Categorías de estadísticas">${cats.map(([k,n]) => `<button type="button" role="tab" class="stats-tab ${k === elegida ? 'on' : ''}" aria-selected="${k === elegida}" data-stat-cat="${k}"><span>${ICONO_CAT[k] || '🎮'}</span>${n}</button>`).join('')}</div>`;
   const cards = JUEGOS.filter(j => j.categoria === elegida).map(j => {
     const s = T[j.id];
