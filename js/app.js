@@ -8,7 +8,15 @@ import * as son from './core/sonido.js';
 import { cargarBarajas, precargarSeleccion } from './core/cartas.js';
 
 const app = $('#app'), tit = $('#titulo'), btnAtras = $('#atras'), btnMas = $('#mas'), nav = $('#nav');
-const RUTAS = [['inicio', '🏠', 'Inicio', '#/'], ['stats', '📊', 'Estadísticas', '#/stats'], ['ajustes', '⚙️', 'Ajustes', '#/ajustes']];
+const RUTAS = [
+  ['cat-logica', '🧠', 'Lógica', '#/cat/logica'],
+  ['cat-tablero', '🎲', 'Tablero', '#/cat/tablero'],
+  ['cat-cartas', '🃏', 'Cartas', '#/cat/cartas'],
+  ['cat-palabras', '🔤', 'Palabras', '#/cat/palabras'],
+  ['cat-arcade', '🕹️', 'Arcade', '#/cat/arcade'],
+  ['stats', '📊', 'Estadísticas', '#/stats'],
+  ['ajustes', '⚙️', 'Ajustes', '#/ajustes']
+];
 let actual = null, token = 0, menuItems = [];
 const V1_KEY = 'juegos-reunidos-save';
 
@@ -94,7 +102,8 @@ function crearApi(j, ent, mod, root) {
 function ruta() {
   const [a, b] = location.hash.replace(/^#\/?/, '').split('/');
   if (a === 'juego' && JUEGOS.some(j => j.id === b)) return { v: 'juego', id: b };
-  return { v: a === 'stats' || a === 'ajustes' ? a : 'inicio' };
+  if (a === 'cat' && Object.keys(CATEGORIAS).includes(b)) return { v: 'inicio', cat: b };
+  return { v: a === 'stats' || a === 'ajustes' ? a : 'inicio', cat: null };
 }
 async function cerrarJuego() {
   if (!actual) return;
@@ -106,11 +115,14 @@ async function render() {
   const t = ++token;
   await cerrarJuego();
   const r = ruta();
-  nav.innerHTML = RUTAS.map(([k, ic, tx, h]) => `<a href="${h}" class="${(r.v === 'juego' ? 'inicio' : r.v) === k ? 'on' : ''}"><span>${ic}</span>${tx}</a>`).join('');
+  nav.innerHTML = RUTAS.map(([k, ic, tx, h]) => {
+    const activa = k === 'cat-' + (r.cat || '') ? r.v === 'inicio' : k === r.v;
+    return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span aria-hidden="true">${ic}</span><b>${tx}</b></a>`;
+  }).join('');
   app.innerHTML = '';
   if (r.v === 'juego') return abrirJuego(r.id, t);
   btnAtras.hidden = true; btnMas.hidden = true;
-  ({ inicio: vInicio, stats: vStats, ajustes: vAjustes })[r.v]();
+  if (r.v === 'inicio') vInicio(r.cat); else ({ stats: vStats, ajustes: vAjustes })[r.v]();
   window.scrollTo(0, 0);
 }
 async function abrirJuego(id, t) {
@@ -139,9 +151,9 @@ function ficha(j) {
 }
 // Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
-function vInicio() {
+function vInicio(filtro = null) {
   tit.textContent = 'Juegos Reunidos';
-  const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
+  const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
   let abierta = store.leer('inicio:cat', null);
   if (abierta !== '' && !cats.some(([k]) => k === abierta)) abierta = cats.length ? cats[0][0] : '';
   const grupos = cats.map(([k, n]) => {
@@ -165,7 +177,10 @@ function vInicio() {
 function vStats() {
   tit.textContent = 'Estadísticas';
   const T = stats.todas();
-  const cards = JUEGOS.map(j => {
+  const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
+  const elegida = new URLSearchParams(location.hash.split('?')[1] || '').get('categoria') || cats[0]?.[0];
+  const tabs = `<div class="stats-tabs" role="tablist" aria-label="Categorías de estadísticas">${cats.map(([k,n]) => `<button type="button" role="tab" class="stats-tab ${k === elegida ? 'on' : ''}" aria-selected="${k === elegida}" data-stat-cat="${k}"><span>${ICONO_CAT[k] || '🎮'}</span>${n}</button>`).join('')}</div>`;
+  const cards = JUEGOS.filter(j => j.categoria === elegida).map(j => {
     const s = T[j.id];
     if (!s || !s.partidas) return `<div class="panel"><h3>${j.icono} ${esc(j.nombre)}</h3><p class="note">Todavía sin partidas terminadas.</p></div>`;
     const tiempos = Object.entries(s.tiempos || {}).map(([k, v]) => `<tr><td>Mejor tiempo · ${esc(k)}</td><td>${fmtTiempo(v)}</td></tr>`).join('')
@@ -175,7 +190,10 @@ function vStats() {
       ${s.victorias || s.derrotas || s.tablas ? `<tr><td>Victorias · derrotas · tablas</td><td>${s.victorias} · ${s.derrotas} · ${s.tablas}</td></tr><tr><td>Racha actual · mejor racha</td><td>${s.racha} · ${s.mejorRacha}</td></tr>` : ''}
       ${tiempos}</table></div>`;
   }).join('');
-  app.innerHTML = cards + '<div class="bar"><button class="btn danger" id="stReset">Reiniciar estadísticas</button></div>';
+  app.innerHTML = tabs + `<div class="stats-cards">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar"><button class="btn danger" id="stReset">Reiniciar estadísticas</button></div>`;
+  app.querySelectorAll('[data-stat-cat]').forEach(b => b.addEventListener('click', () => {
+    location.hash = '#/stats?categoria=' + b.dataset.statCat;
+  }));
   $('#stReset').addEventListener('click', () => { if (confirm('¿Borrar todas las estadísticas?')) { stats.reiniciar(); vStats(); } });
 }
 
