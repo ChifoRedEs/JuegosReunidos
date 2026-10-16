@@ -184,11 +184,21 @@ function vStats() {
       ${s.victorias || s.derrotas || s.tablas ? `<tr><td>Victorias · derrotas · tablas</td><td>${s.victorias} · ${s.derrotas} · ${s.tablas}</td></tr><tr><td>Racha actual · mejor racha</td><td>${s.racha} · ${s.mejorRacha}</td></tr>` : ''}
       ${tiempos}</table></div>`;
   }).join('');
-  app.innerHTML = tabs + `<div class="stats-cards">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar"><button class="btn danger" id="stReset">Reiniciar estadísticas</button></div>`;
+  app.innerHTML = tabs + `<div class="stats-cards">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar Todas las Estadísticas</button></div>`;
   app.querySelectorAll('[data-stat-cat]').forEach(b => b.addEventListener('click', () => {
     location.hash = '#/stats?categoria=' + b.dataset.statCat;
   }));
-  $('#stReset').addEventListener('click', () => { if (confirm('¿Borrar todas las estadísticas?')) { stats.reiniciar(); vStats(); } });
+  $('#stResetCat').addEventListener('click', () => {
+    const nombre = CATEGORIAS[elegida] || 'esta categoría';
+    if (!confirm(`¿Borrar únicamente las estadísticas de ${nombre}? Las demás categorías se conservarán.`)) return;
+    const idsCategoria = new Set(JUEGOS.filter(j => j.categoria === elegida).map(j => j.id));
+    const restantes = Object.fromEntries(Object.entries(stats.todas()).filter(([id]) => !idsCategoria.has(id)));
+    stats.importar(restantes);
+    vStats();
+  });
+  $('#stResetAll').addEventListener('click', () => {
+    if (confirm('¿Borrar todas las estadísticas de todas las categorías? Esta acción no se puede deshacer.')) { stats.reiniciar(); vStats(); }
+  });
 }
 
 /* ---------- ajustes y copia de seguridad ---------- */

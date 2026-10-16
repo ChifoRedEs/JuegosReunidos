@@ -43,12 +43,12 @@ nav a.on{color:var(--purple);background:color-mix(in srgb,var(--purple) 14%,tran
 .catd[open]>.rejilla{animation:catab .22s ease-out}
 @keyframes catab{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .rejilla{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.ficha{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:3px;min-height:132px;padding:14px;border-radius:22px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 78%,#fff),var(--c) 70%);box-shadow:0 8px 18px color-mix(in srgb,var(--c) 45%,transparent)}
+.ficha{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:3px;aspect-ratio:1 / 1;min-height:0;padding:clamp(9px,2.5vw,14px);border-radius:22px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 78%,#fff),var(--c) 70%);box-shadow:0 8px 18px color-mix(in srgb,var(--c) 45%,transparent)}
 .ficha::after{content:"";position:absolute;right:-26px;top:-26px;width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.17)}
 .ficha:active{transform:scale(.97)}
-.ficha .ico{font-size:42px;line-height:1.05;filter:drop-shadow(0 3px 3px rgba(0,0,0,.28));position:relative;z-index:1}
-.ficha b{font-family:'Baloo 2',system-ui,sans-serif;font-size:21px;line-height:1.05;position:relative;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.25)}
-.ficha small{color:rgba(255,255,255,.95);font-size:12.5px;line-height:1.25;position:relative;z-index:1;font-weight:700}
+.ficha .ico{font-size:clamp(30px,9vw,42px);line-height:1.05;filter:drop-shadow(0 3px 3px rgba(0,0,0,.28));position:relative;z-index:1}
+.ficha b{font-family:'Baloo 2',system-ui,sans-serif;font-size:clamp(16px,4.5vw,21px);line-height:1.05;position:relative;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.ficha small{color:rgba(255,255,255,.95);font-size:clamp(10px,2.6vw,12.5px);line-height:1.25;position:relative;z-index:1;font-weight:700;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;overflow-wrap:anywhere}
 .ficha.curso small{background:rgba(255,255,255,.26);padding:3px 9px;border-radius:99px;font-weight:800;width:fit-content}
 .soon{border:2px dashed var(--line);border-radius:16px;padding:12px 16px;color:var(--mut);font-size:14px;margin-top:22px}
 

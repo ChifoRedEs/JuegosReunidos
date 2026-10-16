@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-4879e6d4b1';
+const VERSION = 'jr-53dba712b4';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
