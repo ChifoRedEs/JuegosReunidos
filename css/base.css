@@ -43,7 +43,7 @@ nav a.on{color:var(--purple);background:color-mix(in srgb,var(--purple) 14%,tran
 .catd[open]>.rejilla{animation:catab .22s ease-out}
 @keyframes catab{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .rejilla{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.ficha{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:3px;aspect-ratio:1 / 1;min-height:0;padding:clamp(9px,2.5vw,14px);border-radius:22px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 78%,#fff),var(--c) 70%);box-shadow:0 8px 18px color-mix(in srgb,var(--c) 45%,transparent)}
+.ficha{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:3px;aspect-ratio:5 / 4;min-height:0;padding:clamp(9px,2.5vw,14px);border-radius:22px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 78%,#fff),var(--c) 70%);box-shadow:0 8px 18px color-mix(in srgb,var(--c) 45%,transparent)}
 .ficha::after{content:"";position:absolute;right:-26px;top:-26px;width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.17)}
 .ficha:active{transform:scale(.97)}
 .ficha .ico{font-size:clamp(30px,9vw,42px);line-height:1.05;filter:drop-shadow(0 3px 3px rgba(0,0,0,.28));position:relative;z-index:1}
