@@ -48,7 +48,7 @@
   },
   {
    "id": "i-fr-amarillo",
-   "nombre": "Amarillo (adamascado)",
+   "nombre": "Amarillo (poker)",
    "archivo": "dorsos/fr-amarillo.webp"
   },
   {
@@ -58,7 +58,7 @@
   },
   {
    "id": "i-fr-arcoiris",
-   "nombre": "Arcoíris (adamascado)",
+   "nombre": "Arcoíris (poker)",
    "archivo": "dorsos/fr-arcoiris.webp"
   },
   {
@@ -68,12 +68,12 @@
   },
   {
    "id": "i-fr-azul",
-   "nombre": "Azul (adamascado)",
+   "nombre": "Azul (poker)",
    "archivo": "dorsos/fr-azul.webp"
   },
   {
    "id": "i-fr-blanco",
-   "nombre": "Blanco (adamascado)",
+   "nombre": "Blanco (poker)",
    "archivo": "dorsos/fr-blanco.webp"
   },
   {
@@ -88,7 +88,7 @@
   },
   {
    "id": "i-fr-marron",
-   "nombre": "Marrón (adamascado)",
+   "nombre": "Marrón (poker)",
    "archivo": "dorsos/fr-marron.webp"
   },
   {
@@ -98,7 +98,7 @@
   },
   {
    "id": "i-fr-morado",
-   "nombre": "Morado (adamascado)",
+   "nombre": "Morado (poker)",
    "archivo": "dorsos/fr-morado.webp"
   },
   {
@@ -108,7 +108,7 @@
   },
   {
    "id": "i-fr-naranja",
-   "nombre": "Naranja (adamascado)",
+   "nombre": "Naranja (poker)",
    "archivo": "dorsos/fr-naranja.webp"
   },
   {
@@ -118,7 +118,7 @@
   },
   {
    "id": "i-fr-rojo",
-   "nombre": "Rojo (adamascado)",
+   "nombre": "Rojo (poker)",
    "archivo": "dorsos/fr-rojo.webp"
   },
   {
