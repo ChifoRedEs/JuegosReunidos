@@ -1,6 +1,5 @@
 // Utilidades DOM y de azar compartidas por toda la app.
 export const $ = (s, r = document) => r.querySelector(s);
-export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 export const rnd = n => Math.floor(Math.random() * n);
 export const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 export const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

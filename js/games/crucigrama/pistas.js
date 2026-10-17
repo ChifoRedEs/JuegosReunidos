@@ -34,6 +34,16 @@ OVEJA|Animal que da lana
 FLAMENCO|Ave rosada que descansa sobre una pata
 KOALA|Marsupial australiano que duerme en los eucaliptos
 PANDA|Oso blanco y negro que come bambú
+CAMALEON|Reptil que cambia de color para camuflarse
+ARDILLA|Roedor de cola peluda que trepa a los árboles
+ERIZO|Mamífero pequeño cubierto de púas
+FOCA|Mamífero marino que aplaude con las aletas en los acuarios
+LORO|Ave de colores que puede imitar palabras
+CARACOL|Molusco que lleva su casa a cuestas
+MEDUSA|Animal marino gelatinoso que puede picar
+HIPOPOTAMO|Mamífero africano enorme que pasa el día en el agua
+CIERVO|Animal del bosque cuyo macho luce grandes astas
+ABEJA|Insecto que fabrica miel
 `),
   geografia: T('Geografía', '🌍', `
 FRANCIA|País de la Torre Eiffel
@@ -70,6 +80,16 @@ ISLANDIA|Isla de volcanes y géiseres
 TOKIO|Capital de Japón
 ATENAS|Capital de Grecia
 CUBA|La isla más grande del Caribe
+ANDES|Cordillera más larga del mundo, en Sudamérica
+CARIBE|Mar de aguas cálidas entre América Central y las Antillas
+TAJO|Río más largo de la península ibérica
+EBRO|Río que desemboca en un gran delta en Tarragona
+SEVILLA|Ciudad de la Giralda y la Torre del Oro
+NORUEGA|País nórdico famoso por sus fiordos
+MARRUECOS|País africano vecino de España al otro lado del Estrecho
+CANARIAS|Archipiélago español frente a la costa africana
+ANTARTIDA|Continente helado del polo sur
+VENECIA|Ciudad italiana de canales y góndolas
 `),
   cocina: T('Cocina', '🍳', `
 PAELLA|Plato de arroz típico de Valencia
@@ -104,6 +124,16 @@ VINAGRE|Aliño ácido que se hace con vino
 ENSALADA|Plato frío de verduras
 SOPA|Plato líquido que se toma con cuchara
 TARTA|Dulce grande para celebrar un cumpleaños
+PIMIENTO|Hortaliza que puede ser roja, verde o amarilla
+CEBOLLA|Hortaliza que hace llorar al cortarla
+LECHUGA|Hoja verde base de muchas ensaladas
+YOGUR|Lácteo fermentado que se toma con cuchara
+GALLETA|Dulce pequeño y crujiente horneado
+MERMELADA|Dulce de fruta cocida con azúcar para untar
+BOCADILLO|Pan partido y relleno de embutido o tortilla
+PATATA|Tubérculo con el que se hacen las fritas
+CALABAZA|Hortaliza naranja típica de Halloween
+FLAN|Postre de huevo y leche con caramelo
 `),
   deportes: T('Deportes', '⚽', `
 FUTBOL|Deporte con porterías y balón
@@ -137,13 +167,22 @@ ESTADIO|Recinto grande para ver partidos
 CANCHA|Terreno de juego de baloncesto o tenis
 REMO|Deporte con palas en el agua
 TRIATLON|Natación, ciclismo y carrera
+PATINAJE|Deporte sobre ruedas o cuchillas de hielo
+ESCALADA|Deporte de subir paredes de roca
+VELA|Deporte de navegar empujado por el viento
+RAQUETA|Pala con cuerdas para golpear la pelota en tenis
+CANASTA|Aro con red donde se encesta en baloncesto
+PENALTI|Lanzamiento desde once metros en fútbol
+AJEDREZ|Deporte mental de reyes, damas y peones
+TROFEO|Copa que recibe el campeón
+DEFENSA|Jugador que protege su portería
+SAQUE|Golpe con el que empieza cada punto en tenis
 `),
   ciencia: T('Ciencia y espacio', '🚀', `
 PLANETA|Cuerpo que gira alrededor de una estrella
 ESTRELLA|Astro que brilla con luz propia
 GALAXIA|Enorme conjunto de estrellas
 COMETA|Astro con larga cola de hielo
-COHETE|Vehículo que viaja al espacio
 SATELITE|La Luna lo es de la Tierra
 ORBITA|Camino que sigue un astro
 MARTE|El planeta rojo
@@ -171,6 +210,16 @@ TERREMOTO|Temblor fuerte de la tierra
 ROBOT|Máquina programada para hacer tareas
 ASTRONAUTA|Persona que viaja al espacio
 PROTON|Partícula con carga positiva en el núcleo
+NEURONA|Célula del sistema nervioso
+VIRUS|Agente diminuto que solo se reproduce dentro de células
+IMAN|Objeto que atrae el hierro
+SOLAR|Relativo al Sol, como cierta energía renovable
+RAYO|Descarga eléctrica que cae durante una tormenta
+CARBONO|Elemento químico base de la vida
+VACUNA|Preparado que enseña al cuerpo a defenderse de una enfermedad
+GENETICA|Ciencia que estudia la herencia y los genes
+PLUTON|Planeta enano en los confines del sistema solar
+BACTERIA|Microorganismo de una sola célula sin núcleo
 `),
   cultura: T('Arte y cultura', '🎨', `
 QUIJOTE|Hidalgo de La Mancha que luchaba contra molinos
@@ -205,6 +254,16 @@ DIRECTOR|Dirige una película o una orquesta
 FESTIVAL|Gran celebración de música o cine
 CARNAVAL|Fiesta de disfraces y comparsas
 MOSAICO|Dibujo hecho con piedrecitas de colores
+SONETO|Poema de catorce versos
+GUERNICA|Cuadro de Picasso sobre un bombardeo en la guerra civil
+BOLERO|Famosa obra orquestal de Ravel que repite un mismo ritmo
+ZARZUELA|Género teatral español con partes habladas y cantadas
+LORCA|Poeta granadino autor de Bodas de sangre
+SINFONIA|Obra larga para orquesta en varios movimientos
+COMEDIA|Obra pensada para hacer reír
+ACUARELA|Pintura hecha con colores diluidos en agua
+RETRATO|Pintura o foto que representa a una persona
+TRAGEDIA|Obra teatral de final desgraciado
 `),
   naturaleza: T('Naturaleza', '🌿', `
 BOSQUE|Lugar con muchos árboles
@@ -239,5 +298,105 @@ PINO|Árbol de piñas y agujas
 HELECHO|Planta de hojas en forma de pluma
 SETA|Hongo con sombrero
 MUSGO|Planta verde que crece sobre las piedras
+NIEBLA|Nube baja que apenas deja ver
+ESCARCHA|Hielo fino que cubre las plantas en las mañanas frías
+LAGUNA|Lago pequeño
+RAIZ|Parte de la planta que crece bajo tierra
+SEMILLA|Grano del que nace una planta nueva
+CACTUS|Planta del desierto con espinas
+ROCIO|Gotas de agua que aparecen en las hojas al amanecer
+CORAL|Animal marino que forma arrecifes de colores
+ENCINA|Árbol de las bellotas típico de la dehesa
+NEVADA|Caída abundante de nieve
+`),
+  profesiones: T('Profesiones', '👩‍⚕️', `
+MEDICO|Persona que cura enfermedades
+ENFERMERA|Cuida a los pacientes en el hospital
+BOMBERO|Apaga incendios y rescata personas
+POLICIA|Agente que vela por la seguridad
+MAESTRO|Enseña a los niños en la escuela
+PANADERO|Hace el pan cada madrugada
+CARTERO|Reparte las cartas casa por casa
+PILOTO|Conduce aviones
+CARPINTERO|Trabaja la madera
+FONTANERO|Arregla tuberías y grifos
+DENTISTA|Médico de los dientes
+VETERINARIO|Médico de los animales
+ABOGADO|Defiende a su cliente ante el juez
+JUEZ|Dicta sentencia en un juicio
+COCINERO|Prepara la comida en un restaurante
+CAMARERO|Sirve las mesas en un bar
+ARQUITECTO|Diseña edificios
+PERIODISTA|Informa de las noticias
+FOTOGRAFO|Hace fotografías por oficio
+PELUQUERO|Corta y peina el pelo
+AGRICULTOR|Cultiva la tierra
+PESCADOR|Saca peces del mar o del río
+MECANICO|Repara coches y motores
+PINTOR|Artista que trabaja con pinceles y colores
+CIRUJANO|Médico que opera
+BARISTA|Profesional que prepara cafés de especialidad
+`),
+  hogar: T('La casa', '🏠', `
+SOFA|Asiento largo y mullido del salón
+CAMA|Mueble para dormir
+ALMOHADA|Cojín donde se apoya la cabeza al dormir
+ARMARIO|Mueble donde se guarda la ropa
+ESPEJO|Superficie que refleja la imagen
+LAMPARA|Aparato que da luz
+VENTANA|Abertura en la pared con cristal
+PUERTA|Hueco con hoja para entrar y salir
+TEJADO|Cubierta superior de la casa
+ESCALERA|Sirve para subir de un piso a otro
+COCINA|Habitación donde se preparan las comidas
+BALCON|Saliente de una fachada con barandilla
+JARDIN|Terreno con plantas y flores junto a la casa
+CHIMENEA|Hogar para encender fuego dentro de casa
+ALFOMBRA|Tejido que cubre el suelo
+CORTINA|Tela que cubre la ventana
+LAVADORA|Electrodoméstico que lava la ropa
+ESCOBA|Utensilio para barrer
+GRIFO|Llave por la que sale el agua
+DUCHA|Chorro de agua para asearse
+MESA|Mueble con tablero y patas para comer o trabajar
+SILLA|Asiento con respaldo para una persona
+ESTANTERIA|Mueble de baldas para libros
+TIMBRE|Suena cuando alguien llama a la puerta
+LLAVE|Abre la cerradura
+BUZON|Caja donde llegan las cartas
+GARAJE|Lugar donde se guarda el coche
+SOTANO|Habitación bajo el nivel de la calle
+PASILLO|Corredor que une las habitaciones
+`),
+  transporte: T('Transporte', '🚆', `
+AVION|Vehículo que vuela con alas y motores
+TREN|Vehículo que circula sobre raíles
+BARCO|Vehículo que navega por el agua
+BICICLETA|Vehículo de dos ruedas y pedales
+AUTOBUS|Vehículo grande de transporte público por carretera
+METRO|Tren que circula bajo tierra en la ciudad
+TRANVIA|Tren urbano que va por raíles en la calle
+MOTO|Vehículo de dos ruedas con motor
+CAMION|Vehículo grande para transportar mercancías
+TAXI|Coche con conductor que se paga por trayecto
+HELICOPTERO|Aeronave con hélices encima
+SUBMARINO|Barco que navega bajo el agua
+VELERO|Barco movido por el viento
+GLOBO|Aeronave que vuela con aire caliente
+PATINETE|Tabla con ruedas y manillar
+CANOA|Embarcación estrecha que se mueve a remo
+FERRY|Barco que transporta pasajeros y coches
+AEROPUERTO|Lugar donde despegan y aterrizan los aviones
+ESTACION|Lugar donde paran los trenes
+PUERTO|Lugar donde atracan los barcos
+SEMAFORO|Luces que regulan el tráfico
+VOLANTE|Rueda con la que se dirige el coche
+GASOLINA|Combustible de muchos coches
+BILLETE|Papel que da derecho a viajar
+MALETA|Bolsa grande para el equipaje
+PEAJE|Pago por usar una autopista
+CARRETERA|Vía para los coches
+TELEFERICO|Cabina colgada de un cable que sube montañas
+AMBULANCIA|Vehículo que lleva enfermos al hospital
 `),
 };

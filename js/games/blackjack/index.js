@@ -3,7 +3,7 @@ import { cartaHTML } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
 import * as BJ from './motor.js';
 
-let S = null, api = null, asp = null, root = null, prev = { banca: 0, manos: [] }, bloqueo = false, tBloq = null, regRonda = 0, consejoOn = true;
+let S = null, api = null, asp = null, root = null, prev = { banca: 0, manos: [] }, bloqueo = false, tBloq = null, regRonda = 0, consejoOn = true, contarOn = false;
 const NOMBRE_RES = { gana: 'Gana', bj: '¡Blackjack!', pierde: 'Pierdes', empate: 'Empate', rend: 'Rendida', pasa: 'Te pasas' };
 const netoMano = h => h.res === 'gana' ? h.ap : h.res === 'bj' ? h.ap * 1.5 : h.res === 'pierde' || h.res === 'pasa' ? -h.ap : h.res === 'rend' ? -h.ap / 2 : 0;
 const signo = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
@@ -22,21 +22,33 @@ export async function mount(r, a) {
   api = a; root = r; bloqueo = false;
   asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./blackjack.css', import.meta.url));
-  const g = api.cargar(); S = g ? g.s : BJ.nuevoEstado(); regRonda = g ? g.regRonda : 0; consejoOn = api.pref('consejo', true);
+  const g = api.cargar(); S = g ? g.s : BJ.nuevoEstado(); regRonda = g ? g.regRonda : 0; consejoOn = api.pref('consejo', true); contarOn = api.pref('contar', false);
   prev = { banca: S.banca.length, manos: S.manos.map(h => h.c.length) };
   root.innerHTML = `
     <div class="bjtop"><div class="bjbank">🪙 <span id="bjF">0</span><small id="bjPico"></small></div><button class="btn" data-ac="consejo" id="bjCons"></button></div>
     <div class="mesa bjmesa"><div><div class="bjlbl">Banca <span class="bjb" id="bjTB"></span></div><div class="bjrow" id="bjBanca"></div></div>
       <div class="bjmsg" id="bjMsg" role="status" aria-live="polite"></div>
       <div><div class="bjmanos" id="bjManos"></div></div></div>
+    <div class="bjcuenta" id="bjCuenta" hidden></div>
     <div id="bjPanel"></div>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    <div class="bar"><button class="btn" data-ac="contar" id="bjContar"></button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
   root.addEventListener('click', clic);
-  api.menu([{ texto: 'Consejo de estrategia', accion: () => alternarConsejo(), activo: consejoOn }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Empezar de cero (1000 fichas)', accion: reiniciar, peligro: true }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Consejo de estrategia', accion: () => alternarConsejo(), activo: consejoOn }, { texto: '🧮 Contador de cartas (Hi-Lo)', accion: () => alternarContar(), activo: contarOn }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Empezar de cero (1000 fichas)', accion: reiniciar, peligro: true }, { texto: 'Reglas', accion: reglas }]);
   pintar();
 }
 export function unmount() { clearTimeout(tBloq); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
 function guardar() { if (!S) return; const d = { s: S, regRonda }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
+function alternarContar() { contarOn = !contarOn; api.setPref('contar', contarOn); pintar(); }
+// Panel del contador: cuenta corriente, cuenta real y qué significa para la siguiente apuesta
+function pintarCuenta() {
+  const el = $('#bjCuenta'), b = $('#bjContar'); if (b) { b.textContent = `🧮 Contar: ${contarOn ? 'sí' : 'no'}`; b.classList.toggle('on', contarOn); }
+  if (!el) return; el.hidden = !contarOn; if (!contarOn) return;
+  if (bloqueo) { el.innerHTML = '<b>🧮 Cuenta…</b>'; return; }
+  const { rc, tc, mazos } = BJ.cuenta(S), f = n => (n > 0 ? '+' : '') + n.toLocaleString('es-ES', { maximumFractionDigits: 1 });
+  const t = Math.round(tc * 10) / 10;
+  const lectura = t >= 2 ? '🟢 Quedan muchas cartas altas: la ventaja está de tu parte. Es el momento de apostar más.' : t <= -1 ? '🔴 Quedan muchas cartas bajas: la banca tiene ventaja. Apuesta el mínimo.' : '⚪ Zapato neutro: apuesta normal.';
+  el.innerHTML = `<div class="bjc"><span>Cuenta<b>${f(rc)}</b></span><span>Cuenta real<b>${f(t)}</b></span><span>Barajas por salir<b>${f(Math.round(mazos * 10) / 10)}</b></span></div><p class="note">${lectura}</p>`;
+}
 function alternarConsejo() { consejoOn = !consejoOn; api.setPref('consejo', consejoOn); pintar(); }
 function reiniciar() { if (!api.confirmar('¿Volver a 1000 fichas y barajar de nuevo?')) return; S = BJ.nuevoEstado(); regRonda = 0; prev = { banca: 0, manos: [] }; pintar(); guardar(); }
 
@@ -68,6 +80,7 @@ function pintar() {
   else if (S.fase === 'jugador') m.textContent = S.manos.length > 1 ? `Mano ${S.act + 1} de ${S.manos.length}` : 'Tu turno';
   else if (bloqueo) m.textContent = 'La banca juega…';
   else { const r = S.resultado, bj = S.manos.find(h => h.res === 'bj'); m.textContent = bj ? `🎉 ¡BLACKJACK! Cobras 3 a 2: ${signo(netoMano(bj))} fichas` : r.texto === 'victoria' ? `¡Ganas ${r.neto} fichas!` : r.texto === 'derrota' ? `Pierdes ${-r.neto} fichas` : 'Empate: recuperas tu apuesta'; }
+  pintarCuenta();
   panel();
 }
 function panel() {
@@ -105,7 +118,7 @@ function clic(e) {
   const f = S.fase, d = b.dataset;
   if (d.ch) { BJ.apostar(S, +d.ch); api.sonido('click'); return pintar(); }
   const ac = d.ac;
-  if (ac === 'aspecto') return asp.abrir(); if (ac === 'reglas') return reglas(); if (ac === 'consejo') return alternarConsejo();
+  if (ac === 'aspecto') return asp.abrir(); if (ac === 'reglas') return reglas(); if (ac === 'consejo') return alternarConsejo(); if (ac === 'contar') return alternarContar();
   if (ac === 'borrar') { BJ.apostar(S, 0); return pintar(); }
   if (ac === 'todo') { S.apuesta = S.fichas; return pintar(); }
   if (ac === 'recargar') { BJ.recargar(S); api.registrar({ res: 'derrota' }); return tras(f); }
@@ -120,5 +133,6 @@ function reglas() {
     <li><b>Doblar</b>: duplicas la apuesta y recibes una sola carta. <b>Dividir</b>: con dos cartas de igual valor haces dos manos (hasta 4; con ases solo una carta más por mano).</li>
     <li><b>Rendirse</b>: recuperas la mitad de la apuesta (solo con las dos primeras cartas). <b>Seguro</b>: si la banca enseña un as, apuestas media apuesta a que tiene blackjack.</li>
     <li>💡 El <b>consejo</b> te dice la jugada de la estrategia básica; jugando así la ventaja de la casa baja a menos de un 0,5 %.</li>
-    <li>Las fichas son ficticias y se guardan. Si te quedas sin ellas, puedes recargar.</li></ul>`);
+    <li>Las fichas son ficticias y se guardan. Si te quedas sin ellas, puedes recargar.</li>
+    <li>🧮 <b>Contador de cartas Hi-Lo</b> (para aprender): cada 2-6 que sale suma +1, cada 7-9 vale 0 y cada 10, figura o as resta 1. La <b>cuenta real</b> es la cuenta dividida entre las barajas que quedan: con +2 o más el zapato favorece al jugador (más blackjacks), y con valores negativos a la banca. Cuando el zapato llega al corte se baraja y la cuenta vuelve a 0. Pruébalo: intenta llevar la cuenta de cabeza y compara.</li></ul>`);
 }

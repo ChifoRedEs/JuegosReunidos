@@ -1,10 +1,10 @@
 import { $, esc, rnd } from '../../core/dom.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
-import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, mejorJugada } from './reglas.js';
+import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, mejorJugada, fichasDe, equipo, nombreEquipo, COMPANERO } from './reglas.js';
 
 const VEL = { rapida: .5, normal: 1, lenta: 1.7 };
 let P = null, api = null, asp = null, rootEl = null, modo = 'setup', timer = null, ivDado = null, ivAnim = null, rodando = false, ptsMov = [], ultFoco = '';
-let cfgSetup = { am: 'h', az: 'c', ro: 'c', ve: 'c' }, nombres = {}, libre = false;
+let cfgSetup = { am: 'h', az: 'c', ro: 'c', ve: 'c' }, nombres = {}, libre = false, parejas = false;
 const velMult = () => VEL[api.pref('vel', 'normal')] || 1;
 const zoom = () => +(asp && asp.valores.zoom) || 1.4;
 const forma = () => (asp && asp.valores.fichas) || 'canica';
@@ -23,22 +23,23 @@ export function validar(x) {
   const cfg = {}; PC.forEach(c => { cfg[c] = x.order.includes(c) ? x.cfg[c] : null; });
   return { cfg, names, order: x.order.slice(), pieces: Object.fromEntries(x.order.map(c => [c, x.pieces[c].slice()])), turn: x.turn, phase: x.phase, die: x.die ?? null,
     step: x.step, kind: x.kind, pend: x.pend.slice(), sixes: x.sixes, again: !!x.again, lastMoved: x.lastMoved ?? null, winner: x.phase === 'over' ? x.winner : null,
-    salidaLibre: !!x.salidaLibre, primera: Object.fromEntries(x.order.map(c => [c, !!(x.primera && x.primera[c])])), extraSalida: !!x.extraSalida };
+    salidaLibre: !!x.salidaLibre, primera: Object.fromEntries(x.order.map(c => [c, !!(x.primera && x.primera[c])])), extraSalida: !!x.extraSalida,
+    parejas: !!x.parejas && x.order.length === 4, lastC: x.order.includes(x.lastC) ? x.lastC : null };
 }
 export const migrarV1 = d => d;
 export function resumen(d) {
   const nm = c => (d.names && d.names[c]) || PNAME[c];
-  if (d.phase === 'over') return { texto: `Ganó ${nm(d.winner)}`, fin: true };
-  return { texto: `${d.order.length} jugadores · turno de ${nm(d.order[d.turn])}`, fin: false };
+  if (d.phase === 'over') return { texto: d.parejas ? `Ganaron ${nm(d.winner)} y ${nm(COMPANERO[d.winner])}` : `Ganó ${nm(d.winner)}`, fin: true };
+  return { texto: `${d.parejas ? 'Por parejas' : d.order.length + ' jugadores'} · turno de ${nm(d.order[d.turn])}`, fin: false };
 }
 function restaurar(d) {
   P = { ...d, note: '', log: ['Partida cargada.'], moves: [], ov: null, anim: false };
-  if (P.phase === 'move') { P.moves = legales(P, actual(P), P.step, P.kind); if (!P.moves.length) { P.phase = 'pass'; P.note = 'Sin movimientos posibles.'; } }
+  if (P.phase === 'move') { P.moves = legales(P, fichasDe(P, actual(P)), P.step, P.kind); if (!P.moves.length) { P.phase = 'pass'; P.note = 'Sin movimientos posibles.'; } }
   if (P.phase === 'pass') P.note = P.note || 'Continuando…';
 }
 function guardar() {
   if (!P) return;
-  const d = { cfg: P.cfg, names: P.names, order: P.order, pieces: P.pieces, turn: P.turn, phase: P.phase, die: P.die, step: P.step, kind: P.kind, pend: P.pend, sixes: P.sixes, again: P.again, lastMoved: P.lastMoved, winner: P.winner, salidaLibre: P.salidaLibre, primera: P.primera, extraSalida: P.extraSalida };
+  const d = { cfg: P.cfg, names: P.names, order: P.order, pieces: P.pieces, turn: P.turn, phase: P.phase, die: P.die, step: P.step, kind: P.kind, pend: P.pend, sixes: P.sixes, again: P.again, lastMoved: P.lastMoved, winner: P.winner, salidaLibre: P.salidaLibre, primera: P.primera, extraSalida: P.extraSalida, parejas: !!P.parejas, lastC: P.lastC || null };
   const r = resumen(d); api.guardar(d, r.texto, r.fin);
 }
 
@@ -59,7 +60,7 @@ export async function mount(root, a) {
   await api.css(new URL('./parchis.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && PC.every(c => ['h', 'c', null].includes(c0[c] ?? null)) && PC.filter(c => c0[c]).length >= 2) cfgSetup = { am: c0.am ?? null, az: c0.az ?? null, ro: c0.ro ?? null, ve: c0.ve ?? null };
-  libre = !!api.pref('libre', false);
+  libre = !!api.pref('libre', false); parejas = !!api.pref('parejas', false);
   const n0 = api.pref('names', {}); nombres = n0 && typeof n0 === 'object' ? { ...n0 } : {};
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('change', alCambiar);
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
@@ -118,8 +119,11 @@ function jugarMov(m) {
   api.sonido(info.cap ? 'captura' : 'mover'); api.vibrar(info.cap ? 25 : 8);
   if (P.phase === 'over') {
     const humanos = P.order.filter(c => !esCPU(P, c));
-    api.registrar({ res: humanos.length === 1 ? (humanos[0] === P.winner ? 'victoria' : 'derrota') : 'partida', variante: `${P.order.length} jugadores` });
-    api.sonido(humanos.length !== 1 || humanos[0] === P.winner ? 'ganar' : 'perder');
+    // por parejas gana todo el equipo; si hay humanos en los dos equipos, la partida solo cuenta como jugada
+    const gana = c => P.parejas ? equipo(c) === equipo(P.winner) : c === P.winner, eqH = new Set(humanos.map(equipo));
+    const res = P.parejas ? (eqH.size === 1 ? (gana(humanos[0]) ? 'victoria' : 'derrota') : 'partida') : humanos.length === 1 ? (gana(humanos[0]) ? 'victoria' : 'derrota') : 'partida';
+    api.registrar({ res, variante: P.parejas ? 'Por parejas' : `${P.order.length} jugadores` });
+    api.sonido(res === 'derrota' ? 'perder' : 'ganar');
   }
   animar(info, () => { pintarJuego(); drive(); });
 }
@@ -150,6 +154,7 @@ function rSetup() {
     ${PC.map(c => `<div class="prow"><span class="dot" style="background:var(--pz-${c})"></span>
       <input class="nom" data-name="${c}" maxlength="14" placeholder="${PNAME[c]}" value="${esc(nombres[c] || '')}" aria-label="Nombre del jugador ${PNAME[c]}">
       <div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([t, l]) => `<button class="btn ${(cfgSetup[c] || 'n') === t ? 'on' : ''}" data-cfg="${c},${t}">${l}</button>`).join('')}</div></div>`).join('')}
+    <label class="chk"><input type="checkbox" id="pzParejas" ${parejas && n === 4 ? 'checked' : ''} ${n === 4 ? '' : 'disabled'}><span><b>Por parejas</b> (con 4 jugadores): <b>Amarillo y Rojo</b> contra <b>Azul y Verde</b>. No se come al compañero y, cuando uno mete sus 4 fichas, sigue tirando para mover las de su pareja. Gana la pareja que mete las 8.</span></label>
     <label class="chk"><input type="checkbox" id="pzLibre" ${libre ? 'checked' : ''}><span><b>Salida libre</b>: si no tienes ninguna ficha en juego, sales con una ficha con cualquier número (no hace falta un 5). Y si en tu primera tirada sacas un 5, sacas dos fichas de casa.</span></label>
     <div class="bar"><span class="lbl">Velocidad CPU</span>${velBotones()}</div>
     <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button>${n < 2 ? '<span class="note">Elige al menos 2 jugadores.</span>' : ''}</div>
@@ -166,6 +171,7 @@ function listaReglas() {
     <li>En los seguros (casillas con estrella) y en las salidas no se come.</li>
     <li>Dos fichas del mismo color forman barrera: nadie puede pasar. Con un 6 debes abrirla.</li>
     <li>A meta se entra con el número exacto. Gana quien mete antes sus 4 fichas.</li>
+    <li><b>Por parejas</b> (4 jugadores): Amarillo y Rojo contra Azul y Verde. Al compañero no se le come; quien acaba antes sigue tirando y mueve las fichas de su pareja. Gana la pareja que mete sus 8 fichas.</li>
     <li>Para mover, toca una ficha resaltada <b>o</b> la casilla de destino marcada (si ahí se come una ficha verás 💥).</li>
     <li>En 🎨 Apariencia eliges tablero, colores, forma de las fichas y tamaño; con zoom el tablero se desplaza solo hacia la acción.</li></ul>`;
 }
@@ -188,7 +194,7 @@ function pintarJuego() {
   if (!P.anim) $('#pzTab').innerHTML = pBoard();
   const over = P.phase === 'over', c = over ? P.winner : actual(P), who = nombre(P, c) + (esCPU(P, c) ? ' (CPU)' : '');
   const humano = !over && !esCPU(P, c);
-  const msg = over ? `¡Gana ${nombre(P, P.winner)}!` : rodando ? `${who} tira…` : P.phase === 'pass' ? P.note : P.phase === 'roll' ? (esCPU(P, c) ? `${who} va a tirar…` : `${who}: tira el dado.`) : (esCPU(P, c) ? `${who} está pensando…` : `${who}: toca una ficha resaltada.`);
+  const msg = over ? (P.parejas ? `¡Ganan ${nombreEquipo(P, P.winner)}!` : `¡Gana ${nombre(P, P.winner)}!`) : rodando ? `${who} tira…` : P.phase === 'pass' ? P.note : P.phase === 'roll' ? (esCPU(P, c) ? `${who} va a tirar…` : `${who}: tira el dado.`) : (esCPU(P, c) ? `${who} está pensando…` : `${who}: toca una ficha resaltada.`);
   const sub = over || rodando ? '' : P.phase === 'move' ? (P.kind === 'libre' ? (P.step ? `Salida libre: con el ${P.step} sacas una ficha de casa.` : 'Segunda salida: saca otra ficha de casa.') : P.kind === 'bonus' ? `Premio: cuenta ${P.step}.` : P.step === 7 ? 'El 6 cuenta 7: no quedan fichas en casa.' : `Mueve ${P.step}.`) : '';
   if (!rodando) pintarDado(P.die, c, false);
   const m = $('#pzMsg'); m.textContent = msg; m.className = 'msg' + (over ? ' win' : '');
@@ -268,7 +274,10 @@ function pBoard(preview) {
 }
 
 /* ---------- entrada ---------- */
-function alCambiar(e) { if (e.target.id === 'pzLibre') { libre = e.target.checked; api.setPref('libre', libre); } }
+function alCambiar(e) {
+  if (e.target.id === 'pzLibre') { libre = e.target.checked; api.setPref('libre', libre); }
+  if (e.target.id === 'pzParejas') { parejas = e.target.checked; api.setPref('parejas', parejas); }
+}
 function alEscribir(e) {
   const c = e.target.dataset && e.target.dataset.name; if (!c) return;
   nombres[c] = e.target.value.slice(0, 14); api.setPref('names', nombres);
@@ -285,7 +294,7 @@ function clic(e) {
   if (ac === 'start') {
     if (PC.filter(c => cfgSetup[c]).length < 2) return;
     const nm = {}; PC.forEach(c => { if (cfgSetup[c] && nombres[c] && nombres[c].trim()) nm[c] = nombres[c].trim().slice(0, 14); });
-    P = nuevaPartida(cfgSetup, nm, { salidaLibre: libre }); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
+    P = nuevaPartida(cfgSetup, nm, { salidaLibre: libre, parejas: parejas && PC.every(c => cfgSetup[c]) }); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
   } else if (ac === 'roll') { if (P && P.phase === 'roll' && !esCPU(P, actual(P))) iniciarTirada(); }
   else if (ac === 'setup') nuevaSetup();
   else if (ac === 'aspecto') asp.abrir();

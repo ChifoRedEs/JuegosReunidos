@@ -109,8 +109,11 @@ function clave(b, turn, cas, ep) {                // huella de la posición (par
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0).toString(16).padStart(8, '0');
 }
-export function estadoInicial() {
-  return { b: INICIAL.slice(), turn: 1, n: 0, ult: null, cas: 15, ep: -1, half: 0, claves: [clave(INICIAL, 1, 15, -1)], san: [], fin: null };
+// movs: todas las jugadas desde el principio (para revisar la partida y exportar PGN)
+// reloj (opcional): { ms: [blancas, negras], base, inc } en milisegundos
+export function estadoInicial(reloj = null) {
+  return { b: INICIAL.slice(), turn: 1, n: 0, ult: null, cas: 15, ep: -1, half: 0, claves: [clave(INICIAL, 1, 15, -1)], san: [], fin: null, movs: [],
+    reloj: reloj ? { ms: [reloj.base, reloj.base], base: reloj.base, inc: reloj.inc } : null };
 }
 export function jugadas(e) { return e.fin ? [] : legales(posDe(e)); }
 export const jaque = e => { const P = posDe(e); return enJaque(P, P.side) ? P.k[P.side] : -1; };
@@ -147,7 +150,9 @@ export function aplicar(e, m) {
   hacer(P, m);
   const b = [...P.b], turn = P.side + 1, k = clave(b, turn, P.cas, P.ep);
   const claves = P.half === 0 ? [k] : [...e.claves, k].slice(-120);
-  const n = { b, turn, n: e.n + 1, ult: [de(m), a(m)], cas: P.cas, ep: P.ep, half: P.half, claves, san: [...e.san, san], fin: null };
+  const n = { b, turn, n: e.n + 1, ult: [de(m), a(m)], cas: P.cas, ep: P.ep, half: P.half, claves, san: [...e.san, san], fin: null,
+    movs: Array.isArray(e.movs) && e.movs.length === e.n ? [...e.movs, m] : null, reloj: null };
+  if (e.reloj) { const ms = e.reloj.ms.slice(); ms[e.turn - 1] += e.reloj.inc; n.reloj = { ...e.reloj, ms }; }   // incremento por jugada
   if (!legales(P).length) n.fin = enJaque(P, P.side) ? { w: e.turn, motivo: 'Jaque mate' } : { w: 0, motivo: 'Rey ahogado' };
   else if (P.half >= 100) n.fin = { w: 0, motivo: 'Regla de los 50 movimientos' };
   else if (claves.filter(x => x === k).length >= 3) n.fin = { w: 0, motivo: 'Triple repetición' };
@@ -169,8 +174,14 @@ export function validarEstado(x) {
   const san = Array.isArray(x.san) ? x.san.filter(s => typeof s === 'string' && s.length <= 10).slice(-1000) : [];
   let fin = null;
   if (x.fin) { if (typeof x.fin !== 'object' || ![0, 1, 2].includes(x.fin.w)) return null; fin = { w: x.fin.w, motivo: typeof x.fin.motivo === 'string' ? x.fin.motivo.slice(0, 40) : '' }; }
-  const e = { b: x.b.slice(), turn: x.turn, n: x.n, ult, cas: x.cas, ep: x.ep, half: x.half, claves, san, fin };
+  const reloj = x.reloj && Array.isArray(x.reloj.ms) && x.reloj.ms.length === 2 && x.reloj.ms.every(v => Number.isFinite(v) && v >= 0 && v <= 4 * 3600e3)
+    && ent(x.reloj.base, 1000, 3 * 3600e3) && ent(x.reloj.inc, 0, 60000) ? { ms: x.reloj.ms.slice(), base: x.reloj.base, inc: x.reloj.inc } : null;
+  const e = { b: x.b.slice(), turn: x.turn, n: x.n, ult, cas: x.cas, ep: x.ep, half: x.half, claves, san, fin, movs: null, reloj };
   const P = posDe(e); if (enJaque(P, P.side ^ 1)) return null;          // el que acaba de mover no puede seguir en jaque
+  // la lista de jugadas solo se acepta si, rejugada desde el principio, lleva exactamente a esta posición
+  if (Array.isArray(x.movs) && x.movs.length === x.n && x.n <= 1000 && x.movs.every(m => ent(m, 0, 1 << 18))) {
+    const r = rejugar(x.movs); if (r && r.b.join() === e.b.join() && r.turn === e.turn) e.movs = x.movs.slice();
+  }
   return e;
 }
 
@@ -257,6 +268,47 @@ export function ia(e, v, nivel, rapido = false) {
 }
 
 /* ---------- utilidades para pruebas ---------- */
+// Rejuega una lista de jugadas desde la posición inicial; null si alguna no es legal
+export function rejugar(movs, hasta = movs.length) {
+  let e = estadoInicial();
+  for (let i = 0; i < hasta; i++) { if (!jugadas(e).includes(movs[i])) return null; e = aplicar(e, movs[i]); }
+  return e;
+}
+// ---------- PGN (notación inglesa: N B R Q K) ----------
+const A_INGLES = { C: 'N', A: 'B', T: 'R', D: 'Q', R: 'K' };
+export const sanIngles = s => s.replace(/^[CATDR]/, x => A_INGLES[x]).replace(/=([CATD])/, (_, x) => '=' + A_INGLES[x]);
+export function aPGN(e, { blancas = 'Blancas', negras = 'Negras', evento = 'Juegos Reunidos', fecha = new Date() } = {}) {
+  const res = !e.fin ? '*' : e.fin.w === 1 ? '1-0' : e.fin.w === 2 ? '0-1' : '1/2-1/2';
+  const f = `${fecha.getFullYear()}.${String(fecha.getMonth() + 1).padStart(2, '0')}.${String(fecha.getDate()).padStart(2, '0')}`;
+  const cab = [['Event', evento], ['Site', 'Juegos Reunidos'], ['Date', f], ['White', blancas], ['Black', negras], ['Result', res]];
+  const base = e.n - e.san.length, partes = [];
+  e.san.forEach((s, i) => { const nj = base + i; if (nj % 2 === 0) partes.push(`${(nj >> 1) + 1}.`); else if (i === 0) partes.push(`${(nj >> 1) + 1}...`); partes.push(sanIngles(s)); });
+  partes.push(res);
+  const lineas = []; let l = '';
+  for (const p of partes) { if ((l + ' ' + p).trim().length > 79) { lineas.push(l.trim()); l = ''; } l += ' ' + p; }
+  if (l.trim()) lineas.push(l.trim());
+  return cab.map(([k, v]) => `[${k} "${String(v).replace(/["\\]/g, '')}"]`).join('\n') + '\n\n' + lineas.join('\n') + '\n';
+}
+// Lee un PGN (o una lista de jugadas en notación inglesa o española). Devuelve { e } o { error }.
+export function dePGN(txt) {
+  const cuerpo = String(txt).replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/;[^\n]*/g, ' ');
+  let sin = cuerpo, prev;
+  do { prev = sin; sin = sin.replace(/\([^()]*\)/g, ' '); } while (sin !== prev);           // variantes entre paréntesis
+  const fichas = sin.replace(/\$\d+/g, ' ').split(/\s+/).map(t => t.replace(/^\d+\.+/, '').trim()).filter(t => t && !/^(1-0|0-1|1\/2-1\/2|\*|\d+\.+)$/.test(t));
+  const limpia = t => t.replace(/[+#!?]+$/g, '').replace(/0-0-0/g, 'O-O-O').replace(/0-0/g, 'O-O').replace(/e\.p\.$/i, '');
+  // ¿Inglés (N B Q K) o español (C A D T)? La R significa rey en español y torre en inglés: se decide por el resto de letras
+  const ingles = fichas.some(t => /^[NBQK]/.test(t)) || !fichas.some(t => /^[CATD]/.test(t));
+  let e = estadoInicial();
+  for (const [k, t] of fichas.entries()) {
+    if (e.fin) break;
+    const quiero = limpia(t).replace('=', ''), P = posDe(e), todas = legales(P);
+    const m = todas.find(x => { const s = notacion(P, x, todas).replace(/[+#]$/, ''); return (ingles ? sanIngles(s) : s).replace('=', '') === quiero; });
+    if (m == null) return { error: `No entiendo la jugada ${Math.floor((e.n) / 2) + 1}${e.turn === 1 ? '.' : '…'} «${t}» (ficha ${k + 1}).` };
+    e = aplicar(e, m);
+  }
+  if (!e.n) return { error: 'No he encontrado ninguna jugada.' };
+  return { e };
+}
 export function desdeFEN(fen) {
   const [pos, t, cas, ep, half] = fen.trim().split(/\s+/), b = [];
   for (const ch of pos.replace(/\//g, '')) { if (/\d/.test(ch)) for (let i = 0; i < +ch; i++) b.push(0); else { const tp = ' pnbrqk'.indexOf(ch.toLowerCase()); b.push(ch === ch.toLowerCase() ? tp + 8 : tp); } }
@@ -278,5 +330,8 @@ export function reglasHTML() {
     <li>No se puede hacer una jugada que deje a tu rey en jaque. Si estás en jaque, el rey se marca en rojo.</li>
     <li><b>Tablas</b>: rey ahogado, triple repetición, 50 movimientos sin capturas ni movimientos de peón, o material insuficiente para dar mate. También puedes <b>abandonar</b> desde el menú ⋯.</li>
     <li>Las jugadas se anotan en notación española: R rey, D dama, T torre, A alfil, C caballo (los peones sin letra).</li>
-    <li>Contra la CPU: Fácil comete errores, Medio piensa unas jugadas y Difícil busca más profundo. 💡 <b>Pista</b> marca la jugada que recomienda la IA.</li></ul>`;
+    <li>Contra la CPU: Fácil comete errores, Medio piensa unas jugadas y Difícil busca más profundo. 💡 <b>Pista</b> marca la jugada que recomienda la IA.</li>
+    <li>⏱️ <b>Reloj</b>: elige un ritmo (por ejemplo 5+3: cinco minutos por bando y 3 segundos más por jugada). Quien se queda sin tiempo pierde.</li>
+    <li>🔍 <b>Revisar</b>: recorre la partida jugada a jugada con ⏮ ◀ ▶ ⏭ o tocando una jugada de la lista.</li>
+    <li>📤 <b>PGN</b>: copia o descarga la partida en el formato estándar para analizarla en otros programas. 📥 <b>Importar</b>: pega un PGN y la partida sigue desde esa posición.</li></ul>`;
 }

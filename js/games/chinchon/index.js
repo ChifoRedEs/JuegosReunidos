@@ -1,10 +1,12 @@
 import { $, esc } from '../../core/dom.js';
+import { anotarPartida, htmlPartidas, historialVacio, validarHistorial, seguir, htmlTabla } from '../../core/historial.js';
 import { cartaEsHTML, asegurarSprites, nombreEs } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso, grupoBarajaEs } from '../../core/aspectos.js';
 import * as C from './motor.js';
 import { hacerOrdenable, ordenarMano, validarOrden } from '../../core/arrastrar.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, sel = null, robada = -1, ocupado = false;
+let hm = historialVacio();                                   // tabla de puntos mano a mano (se guarda con la partida)
 const MODOS = ['jugadas', 'palo', 'numero', 'libre'];
 let ord = { modo: 'jugadas', ids: [] }, arr = null;
 let cfg = { rivales: 1, nivel: 'medio', limite: 100, cierre: 5, comodines: false }, marcador = { g: 0, p: 0 };
@@ -13,7 +15,7 @@ let cfg = { rivales: 1, nivel: 'medio', limite: 100, cierre: 5, comodines: false
 export function validar(d) {
   const s = d && C.validar(d.s); if (!s) return null;
   const m = d.marcador && typeof d.marcador === 'object' ? d.marcador : {}, e = v => (Number.isInteger(v) && v >= 0 && v <= 99999 ? v : 0);
-  return { s, marcador: { g: e(m.g), p: e(m.p) }, reg: !!d.reg, ord: validarOrden(d.ord, MODOS) };
+  return { s, marcador: { g: e(m.g), p: e(m.p) }, reg: !!d.reg, ord: validarOrden(d.ord, MODOS), hm: validarHistorial(d.hm, s.jug ? s.jug.length : 2) };
 }
 export const migrarV1 = d => d;
 export function resumen(d) {
@@ -32,13 +34,13 @@ export async function mount(r, a) {
   const g = api.cargar();
   const modoPref = MODOS.includes(api.pref('orden', 'jugadas')) ? api.pref('orden', 'jugadas') : 'jugadas';
   ord = { modo: modoPref, ids: [] }; arr = null;
-  if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; } else S = null;
+  if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; hm = g.hm || historialVacio(); } else { S = null; hm = historialVacio(); }
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { if (arr) { arr.destruir(); arr = null; } clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
-function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
+function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord, hm }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
 function setup() {
@@ -79,6 +81,7 @@ function montarArrastre() {
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
+  hm = historialVacio();
   api.setPref('cfg', cfg);
   const jugadores = [{ nombre: 'Tú', cpu: false }, ...Array.from({ length: cfg.rivales }, (_, k) => ({ nombre: cfg.rivales === 1 ? 'CPU' : `CPU ${k + 1}`, cpu: true }))];
   S = C.crear({ jugadores, nivel: cfg.nivel, limite: cfg.limite, cierre: cfg.cierre, comodines: cfg.comodines }); reg = false; sel = null; robada = -1; ord = { modo: ord.modo === 'libre' ? 'jugadas' : ord.modo, ids: [] };
@@ -89,7 +92,18 @@ function empezar() {
 const nombre = c => (C.esComodin(c) ? 'Comodín' : nombreEs(c));
 const carta = (c, extra = '') => (C.esComodin(c) ? `<div class="carta es comodin ${extra}" aria-label="Comodín"><b class="cr">★</b><span class="cc">🃏</span></div>` : cartaEsHTML(c, { clase: extra }));
 const fila = cs => cs.map(c => carta(c)).join('');
+// Historial mano a mano: al terminar cada mano se apuntan los puntos que ha sumado cada uno
+function puntosMano() {
+  const act = S.jug.map(J => J.total), prev = hm.filas.reduce((t, f) => t.map((v, k) => v + f[k]), act.map(() => 0));
+  return act.map((v, k) => v - prev[k]);
+}
+function seguirHistorial() { if (S && (S.fase === 'recuento' || S.fase === 'fin') && !hm.marcada) seguir(hm, true, puntosMano()); else if (S && !(S.fase === 'recuento' || S.fase === 'fin')) seguir(hm, false); }
+function verHistorial() {
+  if (!S) { api.modal('📜 Historial de la partida', htmlPartidas(api)); return; }
+  api.modal('📜 Historial de la partida', htmlTabla(S.jug.map(J => J.nombre), hm.filas, { titulo: 'Mano', menosEsMejor: true }) + '<p class="note">Puntos sumados en cada mano: gana quien menos tenga.</p>');
+}
 function pintar() {
+  seguirHistorial();
   if (!S || !$('#chOpps')) return;
   const yo = S.manos[0], miTurno = S.turno === 0 && (S.fase === 'robar' || S.fase === 'descartar');
   $('#chInfo').textContent = `Mano ${S.mano} · límite ${S.limite} puntos`;
@@ -206,6 +220,7 @@ function cierre() {
   if (!reg) {
     reg = true; const gano = S.ganador === 0;
     if (gano) marcador.g++; else marcador.p++;
+    anotarPartida(api, { res: gano ? 'g' : 'p', texto: `${S.jug.length} jugadores · a ${S.limite} · ${gano ? 'ganaste' : 'ganó ' + S.jug[S.ganador].nombre}` });
     api.registrar({ res: gano ? 'victoria' : 'derrota', variante: `${S.jug.length} jugadores · ${S.limite} puntos${S.nCom ? ' · con comodines' : ''}` });
     api.sonido(gano ? 'ganar' : 'perder'); if (gano) api.vibrar([60, 40, 60]);
   }

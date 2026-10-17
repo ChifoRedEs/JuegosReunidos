@@ -10,10 +10,28 @@ export const DIFICULTADES = {
   experto: { nombre: 'Experto', ops: ['+', '-', 'x', '/'], pesos: [[1, .02], [2, .24], [3, .36], [4, .24], [5, .14]], ayuda: 'Jaulas de hasta 5 casillas y casi ninguna pista.' },
 };
 const vec = (n, i) => { const r = i / n | 0, c = i % n, o = []; if (r > 0) o.push(i - n); if (r < n - 1) o.push(i + n); if (c > 0) o.push(i - 1); if (c < n - 1) o.push(i + 1); return o; };
-function cuadradoLatino(n) {
-  const filas = shuffle([...Array(n).keys()]), cols = shuffle([...Array(n).keys()]), sim = shuffle([...Array(n).keys()].map(x => x + 1)), s = [];
-  for (const r of filas) for (const c of cols) s.push(sim[(r + c) % n]);
-  return s;
+// Cuadrado latino aleatorio de verdad (rellenado con vuelta atrás en orden al azar). Antes solo salían permutaciones
+// del cuadrado cíclico (r + c) mod n, que dejan fuera muchas soluciones posibles (en 4×4, todas las del tipo «Klein»).
+export function cuadradoLatino(n) {
+  const s = new Array(n * n).fill(0), fila = Array.from({ length: n }, () => 0), col = Array.from({ length: n }, () => 0);
+  let pasos = 0;
+  const rec = i => {
+    if (i === n * n) return true;
+    if (++pasos > 20000) return false;                            // tope: se reintenta con otro orden
+    const r = i / n | 0, c = i % n;
+    for (const v of shuffle([...Array(n).keys()].map(x => x + 1))) {
+      const b = 1 << v; if ((fila[r] & b) || (col[c] & b)) continue;
+      s[i] = v; fila[r] |= b; col[c] |= b;
+      if (rec(i + 1)) return true;
+      s[i] = 0; fila[r] &= ~b; col[c] &= ~b;
+    }
+    return false;
+  };
+  for (let k = 0; k < 20; k++) { pasos = 0; s.fill(0); fila.fill(0); col.fill(0); if (rec(0)) return s; }
+  // respaldo (prácticamente imposible llegar aquí): cuadrado cíclico permutado
+  const fs = shuffle([...Array(n).keys()]), cs = shuffle([...Array(n).keys()]), sim = shuffle([...Array(n).keys()].map(x => x + 1)), o = [];
+  for (const r of fs) for (const c of cs) o.push(sim[(r + c) % n]);
+  return o;
 }
 export function evaluar(op, vals) {                      // objetivo que produce una jaula con esos valores
   if (op === '=') return vals[0];
@@ -120,10 +138,4 @@ export function generar(n, dif) {
   throw new Error('No se pudo generar el KenKen');
 }
 // colores de jaula: ninguna jaula vecina comparte color
-export function colorear(n, cages, paleta = 6) {
-  const jaulaDe = new Array(n * n); cages.forEach((g, k) => g.cells.forEach(i => { jaulaDe[i] = k; }));
-  const color = new Array(cages.length).fill(-1);
-  cages.forEach((g, k) => { const usados = new Set(); for (const c of g.cells) for (const v of vec(n, c)) if (jaulaDe[v] !== k && color[jaulaDe[v]] >= 0) usados.add(color[jaulaDe[v]]); let x = rnd(paleta); for (let j = 0; j < paleta && usados.has(x); j++) x = (x + 1) % paleta; color[k] = x; });
-  return color;
-}
 export const simbolo = op => ({ '+': '+', '-': '−', 'x': '×', '/': '÷', '=': '' }[op]);

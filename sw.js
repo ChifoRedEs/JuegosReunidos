@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-53dba712b4';
+const VERSION = 'jr-c0d6c1b205';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -25,12 +25,17 @@ const ARCHIVOS = [
 './js/core/definiciones.js',
 './js/core/dom.js',
 './js/core/duelo.js',
+'./js/core/historial.js',
+'./js/core/logros.js',
+'./js/core/semilla.js',
 './js/core/sonido.js',
 './js/core/stats.js',
 './js/core/storage.js',
 './js/core/teclado.js',
 './js/core/undo.js',
 './js/core/ia/minimax.js',
+'./js/core/ia/remoto.js',
+'./js/core/ia/trabajador.js',
 './js/games/ahorcado/ahorcado.css',
 './js/games/ahorcado/dibujos.js',
 './js/games/ahorcado/index.js',
@@ -130,6 +135,7 @@ const ARCHIVOS = [
 './js/games/tresenraya/index.js',
 './js/games/tresenraya/reglas.js',
 './js/games/tresenraya/tresenraya.css',
+'./js/games/trivial/clasicas.js',
 './js/games/trivial/index.js',
 './js/games/trivial/motor.js',
 './js/games/trivial/trivial.css'
@@ -138,21 +144,39 @@ const ARCHIVOS = [
 // Tipografías de Google Fonts (Baloo 2 y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
 // para que sin conexión los textos se vean igual que con internet. Debe ser la MISMA dirección que en index.html.
 const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas';      // cachés que se conservan entre versiones
-// Imágenes de los naipes (img/cartas): no van en la lista de arriba para no volver a bajar 5 MB en cada actualización.
-// Se guardan en su propia caché: al usarlas y, en segundo plano, todas las del índice barajas.json (solo las que falten).
+// Imágenes de los naipes (img/cartas): no van en la lista de arriba para no volver a bajar varios MB en cada actualización.
+// Se guardan en su propia caché al usarlas. En segundo plano solo se descargan las barajas y el dorso que el usuario
+// tiene elegidos en 🎨 Apariencia (más una carta de muestra de cada baraja), no todas: así no se gastan datos móviles.
 const esImgCarta = url => url.origin === location.origin && url.pathname.includes('/img/cartas/') && /\.(webp|png|jpe?g)$/i.test(url.pathname);
-async function guardarCartas() {
+const EXT_OK = ['webp', 'png', 'jpg', 'jpeg'];
+const extJoker = b => (EXT_OK.includes(b.joker) ? b.joker : b.ext);       // igual que urlJoker() en js/core/cartas.js
+function rutasBaraja(b, tipo) {
+  const r = [], n2 = n => String(n).padStart(2, '0');
+  if (tipo === 'es') { for (const rg of [1, 2, 3, 4, 5, 6, 7, 10, 11, 12]) for (const l of 'OCEB') r.push(`${b.ruta}/${n2(rg)}-${l}.${b.ext}`); }
+  else for (let rg = 1; rg <= 13; rg++) for (const l of 'PCDT') r.push(`${b.ruta}/${n2(rg)}-${l}.${b.ext}`);
+  if (b.joker) r.push(`${b.ruta}/00.${extJoker(b)}`);                  // comodín: también en las españolas (Chinchón)
+  return r;
+}
+async function guardarCartas(elegidas) {
   const base = new URL('./img/cartas/', self.registration.scope), r = await fetch(new URL('barajas.json', base), { cache: 'no-cache' });
   if (!r.ok) return;
-  const d = await r.json(), rutas = new Set(), n2 = n => String(n).padStart(2, '0');
-  for (const b of d.espanola || []) { for (const rg of [1, 2, 3, 4, 5, 6, 7, 10, 11, 12]) for (const l of 'OCEB') rutas.add(`${b.ruta}/${n2(rg)}-${l}.${b.ext}`); rutas.add(`${b.ruta}/${b.muestra}.${b.ext}`); }
-  for (const b of d.francesa || []) { for (let rg = 1; rg <= 13; rg++) for (const l of 'PCDT') rutas.add(`${b.ruta}/${n2(rg)}-${l}.${b.ext}`); if (b.joker) rutas.add(`${b.ruta}/00.${b.ext}`); rutas.add(`${b.ruta}/${b.muestra}.${b.ext}`); }
-  for (const x of d.dorsos || []) rutas.add(x.archivo);
-  const urls = [...rutas].filter(x => typeof x === 'string' && !x.includes('..')).map(x => new URL(x.split('/').map(encodeURIComponent).join('/'), base).href), c = await caches.open(CARTAS);
-  for (const req of await c.keys()) if (!urls.includes(req.url)) await c.delete(req);   // barajas que ya no están
+  const d = await r.json(), todas = new Set(), bajar = new Set(), quiero = new Set(Array.isArray(elegidas) ? elegidas : []);
+  for (const [lista, tipo] of [[d.espanola, 'es'], [d.francesa, 'fr']]) for (const b of lista || []) {
+    const rs = rutasBaraja(b, tipo), muestra = `${b.ruta}/${b.muestra}.${b.ext}`;
+    rs.forEach(x => todas.add(x)); todas.add(muestra); bajar.add(muestra);
+    if (quiero.has(b.id)) rs.forEach(x => bajar.add(x));
+  }
+  for (const x of d.dorsos || []) { todas.add(x.archivo); if (quiero.has(x.id)) bajar.add(x.archivo); }
+  const url = x => new URL(x.split('/').map(encodeURIComponent).join('/'), base).href, ok = x => typeof x === 'string' && !x.includes('..');
+  const validas = new Set([...todas].filter(ok).map(url)), urls = [...bajar].filter(ok).map(url), c = await caches.open(CARTAS);
+  for (const req of await c.keys()) if (!validas.has(req.url)) await c.delete(req);   // barajas que ya no están
   for (let i = 0; i < urls.length; i += 6) await Promise.all(urls.slice(i, i + 6).map(async u => { if (await c.match(u)) return; try { const res = await fetch(u); if (res.ok) await c.put(u, res); } catch { /* sin red: otra vez será */ } }));
 }
-self.addEventListener('message', e => { if (e.data === 'guardar-cartas') e.waitUntil(guardarCartas().catch(() => {})); });
+self.addEventListener('message', e => {
+  const m = e.data;
+  if (m === 'guardar-cartas') e.waitUntil(guardarCartas([]).catch(() => {}));
+  else if (m && m.tipo === 'guardar-cartas') e.waitUntil(guardarCartas(m.ids).catch(() => {}));
+});
 const FUENTES_CSS = 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap';
 const esFuente = url => url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 async function guardarFuentes() {                 // descarga la hoja de estilos y todos los archivos de letra que enlaza

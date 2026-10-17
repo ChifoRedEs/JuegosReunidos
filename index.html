@@ -10,12 +10,16 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap">
+<!-- Fuentes: se cargan sin bloquear el primer pintado (mientras llegan se usa la del sistema) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap"></noscript>
 <link rel="stylesheet" href="css/base.css">
 </head>
 <body>
 <header class="top">
-  <button id="atras" class="icono" aria-label="Volver al inicio" hidden>‹</button>
+  <button id="atras" class="icono" aria-label="Volver" hidden>‹</button>
   <h1 id="titulo">Juegos Reunidos</h1>
   <nav id="nav" aria-label="Navegación principal"></nav>
   <button id="mas" class="icono" aria-label="Menú del juego" hidden>⋯</button>

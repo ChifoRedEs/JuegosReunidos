@@ -28,13 +28,14 @@ export function validar(d) {
     if (cs.some((c, i) => d.sol[c] !== x.p[i])) return null;
     palabras.push({ p: x.p, f: x.f, d: x.d, def: x.def });
   }
-  return { tema, nivel, w: d.w, h: d.h, sol: d.sol.slice(), cur: d.cur.slice(), palabras, t: Number.isInteger(d.t) && d.t >= 0 ? d.t : 0, pistas: Number.isInteger(d.pistas) && d.pistas >= 0 ? d.pistas : 0 };
+  return { tema, nivel, w: d.w, h: d.h, sol: d.sol.slice(), cur: d.cur.slice(), palabras, t: Number.isInteger(d.t) && d.t >= 0 ? d.t : 0, pistas: Number.isInteger(d.pistas) && d.pistas >= 0 ? d.pistas : 0 , reto: typeof d.reto === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.reto) ? d.reto : null };
 }
 export const migrarV1 = d => d;
 const completo = d => d.sol.every((x, i) => !x || d.cur[i] === x);
 export function resumen(d) {
   const ok = completo(d), tot = d.sol.filter(Boolean).length, lle = d.cur.filter(Boolean).length;
-  return { texto: ok ? `${temaNombre(d.tema)} · ${LVL[d.nivel]} · resuelto` : `${temaNombre(d.tema)} · ${LVL[d.nivel]} · ${Math.round(lle / tot * 100)}%`, fin: ok };
+  const pre = d.reto ? '📅 Reto · ' : '';
+  return { texto: pre + (ok ? `${temaNombre(d.tema)} · ${LVL[d.nivel]} · resuelto` : `${temaNombre(d.tema)} · ${LVL[d.nivel]} · ${Math.round(lle / tot * 100)}%`), fin: ok };
 }
 
 /* ---------- ciclo de vida ---------- */
@@ -44,7 +45,7 @@ export async function mount(r, a) {
   await api.css(new URL('./crucigrama.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: null, done: completo(g) } : null;
-  root.innerHTML = `
+  root.innerHTML = `<div id="cwReto"></div>
     <details class="ops" id="cwOps"><summary id="cwSum"></summary>
       <div class="bar"><span class="lbl">Tema</span><div class="seg">${[...Object.entries(BANCOS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }]].map(([k, t]) => `<button class="btn" data-tema="${k}">${t.icono} ${t.nombre}</button>`).join('')}</div></div>
       <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l} ${NIVELES[k].n}×${NIVELES[k].n}</button>`).join('')}</div></div>
@@ -59,7 +60,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
   api.menu([
-    { texto: 'Nuevo crucigrama', accion: () => nueva(S.tema, S.nivel) }, { texto: 'Comprobar', accion: comprobar },
+    { texto: 'Nuevo crucigrama', accion: () => nueva(S.tema, S.nivel) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.tema, RETO.nivel, false, true) }, { texto: 'Comprobar', accion: comprobar },
     { texto: 'Revelar letra', accion: () => revelar('letra') }, { texto: 'Revelar palabra', accion: () => revelar('palabra') },
     { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menuErrores(); }, activo: api.pref('errores', false) },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas },
@@ -69,7 +70,7 @@ export async function mount(r, a) {
   else { prepararInfo(); construir(); seleccionInicial(); arrancar(); pintar(); }
 }
 function menuErrores() { api.menu([
-  { texto: 'Nuevo crucigrama', accion: () => nueva(S.tema, S.nivel) }, { texto: 'Comprobar', accion: comprobar },
+  { texto: 'Nuevo crucigrama', accion: () => nueva(S.tema, S.nivel) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.tema, RETO.nivel, false, true) }, { texto: 'Comprobar', accion: comprobar },
   { texto: 'Revelar letra', accion: () => revelar('letra') }, { texto: 'Revelar palabra', accion: () => revelar('palabra') },
   { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menuErrores(); }, activo: api.pref('errores', false) },
   { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]); }
@@ -85,20 +86,22 @@ function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.de
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S && !S.done && S.cur.some(Boolean);
-async function nueva(tema, nivel, forzar = false) {
+async function nueva(tema, nivel, forzar = false, reto = false) {
   if (ocupado) return;
+  if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un crucigrama nuevo? Perderás el actual.')) return;
   if (tema !== 'mezcla' && !Object.hasOwn(BANCOS, tema)) tema = 'animales';
   ocupado = true; if (crono) crono.detener();
   await esperar(20);
-  const g = generar(tema, nivel);
+  const g = reto ? api.reto.generar(() => generar(tema, nivel)) : generar(tema, nivel);   // reto: mismo tablero para todos
   S = { tema, nivel, w: g.w, h: g.h, sol: g.sol, palabras: g.palabras, cur: new Array(g.w * g.h).fill(''), t: 0, pistas: 0, sel: null, done: false };
-  api.setPref('tema', tema); api.setPref('nivel', nivel); malas = new Set(); ocupado = false;
+  if (!reto) { api.setPref('tema', tema); api.setPref('nivel', nivel); }
+  S.reto = reto ? api.reto.fecha() : null; malas = new Set(); ocupado = false;
   crono = new Cronometro(crono.alTick, 0);
   prepararInfo(); construir(); seleccionInicial(); arrancar(); pintar(); guardar();
   $('#cwOps').open = false;
 }
-function guardar() { if (!S) return; const d = { tema: S.tema, nivel: S.nivel, w: S.w, h: S.h, sol: S.sol, cur: S.cur, palabras: S.palabras, t: S.t, pistas: S.pistas }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
+function guardar() { if (!S) return; const d = { tema: S.tema, nivel: S.nivel, w: S.w, h: S.h, sol: S.sol, cur: S.cur, palabras: S.palabras, t: S.t, pistas: S.pistas , reto: S.reto || null }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 function prepararInfo() {
   const { num, orden } = numerar(S.w, S.palabras);
   const porCelda = Array.from({ length: S.w * S.h }, () => ({ H: -1, V: -1 }));
@@ -119,12 +122,21 @@ function construir() {
   root.querySelectorAll('[data-tema]').forEach(b => b.classList.toggle('on', b.dataset.tema === S.tema));
   root.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.nivel));
 }
+const RETO = { tema: 'mezcla', nivel: 'medio' };
+function pintarReto() {
+  const r = $('#cwReto'); if (!r || !S) return;
+  const hoy = api.reto.fecha(), hecho = api.reto.hecho(), jugando = S.reto === hoy, k = `${hoy}|${hecho}|${jugando}`;
+  if (r.dataset.k === k) return; r.dataset.k = k;
+  r.innerHTML = `<div class="reto ${hecho ? 'hecho' : ''}"><span>${hecho ? '✅' : '📅'}</span><div><b>Reto del día · ${api.reto.texto(hoy)}</b>${hecho ? 'Completado. Vuelve mañana para otro.' : jugando ? 'Estás jugando el reto: un crucigrama igual para todo el mundo.' : 'Un crucigrama de temas variados, el mismo para todos hoy.'}</div>${hecho || jugando ? '' : '<button class="btn on" data-ac="reto">Jugar</button>'}</div>`;
+}
 function pintar() {
   if (!S) return;
+  pintarReto();
   const wi = palActiva(), act = new Set(celdasDe(S.w, S.palabras[wi])), auto = api.pref('errores', false);
   if (!S.done && completo(S)) {
     S.done = true; crono.detener(); S.t = crono.s;
-    api.registrar({ res: 'victoria', tiempo: S.t, variante: LVL[S.nivel], limpio: S.pistas === 0 });
+    api.registrar({ res: 'victoria', tiempo: S.t, variante: S.reto ? 'Reto del día' : LVL[S.nivel], limpio: S.pistas === 0 });
+    if (S.reto && api.reto.completar(S.reto)) setTimeout(() => api.aviso('📅 ¡Reto del día completado!'), 300);
     api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar();
   }
   if (S.done && tk) tk.cerrar();
@@ -197,7 +209,7 @@ function clic(e) {
   if (d.niv) return nueva(S.tema, d.niv);
   const ac = d.ac;
   if (ac === 'teclado') { if (!S.done) tk.abrir(); return; }
-  if (ac === 'nueva') nueva(S.tema, S.nivel); else if (ac === 'prev') irPista(-1); else if (ac === 'next') irPista(1);
+  if (ac === 'nueva') nueva(S.tema, S.nivel); else if (ac === 'reto') nueva(RETO.tema, RETO.nivel, false, true); else if (ac === 'prev') irPista(-1); else if (ac === 'next') irPista(1);
   else if (ac === 'comprobar') comprobar(); else if (ac === 'letra') revelar('letra'); else if (ac === 'palabra') revelar('palabra'); else if (ac === 'aspecto') asp.abrir();
 }
 function reglas() {

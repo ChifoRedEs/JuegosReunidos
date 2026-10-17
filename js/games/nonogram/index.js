@@ -1,10 +1,11 @@
-import { $, esc, esperar, fmtTiempo, rnd } from '../../core/dom.js';
+import { $, esperar, fmtTiempo, rnd } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTablero } from '../../core/aspectos.js';
-import { SIZES, DENS, runs, colsOf, generarAleatorio } from './solver.js';
+import { SIZES, runs, colsOf, generarAleatorio } from './solver.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
+const MAX_DESHACER = 40, RETO = { n: 10, diff: 'medio' };
 const NCELL = { 5: 52, 10: 34, 15: 26, 20: 20 }, NFONT = { 5: 14, 10: 12, 15: 11, 20: 10 };
 let asp = null, N = null, api = null, hist = null, crono = null, modo = 'f', tipo = 'azar', banco = null, ocupado = false, rootEl = null;
 let cel = [], rcEl = [], ccEl = [], drag = null, activo = null;
@@ -16,14 +17,17 @@ const grid = (g, n, vals) => Array.isArray(g) && g.length === n && g.every(r => 
 export function validar(d) {
   if (!d || typeof d !== 'object' || !SIZES.includes(d.n) || !grid(d.sol, d.n, [0, 1]) || !grid(d.cur, d.n, [0, 1, 2])) return null;
   return { n: d.n, diff: Object.hasOwn(LVL, d.diff) ? d.diff : 'medio', sol: copia(d.sol), cur: copia(d.cur), nombre: typeof d.nombre === 'string' ? d.nombre.slice(0, 40) : '',
-    t: Number.isInteger(d.t) && d.t >= 0 ? d.t : 0 };
+    t: Number.isInteger(d.t) && d.t >= 0 ? d.t : 0,
+    hist: Array.isArray(d.hist) ? d.hist.filter(h => grid(h, d.n, [0, 1, 2])).slice(-MAX_DESHACER).map(copia) : [],
+    reto: typeof d.reto === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.reto) ? d.reto : null };
 }
 export const migrarV1 = d => d;
 const completo = d => { const rc = d.sol.map(runs), cc = colsOf(d.sol, d.n).map(runs), cu = d.cur.map(r => r.map(v => v === 1 ? 1 : 0)); return cu.every((r, i) => same(runs(r), rc[i])) && colsOf(cu, d.n).every((c, j) => same(runs(c), cc[j])); };
 const same = (a, b) => a.join() === b.join();
 export function resumen(d) {
   const ok = completo(d), base = `${d.n}×${d.n}`;
-  return { texto: ok ? `Completado · ${base}${d.nombre ? ' · ' + d.nombre : ''}` : `${base} · ${d.nombre ? 'Dibujo' : LVL[d.diff]}`, fin: ok };
+  const pre = d.reto ? '📅 Reto · ' : '';
+  return { texto: pre + (ok ? `Completado · ${base}${d.nombre ? ' · ' + d.nombre : ''}` : `${base} · ${d.nombre ? 'Dibujo' : LVL[d.diff]}`), fin: ok };
 }
 
 /* ---------- ciclo de vida ---------- */
@@ -32,12 +36,13 @@ export async function mount(root, a) {
   asp = api.aspecto([grupoTablero(),
     { clave: 'relleno', titulo: 'Color del relleno', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2F6BFF'] }, { id: 'rosa', nombre: 'Rosa', sw: ['#FF3FA4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0FB56A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#FF7A1A'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#7A4DFF'] }] },
     { clave: 'forma', titulo: 'Forma de las casillas rellenas', def: 'redondeado', opciones: [{ id: 'redondeado', nombre: '▢ Redondeada' }, { id: 'cuadrado', nombre: '■ Cuadrada' }, { id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'corazon', nombre: '♥ Corazón' }] }]);
-  hist = new Pila(200); modo = 'f'; ocupado = false; drag = null;
+  modo = 'f'; ocupado = false; drag = null;
   tipo = api.pref('tipo', 'azar');
   await api.css(new URL('./nonogram.css', import.meta.url));
   const g = api.cargar();
   N = g ? { ...g, rc: g.sol.map(runs), cc: colsOf(g.sol, g.n).map(runs), done: completo(g) } : null;
-  root.innerHTML = `
+  hist = new Pila(MAX_DESHACER, g ? g.hist : []);
+  root.innerHTML = `<div id="ngReto"></div>
     <div class="bar"><span class="lbl">Tamaño</span>${SIZES.map(s => `<button class="btn" data-size="${s}">${s}×${s}</button>`).join('')}</div>
     <div class="bar"><span class="lbl">Tipo</span><button class="btn" data-tipo="azar">Aleatorio</button><button class="btn" data-tipo="dibujo">Dibujo</button></div>
     <div class="bar" id="ngDifBar"><span class="lbl">Dificultad</span>${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-diff="${k}">${l}</button>`).join('')}</div>
@@ -51,6 +56,7 @@ export async function mount(root, a) {
   root.addEventListener('pointerup', pUp); root.addEventListener('pointercancel', pUp);
   api.menu([
     { texto: 'Nuevo panel', accion: () => nuevo(N.n, N.diff) },
+    { texto: '📅 Reto del día', accion: () => nuevo(RETO.n, RETO.diff, false, 'azar', true) },
     { texto: 'Borrar casillas', accion: borrar, peligro: true },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() },
     { texto: 'Reglas', accion: reglas },
@@ -74,8 +80,10 @@ async function cargarBanco() {
   try { const r = await fetch(new URL('../../../data/nonogramas/pixelart.json', import.meta.url)); banco = await r.json(); } catch { banco = {}; }
   return banco;
 }
-async function nuevo(n, diff, forzar = false, nuevoTipo = tipo) {
+async function nuevo(n, diff, forzar = false, nuevoTipo = tipo, reto = false) {
   if (ocupado) return;
+  if (reto && N && N.reto === api.reto.fecha()) { api.aviso(N.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
+  if (reto) nuevoTipo = 'azar';
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un panel nuevo? Perderás el progreso actual.')) return;
   ocupado = true; if (crono) crono.detener();
   const m = $('#ngMsg'); m.className = 'msg'; m.textContent = 'Generando panel…';
@@ -88,8 +96,8 @@ async function nuevo(n, diff, forzar = false, nuevoTipo = tipo) {
       const sol = d.filas.map(f => [...f].map(c => c === '#' ? 1 : 0)); p = { sol, rc: sol.map(runs), cc: colsOf(sol, n).map(runs) }; nombre = d.nombre;
     } else api.aviso(`No hay dibujos de ${n}×${n}: panel aleatorio.`);
   }
-  if (!p) p = await generarAleatorio(n, diff);
-  N = { n, diff, sol: p.sol, rc: p.rc, cc: p.cc, cur: vacia(n), nombre, t: 0, done: false };
+  if (!p) p = reto ? await api.reto.generarAsync(() => generarAleatorio(n, diff)) : await generarAleatorio(n, diff);
+  N = { n, diff, sol: p.sol, rc: p.rc, cc: p.cc, cur: vacia(n), nombre, t: 0, done: false, reto: reto ? api.reto.fecha() : null };
   tipo = nombre ? 'dibujo' : 'azar'; api.setPref('tipo', tipo);
   hist.vaciar(); ocupado = false;
   crono = new Cronometro(crono ? crono.alTick : () => {}, 0);
@@ -106,7 +114,7 @@ function deshacer() {
 }
 function guardar() {
   if (!N) return;
-  const d = { n: N.n, diff: N.diff, sol: N.sol, cur: N.cur, nombre: N.nombre, t: N.t };
+  const d = { n: N.n, diff: N.diff, sol: N.sol, cur: N.cur, nombre: N.nombre, t: N.t, reto: N.reto || null, hist: hist ? hist.toJSON().slice(-MAX_DESHACER) : [] };
   const r = resumen(d); api.guardar(d, r.texto, r.fin);
 }
 
@@ -141,10 +149,12 @@ function pintar() {
   const ok = completo(N);
   if (ok && !N.done) {
     N.done = true; crono.detener(); N.t = crono.s;
-    api.registrar({ res: 'victoria', tiempo: N.t, variante: `${n}×${n}` });
+    api.registrar({ res: 'victoria', tiempo: N.t, variante: N.reto ? 'Reto del día' : `${n}×${n}` });
+    if (N.reto && api.reto.completar(N.reto)) setTimeout(() => api.aviso('📅 ¡Reto del día completado!'), 300);
     api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar();
   }
   $('#ngTab').classList.toggle('ganado', N.done);
+  pintarReto();
   document.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === modo));
   document.querySelectorAll('[data-tipo]').forEach(b => { b.classList.toggle('on', b.dataset.tipo === tipo); });
   $('#ngDifBar').style.opacity = tipo === 'dibujo' && N.nombre ? .45 : 1;
@@ -153,6 +163,12 @@ function pintar() {
   $('#ngCrono').textContent = fmtTiempo(N.t);
 }
 
+function pintarReto() {
+  const r = $('#ngReto'); if (!r || !N) return;
+  const hoy = api.reto.fecha(), hecho = api.reto.hecho(), jugando = N.reto === hoy, k = `${hoy}|${hecho}|${jugando}`;
+  if (r.dataset.k === k) return; r.dataset.k = k;
+  r.innerHTML = `<div class="reto ${hecho ? 'hecho' : ''}"><span>${hecho ? '✅' : '📅'}</span><div><b>Reto del día · ${api.reto.texto(hoy)}</b>${hecho ? 'Completado. Vuelve mañana para otro.' : jugando ? 'Estás jugando el reto: el mismo panel para todo el mundo.' : `Un ${RETO.n}×${RETO.n} de nivel ${LVL[RETO.diff].toLowerCase()}, el mismo para todos hoy.`}</div>${hecho || jugando ? '' : '<button class="btn on" data-ac="reto">Jugar</button>'}</div>`;
+}
 /* ---------- entrada: tocar, arrastrar y mantener pulsado ---------- */
 function setCelda(i, j, v) { if (N.cur[i][j] === v) return false; N.cur[i][j] = v; pintarCelda(i, j); return true; }
 function activar(i, j) {
@@ -206,7 +222,7 @@ function clic(e) {
   if (b.dataset.tipo) { if (b.dataset.tipo === tipo) return; return nuevo(N.n, N.diff, false, b.dataset.tipo); }
   if (b.dataset.m) { modo = b.dataset.m; return pintar(); }
   const ac = b.dataset.ac;
-  if (ac === 'undo') deshacer(); else if (ac === 'nuevo') nuevo(N.n, N.diff); else if (ac === 'borrar') borrar(); else if (ac === 'aspecto') asp.abrir();
+  if (ac === 'undo') deshacer(); else if (ac === 'nuevo') nuevo(N.n, N.diff); else if (ac === 'reto') nuevo(RETO.n, RETO.diff, false, 'azar', true); else if (ac === 'borrar') borrar(); else if (ac === 'aspecto') asp.abrir();
 }
 function reglas() {
   api.modal('Nonogram', `<ul>
@@ -214,5 +230,5 @@ function reglas() {
     <li>Entre dos grupos hay al menos una casilla vacía.</li>
     <li><b>Arrastra</b> el dedo por una fila o columna para pintar de golpe. <b>Mantén pulsado</b> una casilla para poner ✕ (o ■ si estás en modo ✕).</li>
     <li>Las pistas se <b>tachan</b> cuando esa línea ya está bien.</li>
-    <li>Los paneles aleatorios se resuelven siempre por lógica; el modo <b>Dibujo</b> usa imágenes hechas a mano (5×5 y 10×10).</li></ul>`);
+    <li>Los paneles aleatorios se resuelven siempre por lógica; el modo <b>Dibujo</b> usa imágenes hechas a mano en todos los tamaños (de 5×5 a 20×20).</li><li><b>Reto del día</b>: un panel 10×10 igual para todo el mundo. El historial de deshacer se guarda con la partida.</li></ul>`);
 }

@@ -18,7 +18,26 @@ export function validar(d) {
 export const migrarV1 = d => d;
 export function resumen(d) {
   const f = d.s.fund.reduce((n, x) => n + x.length, 0);
-  return K.gana(d.s) ? { texto: `Robar ${d.s.robar} · ¡Ganada!`, fin: true } : { texto: `Robar ${d.s.robar} · ${f}/52 en las bases`, fin: false };
+  const v = d.s.vegas ? ` · Vegas ${dolares(K.puntosVegas(d.s))}` : '';
+  return K.gana(d.s) ? { texto: `Robar ${d.s.robar} · ¡Ganada!${v}`, fin: true } : { texto: `Robar ${d.s.robar} · ${f}/52 en las bases${v}`, fin: false };
+}
+
+const dolares = n => `${n < 0 ? '−' : '+'}${Math.abs(n)} $`;
+let repartiendo = false, serieReparto = 0;
+// Reparto con solución garantizada: un Worker baraja hasta que el analizador encuentra cómo ganar
+function repartirGanable(robar, extra, vegas) {
+  return new Promise(res => {
+    let w; try { w = new Worker(new URL('./solver.worker.js', import.meta.url), { type: 'module' }); } catch { res(null); return; }
+    const fin = S => { clearTimeout(t); w.terminate(); res(S); }, t = setTimeout(() => fin(null), 15000);
+    w.onmessage = e => fin(e.data && e.data.S ? K.validar(e.data.S) : null);
+    w.onerror = () => fin(null);
+    w.postMessage({ id: 1, tipo: 'repartir', robar, extra, vegas, ms: 9000 });
+  });
+}
+// Vegas: lo ganado o perdido en cada partida se suma a una banca acumulada (una sola vez por partida)
+function cobrarVegas() {
+  if (!S || !S.vegas || S.cobrado || (!S.mov && !K.gana(S))) return;
+  S.cobrado = true; api.setPref('banca', (api.pref('banca', 0) | 0) + K.puntosVegas(S));
 }
 
 /* ---------- ciclo de vida ---------- */
@@ -27,11 +46,14 @@ export async function mount(r, a) {
   asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./klondike.css', import.meta.url));
   const g = api.cargar();
-  if (g) { S = g.s; hist = g.hist; reg = g.reg; ac = g.ac; } else { S = K.nuevo(api.pref('robar', 1), api.pref('extra', true)); hist = []; reg = false; ac = { b: 0, m: 0 }; }
+  if (g) { S = g.s; hist = g.hist; reg = g.reg; ac = g.ac; } else { S = K.nuevo(api.pref('robar', 1), api.pref('extra', true), api.pref('vegas', false)); hist = []; reg = false; ac = { b: 0, m: 0 }; }
   root.innerHTML = `
     <details class="ops" id="klOps"><summary id="klSum"></summary>
       <div class="bar"><span class="lbl">Robar</span><div class="seg"><button class="btn" data-robar="1">1 carta</button><button class="btn" data-robar="3">3 cartas</button></div></div>
       <div class="bar"><span class="lbl">Casilla extra</span><div class="seg"><button class="btn" data-extra="1">Con casilla libre</button><button class="btn" data-extra="0">Sin ella</button></div></div>
+      <div class="bar"><span class="lbl">Reparto</span><div class="seg"><button class="btn" data-gar="1">✅ Siempre con solución</button><button class="btn" data-gar="0">🎲 Al azar</button></div></div>
+      <div class="bar"><span class="lbl">Puntuación</span><div class="seg"><button class="btn" data-vegas="0">Normal</button><button class="btn" data-vegas="1">💰 Vegas</button></div></div>
+      <p class="note" id="klVegasNota"></p>
       <div class="bar"><span class="lbl">Auto-relleno</span><div class="seg"><button class="btn" data-autor="1">Automático</button><button class="btn" data-autor="0">Solo con botón</button></div></div>
       <p class="note">Auto-relleno: cuando no quedan cartas boca abajo y el resto puede subir solo a las bases, las cartas se colocan solas y la partida termina.</p></details>
     <div class="info"><span class="mut" id="klInfo"></span><span id="klCrono" aria-label="Tiempo">0:00</span></div>
@@ -41,7 +63,7 @@ export async function mount(r, a) {
     <div class="bar"><button class="btn on" data-ac="nueva">Nueva</button><button class="btn" data-ac="undo" id="klUndo">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="auto" id="klAuto" hidden>⚡ Auto-relleno</button><button class="btn" data-ac="aspecto">🎨</button></div>`;
   root.addEventListener('click', clic);
   const b = $('#klBoard'); b.addEventListener('pointerdown', pDown); b.addEventListener('pointermove', pMove); b.addEventListener('pointerup', pUp); b.addEventListener('pointercancel', pCancel);
-  api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.robar, S.extra) }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🔍 Analizador', accion: abrirAnalizador }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.robar, S.extra) }, { texto: '💰 Poner a cero la banca Vegas', accion: () => { if (api.confirmar('¿Poner la banca de Vegas a 0 $?')) { api.setPref('banca', 0); pintar(); } }, peligro: true }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🔍 Analizador', accion: abrirAnalizador }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { $('#klCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } }, g ? g.t : 0);
   if (S.mov > 0 && !K.gana(S)) crono.iniciar();
   pintar(); analizar(); revisarAuto();
@@ -49,7 +71,7 @@ export async function mount(r, a) {
 export function unmount() {
   if (S && crono) guardar();
   if (crono) crono.detener();
-  clearTimeout(pstT); clearTimeout(tAn); clearTimeout(tAuto); clearInterval(auto); cerrarAnalizador(); quitarDrag(); if (worker) { worker.terminate(); worker = null; }
+  repartiendo = false; serieReparto++; clearTimeout(pstT); clearTimeout(tAn); clearTimeout(tAuto); clearInterval(auto); cerrarAnalizador(); quitarDrag(); if (worker) { worker.terminate(); worker = null; }
   if (root) root.removeEventListener('click', clic);
   S = null; crono = null; asp = null;
 }
@@ -117,17 +139,27 @@ function escAnalizador(e) { if (e.key === 'Escape') cerrarAnalizador(); }
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S.mov > 0 && !K.gana(S);
-function nueva(robar, extra, forzar = false) {
+async function nueva(robar, extra, forzar = false, vegas = S ? S.vegas : api.pref('vegas', false)) {
+  if (repartiendo) return;
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+  cobrarVegas();
   clearInterval(auto); auto = null; clearTimeout(tAuto); crono.detener(); crono = new Cronometro(crono.alTick, 0);
-  S = K.nuevo(robar, extra); hist = []; reg = false; pst = null; ac = { b: 0, m: 0 }; feedback = ''; pendiente = false; estadoAntes = null;
-  api.setPref('robar', robar); api.setPref('extra', extra); pintar(); guardar(); analizar();
+  api.setPref('robar', robar); api.setPref('extra', extra); api.setPref('vegas', !!vegas);
+  let nuevoS = null;
+  if (api.pref('garantizada', true) && !sinWorker) {
+    const tok = ++serieReparto; repartiendo = true; $('#klMsg').className = 'msg'; $('#klMsg').textContent = '🔀 Barajando una partida con solución…';
+    nuevoS = await repartirGanable(robar, extra, !!vegas);
+    if (tok !== serieReparto) return; repartiendo = false; if (!S || !crono) return;
+    if (!nuevoS) api.aviso('No encontré a tiempo una partida con solución: esta es al azar');
+  }
+  S = nuevoS || K.nuevo(robar, extra, vegas); hist = []; reg = false; pst = null; ac = { b: 0, m: 0 }; feedback = ''; pendiente = false; estadoAntes = null;
+  pintar(); guardar(); analizar();
 }
 function antes() { hist.push(K.copia(S)); if (hist.length > 60) hist.shift(); if (S.mov === 0) crono.iniciar(); pst = null; estadoAntes = estadoAn; pendiente = true; feedback = ''; }
 function despues(sonido = 'mover') {
   api.sonido(sonido);
   if (K.gana(S) && !reg) {
-    reg = true; crono.detener(); api.registrar({ res: 'victoria', tiempo: crono.s, variante: `Robar ${S.robar}${S.extra ? '' : ' · sin casilla extra'}` }); api.sonido('ganar'); api.vibrar([60, 40, 60, 40, 90]);
+    reg = true; crono.detener(); cobrarVegas(); api.registrar({ res: 'victoria', tiempo: crono.s, variante: `Robar ${S.robar}${S.extra ? '' : ' · sin casilla extra'}${S.vegas ? ' · Vegas' : ''}` }); api.sonido('ganar'); api.vibrar([60, 40, 60, 40, 90]);
   }
   pintar(); guardar(); analizar(); revisarAuto();
 }
@@ -189,8 +221,12 @@ function pintar() {
   }
   $('#klBoard').innerHTML = h + '</div>' + (win ? '<div class="kwin">🎉 ¡Solitario completado!</div>' : '');
   const f = S.fund.reduce((n, x) => n + x.length, 0);
-  $('#klSum').textContent = `⚙️ Robar ${S.robar} carta${S.robar > 1 ? 's' : ''} · ${S.extra ? 'con' : 'sin'} casilla extra`;
-  $('#klInfo').textContent = `${S.mov} movimientos · ${f}/52 en las bases`;
+  $('#klSum').textContent = `⚙️ Robar ${S.robar} carta${S.robar > 1 ? 's' : ''} · ${S.extra ? 'con' : 'sin'} casilla extra${S.vegas ? ' · Vegas' : ''}${api.pref('garantizada', true) ? ' · con solución' : ''}`;
+  const banca = (api.pref('banca', 0) | 0) + (S.vegas && !S.cobrado && (S.mov || K.gana(S)) ? K.puntosVegas(S) : 0);
+  $('#klInfo').textContent = S.vegas ? `💰 ${dolares(K.puntosVegas(S))} · banca ${dolares(banca)} · pasada ${S.pasada || 1}/${K.PASADAS_VEGAS[S.robar]}` : `${S.mov} movimientos · ${f}/52 en las bases`;
+  root.querySelectorAll('[data-vegas]').forEach(b => b.classList.toggle('on', (b.dataset.vegas === '1') === !!S.vegas));
+  root.querySelectorAll('[data-gar]').forEach(b => b.classList.toggle('on', (b.dataset.gar === '1') === api.pref('garantizada', true)));
+  $('#klVegasNota').textContent = `Vegas: cada partida cuesta 52 $ y cada carta que subes a las bases te da 5 $. Solo puedes pasar el mazo ${K.PASADAS_VEGAS[S.robar] === 1 ? 'una vez' : `${K.PASADAS_VEGAS[S.robar]} veces`} (${S.robar === 1 ? 'robando de 1 en 1' : 'robando de 3 en 3'}). Con solución: el reparto siempre se puede ganar (lo comprueba el analizador).`;
   $('#klCrono').textContent = fmtTiempo(crono.s);
   root.querySelectorAll('[data-robar]').forEach(b => b.classList.toggle('on', +b.dataset.robar === S.robar));
   root.querySelectorAll('[data-extra]').forEach(b => b.classList.toggle('on', (b.dataset.extra === '1') === S.extra));
@@ -247,6 +283,8 @@ function clic(e) {
   const d = b.dataset;
   if (d.robar) { const n = +d.robar; if (n !== S.robar) nueva(n, S.extra); return; }
   if (d.extra) { const x = d.extra === '1'; if (x !== S.extra) nueva(S.robar, x); return; }
+  if (d.vegas) { const x = d.vegas === '1'; if (x !== !!S.vegas) nueva(S.robar, S.extra, false, x); return; }
+  if (d.gar) { api.setPref('garantizada', d.gar === '1'); pintar(); api.aviso(d.gar === '1' ? 'Las próximas partidas siempre tendrán solución' : 'Repartos al azar: algunas partidas no se pueden ganar'); return; }
   if (d.autor) { api.setPref('autorrelleno', d.autor === '1'); pintar(); revisarAuto(); return; }
   const a = d.ac;
   if (a === 'nueva') nueva(S.robar, S.extra); else if (a === 'undo') deshacer(); else if (a === 'pista') pista(); else if (a === 'auto') autocompletar(); else if (a === 'analizador') abrirAnalizador(); else if (a === 'aspecto') asp.abrir();
@@ -259,5 +297,7 @@ function reglas() {
     <li>Toca el mazo para robar; cuando se acaba, tócalo de nuevo. Puedes robar de 1 en 1 o de 3 en 3.</li>
     <li><b>Analizador</b>: la burbuja de la esquina muestra si el camino sigue abierto (🟢 100 %) o cerrado (🔴 0 %). Tócala para ver el detalle y el <b>acierto de tus jugadas</b> (porcentaje de jugadas que mantuvieron el camino abierto). Si una jugada cierra el camino, te avisa.</li>
     <li>⚡ <b>Auto-relleno</b>: cuando no quedan cartas boca abajo y el resto puede subir solo, las cartas van solas a las bases y la partida se termina. Puedes dejarlo automático o usar el botón (en las opciones ⚙️).</li>
-    <li>💡 <b>Pista</b> y ↶ <b>Deshacer</b>.</li></ul>`);
+    <li>💡 <b>Pista</b> y ↶ <b>Deshacer</b>.</li>
+    <li>✅ <b>Siempre con solución</b> (por defecto): antes de repartir, el analizador comprueba que la partida se puede ganar.</li>
+    <li>💰 <b>Vegas</b>: cada partida cuesta 52 $ y cada carta en las bases paga 5 $; el mazo solo se pasa una vez robando de 1 (tres veces robando de 3). Lo que ganas o pierdes se acumula en tu banca.</li></ul>`);
 }

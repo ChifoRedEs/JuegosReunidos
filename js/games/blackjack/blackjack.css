@@ -26,3 +26,8 @@
 .mano.bj{border-color:#FFD33D;box-shadow:0 0 18px 4px rgba(255,211,61,.65);animation:bjglow 1s ease-in-out infinite alternate}
 .bjb.bj{background:linear-gradient(135deg,#FFD33D,#FF9F1C);color:#3A2800;box-shadow:0 0 10px rgba(255,211,61,.9)}
 @keyframes bjglow{to{box-shadow:0 0 28px 8px rgba(255,211,61,.85)}}
+.juego-blackjack .bjcuenta{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:8px 12px;margin:8px 0}
+.juego-blackjack .bjcuenta[hidden]{display:none}
+.juego-blackjack .bjc{display:flex;justify-content:space-around;gap:8px;text-align:center;font-size:12px;font-weight:800;color:var(--mut)}
+.juego-blackjack .bjc b{display:block;font:800 22px/1.1 'Baloo 2',system-ui,sans-serif;color:var(--ink)}
+.juego-blackjack .bjcuenta .note{margin:6px 0 0;text-align:center}

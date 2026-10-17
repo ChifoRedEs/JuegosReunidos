@@ -2,7 +2,8 @@
 // Todo el tiempo va dentro de avanzar(S, dt, entrada): física por subpasos para que la bola no atraviese ladrillos.
 export const ANCHO = 1000, ALTO = 1400, COLS = 10, LAD_W = 100, LAD_H = 42, TOPE = 150;
 export const PALA_Y = 1290, PALA_H = 26, PALA_W = 180, RADIO = 14;
-export const MODOS = { campana: 'Campaña', aleatorio: 'Aleatorio' };
+export const MODOS = { campana: 'Campaña', aleatorio: 'Aleatorio', propio: 'Mis niveles' };
+export const FILAS = 8;
 export const VIDAS = 3;
 // Ladrillos: 1–6 normales (color por número) · D = 2 golpes · T = 3 golpes · M = metal (no se rompe) · ? = sorpresa (suelta premio)
 export const NIVELES = [
@@ -25,6 +26,12 @@ const TIPOS_CAP = ['ancha', 'ancha', 'multi', 'multi', 'lenta', 'laser', 'laser'
 const DURACION = 12000;                                       // ms que dura cada efecto temporal
 
 /* ---------- niveles ---------- */
+// Plano de un nivel hecho con el editor: 8 filas de 10 caracteres (. 1-6 D T M ?) y al menos un ladrillo que se pueda romper
+export const PIEZAS_EDITOR = ['.', '1', '2', '3', '4', '5', '6', 'D', 'T', 'M', '?'];
+export function validarPlano(p) {
+  return Array.isArray(p) && p.length === FILAS && p.every(f => typeof f === 'string' && f.length === COLS && [...f].every(ch => PIEZAS_EDITOR.includes(ch)))
+    && /[1-6DT?]/.test(p.join('')) ? p.slice() : null;
+}
 function aleatorio(n) {                                      // nivel generado con simetría izquierda-derecha
   const filas = []; const dens = .55 + Math.min(n, 10) * .03;
   for (let f = 0; f < 8; f++) {
@@ -35,7 +42,7 @@ function aleatorio(n) {                                      // nivel generado c
   return filas;
 }
 export function cargarNivel(S) {
-  const plano = S.modo === 'aleatorio' ? aleatorio(S.nivel) : NIVELES[(S.nivel - 1) % NIVELES.length];
+  const plano = S.modo === 'propio' && S.plano ? S.plano : S.modo === 'aleatorio' ? aleatorio(S.nivel) : NIVELES[(S.nivel - 1) % NIVELES.length];
   S.ladrillos = [];
   plano.forEach((fila, f) => [...fila].forEach((ch, c) => {
     if (ch === '.') return;
@@ -51,8 +58,9 @@ export const quedan = S => S.ladrillos.filter(l => l.tipo !== 'm').length;
 const velBase = S => Math.min(1.05, .52 + (S.nivel - 1) * .03 + (S.vuelta || 0) * .08);
 
 /* ---------- partida ---------- */
-export function crear({ modo = 'campana', nivel = 1 } = {}) {
-  const S = { modo: MODOS[modo] ? modo : 'campana', nivel: Math.max(1, nivel | 0), vidas: VIDAS, puntos: 0, pala: { x: ANCHO / 2, w: PALA_W }, bolas: [], ladrillos: [], capsulas: [], disparos: [],
+export function crear({ modo = 'campana', nivel = 1, plano = null, nombre = '' } = {}) {
+  if (modo === 'propio' && !validarPlano(plano)) modo = 'campana';
+  const S = { modo: MODOS[modo] ? modo : 'campana', plano: modo === 'propio' ? validarPlano(plano) : null, nombrePlano: modo === 'propio' ? String(nombre).slice(0, 24) : '', nivel: Math.max(1, nivel | 0), vidas: VIDAS, puntos: 0, pala: { x: ANCHO / 2, w: PALA_W }, bolas: [], ladrillos: [], capsulas: [], disparos: [],
     efectos: {}, combo: 0, fase: 'listo', tiempoNivel: 0, cadencia: 0, vuelta: 0, motivo: '' };
   cargarNivel(S); return S;
 }
@@ -179,7 +187,9 @@ export function validar(d) {
   const ladrillos = [];
   for (const l of d.ladrillos) { if (!l || !ent(l.c, 0, COLS - 1) || !ent(l.f, 0, 11) || !['n', 'd', 't', 'm', 's'].includes(l.tipo) || !ent(l.golpes, 1, 99) || !ent(l.color, 0, 6)) return null; ladrillos.push({ c: l.c, f: l.f, tipo: l.tipo, color: l.color, golpes: l.golpes }); }
   if (!['listo', 'jugar', 'pausa', 'nivel', 'fin'].includes(d.fase)) return null;
-  const S = { modo: d.modo, nivel: d.nivel, vidas: d.vidas, puntos: d.puntos, pala: { x: d.pala.x, w: PALA_W }, ladrillos, capsulas: [], disparos: [], efectos: {}, combo: 0,
+  const plano = d.modo === 'propio' ? validarPlano(d.plano) : null;
+  if (d.modo === 'propio' && !plano) return null;
+  const S = { modo: d.modo, plano, nombrePlano: typeof d.nombrePlano === 'string' ? d.nombrePlano.slice(0, 24) : '', nivel: d.nivel, vidas: d.vidas, puntos: d.puntos, pala: { x: d.pala.x, w: PALA_W }, ladrillos, capsulas: [], disparos: [], efectos: {}, combo: 0,
     fase: d.fase, tiempoNivel: 0, cadencia: 0, vuelta: ent(d.vuelta, 0, 999) ? d.vuelta : 0, motivo: typeof d.motivo === 'string' ? d.motivo.slice(0, 10) : '', bolas: [] };
   // Al volver a una partida guardada, la bola vuelve a la pala (más justo que reanudar a mitad de vuelo)
   if (S.fase === 'jugar' || S.fase === 'pausa' || S.fase === 'listo') { prepararSaque(S); }

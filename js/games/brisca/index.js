@@ -1,4 +1,5 @@
 import { $, esc } from '../../core/dom.js';
+import { anotarPartida, htmlPartidas } from '../../core/historial.js';
 import { cartaEsHTML, asegurarSprites, PALOS_ES } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso, grupoBarajaEs } from '../../core/aspectos.js';
 import * as B from './motor.js';
@@ -29,7 +30,7 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   root.addEventListener('click', clic);
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '👀 Última baza', accion: verUltima }, { texto: '📜 Historial de partidas', accion: () => api.modal('📜 Historial de partidas', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); prevMesa = S.mesa.length; pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
@@ -47,7 +48,7 @@ function setup() {
   root.querySelector('#brCambio').addEventListener('change', e => { cfg.cambio = e.target.checked; });
 }
 function armar() {
-  root.innerHTML = `<div class="brtop"><span id="brInfo"></span><span class="brtri" id="brTri"></span></div>
+  root.innerHTML = `<div class="brtop"><span id="brInfo"></span><button type="button" class="btn brult" data-ac="ultima">👀 Última baza</button><span class="brtri" id="brTri"></span></div>
     <div class="mesa brm"><div class="bropps" id="brOpps"></div>
       <div class="brcentro"><div id="brMazo"></div><div class="brbaza" id="brBaza"></div></div>
       <div class="brmsg" id="brMsg" role="status" aria-live="polite"></div><div class="brmano" id="brMano"></div></div>
@@ -94,15 +95,24 @@ function bucle() {
 function cierre() {
   if (!reg) {
     reg = true; const r = S.resultado.humano; if (r === 'gana') marcador.g++; else if (r === 'pierde') marcador.p++; else marcador.e++;
+    const pe = B.puntosEquipo(S), yoE = B.equipoDe(S, 0);
+    anotarPartida(api, { res: r === 'gana' ? 'g' : r === 'pierde' ? 'p' : 'e', texto: `${S.n === 4 ? 'Parejas' : S.n + ' jugadores'} · ${NIVEL[S.nivel]} · tus puntos ${pe[yoE]} de 120` });
     api.registrar({ res: r === 'gana' ? 'victoria' : r === 'pierde' ? 'derrota' : 'tablas', variante: `${S.n === 4 ? 'Parejas' : S.n + ' jugadores'} · ${NIVEL[S.nivel]}` });
     api.sonido(r === 'gana' ? 'ganar' : r === 'pierde' ? 'perder' : 'ok'); if (r === 'gana') api.vibrar([60, 40, 60]);
   }
   pintar(); guardar();
 }
+// Repaso de la última baza cerrada: quién jugó qué y quién se la llevó
+function verUltima() {
+  const u = S && S.previa; if (!u || !u.mesa.length) { api.aviso('Todavía no se ha cerrado ninguna baza'); return; }
+  const nom = nombres(S.n);
+  api.modal('👀 Última baza', `<div class="repaso">${u.mesa.map(m => `<div class="${m.j === u.ganador ? 'gana' : ''}">${cartaEsHTML(m.c)}<span>${esc(nom[m.j])}${m.j === u.ganador ? ' 🏆' : ''}</span></div>`).join('')}</div><p style="text-align:center">Se la lleva <b>${esc(nom[u.ganador])}</b> con <b>${u.puntos}</b> punto${u.puntos === 1 ? '' : 's'}.</p>`);
+}
 function jugarMia(c) { if (!S || S.fase !== 'jugando' || S.turno !== 0) return; if (B.jugar(S, 0, c)) { api.sonido('mover'); pintar(); guardar(); bucle(); } }
 function clic(e) {
   const carta = e.target.closest('#brMano [data-c]'); if (carta) return jugarMia(+carta.dataset.c);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
+  if (d.ac === 'ultima') return verUltima();
   if (d.n) { cfg.n = +d.n; return setup(); } if (d.niv) { cfg.nivel = d.niv; return setup(); }
   const a = d.ac;
   if (a === 'start') empezar(); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();

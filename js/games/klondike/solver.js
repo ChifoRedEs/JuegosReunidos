@@ -1,7 +1,7 @@
 // Analizador de Klondike: busca (con las cartas ocultas que conoce el programa) si desde la posición actual
 // existe alguna forma de ganar. Devuelve 'ganable' (hay solución), 'cerrado' (se agotó la búsqueda: no hay) o 'incierto' (se acabó el tiempo).
 import * as K from './motor.js';
-import { paloDe, rangoDe, esRoja } from '../../core/cartas.js';
+import { rangoDe, esRoja } from '../../core/cartas.js';
 
 const clon = S => ({ tab: S.tab.map(c => ({ d: c.d.slice(), u: c.u.slice() })), fund: S.fund.map(f => f.slice()), stock: S.stock.slice(), waste: S.waste.slice(), robar: S.robar, mov: 0, extra: S.extra });
 const clave = S => { const cs = []; for (let i = 1; i < 8; i++) cs.push(S.tab[i].d.length + ':' + S.tab[i].u.join('.')); cs.sort(); return S.tab[0].u.join('.') + '|' + cs.join('|') + '#' + S.fund.map(f => f.length).join('') + '#' + S.stock.join('.') + '#' + S.waste.join('.'); };

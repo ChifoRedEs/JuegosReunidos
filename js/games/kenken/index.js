@@ -25,23 +25,27 @@ export function validar(d) {
   if (visto.size !== N) return null;
   if (!Array.isArray(d.cur) || d.cur.length !== N || !d.cur.every(v => ent(v, 0, n))) return null;
   const notas = Array.isArray(d.notas) && d.notas.length === N && d.notas.every(v => ent(v, 0, (1 << (n + 1)) - 1)) ? d.notas.slice() : new Array(N).fill(0);
-  return { n, dif: d.dif, sol: d.sol.slice(), cages, cur: d.cur.slice(), notas, t: ent(d.t, 0, 1e7) ? d.t : 0, pistas: ent(d.pistas, 0, 1e5) ? d.pistas : 0 };
+  const hist = Array.isArray(d.hist) ? d.hist.filter(h => h && Array.isArray(h.cur) && h.cur.length === N && h.cur.every(v => ent(v, 0, n)) && Array.isArray(h.notas) && h.notas.length === N && h.notas.every(v => ent(v, 0, (1 << (n + 1)) - 1))).slice(-60) : [];
+  return { n, dif: d.dif, sol: d.sol.slice(), cages, cur: d.cur.slice(), notas, t: ent(d.t, 0, 1e7) ? d.t : 0, pistas: ent(d.pistas, 0, 1e5) ? d.pistas : 0, hist,
+    reto: typeof d.reto === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.reto) ? d.reto : null };
 }
 export const migrarV1 = d => d;
 const completo = d => d.sol.every((v, i) => d.cur[i] === v);
 export function resumen(d) {
   const ok = completo(d), lle = d.cur.filter(Boolean).length;
-  return { texto: ok ? `${d.n}×${d.n} · ${DIFICULTADES[d.dif].nombre} · resuelto` : `${d.n}×${d.n} · ${DIFICULTADES[d.dif].nombre} · ${lle}/${d.n * d.n}`, fin: ok };
+  const pre = d.reto ? '📅 Reto · ' : '';
+  return { texto: pre + (ok ? `${d.n}×${d.n} · ${DIFICULTADES[d.dif].nombre} · resuelto` : `${d.n}×${d.n} · ${DIFICULTADES[d.dif].nombre} · ${lle}/${d.n * d.n}`), fin: ok };
 }
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; hist = new Pila(300); notasOn = false; ocupado = false; malas = new Set();
+  api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
   asp = api.aspecto([grupoTablero(), { clave: 'jaulas', titulo: 'Jaulas', def: 'bordes', opciones: [{ id: 'bordes', nombre: 'Solo bordes' }, { id: 'colores', nombre: 'De colores', sw: ['#FF8FA3', '#FFC857', '#6FD99B', '#6FCFE8', '#B79BFF'] }] }, { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
   await api.css(new URL('./kenken.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;
-  root.innerHTML = `
+  hist = new Pila(60, g ? g.hist : []);
+  root.innerHTML = `<div id="kkReto"></div>
     <details class="ops" id="kkOps"><summary id="kkSum"></summary>
       <div class="bar"><span class="lbl">Tamaño</span><div class="seg">${TAMANOS.map(t => `<button class="btn" data-n="${t}">${t}×${t}</button>`).join('')}</div></div>
       <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(DIFICULTADES).map(([k, d]) => `<button class="btn" data-dif="${k}">${d.nombre}</button>`).join('')}</div></div>
@@ -58,7 +62,8 @@ export async function mount(r, a) {
   if (!S) { $('#kkOps').open = true; await nueva(api.pref('n', 5), api.pref('dif', 'medio'), true); }
   else { prepararInfo(); construir(); arrancar(); pintar(); }
 }
-function menu() { api.menu([{ texto: 'Nuevo panel', accion: () => nueva(S.n, S.dif, false, true) }, { texto: 'Comprobar', accion: comprobar }, { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menu(); }, activo: api.pref('errores', false) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]); }
+const RETO = { n: 6, dif: 'medio' };
+function menu() { api.menu([{ texto: 'Nuevo panel', accion: () => nueva(S.n, S.dif, false, true) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.n, RETO.dif, false, true, true) }, { texto: 'Comprobar', accion: comprobar }, { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menu(); }, activo: api.pref('errores', false) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]); }
 export function unmount() {
   if (S && crono) { S.t = crono.s; guardar(); }
   if (crono) crono.detener();
@@ -70,24 +75,31 @@ function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.de
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S && !S.done && S.cur.some(Boolean);
-async function nueva(n, dif, forzar = false, cerrar = false) {
+async function nueva(n, dif, forzar = false, cerrar = false, reto = false) {
   if (ocupado) return;
+  if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un panel nuevo? Perderás el actual.')) return;
   ocupado = true; if (crono) crono.detener();
   $('#kkMsg').textContent = 'Generando panel…'; await esperar(30);
-  const p = generar(n, dif);
-  S = { n, dif, sol: p.sol, cages: p.cages, cur: new Array(n * n).fill(0), notas: new Array(n * n).fill(0), t: 0, pistas: 0, sel: 0, done: false };
-  api.setPref('n', n); api.setPref('dif', dif); hist.vaciar(); malas = new Set(); ocupado = false; notasOn = false;
+  const p = reto ? api.reto.generar(() => generar(n, dif)) : generar(n, dif);
+  S = { n, dif, sol: p.sol, cages: p.cages, cur: new Array(n * n).fill(0), notas: new Array(n * n).fill(0), t: 0, pistas: 0, sel: 0, done: false, reto: reto ? api.reto.fecha() : null };
+  if (!reto) { api.setPref('n', n); api.setPref('dif', dif); } hist.vaciar(); malas = new Set(); ocupado = false; notasOn = false;
   crono = new Cronometro(crono.alTick, 0);
   prepararInfo(); construir(); arrancar(); pintar(); guardar();
   if (cerrar) $('#kkOps').open = false;
 }
-function guardar() { if (!S) return; const d = { n: S.n, dif: S.dif, sol: S.sol, cages: S.cages, cur: S.cur, notas: S.notas, t: S.t, pistas: S.pistas }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
+function guardar() { if (!S) return; const d = { n: S.n, dif: S.dif, sol: S.sol, cages: S.cages, cur: S.cur, notas: S.notas, t: S.t, pistas: S.pistas, reto: S.reto || null, hist: hist ? hist.toJSON().slice(-60) : [] }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 function prepararInfo() {                          // jaula de cada casilla, casilla de la etiqueta y color (determinista) de cada jaula
   const n = S.n, jaulaDe = new Array(n * n), color = new Array(S.cages.length).fill(-1);
   S.cages.forEach((g, k) => g.cells.forEach(i => { jaulaDe[i] = k; }));
   S.cages.forEach((g, k) => { const usados = new Set(); for (const c of g.cells) for (const v of vecinos(n, c)) if (jaulaDe[v] !== k && color[jaulaDe[v]] >= 0) usados.add(color[jaulaDe[v]]); let x = 0; while (usados.has(x)) x++; color[k] = x % 6; });
   info = { jaulaDe, color };
+}
+function pintarReto() {
+  const r = $('#kkReto'); if (!r || !S) return;
+  const hoy = api.reto.fecha(), hecho = api.reto.hecho(), jugando = S.reto === hoy, k = `${hoy}|${hecho}|${jugando}`;
+  if (r.dataset.k === k) return; r.dataset.k = k;
+  r.innerHTML = `<div class="reto ${hecho ? 'hecho' : ''}"><span>${hecho ? '✅' : '📅'}</span><div><b>Reto del día · ${api.reto.texto(hoy)}</b>${hecho ? 'Completado. Vuelve mañana para otro.' : jugando ? 'Estás jugando el reto: el mismo panel para todo el mundo.' : `Un ${RETO.n}×${RETO.n} de nivel ${DIFICULTADES[RETO.dif].nombre.toLowerCase()}, el mismo para todos hoy.`}</div>${hecho || jugando ? '' : '<button class="btn on" data-ac="reto">Jugar</button>'}</div>`;
 }
 const push = () => hist.push({ cur: S.cur.slice(), notas: S.notas.slice() });
 
@@ -108,8 +120,9 @@ function construir() {
 }
 function pintar() {
   if (!S) return;
+  pintarReto();
   const n = S.n, N = n * n, auto = api.pref('errores', false), sv = S.cur[S.sel];
-  if (!S.done && completo(S)) { S.done = true; crono.detener(); S.t = crono.s; api.registrar({ res: 'victoria', tiempo: S.t, variante: `${n}×${n} ${DIFICULTADES[S.dif].nombre}`, limpio: S.pistas === 0 }); api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar(); }
+  if (!S.done && completo(S)) { S.done = true; crono.detener(); S.t = crono.s; api.registrar({ res: 'victoria', tiempo: S.t, variante: S.reto ? 'Reto del día' : `${n}×${n} ${DIFICULTADES[S.dif].nombre}`, limpio: S.pistas === 0 }); if (S.reto && api.reto.completar(S.reto)) setTimeout(() => api.aviso('📅 ¡Reto del día completado!'), 300); api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar(); }
   const dup = new Set();
   for (let i = 0; i < N; i++) { const v = S.cur[i]; if (!v) continue; for (let j = i + 1; j < N; j++) if (S.cur[j] === v && ((i / n | 0) === (j / n | 0) || i % n === j % n)) { dup.add(i); dup.add(j); } }
   const jmal = new Set(); S.cages.forEach((g, k) => { const vs = g.cells.map(i => S.cur[i]); if (vs.every(Boolean) && !cumple(g, vs)) jmal.add(k); });
@@ -162,7 +175,7 @@ function clic(e) {
   if (d.v != null) return poner(+d.v);
   if (d.n) return nueva(+d.n, S.dif); if (d.dif) return nueva(S.n, d.dif);
   const ac = d.ac;
-  if (ac === 'notas') { notasOn = !notasOn; pintar(); } else if (ac === 'undo') deshacer(); else if (ac === 'pista') pista(); else if (ac === 'comprobar') comprobar(); else if (ac === 'nuevo') nueva(S.n, S.dif, false, true); else if (ac === 'aspecto') asp.abrir();
+  if (ac === 'notas') { notasOn = !notasOn; pintar(); } else if (ac === 'undo') deshacer(); else if (ac === 'pista') pista(); else if (ac === 'comprobar') comprobar(); else if (ac === 'nuevo') nueva(S.n, S.dif, false, true); else if (ac === 'reto') nueva(RETO.n, RETO.dif, false, true, true); else if (ac === 'aspecto') asp.abrir();
 }
 function reglas() {
   api.modal('KenKen', `<ul><li>Rellena la cuadrícula con los números del <b>1 al ${S ? S.n : 'N'}</b> sin repetir ninguno en cada fila ni columna (como un Sudoku).</li>

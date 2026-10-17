@@ -1,10 +1,9 @@
 import { $, esc, esperar } from '../../core/dom.js';
 import { grupoTablero } from '../../core/aspectos.js';
-import { BLOQUES } from '../../core/definiciones.js';
 import * as T from './motor.js';
 
 const FORMAS = ['circulo', 'estrella', 'diamante', 'cuadrado'];
-let S = null, api = null, asp = null, root = null, timer = null, rodando = false, cfg = { nCat: 6, modo: 'opciones', nivel: 'medio', jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'c']] }, reg = false;
+let S = null, api = null, asp = null, root = null, timer = null, rodando = false, cfg = { nCat: 6, modo: 'opciones', nivel: 'medio', banco: 'mix', jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'c']] }, reg = false;
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) { const s = d && T.validar(d.s); return s ? { s, reg: !!d.reg } : null; }
@@ -19,7 +18,7 @@ export async function mount(r, a) {
   api = a; root = r; rodando = false;
   asp = api.aspecto([grupoTablero(), { clave: 'ficha', titulo: 'Fichas de los jugadores', def: 'circulo', opciones: [{ id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'cuadrado', nombre: '■ Cuadrado' }] }], () => { if (S) pintar(); });
   await api.css(new URL('./trivial.css', import.meta.url));
-  const c0 = api.pref('cfg', null); if (c0 && [6, 9].includes(c0.nCat) && ['opciones', 'escribir'].includes(c0.modo) && T.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
+  const c0 = api.pref('cfg', null); if (c0 && [6, 9].includes(c0.nCat) && ['opciones', 'escribir'].includes(c0.modo) && T.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...c0, banco: T.BANCOS[c0.banco] ? c0.banco : 'mix', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', alTecla);
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
@@ -31,13 +30,14 @@ function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(
 /* ---------- pantallas ---------- */
 function setup() {
   S = null; clearTimeout(timer); const n = cfg.jug.filter(j => j[1] !== 'n').length;
-  root.innerHTML = `<p class="note">Responde preguntas de cultura general (definiciones: ¿qué término es?) y mueve tu ficha por el tablero. Reúne un quesito de cada categoría y responde la pregunta final en el centro.</p>
+  root.innerHTML = `<p class="note">Responde preguntas de cultura general (de tipo test o definiciones: ¿qué término es?) y mueve tu ficha por el tablero. Reúne un quesito de cada categoría y responde la pregunta final en el centro.</p>
     ${cfg.jug.map(([nom, t], i) => `<div class="prow"><span class="dot" style="background:${T.COLORES_J[i]}"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Quesitos</span><div class="seg"><button class="btn ${cfg.nCat === 6 ? 'on' : ''}" data-ncat="6">6 categorías</button><button class="btn ${cfg.nCat === 9 ? 'on' : ''}" data-ncat="9">9 (completo)</button></div></div>
+    <div class="bar"><span class="lbl">Preguntas</span><div class="seg">${Object.entries(T.BANCOS).map(([k, l]) => `<button class="btn ${cfg.banco === k ? 'on' : ''}" data-banco="${k}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Respuestas</span><div class="seg"><button class="btn ${cfg.modo === 'opciones' ? 'on' : ''}" data-modo="opciones">4 opciones</button><button class="btn ${cfg.modo === 'escribir' ? 'on' : ''}" data-modo="escribir">Escribir</button></div></div>
     <div class="bar"><span class="lbl">Nivel CPU</span><div class="seg">${Object.entries(T.NIVEL).map(([k, v]) => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-niv="${k}">${v.nombre}</button>`).join('')}</div></div>
     <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
-    <p class="note">${cfg.nCat === 6 ? 'Geografía, Historia, Ciencias, Arte y literatura, Espectáculos y Deportes.' : 'Añade Mitología y filosofía, Gastronomía y Cultura general (partidas más largas).'} Banco de 450 definiciones.</p>`;
+    <p class="note">${cfg.nCat === 6 ? 'Geografía, Historia, Ciencias, Arte y literatura, Espectáculos y Deportes.' : 'Añade Mitología y filosofía, Gastronomía y Cultura general (partidas más largas).'} Banco de 450 definiciones y ${cfg.nCat * 15} preguntas clásicas.</p>`;
 }
 function armar() {
   root.innerHTML = `<div class="tvj" id="tvJ"></div><svg class="tvb" id="tvB" viewBox="0 0 320 320" role="img" aria-label="Tablero circular del Trivial"></svg><div class="tvpanel" id="tvP"></div><ul class="tvlog" id="tvL"></ul>
@@ -46,7 +46,7 @@ function armar() {
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   const jugadores = cfg.jug.map(([nombre, t]) => ({ nombre: nombre.trim() || 'Jugador', cpu: t === 'c', activo: t !== 'n' })).filter(j => j.activo);
-  api.setPref('cfg', cfg); S = T.crear({ nCat: cfg.nCat, modo: cfg.modo, nivel: cfg.nivel, jugadores }); reg = false; armar(); pintar(); guardar(); bucle();
+  api.setPref('cfg', cfg); S = T.crear({ nCat: cfg.nCat, modo: cfg.modo, nivel: cfg.nivel, banco: cfg.banco, jugadores }); reg = false; armar(); pintar(); guardar(); bucle();
 }
 
 /* ---------- tablero SVG ---------- */
@@ -107,10 +107,10 @@ function panel() {
     const q = S.pregunta, cat = cats[q.cat], resuelta = S.fase === 'resultado';
     let cuerpo = '';
     if (S.modo === 'opciones') cuerpo = `<div class="ops">${q.opciones.map((o, i) => `<button class="op ${resuelta ? (i === q.correcta ? 'ok' : i === q.respuesta ? 'mal' : '') : ''}" data-op="${i}" ${resuelta || cpu ? 'disabled' : ''}>${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`;
-    else cuerpo = resuelta ? '' : (cpu ? '' : `<div class="esc"><input id="tvTxt" type="text" autocomplete="off" autocapitalize="sentences" placeholder="Escribe el término…" aria-label="Tu respuesta"><div class="tvdir"><button class="btn" data-ac="nosé">No lo sé</button><button class="btn on" data-ac="resp">Responder</button></div></div>`);
+    else cuerpo = resuelta ? '' : (cpu ? '' : `<div class="esc"><input id="tvTxt" type="text" autocomplete="off" autocapitalize="sentences" placeholder="${q.fuente === 'c' ? 'Escribe la respuesta…' : 'Escribe el término…'}" aria-label="Tu respuesta"><div class="tvdir"><button class="btn" data-ac="nosé">No lo sé</button><button class="btn on" data-ac="resp">Responder</button></div></div>`);
     const extraFin = !q.final || !resuelta ? '' : q.acierto ? (yo.final.length + 1 >= S.nCat ? ' · ¡Ronda final completada!' : ` · ¡Vas ${yo.final.length + 1}/${S.nCat}! Siguiente categoría…`) : ' · Ronda final fallida: lo intentarás de nuevo en tu próximo turno';
     const fb = resuelta ? `<div class="fb ${q.acierto ? 'ok' : 'mal'}">${q.acierto ? '✔ ¡Correcto!' : '✘ Incorrecto'}${extraFin} · ${S.modo === 'escribir' || !q.acierto ? `Respuesta: ${esc(q.resp)}` : esc(q.resp)}${S.modo === 'escribir' && q.respuesta ? `<br><small style="color:var(--mut)">Tu respuesta: ${esc(String(q.respuesta))}</small>` : ''}</div>` : '';
-    p.innerHTML = `<div class="tvq" style="--c:${cat.color}"><div class="cab"><span>${cat.icono} ${cat.nombre}${q.final ? ` · FINAL ${yo.final.length + 1}/${S.nCat}` : ''}</span><small>${esc(q.tema)}</small></div>${q.final ? progresoFinal(yo, cats, q, resuelta) : ''}<div class="def">${esc(q.def)}</div>${cuerpo}${fb}</div>${resuelta && !cpu ? `<div class="bar" style="justify-content:center"><button class="btn on" data-ac="seguir">${q.final && q.acierto && yo.final.length + 1 < S.nCat ? 'Siguiente pregunta final' : 'Continuar'}</button></div>` : ''}${cpu && !resuelta ? `<div class="msg" style="text-align:center">${esc(yo.nombre)} piensa…</div>` : ''}`;
+    p.innerHTML = `<div class="tvq" style="--c:${cat.color}"><div class="cab"><span>${cat.icono} ${cat.nombre}${q.final ? ` · FINAL ${yo.final.length + 1}/${S.nCat}` : ''}</span><small>${q.fuente === 'c' ? '❓ Pregunta' : '📖 ' + esc(q.tema)}</small></div>${q.final ? progresoFinal(yo, cats, q, resuelta) : ''}<div class="def">${esc(q.def)}</div>${cuerpo}${fb}</div>${resuelta && !cpu ? `<div class="bar" style="justify-content:center"><button class="btn on" data-ac="seguir">${q.final && q.acierto && yo.final.length + 1 < S.nCat ? 'Siguiente pregunta final' : 'Continuar'}</button></div>` : ''}${cpu && !resuelta ? `<div class="msg" style="text-align:center">${esc(yo.nombre)} piensa…</div>` : ''}`;
     if (!resuelta && !cpu && S.modo === 'escribir') setTimeout(() => { const i = $('#tvTxt'); if (i) i.focus({ preventScroll: true }); }, 50);
   }
 }
@@ -151,7 +151,7 @@ function alTecla(e) { if (e.key === 'Enter' && e.target.id === 'tvTxt') { e.prev
 function clic(e) {
   const b = e.target.closest('button,[data-dir]'); if (!b) return; const d = b.dataset;
   if (d.tipo) { const [i, k] = d.tipo.split(','); cfg.jug[+i][1] = k; return setup(); }
-  if (d.ncat) { cfg.nCat = +d.ncat; return setup(); } if (d.modo) { cfg.modo = d.modo; return setup(); } if (d.niv) { cfg.nivel = d.niv; return setup(); }
+  if (d.ncat) { cfg.nCat = +d.ncat; return setup(); } if (d.modo) { cfg.modo = d.modo; return setup(); } if (d.banco) { cfg.banco = d.banco; return setup(); } if (d.niv) { cfg.nivel = d.niv; return setup(); }
   if (d.dir && S && S.fase === 'mover' && !S.jug[S.turno].cpu) { T.mover(S, d.dir); api.sonido('mover'); pintar(); guardar(); return bucle(); }
   if (d.op != null) return responder(+d.op);
   const a = d.ac;

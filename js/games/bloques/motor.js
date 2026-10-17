@@ -2,8 +2,10 @@
 // Tablero de 10 columnas × 22 filas (las 2 de arriba están ocultas). Celda = 0 vacía o 1..7 (tipo de pieza).
 // Giros con el sistema SRS y sus «empujones» (wall kicks), bolsa de 7 piezas, reserva, pieza fantasma y tiempo de gracia.
 export const W = 10, H = 22, VISIBLES = 20;
-export const MODOS = { maraton: 'Maratón', sprint: 'Sprint 40 líneas', ultra: 'Ultra 2 minutos' };
-export const TIPOS = ['', 'I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+export const MODOS = { maraton: 'Maratón', sprint: 'Sprint 40 líneas', ultra: 'Ultra 2 minutos', excavar: 'Excavar 10 filas' };
+export const BASURA = 8;                                       // celda de basura (modo Excavar)
+export const FILAS_BASURA = 10;
+export const porTiempo = modo => modo === 'sprint' || modo === 'excavar';   // modos en los que gana el menor tiempo
 // Forma de cada pieza en su estado 0 (celdas [x, y] dentro de su caja)
 const FORMAS = {
   1: { n: 4, c: [[0, 1], [1, 1], [2, 1], [3, 1]] }, 2: { n: 2, c: [[0, 0], [1, 0], [0, 1], [1, 1]] }, 3: { n: 3, c: [[1, 0], [0, 1], [1, 1], [2, 1]] },
@@ -25,8 +27,19 @@ export function crear({ modo = 'maraton', nivel = 1 } = {}) {
   const S = { modo: MODOS[modo] ? modo : 'maraton', tab: new Array(W * H).fill(0), bolsa: [], cola: [], p: null, reserva: 0, puedeReservar: true,
     nivel: Math.max(1, Math.min(15, nivel | 0)), nivelIni: Math.max(1, Math.min(15, nivel | 0)), lineas: 0, puntos: 0, combo: -1, b2b: false, piezas: 0,
     tiempo: 0, caida: 0, gracia: 0, resets: 0, fase: 'jugar', motivo: '', ultimo: null };
+  if (S.modo === 'excavar') ponerBasura(S, FILAS_BASURA);
   rellenarCola(S); sacarPieza(S); return S;
 }
+// Modo Excavar: filas grises abajo, cada una con un hueco (nunca en la misma columna que la de debajo)
+function ponerBasura(S, n) {
+  let ant = -1;
+  for (let k = 0; k < n; k++) {
+    let h; do h = Math.floor(Math.random() * W); while (h === ant);
+    ant = h; const y = H - 1 - k;
+    for (let x = 0; x < W; x++) S.tab[y * W + x] = x === h ? 0 : BASURA;
+  }
+}
+export const basuraRestante = S => { let n = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (S.tab[y * W + x] === BASURA) { n++; break; } return n; };
 function rellenarCola(S) { while (S.cola.length < 5) { if (!S.bolsa.length) { S.bolsa = [1, 2, 3, 4, 5, 6, 7]; for (let i = 6; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [S.bolsa[i], S.bolsa[j]] = [S.bolsa[j], S.bolsa[i]]; } } S.cola.push(S.bolsa.shift()); } }
 function nuevaPieza(t) { const n = FORMAS[t].n; return { t, r: 0, x: Math.floor((W - n) / 2), y: t === 1 ? 1 : 2 }; }   // aparece ya en la primera fila visible
 function sacarPieza(S, t = null) {
@@ -82,12 +95,13 @@ function fijar(S) {
     if (seguido) pts = Math.floor(pts * 1.5);
     pts += 50 * S.combo * S.nivel; S.b2b = dificil;
     S.lineas += n;
-    if (S.modo !== 'sprint') S.nivel = Math.max(S.nivelIni, Math.min(20, S.nivelIni + Math.floor(S.lineas / 10)));
+    if (!porTiempo(S.modo)) S.nivel = Math.max(S.nivelIni, Math.min(20, S.nivelIni + Math.floor(S.lineas / 10)));
   } else { S.combo = -1; if (tspin) pts = 400 * S.nivel; }
   S.puntos += pts;
   const ev = { lineas: n, filas, nombre: (tspin ? 'T-giro ' : '') + (n ? NOMBRE_LINEAS[n] : ''), puntos: pts, combo: S.combo, b2b: seguido };
   S.puedeReservar = true; S.ultimo = null;
   if (S.modo === 'sprint' && S.lineas >= SPRINT) { S.fase = 'fin'; S.motivo = 'meta'; return ev; }
+  if (S.modo === 'excavar' && n && !basuraRestante(S)) { S.fase = 'fin'; S.motivo = 'meta'; return ev; }
   if (fuera) { S.fase = 'fin'; S.motivo = 'arriba'; return ev; }
   sacarPieza(S);
   return ev;
@@ -113,10 +127,9 @@ export function avanzar(S, dt, bajando = false) {
 export const restante = S => (S.modo === 'ultra' ? Math.max(0, ULTRA_MS - S.tiempo) : null);
 export const META_SPRINT = SPRINT;
 export const variante = S => MODOS[S.modo];
-export const marcaDe = S => (S.modo === 'sprint' ? S.tiempo : S.puntos);   // en Sprint cuenta el tiempo (menos es mejor)
 
 export function validar(d) {
-  if (!d || typeof d !== 'object' || !MODOS[d.modo] || !Array.isArray(d.tab) || d.tab.length !== W * H || !d.tab.every(v => Number.isInteger(v) && v >= 0 && v <= 7)) return null;
+  if (!d || typeof d !== 'object' || !MODOS[d.modo] || !Array.isArray(d.tab) || d.tab.length !== W * H || !d.tab.every(v => Number.isInteger(v) && v >= 0 && v <= BASURA)) return null;
   const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b, pz = v => ent(v, 1, 7);
   if (!d.p || !pz(d.p.t) || !ent(d.p.r, 0, 3) || !ent(d.p.x, -3, W) || !ent(d.p.y, -3, H) || !Array.isArray(d.cola) || d.cola.length < 3 || !d.cola.every(pz) || !Array.isArray(d.bolsa) || !d.bolsa.every(pz)) return null;
   if (!(d.reserva === 0 || pz(d.reserva)) || !ent(d.nivel, 1, 20) || !ent(d.nivelIni, 1, 15) || !ent(d.lineas, 0, 1e6) || !ent(d.puntos, 0, 1e9) || !ent(d.piezas, 0, 1e7) || !Number.isFinite(d.tiempo) || d.tiempo < 0) return null;

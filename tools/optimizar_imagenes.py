@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Reduce y convierte imágenes de cartas a WebP ligero (requiere Pillow:  pip install pillow).
 Uso:
-    python tools/optimizar_imagenes.py ORIGEN DESTINO [--ancho 360] [--calidad 85]
+    python tools/optimizar_imagenes.py ORIGEN DESTINO [--ancho 240] [--calidad 78]
 Recorre ORIGEN (carpeta con barajas o dorsos), conserva la estructura de subcarpetas y los nombres de archivo,
-y guarda cada imagen como .webp de 360 px de ancho en DESTINO. Después sube DESTINO a img/cartas/... en GitHub."""
+y guarda cada imagen como .webp de 240 px de ancho en DESTINO (suficiente para pantallas de 3×). Después sube DESTINO a img/cartas/... en GitHub."""
 import argparse, os
 from PIL import Image
 
 p = argparse.ArgumentParser()
 p.add_argument('origen'); p.add_argument('destino')
-p.add_argument('--ancho', type=int, default=360); p.add_argument('--calidad', type=int, default=85)
+p.add_argument('--ancho', type=int, default=240); p.add_argument('--calidad', type=int, default=78)
 a = p.parse_args()
 n = 0; antes = 0; despues = 0
 for base, _, files in os.walk(a.origen):

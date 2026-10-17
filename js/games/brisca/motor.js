@@ -33,7 +33,7 @@ export function ganadorMesa(S) {
 export function cerrarBaza(S) {
   if (S.fase !== 'baza') return false;
   const g = ganadorMesa(S), cartas = S.mesa.map(m => m.c), pts = cartas.reduce((s, c) => s + puntos(c), 0);
-  S.ganadas[g].push(...cartas); S.ultimaBaza = { mesa: S.mesa.slice(), ganador: g, puntos: pts }; S.mesa = [];
+  S.ganadas[g].push(...cartas); S.ultimaBaza = { mesa: S.mesa.slice(), ganador: g, puntos: pts }; S.previa = S.ultimaBaza; S.mesa = [];   // previa: para «Última baza» aunque ya se juegue la siguiente
   for (let k = 0; k < S.n && S.mazo.length; k++) S.manos[(g + k) % S.n].push(S.mazo.pop());            // roba primero el que ganó; el último se lleva el triunfo
   S.ronda++; S.lider = g; S.turno = g; S.fase = 'jugando';
   if (S.manos.every(m => !m.length) && !S.mazo.length) terminar(S);
@@ -65,7 +65,8 @@ export function validar(d) {
   if (!['jugando', 'baza', 'fin'].includes(d.fase) || !ent(d.turno, -1, n - 1) || !ent(d.lider, 0, n - 1) || !carta(d.triunfoCarta)) return null;
   const tc = d.triunfoCarta; if (d.mazo.length && d.mazo[0] !== tc) return null;
   const ub = d.ultimaBaza && Array.isArray(d.ultimaBaza.mesa) && ent(d.ultimaBaza.ganador, 0, n - 1) ? { mesa: d.ultimaBaza.mesa.filter(m => m && ent(m.j, 0, n - 1) && carta(m.c)).map(m => ({ j: m.j, c: m.c })), ganador: d.ultimaBaza.ganador, puntos: ent(d.ultimaBaza.puntos, 0, 120) ? d.ultimaBaza.puntos : 0 } : null;
-  const S = { n, nivel: d.nivel, cambio: !!d.cambio, mazo: d.mazo.slice(), triunfoCarta: tc, triunfo: paloEs(tc), manos: d.manos.map(m => m.slice()), mesa, turno: d.turno, lider: d.lider, ganadas: d.ganadas.map(g => g.slice()), fase: d.fase, ultimaBaza: ub, resultado: null, ronda: ent(d.ronda, 0, 100) ? d.ronda : 0, cambios: ent(d.cambios, 0, 20) ? d.cambios : 0 };
+  const pv = d.previa && Array.isArray(d.previa.mesa) && ent(d.previa.ganador, 0, n - 1) ? { mesa: d.previa.mesa.filter(m => m && ent(m.j, 0, n - 1) && carta(m.c)).map(m => ({ j: m.j, c: m.c })), ganador: d.previa.ganador, puntos: ent(d.previa.puntos, 0, 120) ? d.previa.puntos : 0 } : null;
+  const S = { previa: pv, n, nivel: d.nivel, cambio: !!d.cambio, mazo: d.mazo.slice(), triunfoCarta: tc, triunfo: paloEs(tc), manos: d.manos.map(m => m.slice()), mesa, turno: d.turno, lider: d.lider, ganadas: d.ganadas.map(g => g.slice()), fase: d.fase, ultimaBaza: ub, resultado: null, ronda: ent(d.ronda, 0, 100) ? d.ronda : 0, cambios: ent(d.cambios, 0, 20) ? d.cambios : 0 };
   if (S.fase === 'fin') terminar(S);
   return S;
 }

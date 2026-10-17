@@ -13,6 +13,15 @@ export function total(cartas) {
 export const esBJ = cartas => cartas.length === 2 && total(cartas).t === 21;
 const mismoValor = (a, b) => valor(a) === valor(b);
 
+// Contador de cartas Hi-Lo (didáctico): 2-6 suman +1, 7-9 valen 0, 10-A restan 1. Se cuentan las cartas que ya han salido
+// del zapato (las que no quedan en él, salvo la carta tapada de la banca). Cuenta real = cuenta / barajas que quedan.
+export const hiLo = id => { const v = valor(id); return v <= 6 ? 1 : v >= 10 ? -1 : 0; };
+export function cuenta(S) {
+  let rc = 0; for (const c of S.zapato) rc -= hiLo(c);                      // el zapato completo suma 0
+  if ((S.fase === 'jugador' || S.fase === 'seguro') && S.banca[1] != null) rc -= hiLo(S.banca[1]);   // la tapada aún no se ve
+  const mazos = Math.max(.5, S.zapato.length / 52);
+  return { rc, tc: rc / mazos, mazos };
+}
 export function nuevoEstado() { return { fichas: INICIAL, apuesta: INICIAL >= 50 ? 50 : 10, ultApuesta: 50, zapato: barajar(nuevaBaraja(MAZOS)), fase: 'apuesta', manos: [], act: 0, banca: [], seguro: 0, gastado: 0, resultado: null, ronda: 0, pico: INICIAL, barajado: false }; }
 function robar(S) { if (!S.zapato.length) { S.zapato = barajar(nuevaBaraja(MAZOS)); S.barajado = true; } return S.zapato.pop(); }
 const mano = (c, ap, extra = {}) => ({ c, ap, dbl: false, fin: false, split: false, res: null, ...extra });

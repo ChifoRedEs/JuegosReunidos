@@ -5,11 +5,13 @@
 // categoría seguidas y sin fallar. Si fallas una, pasa el turno y en tu siguiente turno vuelves a empezar la ronda final.
 import { BLOQUES, analizar, claveTexto, enmascarar } from '../../core/definiciones.js';
 import { shuffle, rnd } from '../../core/dom.js';
+import { CLASICAS } from './clasicas.js';
+// De dónde salen las preguntas: definiciones (adivina el término), clásicas (preguntas tipo test) o mezcla de las dos
+export const BANCOS = { def: 'Definiciones', cla: 'Clásicas', mix: 'Mezcla' };
 
 export const NIVEL = { facil: { nombre: 'Fácil', p: .38 }, medio: { nombre: 'Medio', p: .58 }, dificil: { nombre: 'Difícil', p: .78 } };
 export const COLORES_J = ['#FF4757', '#2F6BFF', '#12B76A', '#FFB400'];
 export const categorias = n => BLOQUES.slice(0, n);
-export const tamano = S => S.nCat * 6;
 export function casilla(S, i) {
   const r = i % 6, b = i / 6 | 0;
   if (r === 0) return { tipo: 'quesito', cat: b % S.nCat };
@@ -19,7 +21,7 @@ export function casilla(S, i) {
 }
 export function crear(cfg) {
   const js = cfg.jugadores.slice(0, 4), N = cfg.nCat * 6, paso = Math.floor(N / (6 * js.length)) * 6 || 6;
-  return { nCat: cfg.nCat, modo: cfg.modo, nivel: cfg.nivel, N,
+  return { nCat: cfg.nCat, modo: cfg.modo, nivel: cfg.nivel, N, banco: BANCOS[cfg.banco] ? cfg.banco : 'def', usadasC: Object.fromEntries(BLOQUES.slice(0, cfg.nCat).map(b => [b.id, []])),
     jug: js.map((j, k) => ({ nombre: j.nombre, cpu: !!j.cpu, pos: (k * paso + 3) % N, q: Array(cfg.nCat).fill(false), centro: false, final: [], pericia: Array.from({ length: cfg.nCat }, () => Math.max(.08, Math.min(.95, NIVEL[cfg.nivel].p + (Math.random() - .5) * .3))) })),
     turno: 0, fase: 'tirar', dado: 0, destinos: [], pregunta: null, usadas: Object.fromEntries(BLOQUES.slice(0, cfg.nCat).map(b => [b.id, []])), ganador: -1, ronda: 1, log: ['¡Empieza la partida!'], aciertos: js.map(() => 0), fallos: js.map(() => 0) };
 }
@@ -42,7 +44,21 @@ export function mover(S, sentido) {                       // 'h' (horario) o 'a'
 // Ronda final: categorías que aún le faltan por acertar en este intento (en orden aleatorio)
 export const faltanFinal = (S, p = jugador(S)) => Array.from({ length: S.nCat }, (_, k) => k).filter(k => !p.final.includes(k));
 function siguienteFinal(S, p) { const f = faltanFinal(S, p); return f[rnd(f.length)]; }
+// Pregunta clásica: el texto es la pregunta y las opciones vienen del banco (la correcta es la primera)
+function preguntaClasica(S, cat, final) {
+  const bl = BLOQUES[cat], lista = CLASICAS[bl.id] || [], usadas = S.usadasC[bl.id] || (S.usadasC[bl.id] = []);
+  let libres = lista.map((_, i) => i).filter(i => !usadas.includes(i)); if (!libres.length) { usadas.length = 0; libres = lista.map((_, i) => i); }
+  const idx = libres[rnd(libres.length)]; usadas.push(idx);
+  S.pregunta = construirClasica(S.modo, cat, idx, final); S.fase = 'pregunta';
+}
+export function construirClasica(modo, cat, idx, final, opciones = null) {
+  const [preg, ok, ...mal] = CLASICAS[BLOQUES[cat].id][idx];
+  const opc = modo === 'opciones' ? (opciones || shuffle([ok, ...mal])) : null;
+  return { fuente: 'c', cat, idx, tema: 'Pregunta', def: preg, resp: ok, principal: ok, opciones: opc, correcta: opc ? opc.indexOf(ok) : -1, final: !!final, respuesta: null, acierto: null };
+}
 export function preguntar(S, cat, final) {
+  const hayC = (CLASICAS[BLOQUES[cat].id] || []).length > 0;
+  if (hayC && (S.banco === 'cla' || (S.banco === 'mix' && Math.random() < .5))) return preguntaClasica(S, cat, final);
   const bl = BLOQUES[cat], usadas = S.usadas[bl.id];
   let libres = bl.fichas.map((_, i) => i).filter(i => !usadas.includes(i)); if (!libres.length) { usadas.length = 0; libres = bl.fichas.map((_, i) => i); }
   const idx = libres[rnd(libres.length)]; usadas.push(idx);
@@ -54,7 +70,7 @@ export function preguntar(S, cat, final) {
     for (const x of [...mismas, ...otras]) { const k = claveTexto(x.t); if (!claves.has(k) && x.t.length <= 42) { claves.add(k); elegidas.push(x.t); } if (elegidas.length === 3) break; }
     opciones = shuffle([principal, ...elegidas]); correcta = opciones.indexOf(principal);
   }
-  S.pregunta = { cat, idx, tema, def: enmascarar(def, resp), resp, principal, opciones, correcta, final: !!final, respuesta: null, acierto: null };
+  S.pregunta = { fuente: 'd', cat, idx, tema, def: enmascarar(def, resp), resp, principal, opciones, correcta, final: !!final, respuesta: null, acierto: null };
   S.fase = 'pregunta';
 }
 const lev = (a, b) => { const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]); for (let j = 1; j <= b.length; j++) d[0][j] = j; for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; };
@@ -114,13 +130,23 @@ export function validar(d) {
   if (d.fase === 'mover' && destinos.length !== 2) return null;
   let pregunta = null;
   if (d.fase === 'pregunta' || d.fase === 'resultado') {
-    const q = d.pregunta; if (!q || !ent(q.cat, 0, d.nCat - 1) || !ent(q.idx, 0, 49)) return null;
+    const q = d.pregunta; if (!q || !ent(q.cat, 0, d.nCat - 1) || !ent(q.idx, 0, 199)) return null;
+    const opc = Array.isArray(q.opciones) && q.opciones.length === 4 && q.opciones.every(x => typeof x === 'string' && x.length < 120) ? q.opciones.slice() : null;
+    if (d.modo === 'opciones' && (!opc || !ent(q.correcta, 0, 3))) return null;
+    const resp = q.respuesta == null || ent(q.respuesta, 0, 3) || typeof q.respuesta === 'string' ? (typeof q.respuesta === 'string' ? q.respuesta.slice(0, 60) : q.respuesta) : null;
+    if (q.fuente === 'c') {
+      const lista = CLASICAS[BLOQUES[q.cat].id] || []; if (!lista[q.idx]) return null;
+      const ok = lista[q.idx][1]; if (opc && !(opc.includes(ok) && opc.every(o => lista[q.idx].slice(1).includes(o)))) return null;
+      pregunta = { ...construirClasica(d.modo, q.cat, q.idx, q.final, opc), respuesta: resp, acierto: q.acierto == null ? null : !!q.acierto };
+    }
+  }
+  if ((d.fase === 'pregunta' || d.fase === 'resultado') && !pregunta) {
+    const q = d.pregunta; if (!ent(q.idx, 0, 49)) return null;
     const f = BLOQUES[q.cat].fichas[q.idx]; if (!f) return null;
     const opc = Array.isArray(q.opciones) && q.opciones.length === 4 && q.opciones.every(x => typeof x === 'string' && x.length < 80) ? q.opciones.slice() : null;
-    if (d.modo === 'opciones' && (!opc || !ent(q.correcta, 0, 3))) return null;
-    pregunta = { cat: q.cat, idx: q.idx, tema: f[0], def: enmascarar(f[1], f[2]), resp: f[2], principal: analizar(f[2]).principal, opciones: opc, correcta: opc ? q.correcta : -1, final: !!q.final, respuesta: q.respuesta == null || ent(q.respuesta, 0, 3) || typeof q.respuesta === 'string' ? (typeof q.respuesta === 'string' ? q.respuesta.slice(0, 60) : q.respuesta) : null, acierto: q.acierto == null ? null : !!q.acierto };
+    pregunta = { fuente: 'd', cat: q.cat, idx: q.idx, tema: f[0], def: enmascarar(f[1], f[2]), resp: f[2], principal: analizar(f[2]).principal, opciones: opc, correcta: opc ? q.correcta : -1, final: !!q.final, respuesta: q.respuesta == null || ent(q.respuesta, 0, 3) || typeof q.respuesta === 'string' ? (typeof q.respuesta === 'string' ? q.respuesta.slice(0, 60) : q.respuesta) : null, acierto: q.acierto == null ? null : !!q.acierto };
   }
-  const usadas = {}; for (const b of BLOQUES.slice(0, d.nCat)) usadas[b.id] = d.usadas && Array.isArray(d.usadas[b.id]) ? d.usadas[b.id].filter(v => ent(v, 0, 49)) : [];
+  const usadas = {}, usadasC = {}; for (const b of BLOQUES.slice(0, d.nCat)) { usadas[b.id] = d.usadas && Array.isArray(d.usadas[b.id]) ? d.usadas[b.id].filter(v => ent(v, 0, 49)) : []; usadasC[b.id] = d.usadasC && Array.isArray(d.usadasC[b.id]) ? d.usadasC[b.id].filter(v => ent(v, 0, 199)) : []; }
   const nums = a => (Array.isArray(a) && a.length === jug.length ? a.map(v => (ent(v, 0, 9999) ? v : 0)) : jug.map(() => 0));
-  return { nCat: d.nCat, modo: d.modo, nivel: d.nivel, N, jug, turno: d.turno, fase: d.fase, dado: d.dado, destinos, pregunta, usadas, ganador: d.ganador, ronda: ent(d.ronda, 1, 9999) ? d.ronda : 1, log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 6).map(x => x.slice(0, 160)) : [], aciertos: nums(d.aciertos), fallos: nums(d.fallos) };
+  return { nCat: d.nCat, modo: d.modo, nivel: d.nivel, N, banco: BANCOS[d.banco] ? d.banco : 'def', usadasC, jug, turno: d.turno, fase: d.fase, dado: d.dado, destinos, pregunta, usadas, ganador: d.ganador, ronda: ent(d.ronda, 1, 9999) ? d.ronda : 1, log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 6).map(x => x.slice(0, 160)) : [], aciertos: nums(d.aciertos), fallos: nums(d.fallos) };
 }

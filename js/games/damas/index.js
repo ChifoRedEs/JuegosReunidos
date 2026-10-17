@@ -1,19 +1,22 @@
 import { $ } from '../../core/dom.js';
-import { PALETAS } from '../../core/aspectos.js';
-import { REGLAS, tableroInicial, jugadas, aplicar, contar, clavePos, esRey, dueno } from './reglas.js';
-import { elegir } from './ia.js';
+import { REGLAS, tableroInicial, jugadas, aplicar, contar, clavePos, esRey, dueno, fichasIniciales } from './reglas.js';
+import { elegirPorRegla } from './ia.js';
+import { enSegundoPlano } from '../../core/ia/remoto.js';
+const IA_URL = new URL('./ia.js', import.meta.url).href;
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
-let asp = null, C = null, api = null, sq = [], timer = null, pensando = false, rootEl = null, anim = null;
+let asp = null, C = null, api = null, sq = [], timer = null, pensando = false, rootEl = null, anim = null, nTab = 0, turnoIA = 0;
 const R = () => REGLAS[C.regla];
 const pos = p => p.join();
 const igual = (a, b) => a[0] === b[0] && a[1] === b[1];
 
 /* ---------- validación / migración ---------- */
-const coord = p => Array.isArray(p) && p.length === 2 && p.every(v => Number.isInteger(v) && v >= 0 && v < 8);
-const tab8 = g => Array.isArray(g) && g.length === 8 && g.every(r => Array.isArray(r) && r.length === 8 && r.every(v => [0, 'w', 'b', 'W', 'B'].includes(v)));
+const coord = p => Array.isArray(p) && p.length === 2 && p.every(v => Number.isInteger(v) && v >= 0 && v < 10);
+const tabN = (g, n) => Array.isArray(g) && g.length === n && g.every(r => Array.isArray(r) && r.length === n && r.every(v => [0, 'w', 'b', 'W', 'B'].includes(v)));
 export function validar(d) {
-  if (!d || typeof d !== 'object' || !tab8(d.b) || !['w', 'b'].includes(d.turn)) return null;
+  if (!d || typeof d !== 'object') return null;
+  const n = (REGLAS[Object.hasOwn(REGLAS, d.regla) ? d.regla : 'espanola']).n, tab8 = g => tabN(g, n);
+  if (!tab8(d.b) || !['w', 'b'].includes(d.turn)) return null;
   const ult = d.ultimo && Array.isArray(d.ultimo.path) && d.ultimo.path.every(coord) && Array.isArray(d.ultimo.caps) && d.ultimo.caps.every(coord) ? { path: d.ultimo.path, caps: d.ultimo.caps } : null;
   const hist = Array.isArray(d.hist) ? d.hist.filter(h => h && tab8(h.b) && ['w', 'b'].includes(h.turn) && Number.isInteger(h.sp)).slice(-10).map(h => ({ b: h.b, turn: h.turn, sp: h.sp, ultimo: h.ultimo && h.ultimo.path && h.ultimo.path.every(coord) && Array.isArray(h.ultimo.caps) && h.ultimo.caps.every(coord) ? h.ultimo : null })) : [];
   const reps = {};
@@ -40,16 +43,14 @@ export async function mount(root, a) {
   await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
   root.innerHTML = `
-    <div class="bar"><span class="lbl">Reglas</span>${Object.entries(REGLAS).map(([k, r]) => `<button class="btn" data-reg="${k}">${r.nombre}</button>`).join('')}</div>
+    <div class="bar"><span class="lbl">Reglas</span>${Object.entries(REGLAS).map(([k, r]) => `<button class="btn" data-reg="${k}">${r.corto || r.nombre}</button>`).join('')}</div>
     <div class="bar"><span class="lbl">Nivel CPU</span>${Object.entries(NIVEL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div>
     <div class="msg" id="dmMsg" role="status" aria-live="polite"></div>
     <div class="ck" id="dmTab" role="group" aria-label="Tablero de damas"></div>
     <div class="cnt" id="dmCnt"></div>
     <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
     <p class="note" id="dmReg"></p>`;
-  const tab = $('#dmTab');
-  tab.innerHTML = Array.from({ length: 64 }, (_, k) => { const r = k >> 3, c = k & 7, d = (r + c) % 2 === 1; return `<div class="sq ${d ? 'd' : ''}" data-r="${r}" data-c="${c}" ${d ? 'tabindex="0" role="button"' : ''}></div>`; }).join('');
-  sq = [...tab.children];
+  const tab = $('#dmTab'); nTab = 0;
   root.addEventListener('click', clic); tab.addEventListener('keydown', tecla);
   api.menu([
     { texto: 'Nueva partida', accion: () => nueva(C.regla, C.nivel) },
@@ -57,13 +58,20 @@ export async function mount(root, a) {
     { texto: '🎨 Apariencia', accion: () => asp.abrir() },
     { texto: 'Reglamento', accion: reglamento },
   ]);
-  if (g) { C = { ...g, ruta: null }; C.jug = jugadas(C.b, C.turn, R()); if (!C.over) comprobarFin(); }
+  if (g) { C = { ...g, ruta: null }; construirTablero(); C.jug = jugadas(C.b, C.turn, R()); if (!C.over) comprobarFin(); }
   else { C = null; nueva(api.pref('regla', 'espanola'), api.pref('nivel', 'medio'), true); return; }
   pintar();
   if (!C.over && C.turn === 'b') programarCPU();
 }
+// Casillas del tablero (8×8 o 10×10). Se reutilizan entre jugadas para no perder el foco.
+function construirTablero() {
+  const n = R().n, tab = $('#dmTab'); if (!tab || nTab === n) return;
+  nTab = n; tab.style.setProperty('--n', n); tab.classList.toggle('n10', n === 10);
+  tab.innerHTML = Array.from({ length: n * n }, (_, k) => { const r = k / n | 0, c = k % n, d = (r + c) % 2 === 1; return `<div class="sq ${d ? 'd' : ''}" data-r="${r}" data-c="${c}" ${d ? 'tabindex="0" role="button"' : ''}></div>`; }).join('');
+  sq = [...tab.children];
+}
 export function unmount() {
-  clearTimeout(timer); timer = null; pensando = false;
+  clearTimeout(timer); timer = null; pensando = false; turnoIA++;
   if (rootEl) rootEl.removeEventListener('click', clic);
   C = null; sq = []; anim = null;
 }
@@ -72,9 +80,9 @@ export function unmount() {
 const hayProgreso = () => C && !C.over && C.hist.length > 0;
 function nueva(regla, nivel, forzar = false) {
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
-  clearTimeout(timer); pensando = false; anim = null;
-  C = { b: tableroInicial(), turn: 'w', regla, nivel, over: false, res: null, ultimo: null, sp: 0, reps: {}, hist: [], ruta: null, reg: false };
-  C.reps[clavePos(C.b, 'w')] = 1; C.jug = jugadas(C.b, 'w', R());
+  clearTimeout(timer); pensando = false; anim = null; turnoIA++;
+  C = { b: tableroInicial(REGLAS[regla]), turn: 'w', regla, nivel, over: false, res: null, ultimo: null, sp: 0, reps: {}, hist: [], ruta: null, reg: false };
+  construirTablero(); C.reps[clavePos(C.b, 'w')] = 1; C.jug = jugadas(C.b, 'w', R());
   api.setPref('regla', regla); api.setPref('nivel', nivel);
   pintar(); guardar();
 }
@@ -110,11 +118,14 @@ function jugar(m) {
 function programarCPU() {
   pensando = true; pintarMsg();
   clearTimeout(timer);
-  timer = setTimeout(() => {
+  timer = setTimeout(async () => {
     if (!C || C.turn !== 'b' || C.over) { pensando = false; return; }
-    const m = elegir(C.b, 'b', R(), C.nivel);
+    const tok = ++turnoIA, b0 = C.b;
+    // la IA corre en un Worker: la pantalla no se congela mientras piensa
+    const m = await enSegundoPlano(IA_URL, 'elegirPorRegla', [C.b, 'b', C.regla, C.nivel], elegirPorRegla);
+    if (!C || tok !== turnoIA || C.b !== b0) return;
     pensando = false;
-    if (C && m) jugar(m);
+    if (m) { const real = C.jug.find(x => JSON.stringify(x.path) === JSON.stringify(m.path)); if (real) jugar(real); }
   }, 450);
 }
 function deshacer() {
@@ -173,8 +184,9 @@ function pintar() {
   const ult = new Set(C.ultimo ? C.ultimo.path.map(pos) : []);
   const rutaS = new Set(C.ruta ? C.ruta.map(pos) : []), sig = new Set();
   if (C.ruta) candidatas().forEach(m => { const n = m.path[C.ruta.length]; if (n) sig.add(pos(n)); });
-  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-    const p = C.b[r][c], k = pos([r, c]), s = sq[r * 8 + c];
+  const n = R().n;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    const p = C.b[r][c], k = pos([r, c]), s = sq[r * n + c];
     const fl = (ult.has(k) ? 'l' : '') + (C.ruta && igual(C.ruta[0], [r, c]) ? 's' : rutaS.has(k) ? 'r' : '') + (sig.has(k) ? 't' : '');
     const key = (p || '') + '|' + fl;
     if (s.dataset.k === key) continue;
@@ -184,12 +196,12 @@ function pintar() {
     if ((r + c) % 2) s.setAttribute('aria-label', `Fila ${r + 1}, columna ${c + 1}, ${p ? (dueno(p) === 'w' ? 'ficha blanca' : 'ficha roja') + (esRey(p) ? ' dama' : '') : 'vacía'}`);
   }
   if (anim) {
-    const d = sq[anim.de[0] * 8 + anim.de[1]].getBoundingClientRect(), a = sq[anim.a[0] * 8 + anim.a[1]], pc = a.firstElementChild;
+    const d = sq[anim.de[0] * n + anim.de[1]].getBoundingClientRect(), a = sq[anim.a[0] * n + anim.a[1]], pc = a.firstElementChild;
     if (pc && pc.animate) { const ar = a.getBoundingClientRect(); pc.animate([{ transform: `translate(${d.left - ar.left}px,${d.top - ar.top}px)` }, { transform: 'none' }], { duration: 240, easing: 'ease-out' }); }
     anim = null;
   }
-  const n = contar(C.b);
-  $('#dmCnt').innerHTML = `<b><i class="pdot w"></i>Tú ${n.w}</b><span>te han comido ${12 - n.w}</span><b><i class="pdot b"></i>CPU ${n.b}</b><span>has comido ${12 - n.b}</span>`;
+  const cn = contar(C.b), ini = fichasIniciales(R());
+  $('#dmCnt').innerHTML = `<b><i class="pdot w"></i>Tú ${cn.w}</b><span>te han comido ${ini - cn.w}</span><b><i class="pdot b"></i>CPU ${cn.b}</b><span>has comido ${ini - cn.b}</span>`;
   document.querySelectorAll('[data-reg]').forEach(b => b.classList.toggle('on', b.dataset.reg === C.regla));
   document.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === C.nivel));
   $('#dmReg').innerHTML = `<b>${R().nombre}:</b> ${R().texto}`;

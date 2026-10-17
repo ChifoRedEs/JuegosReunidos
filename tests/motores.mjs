@@ -1,5 +1,12 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import { calificar } from '../js/games/sudoku/generador.js';
+import { cuadradoLatino } from '../js/games/kenken/generador.js';
+import { conSemilla, mulberry32 } from '../js/core/semilla.js';
+import { CLASICAS } from '../js/games/trivial/clasicas.js';
+import { elegirPorRegla } from '../js/games/damas/ia.js';
+import * as PZ from '../js/games/parchis/reglas.js';
+import { BANCO as BRosco, LETRAS as LRosco } from '../js/games/rosco/palabras.js';
 import { generar, contarSoluciones } from '../js/games/sudoku/generador.js';
 import { generarAleatorio, solveGrid } from '../js/games/nonogram/solver.js';
 import { REGLAS, tableroInicial, jugadas, aplicar } from '../js/games/damas/reglas.js';
@@ -378,4 +385,72 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
   ok('Rompe-Ladrillos: niveles, rebote en la pala, ladrillos duros, bola de fuego, vidas y niveles completables'); }
 // ---- Ahorcado ----
 for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100); ok('Ahorcado: bancos de palabras para los 4 niveles');
+
+// ==================== Pruebas de las mejoras ====================
+// ---- Reto del día: con la misma semilla sale el mismo tablero ----
+{ const a = conSemilla('2026-10-17:sudoku', () => generar('medio')), b = conSemilla('2026-10-17:sudoku', () => generar('medio')), c = conSemilla('2026-10-18:sudoku', () => generar('medio'));
+  assert.deepEqual(a.cur, b.cur); assert.notDeepEqual(a.cur, c.cur);
+  const r = mulberry32(1); assert.ok([0, 0, 0].map(() => r()).every(x => x >= 0 && x < 1));
+  ok('Reto del día: misma semilla → mismo tablero; otro día → otro tablero'); }
+// ---- Sudoku: niveles calificados por técnica ----
+{ for (const [nv, t] of [['medio', 1], ['dificil', 2], ['experto', 3]]) { let bien = 0; for (let k = 0; k < 4; k++) { const g = generar(nv); assert.equal(contarSoluciones(g.cur, 2), 1); if (calificar(g.cur) === t) bien++; } assert.ok(bien >= 3, `${nv}: ${bien}/4`); }
+  ok('Sudoku: Medio se resuelve con únicos, Difícil pide técnicas intermedias y Experto avanzadas'); }
+// ---- KenKen: cuadrados latinos variados y 7×7 ----
+{ const vistos = new Set(); for (let k = 0; k < 2500; k++) { const q = cuadradoLatino(4); for (let i = 0; i < 4; i++) { assert.equal(new Set(q.slice(i * 4, i * 4 + 4)).size, 4); assert.equal(new Set([0, 1, 2, 3].map(f => q[f * 4 + i])).size, 4); } vistos.add(q.join('')); }
+  assert.ok(vistos.size > 432, 'cuadrados 4×4 distintos: ' + vistos.size);      // el generador anterior nunca pasaba de 432
+  for (const d of Object.keys(DKk)) { const p = generarKk(7, d); assert.equal(contarKk(7, p.cages, 2), 1); }
+  ok('KenKen: cuadrados latinos realmente aleatorios (más de los 432 a los que llegaba el anterior en 4×4) y 7×7 con solución única'); }
+// ---- Buscaminas: tableros sin adivinar y personalizado ----
+{ for (const nv of Object.keys(BM.NIVELES)) { const c = BM.NIVELES[nv], ini = (c.h >> 1) * c.w + (c.w >> 1); const r = BM.crearMinasLogicas(c.w, c.h, c.m, ini, 5000); assert.ok(r.ok); assert.ok(BM.resolublePorLogica(c.w, c.h, r.minas, ini)); }
+  const S = BM.nuevo('personal', { w: 7, h: 9, m: 12 }); assert.equal(S.rev.length, 63); assert.equal(S.m, 12);
+  assert.equal(BM.medidas('personal', { w: 99, h: 9, m: 999 }).w, 10);
+  ok('Buscaminas: generador sin adivinar en los 3 niveles y tablero personalizado'); }
+// ---- Damas: brasileñas e internacionales 10×10 ----
+{ const R = REGLAS.internacional, b = tableroInicial(R); assert.equal(b.length, 10); assert.equal(b.flat().filter(x => x === 'w').length, 20);
+  const t = Array.from({ length: 8 }, () => Array(8).fill(0)); t[4][3] = 'w'; t[5][4] = 'b';           // peón que captura hacia atrás
+  assert.ok(jugadas(t, 'w', REGLAS.brasilena).some(m => m.caps.length)); assert.ok(!jugadas(t, 'w', REGLAS.espanola).some(m => m.caps.length));
+  for (const regla of ['brasilena', 'internacional']) { let e = { b: tableroInicial(REGLAS[regla]), t: 'w' }, k = 0;
+    while (k++ < 300) { const js = jugadas(e.b, e.t, REGLAS[regla]); if (!js.length) break; const m = e.t === 'w' ? elegirPorRegla(e.b, 'w', regla, 'facil') : js[Math.floor(Math.random() * js.length)]; assert.ok(js.some(x => JSON.stringify(x.path) === JSON.stringify(m.path))); e = { b: aplicar(e.b, m), t: e.t === 'w' ? 'b' : 'w' }; } }
+  ok('Damas: brasileñas e internacionales 10×10 (captura hacia atrás, partidas completas con la IA)'); }
+// ---- Parchís por parejas ----
+{ for (let g = 0; g < 10; g++) { const P = PZ.nuevaPartida({ am: 'c', az: 'c', ro: 'c', ve: 'c' }, {}, { parejas: true }); let t = 0;
+    while (P.phase !== 'over' && t++ < 30000) { if (P.phase === 'roll') PZ.tirar(P, 1 + Math.floor(Math.random() * 6)); else if (P.phase === 'move') { const m = PZ.mejorJugada(P); assert.ok(!m.cap || !PZ.amigos(P, m.cap.c, m.c)); PZ.mover(P, m); } else PZ.siguiente(P); }
+    assert.equal(P.phase, 'over'); assert.ok(P.pieces[P.winner].every(p => p === 71) && P.pieces[PZ.COMPANERO[P.winner]].every(p => p === 71)); }
+  ok('Parchís por parejas: nunca se come al compañero y gana la pareja con sus 8 fichas en meta'); }
+// ---- Trivial: preguntas clásicas ----
+{ for (const b of BLOQUES) { const l = CLASICAS[b.id]; assert.ok(l && l.length >= 15); for (const q of l) assert.ok(q.length === 5 && new Set(q.slice(1)).size === 4); }
+  for (const banco of ['cla', 'mix']) for (const modo of ['opciones', 'escribir']) { const S = TV.crear({ nCat: 9, modo, nivel: 'medio', banco, jugadores: [{ nombre: 'A', cpu: true }, { nombre: 'B', cpu: true }] }); let k = 0;
+    while (S.fase !== 'fin' && k++ < 6000) { if (S.fase === 'tirar') TV.tirar(S); else if (S.fase === 'mover') TV.mover(S, TV.cpuSentido(S)); else if (S.fase === 'pregunta') { TV.responder(S, TV.cpuRespuesta(S)); assert.ok(TV.validar(JSON.parse(JSON.stringify(S)))); } else TV.continuar(S); }
+    assert.equal(S.fase, 'fin'); }
+  ok('Trivial: 15 preguntas clásicas por categoría y partidas completas con clásicas y mezcla'); }
+// ---- Klondike: Vegas y repartos con solución ----
+{ const S = KL.nuevo(1, true, true); assert.equal(KL.puntosVegas(S), -52); while (S.stock.length) KL.robarStock(S); assert.ok(!KL.robarStock(S), 'Vegas robando de 1: una sola pasada');
+  const T = KL.nuevo(3, true, true); for (let k = 0; k < 3; k++) { while (T.stock.length) KL.robarStock(T); if (k < 2) assert.ok(KL.robarStock(T)); } assert.ok(!KL.robarStock(T), 'Vegas robando de 3: tres pasadas');
+  let gan = 0; for (let k = 0; k < 6 && !gan; k++) if (resolverKl(KL.nuevo(1, true), { ms: 1500 }).r === 'ganable') gan++; assert.ok(gan);
+  ok('Klondike: puntuación y pasadas de Vegas, y el analizador encuentra repartos ganables'); }
+// ---- Hold'em: partida libre ----
+{ const S = HE.crear(3, 'facil', 'Tú', 'libre', 'alta');
+  for (let m = 0; m < 60; m++) { HE.nuevaMano(S); let k = 0; while (['preflop', 'flop', 'turn', 'river'].includes(S.fase) && k++ < 500) { const i = S.turno; if (!HE.actuar(S, i, HE.decidir(S, i))) HE.actuar(S, i, HE.legal(S, i).pasar ? { t: 'check' } : { t: 'call' }); } assert.equal(S.fase, 'fin'); assert.equal(S.bb, 100); }
+  assert.equal(S.jug.reduce((a, p) => a + p.stack, 0), S.compras.reduce((a, b) => a + b, 0) * HE.STACK); assert.equal(HE.evaluarFin(S), null); assert.ok(HE.validar(JSON.parse(JSON.stringify(S))));
+  ok("Hold'em: partida libre con ciegas fijas, recompras y fichas conservadas"); }
+// ---- BlackJack: contador Hi-Lo ----
+{ const S = BJ.nuevoEstado(); assert.equal(BJ.cuenta(S).rc, 0); const vistas = S.zapato.splice(-20); assert.equal(BJ.cuenta(S).rc, vistas.reduce((s, c) => s + BJ.hiLo(c), 0));
+  ok('BlackJack: la cuenta Hi-Lo coincide con las cartas que han salido'); }
+// ---- Ajedrez: PGN, lista de jugadas y reloj ----
+{ const r = AX.dePGN('[Event "x"]\n1. e4 e5 2. Nf3 {comentario} Nc6 3. Bb5 a6 (3... Nf6) 4. Ba4 Nf6 5. O-O Be7 1/2-1/2'); assert.ok(r.e && r.e.n === 10);
+  const r2 = AX.dePGN(AX.aPGN(r.e)); assert.equal(r2.e.b.join(), r.e.b.join());
+  assert.equal(AX.dePGN('1. e4 e5 2. Cf3 Cc6 3. Ab5').e.san.at(-1), 'Ab5'); assert.ok(AX.dePGN('1. e4 e5 2. Ke3 Kz9').error);
+  const v = AX.validarEstado(JSON.parse(JSON.stringify(r.e))); assert.equal(v.movs.length, 10); assert.equal(AX.rejugar(v.movs).b.join(), r.e.b.join());
+  const e0 = AX.estadoInicial({ base: 60000, inc: 2000 }), e1 = AX.aplicar(e0, AX.jugadas(e0)[0]); assert.deepEqual(e1.reloj.ms, [62000, 60000]);
+  ok('Ajedrez: PGN de ida y vuelta (inglés y español), lista de jugadas para revisar y reloj con incremento'); }
+// ---- Arcade: Excavar, Obstáculos y niveles propios ----
+{ const S = BL.crear({ modo: 'excavar' }); assert.equal(BL.basuraRestante(S), BL.FILAS_BASURA); assert.ok(BL.validar(JSON.parse(JSON.stringify(S))));
+  const T = SN.crear({ modo: 'obstaculos', vel: 'normal', tam: 'normal' }); for (let k = 0; k < 8; k++) { T.comida = T.serp[0] + 1; SN.paso(T, 1); if (T.fase !== 'jugar') break; } assert.ok(T.muros.length >= 1); assert.ok(SN.validar(JSON.parse(JSON.stringify(T))));
+  const plano = ['..........', '..........', '1111111111', '..........', '..........', '..........', '..........', '..........'];
+  assert.ok(LD.validarPlano(plano)); assert.ok(!LD.validarPlano(['MMMMMMMMMM', ...plano.slice(1).map(() => '..........')]));
+  const U = LD.crear({ modo: 'propio', plano, nombre: 'Prueba' }); assert.equal(U.ladrillos.length, 10); assert.ok(LD.validar(JSON.parse(JSON.stringify(U))));
+  ok('Arcade: modo Excavar de Bloques, Obstáculos de la Serpiente y niveles propios del Rompe-Ladrillos'); }
+// ---- Flota y Rosco: contenido nuevo ----
+{ assert.ok(Object.keys(FL.FLOTAS).length >= 6); for (const L of LRosco) assert.ok(BRosco[L].length >= 16, L);
+  ok('Hundir la Flota: 6 flotas · El Rosco: 16 palabras por letra'); }
 console.log(`\n${n} pruebas correctas`);

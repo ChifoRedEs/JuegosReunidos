@@ -16,12 +16,13 @@ export function validar(d) {
   const usadas = typeof d.usadas === 'string' && /^[A-ZÑ]*$/.test(d.usadas) && new Set(d.usadas).size === d.usadas.length ? d.usadas : null; if (usadas === null) return null;
   if (!ent(d.fallos, 0, max) || ![null, 'gana', 'pierde'].includes(d.fin)) return null;
   const m = d.marcador && typeof d.marcador === 'object' ? d.marcador : {};
-  return { nivel: d.nivel, tema: d.tema, palabra: d.palabra, pista: d.pista, usadas, fallos: d.fallos, pistaVista: !!d.pistaVista, letraGratis: !!d.letraGratis, fin: d.fin, reg: !!d.reg,
+  return { dos: !!d.dos, nivel: d.nivel, tema: d.tema, palabra: d.palabra, pista: d.pista, usadas, fallos: d.fallos, pistaVista: !!d.pistaVista, letraGratis: !!d.letraGratis, fin: d.fin, reg: !!d.reg,
     ultimas: Array.isArray(d.ultimas) ? d.ultimas.filter(x => typeof x === 'string').slice(-15).map(x => x.slice(0, 30)) : [], marcador: { g: ent(m.g, 0, 99999) ? m.g : 0, p: ent(m.p, 0, 99999) ? m.p : 0, racha: ent(m.racha, 0, 99999) ? m.racha : 0 } };
 }
 export const migrarV1 = d => d;
 export function resumen(d) {
-  return d.fin ? { texto: `${NIVELES[d.nivel].nombre} · ${d.fin === 'gana' ? '¡Acertada!' : 'Fallada'}`, fin: true } : { texto: `${NIVELES[d.nivel].nombre} · ${d.fallos}/${NIVELES[d.nivel].fallos} fallos`, fin: false };
+  const nom = d.dos ? '2 jugadores' : NIVELES[d.nivel].nombre;
+  return d.fin ? { texto: `${nom} · ${d.fin === 'gana' ? '¡Acertada!' : 'Fallada'}`, fin: true } : { texto: `${nom} · ${d.fallos}/${NIVELES[d.nivel].fallos} fallos`, fin: false };
 }
 const letrasDe = p => [...p].filter(c => LETRA.test(c)).map(base);
 const acertada = d => letrasDe(d.palabra).every(l => d.usadas.includes(l));
@@ -42,10 +43,10 @@ export async function mount(r, a) {
     <p class="ahtoca" id="ahToca">⌨️ Toca las casillas para escribir</p>
     <div class="ahpista" id="ahPista"></div>
     <div class="msg" id="ahMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Otra palabra</button><button class="btn" data-ac="letra" id="ahLetra">💡 Letra</button><button class="btn" data-ac="pista" id="ahBtnPista">🔎 Pista</button><button class="btn tkabrir" data-ac="teclado" id="ahTk" aria-label="Abrir teclado">⌨️</button><button class="btn" data-ac="aspecto">🎨</button></div>`;
+    <div class="bar"><button class="btn on" data-ac="nueva">Otra palabra</button><button class="btn" data-ac="dos">👥 2 jugadores</button><button class="btn" data-ac="letra" id="ahLetra">💡 Letra</button><button class="btn" data-ac="pista" id="ahBtnPista">🔎 Pista</button><button class="btn tkabrir" data-ac="teclado" id="ahTk" aria-label="Abrir teclado">⌨️</button><button class="btn" data-ac="aspecto">🎨</button></div>`;
   tk = crearTeclado({ filas: FILAS, alPulsar: adivinar, titulo: 'El Ahorcado · elige una letra' });
   root.addEventListener('click', clic); root.addEventListener('keydown', teclaPalabra); onKey = teclado; document.addEventListener('keydown', onKey);
-  api.menu([{ texto: 'Otra palabra', accion: () => nueva(S.nivel, S.tema) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+  api.menu([{ texto: 'Otra palabra', accion: () => nueva(S.nivel, S.tema) }, { texto: '👥 2 jugadores: escribe tú la palabra', accion: dosJugadores }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (!S) { $('#ahOps').open = true; nueva(api.pref('nivel', 'facil'), 'mezcla', true); } else { faseAnterior = fase(); temas(); pintar(false); }
 }
 export function unmount() { document.removeEventListener('keydown', onKey); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', teclaPalabra); } if (tk) { tk.destruir(); tk = null; } S = null; asp = null; }
@@ -60,8 +61,22 @@ function nueva(nivel, tema, forzar = false) {
   S = { nivel, tema, palabra: w.palabra, pista: w.pista, usadas: '', fallos: 0, pistaVista: NIVELES[nivel].pista === 'visible', letraGratis: false, fin: null, reg: false, ultimas: [...prev, w.palabra].slice(-15), marcador: marc };
   api.setPref('nivel', nivel); recienRevelada = new Set(); faseAnterior = 0; temas(); pintar(false); guardar();
 }
+// Dos jugadores en el mismo móvil: uno escribe la palabra secreta (y una pista opcional) y el otro la adivina
+async function dosJugadores() {
+  if (S && !S.fin && S.usadas.length && !api.confirmar('¿Empezar una partida de 2 jugadores? Perderás la palabra actual.')) return;
+  const p = await api.pedirTexto('👥 Palabra secreta', { tipo: 'password', max: 30, nota: 'Jugador 1: escribe la palabra o frase que tendrá que adivinar el otro (que no mire). Solo letras, espacios y guiones.', placeholder: 'Palabra secreta' });
+  if (p == null) return;
+  const palabra = p.trim().replace(/\s+/g, ' ');
+  if (palabra.length < 3 || !/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ -]+$/.test(palabra)) { api.aviso('Escribe al menos 3 letras (sin números ni signos)'); return; }
+  const q = await api.pedirTexto('🔎 Pista (opcional)', { max: 120, nota: 'Una pista para ayudar. Déjalo vacío si no quieres darla.', placeholder: 'Por ejemplo: «Es un animal»' });
+  const nivel = S ? S.nivel : 'facil', prev = S ? S.ultimas.slice() : [], marc = S ? S.marcador : { g: 0, p: 0, racha: 0 }, pista = (q || '').trim();
+  S = { dos: true, nivel, tema: 'mezcla', palabra: mayus(palabra), pista: pista || '(Sin pista)', usadas: '', fallos: 0, pistaVista: true, letraGratis: true, fin: null, reg: false, ultimas: prev, marcador: marc };
+  recienRevelada = new Set(); faseAnterior = 0; temas(); pintar(false); guardar();
+  api.aviso('Jugador 2: ¡adivina la palabra!');
+}
 function terminar(res) {
   S.fin = res; S.reg = true;
+  if (S.dos) { api.sonido(res === 'gana' ? 'ganar' : 'perder'); api.registrar({ res: 'partida', variante: '2 jugadores' }); return; }
   if (res === 'gana') { S.marcador.g++; S.marcador.racha++; api.sonido('ganar'); api.vibrar([50, 30, 50]); } else { S.marcador.p++; S.marcador.racha = 0; api.sonido('perder'); }
   api.registrar({ res: res === 'gana' ? 'victoria' : 'derrota', variante: NIVELES[S.nivel].nombre });
 }
@@ -122,7 +137,7 @@ function clic(e) {
   const b = e.target.closest('button,[data-ac]'); if (!b || !S) return; const d = b.dataset;
   if (d.ac === 'teclado') { if (!S.fin) tk.abrir(); return; }
   if (d.niv) return nueva(d.niv, 'mezcla'); if (d.tema) return nueva(S.nivel, d.tema);
-  const a = d.ac; if (a === 'nueva') nueva(S.nivel, S.tema, !!S.fin); else if (a === 'letra') ayudaLetra(); else if (a === 'pista') verPista(); else if (a === 'aspecto') asp.abrir();
+  const a = d.ac; if (a === 'dos') return dosJugadores(); if (a === 'nueva') nueva(S.nivel, S.tema, !!S.fin); else if (a === 'letra') ayudaLetra(); else if (a === 'pista') verPista(); else if (a === 'aspecto') asp.abrir();
 }
 function teclaPalabra(e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'ahWord') { e.preventDefault(); if (S && !S.fin) tk.abrir(); } }
 function reglas() {
@@ -130,5 +145,6 @@ function reglas() {
     <li><b>Fácil y Medio</b> usan palabras cotidianas del crucigrama; <b>Difícil y Experto</b> usan términos del banco de 450 definiciones (geografía, historia, ciencia, arte, gastronomía…), con la pista oculta.</li>
     <li>La <b>pista</b> es la definición de la palabra. En Difícil y Experto verla cuesta un fallo, igual que 💡 Letra (en Fácil tienes una letra gratis).</li>
     <li>Las tildes no importan: la A vale para «á». Toca las casillas de la palabra (o ⌨️) para abrir el teclado: puedes arrastrarlo por la pantalla desde su barra y cerrarlo con ✕. Con el teclado del ordenador también puedes escribir las letras.</li>
-    <li>En 🎨 Apariencia eliges paleta y dibujo: clásico, robot, globos o flor.</li></ul>`);
+    <li>En 🎨 Apariencia eliges paleta y dibujo: clásico, robot, globos o flor.</li>
+    <li>👥 <b>2 jugadores</b>: uno escribe la palabra secreta (y, si quiere, una pista) y le pasa el móvil al otro para que la adivine. Los fallos permitidos son los del nivel elegido.</li></ul>`);
 }

@@ -29,16 +29,17 @@ export function hacerOrdenable(cont, { sel = '[data-c]', clave = el => +el.datas
     if (!d.on) { if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < umbral) return; empezar(); }
     e.preventDefault();
     d.g.style.left = e.clientX - d.ox + 'px'; d.g.style.top = e.clientY - d.oy + 'px';
-    // la carta más cercana al dedo decide el hueco (antes o después de ella)
+    // la carta más cercana al dedo decide el hueco (antes o después de ella). Las posiciones se miden una vez
+    // y solo se vuelven a medir cuando la carta cambia de sitio (antes se medían todas en cada movimiento del dedo)
+    if (!d.cajas) d.cajas = items().filter(x => x !== d.it).map(x => { const r = x.getBoundingClientRect(); return { x, cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; });
     let mejor = null, md = Infinity;
-    for (const x of items()) {
-      if (x === d.it) continue;
-      const r = x.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, dist = Math.hypot(e.clientX - cx, (e.clientY - cy) * 1.6);
-      if (dist < md) { md = dist; mejor = { x, antes: e.clientX < cx }; }
+    for (const c of d.cajas) {
+      const dist = Math.hypot(e.clientX - c.cx, (e.clientY - c.cy) * 1.6);
+      if (dist < md) { md = dist; mejor = { x: c.x, antes: e.clientX < c.cx }; }
     }
     if (!mejor) return;
     const { x, antes } = mejor;
-    if (antes ? x.previousElementSibling !== d.it : x.nextElementSibling !== d.it) x.parentNode.insertBefore(d.it, antes ? x : x.nextSibling);
+    if (antes ? x.previousElementSibling !== d.it : x.nextElementSibling !== d.it) { x.parentNode.insertBefore(d.it, antes ? x : x.nextSibling); d.cajas = null; }
   };
   const up = e => {
     if (!d || e.pointerId !== d.id) return;

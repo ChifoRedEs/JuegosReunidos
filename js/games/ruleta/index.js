@@ -1,4 +1,4 @@
-import { $, esc, esperar } from '../../core/dom.js';
+import { $, esc } from '../../core/dom.js';
 import { grupoTablero } from '../../core/aspectos.js';
 import { crearTeclado } from '../../core/teclado.js';
 import { CATEGORIAS } from './paneles.js';

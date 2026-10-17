@@ -1,12 +1,13 @@
 # Hoja de ruta
 
-**Hecho (28 juegos):** Sudoku, Nonogram, Buscaminas, KenKen, Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, 3 en raya, Conecta 4, Trivial, Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas, BlackJack, Klondike, Texas Hold'em, Brisca, Chinchón, Mus, Cinquillo, Continental y Serpiente (Arcade).
+**Hecho (30 juegos):** Sudoku, Nonogram, Buscaminas, KenKen · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, 3 en raya, Conecta 4, Trivial · BlackJack, Klondike, Texas Hold'em, Brisca, Chinchón, Mus, Cinquillo, Continental · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas · Serpiente, Bloques y Rompe-Ladrillos.
 
 Ideas para seguir (cada una = una carpeta nueva en `js/games/` + una línea en `registry.js`, ver `AÑADIR-JUEGO.md`):
-1. Wordle en español, Mastermind, Hundir la flota, 2048, Ahorcado.
-2. Reversi (usa `core/duelo.js`), Oca, Dominó.
-3. Tute (la baraja española y su dibujo ya están en `core/cartas.js`).
-4. Más temas de crucigrama y de sopa de letras, y más dibujos para el Nonogram.
-5. Próximos (Arcade): Tetris y Rompe-ladrillos.
+1. **Lógica:** Mastermind, Kakuro, Takuzu (Binairo), Sokoban, 2048.
+2. **Tablero:** Reversi y Molino (encajan en `core/duelo.js`), Mancala, Dominó, Backgammon.
+3. **Cartas:** Tute, Escoba, Siete y media, Solitario Spider, Corazones.
+4. **Palabras:** Wordle en español, Boggle, Colmena, Cifras y letras, Scrabble contra la CPU.
+5. **Arcade:** Invasores espaciales, Comecocos, Asteroides, Cruza la carretera, Pong.
 
+Pendiente técnico: alojar las fuentes (Baloo 2 y Nunito) en el propio repositorio para no depender de Google Fonts.
 El multijugador online no es posible con GitHub Pages (solo archivos estáticos).

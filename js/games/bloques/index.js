@@ -2,13 +2,13 @@ import { $, esc } from '../../core/dom.js';
 import * as B from './motor.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, onKey = null, onKeyUp = null, onVis = null;
-let cv = null, ctx = null, cvR = null, cvN = null, dpr = 1, bajando = false, rep = null, gesto = null, flash = null, letrero = null, nuevoRecord = false;
+let cv = null, ctx = null, cvR = null, cvN = null, dpr = 1, bajando = false, rep = null, gesto = null, flash = null, letrero = null, nuevoRecord = false, onRes = null, hudAnt = '', rejilla = null, podioPos = -1;
 let cfg = { modo: 'maraton', nivel: 1, botones: true };
 const DAS = 170, ARR = 50;                                     // retardo y ritmo de la repetición al mantener ◀ ▶
 const PALETAS = {
-  clasica: ['', '#21C7E8', '#F7D51D', '#A24DE0', '#3FCB4E', '#EF3B3B', '#2D5BE3', '#F58A1F'],
-  pastel: ['', '#8EE3F5', '#FFE58A', '#CDB4FF', '#A8EDB0', '#FFAAAA', '#9DB8FF', '#FFC48A'],
-  neon: ['', '#00F0FF', '#FFF000', '#D400FF', '#00FF6A', '#FF2E63', '#2979FF', '#FF9100'],
+  clasica: ['', '#21C7E8', '#F7D51D', '#A24DE0', '#3FCB4E', '#EF3B3B', '#2D5BE3', '#F58A1F', '#7A8199'],
+  pastel: ['', '#8EE3F5', '#FFE58A', '#CDB4FF', '#A8EDB0', '#FFAAAA', '#9DB8FF', '#FFC48A', '#7A8199'],
+  neon: ['', '#00F0FF', '#FFF000', '#D400FF', '#00FF6A', '#FF2E63', '#2979FF', '#FF9100', '#7A8199'],
 };
 const FONDOS = { clasica: ['#141A38', '#1A2148'], pastel: ['#F3EFFF', '#E9E3FF'], neon: ['#05060F', '#0A0C1C'] };
 
@@ -17,7 +17,7 @@ export function validar(d) { const s = d && B.validar(d.s); return s ? { s, reg:
 export const migrarV1 = d => d;
 export function resumen(d) {
   const s = d.s;
-  if (s.fase === 'fin') return { texto: s.modo === 'sprint' ? (s.motivo === 'meta' ? `Sprint en ${reloj(s.tiempo)}` : `Sprint: ${s.lineas}/40 líneas`) : `${B.MODOS[s.modo]} · ${s.puntos.toLocaleString('es-ES')} puntos`, fin: true };
+  if (s.fase === 'fin') return { texto: s.modo === 'sprint' ? (s.motivo === 'meta' ? `Sprint en ${reloj(s.tiempo)}` : `Sprint: ${s.lineas}/40 líneas`) : s.modo === 'excavar' ? (s.motivo === 'meta' ? `Excavado en ${reloj(s.tiempo)}` : `Excavar: quedaban ${B.basuraRestante(s)} filas`) : `${B.MODOS[s.modo]} · ${s.puntos.toLocaleString('es-ES')} puntos`, fin: true };
   return { texto: `En pausa · ${B.MODOS[s.modo]} · ${s.lineas} líneas`, fin: false };
 }
 const reloj = ms => { const s = Math.max(0, ms) / 1000; return `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`; };
@@ -33,12 +33,13 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   onKey = teclaAbajo; onKeyUp = teclaArriba; document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKeyUp);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
+  onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin') { armar(); dibujar(); } else setup();
 }
 export function unmount() {
   pausar(); cancelAnimationFrame(raf); raf = 0; pararRep();
-  document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKeyUp); document.removeEventListener('visibilitychange', onVis);
+  document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKeyUp); document.removeEventListener('visibilitychange', onVis); removeEventListener('resize', onRes);
   if (root) root.removeEventListener('click', clic); S = null; cv = null; asp = null;
 }
 function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
@@ -47,14 +48,14 @@ function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(
 function setup() {
   cancelAnimationFrame(raf); raf = 0; if (S && S.fase !== 'fin') guardar();
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  const mejorS = api.pref('mejorSprint', 0), rM = api.record(B.MODOS.maraton), rU = api.record(B.MODOS.ultra);
+  const mejorS = api.pref('mejorSprint', 0), mejorE = api.pref('mejorExcavar', 0), rM = api.record(B.MODOS.maraton), rU = api.record(B.MODOS.ultra);
   root.innerHTML = `<p class="note">Encaja las piezas que caen para completar líneas horizontales: cada línea completa desaparece. Si las piezas llegan arriba, se acabó.</p>
     <div class="bar"><span class="lbl">Modo</span>${seg('modo', Object.entries(B.MODOS))}</div>
-    <p class="note">${{ maraton: 'Sin fin: el nivel (y la velocidad) sube cada 10 líneas.', sprint: 'Haz 40 líneas lo más rápido que puedas.', ultra: 'Consigue la máxima puntuación en 2 minutos.' }[cfg.modo]}</p>
-    ${cfg.modo !== 'sprint' ? `<div class="bar"><span class="lbl">Nivel inicial</span>${seg('nivel', [[1, '1'], [5, '5'], [8, '8'], [10, '10'], [13, '13']])}</div>` : ''}
+    <p class="note">${{ maraton: 'Sin fin: el nivel (y la velocidad) sube cada 10 líneas.', sprint: 'Haz 40 líneas lo más rápido que puedas.', ultra: 'Consigue la máxima puntuación en 2 minutos.', excavar: `Empiezas con ${B.FILAS_BASURA} filas de basura gris con un hueco cada una: límpialas todas lo más rápido que puedas.` }[cfg.modo]}</p>
+    ${!B.porTiempo(cfg.modo) ? `<div class="bar"><span class="lbl">Nivel inicial</span>${seg('nivel', [[1, '1'], [5, '5'], [8, '8'], [10, '10'], [13, '13']])}</div>` : ''}
     <div class="bar"><span class="lbl">Botones</span>${seg('botones', [[true, 'Mostrar'], [false, 'Solo gestos']])}</div>
-    ${rM || rU || mejorS ? `<div class="blrecs"><b>🏆 Tus récords</b>${rM ? `<span>Maratón: <b>${rM.toLocaleString('es-ES')}</b></span>` : ''}${rU ? `<span>Ultra: <b>${rU.toLocaleString('es-ES')}</b></span>` : ''}${mejorS ? `<span>Sprint: <b>${reloj(mejorS)}</b></span>` : ''}</div>` : ''}
-    <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">🧱 Nueva partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Cómo se juega</button></div>`;
+    ${rM || rU || mejorS || mejorE ? `<div class="blrecs"><b>🏆 Tus récords</b>${rM ? `<span>Maratón: <b>${rM.toLocaleString('es-ES')}</b></span>` : ''}${rU ? `<span>Ultra: <b>${rU.toLocaleString('es-ES')}</b></span>` : ''}${mejorS ? `<span>Sprint: <b>${reloj(mejorS)}</b></span>` : ''}${mejorE ? `<span>Excavar: <b>${reloj(mejorE)}</b></span>` : ''}</div>` : ''}
+    <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">🧱 Nueva partida</button><button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Cómo se juega</button></div>`;
 }
 function armar() {
   root.innerHTML = `<div class="blhud" id="blHud"></div>
@@ -68,7 +69,7 @@ function armar() {
       <button class="btn bltodo" data-k="soltar" aria-label="Dejar caer">⤓ Dejar caer</button>
     </div>
     <p class="note blayuda">Toca el tablero para girar · arrastra a los lados para mover · desliza abajo para bajar · golpe rápido abajo: dejar caer · golpe arriba: reservar.</p>`;
-  cv = $('#blCv'); ctx = cv.getContext('2d'); cvR = $('#blRes'); cvN = $('#blSig'); dpr = Math.min(window.devicePixelRatio || 1, 3);
+  cv = $('#blCv'); ctx = cv.getContext('2d'); cvR = $('#blRes'); cvN = $('#blSig'); dpr = Math.min(window.devicePixelRatio || 1, 3); hudAnt = ''; rejilla = null;
   ajustar();
   const zona = $('#blTab');
   zona.addEventListener('pointerdown', gestoIni); zona.addEventListener('pointermove', gestoMov); zona.addEventListener('pointerup', gestoFin); zona.addEventListener('pointercancel', () => { gesto = null; bajando = false; });
@@ -84,11 +85,12 @@ function ajustar() {
   cv.width = ancho * dpr; cv.height = alto * dpr; cv.style.width = ancho + 'px'; cv.style.height = alto + 'px';
   const m = Math.max(30, Math.floor(cvR.parentElement.getBoundingClientRect().width - 10));   // ancho de la columna lateral
   cvR.width = m * dpr; cvR.height = m * .7 * dpr; cvR.style.width = m + 'px'; cvR.style.height = m * .7 + 'px';
+  cvR.dataset.k = cvN.dataset.k = ''; rejilla = null;
   cvN.width = m * dpr; cvN.height = m * 2.1 * dpr; cvN.style.width = m + 'px'; cvN.style.height = m * 2.1 + 'px';
 }
 function empezar(seguir = false) {
   api.setPref('cfg', cfg);
-  if (!seguir || !S || S.fase === 'fin') { S = B.crear({ modo: cfg.modo, nivel: cfg.modo === 'sprint' ? 1 : cfg.nivel }); S.fase = 'pausa'; reg = false; nuevoRecord = false; api.borrar(); }
+  if (!seguir || !S || S.fase === 'fin') { S = B.crear({ modo: cfg.modo, nivel: B.porTiempo(cfg.modo) ? 1 : cfg.nivel }); S.fase = 'pausa'; reg = false; nuevoRecord = false; podioPos = -1; api.borrar(); }
   armar(); dibujar();
 }
 
@@ -124,17 +126,29 @@ function terminar() {
   cancelAnimationFrame(raf); raf = 0; bajando = false; pararRep();
   if (!reg) {
     reg = true;
-    if (S.modo === 'sprint') {
-      const ok = S.motivo === 'meta', mejor = api.pref('mejorSprint', 0);
-      if (ok && (!mejor || S.tiempo < mejor)) { api.setPref('mejorSprint', Math.round(S.tiempo)); nuevoRecord = true; }
-      api.registrar({ res: ok ? 'victoria' : 'derrota', variante: B.MODOS.sprint, tiempo: ok ? S.tiempo / 1000 : null });
+    if (B.porTiempo(S.modo)) {
+      const k = S.modo === 'sprint' ? 'mejorSprint' : 'mejorExcavar', ok = S.motivo === 'meta', mejor = api.pref(k, 0);
+      if (ok && (!mejor || S.tiempo < mejor)) { api.setPref(k, Math.round(S.tiempo)); nuevoRecord = true; }
+      api.registrar({ res: ok ? 'victoria' : 'derrota', variante: B.MODOS[S.modo], tiempo: ok ? S.tiempo / 1000 : null });
     } else {
       const antes = api.record(B.MODOS[S.modo]); nuevoRecord = S.puntos > antes && S.puntos > 0;
       api.registrar({ res: 'partida', variante: B.MODOS[S.modo], puntos: S.puntos });
     }
     api.sonido(S.motivo === 'meta' || nuevoRecord ? 'ganar' : 'perder'); api.vibrar([80, 40, 120]);
   }
-  guardar(); dibujar(); pintarHud(); pintarOver();
+  guardar(); dibujar(); pintarHud(); pintarOver(); anotarPodio();
+}
+// Podio local: puntos (Maratón, Ultra) o tiempo (Sprint, Excavar; solo si se completa)
+async function anotarPodio() {
+  if (!S || S.fase !== 'fin' || podioPos >= 0) return;
+  const tiempo = B.porTiempo(S.modo), v = B.MODOS[S.modo], valor = tiempo ? (S.motivo === 'meta' ? Math.round(S.tiempo) : 0) : S.puntos;
+  if (!api.podio.entra(v, valor, tiempo)) return;
+  podioPos = await api.podio.anotar(v, valor, tiempo);
+  if (S && S.fase === 'fin') pintarOver();
+}
+function verPodio() {
+  const vs = Object.values(B.MODOS).filter(v => api.podio.lista(v).length);
+  api.modal('🏆 Podio', vs.length ? vs.map(v => `<h3>${esc(v)}</h3>${api.podio.html(v, /sprint|excavar/i.test(v) ? { formato: reloj } : {})}`).join('') : '<p>Juega una partida y entra en la tabla de los 10 mejores.</p>');
 }
 
 /* ---------- acciones ---------- */
@@ -183,10 +197,7 @@ function aclarar(hex, f) { const n = [1, 3, 5].map(k => parseInt(hex.slice(k, k 
 function dibujar() {
   if (!S || !cv || !ctx) return;
   const P = PALETAS[asp.valores.paleta] || PALETAS.clasica, F = FONDOS[asp.valores.paleta] || FONDOS.clasica, L = cv.width / B.W, oculto = B.H - B.VISIBLES, ahora = performance.now();
-  ctx.fillStyle = F[0]; ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.strokeStyle = F[1]; ctx.lineWidth = 1;
-  for (let x = 1; x < B.W; x++) { ctx.beginPath(); ctx.moveTo(x * L, 0); ctx.lineTo(x * L, cv.height); ctx.stroke(); }
-  for (let y = 1; y < B.VISIBLES; y++) { ctx.beginPath(); ctx.moveTo(0, y * L); ctx.lineTo(cv.width, y * L); ctx.stroke(); }
+  ctx.drawImage(fondoRejilla(F, L), 0, 0);                        // fondo y rejilla: se pintan una sola vez
   for (let y = oculto; y < B.H; y++) for (let x = 0; x < B.W; x++) { const v = S.tab[y * B.W + x]; if (v) bloque(ctx, x * L, (y - oculto) * L, L, S.fase === 'fin' && S.motivo === 'arriba' ? '#6B7280' : P[v]); }
   if (S.fase !== 'fin' && S.p) {
     if (asp.valores.fantasma !== 'no') {
@@ -199,7 +210,18 @@ function dibujar() {
   mini(cvR, S.reserva ? [S.reserva] : [], P, F, !S.puedeReservar);
   mini(cvN, S.cola.slice(0, 3), P, F, false);
 }
+function fondoRejilla(F, L) {
+  const clave = F[0] + cv.width + 'x' + cv.height;
+  if (rejilla && rejilla.clave === clave) return rejilla.cv;
+  const f = document.createElement('canvas'); f.width = cv.width; f.height = cv.height; const g = f.getContext('2d');
+  g.fillStyle = F[0]; g.fillRect(0, 0, f.width, f.height); g.strokeStyle = F[1]; g.lineWidth = 1; g.beginPath();
+  for (let x = 1; x < B.W; x++) { g.moveTo(x * L, 0); g.lineTo(x * L, f.height); }
+  for (let y = 1; y < B.VISIBLES; y++) { g.moveTo(0, y * L); g.lineTo(f.width, y * L); }
+  g.stroke(); rejilla = { clave, cv: f };
+  return f;
+}
 function mini(c, piezas, P, F, apagada) {
+  const clave = c.id + piezas.join() + apagada + P[1] + c.width; if (c.dataset.k === clave) return; c.dataset.k = clave;   // solo si cambia
   const g = c.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height);
   const hueco = c.width * .7, s = c.width / 5.2;
   piezas.forEach((t, k) => {
@@ -211,7 +233,8 @@ function mini(c, piezas, P, F, apagada) {
 function pintarHud() {
   const h = $('#blHud'); if (!h || !S) return;
   const t = S.modo === 'ultra' ? reloj(B.restante(S)) : reloj(S.tiempo);
-  h.innerHTML = `<span><small>Puntos</small><b>${S.puntos.toLocaleString('es-ES')}</b></span><span><small>Líneas</small><b>${S.lineas}${S.modo === 'sprint' ? `<i>/${B.META_SPRINT}</i>` : ''}</b></span>${S.modo !== 'sprint' ? `<span><small>Nivel</small><b>${S.nivel}</b></span>` : ''}<span><small>${S.modo === 'ultra' ? 'Quedan' : 'Tiempo'}</small><b class="${S.modo === 'ultra' && B.restante(S) < 15000 ? 'poco' : ''}">${t}</b></span>`;
+  const html = `<span><small>Puntos</small><b>${S.puntos.toLocaleString('es-ES')}</b></span>${S.modo === 'excavar' ? `<span><small>Basura</small><b>${B.basuraRestante(S)}<i>/${B.FILAS_BASURA}</i></b></span>` : `<span><small>Líneas</small><b>${S.lineas}${S.modo === 'sprint' ? `<i>/${B.META_SPRINT}</i>` : ''}</b></span>`}${!B.porTiempo(S.modo) ? `<span><small>Nivel</small><b>${S.nivel}</b></span>` : ''}<span><small>${S.modo === 'ultra' ? 'Quedan' : 'Tiempo'}</small><b class="${S.modo === 'ultra' && B.restante(S) < 15000 ? 'poco' : ''}">${t}</b></span>`;
+  if (html !== hudAnt) { hudAnt = html; h.innerHTML = html; }          // el reloj cambia cada décima: no se reescribe en cada fotograma
 }
 function pintarLetrero() {
   const el = $('#blLet'); if (!el || !letrero) return;
@@ -222,8 +245,8 @@ function pintarOver() {
   o.hidden = S.fase === 'jugar';
   if (S.fase === 'pausa') o.innerHTML = S.piezas ? '<div><b>⏸️ Pausa</b><span>Toca para seguir</span></div>' : `<div><b>🧱 ${esc(B.MODOS[S.modo])}</b><span>Toca para empezar</span></div>`;
   else if (S.fase === 'fin') {
-    const tit = S.modo === 'sprint' ? (S.motivo === 'meta' ? `🏁 ¡40 líneas en ${reloj(S.tiempo)}!` : '💥 ¡Se acabó!') : S.modo === 'ultra' && S.motivo === 'tiempo' ? '⏱️ ¡Tiempo!' : '💥 ¡Se acabó!';
-    o.innerHTML = `<div class="fin"><b>${tit}</b><span class="g">${S.puntos.toLocaleString('es-ES')} puntos</span><span>${S.lineas} líneas · nivel ${S.nivel}</span>${nuevoRecord ? '<span class="rec">🎉 ¡Nuevo récord!</span>' : ''}<span class="bts"><button class="btn on" data-ac="otra">🔁 Otra</button><button class="btn" data-ac="opciones">⚙️</button></span></div>`;
+    const tit = S.modo === 'sprint' ? (S.motivo === 'meta' ? `🏁 ¡40 líneas en ${reloj(S.tiempo)}!` : '💥 ¡Se acabó!') : S.modo === 'excavar' ? (S.motivo === 'meta' ? `⛏️ ¡Excavado en ${reloj(S.tiempo)}!` : '💥 ¡Se acabó!') : S.modo === 'ultra' && S.motivo === 'tiempo' ? '⏱️ ¡Tiempo!' : '💥 ¡Se acabó!';
+    o.innerHTML = `<div class="fin"><b>${tit}</b><span class="g">${S.puntos.toLocaleString('es-ES')} puntos</span><span>${S.lineas} líneas · nivel ${S.nivel}</span>${nuevoRecord ? '<span class="rec">🎉 ¡Nuevo récord!</span>' : ''}${podioPos >= 0 ? `<span>🏆 Puesto ${podioPos + 1} del podio</span>` : ''}<span class="bts"><button class="btn on" data-ac="otra">🔁 Otra</button><button class="btn" data-ac="opciones">⚙️</button></span></div>`;
   }
 }
 
@@ -252,7 +275,7 @@ function clic(e) {
   if (d.cfg) { cfg[d.cfg] = d.v === 'true' ? true : d.v === 'false' ? false : d.cfg === 'nivel' ? +d.v : d.v; api.setPref('cfg', cfg); return setup(); }
   const a = d.ac;
   if (a === 'start') empezar(); else if (a === 'seguir') empezar(true); else if (a === 'otra') empezar();
-  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') reglas();
+  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'podio') verPodio(); else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') reglas();
   else if (a === 'pausa') { if (S && S.fase === 'jugar') pausar(); else jugarYa(); }
   else if (a === 'reservar') { if (S && S.fase === 'pausa') jugarYa(); reservar(); }
 }
@@ -263,6 +286,5 @@ function reglas() {
     <li>Al tocar el suelo tienes medio segundo para deslizarla o girarla antes de que se fije.</li>
     <li><b>Táctil</b>: toca el tablero para girar (en el borde izquierdo gira al revés), arrastra a los lados para mover, desliza hacia abajo para bajar, un golpe rápido hacia abajo la deja caer y uno hacia arriba la reserva. También tienes los botones.</li>
     <li><b>Teclado</b>: ← → mover · ↓ bajar · ↑ o X girar · Z girar al revés · espacio dejar caer · C reservar · P pausa.</li>
-    <li>Modos: <b>Maratón</b> (sin fin, el nivel sube cada 10 líneas), <b>Sprint</b> (40 líneas lo más rápido posible) y <b>Ultra</b> (máxima puntuación en 2 minutos). Tus récords quedan en 📊 Estadísticas.</li></ul>`);
+    <li>Modos: <b>Maratón</b> (sin fin, el nivel sube cada 10 líneas), <b>Sprint</b> (40 líneas lo más rápido posible), <b>Ultra</b> (máxima puntuación en 2 minutos) y <b>Excavar</b> (limpia 10 filas de basura gris lo antes posible). Tus récords quedan en 📊 Estadísticas y en el 🏆 Podio.</li></ul>`);
 }
-addEventListener('resize', () => { if (cv && S) { ajustar(); dibujar(); } });

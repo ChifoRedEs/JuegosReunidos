@@ -49,12 +49,16 @@ export function equidad(mano, tablero, rivales, sims) {
 }
 
 /* ---------- estado y flujo de la partida ---------- */
-export function crear(nBots, nivel = 'medio', nombre = 'Tú') {
+// Partida libre: ciegas fijas y, si alguien se queda sin fichas, recompra 1000 (cuenta cuántas veces)
+export const CIEGAS_LIBRE = { baja: [10, 20], media: [25, 50], alta: [50, 100] };
+export const neto = (S, i = 0) => S.jug[i].stack - (S.compras ? S.compras[i] : 1) * STACK;
+export function crear(nBots, nivel = 'medio', nombre = 'Tú', modo = 'torneo', ciegas = 'baja') {
   const perfiles = Object.keys(PERFILES).sort(() => Math.random() - .5);
   const jug = [{ nombre, bot: false, perfil: 'equilibrado' }];
   for (let i = 0; i < nBots; i++) jug.push({ nombre: NOMBRES_BOT[i], bot: true, perfil: perfiles[i % perfiles.length] });
   const S = { jug: jug.map(j => ({ ...j, stack: STACK, cartas: [], apuesta: 0, inv: 0, fold: false, allin: false, fuera: false, actuo: false, txt: '' })), nivel, boton: Math.floor(Math.random() * jug.length), mano: 0,
-    mazo: [], tablero: [], fase: 'fin', turno: -1, apuestaMax: 0, ultRaise: 0, resultado: null, log: [], reg: false, sb: 0, bb: 0, total: jug.length * STACK };
+    mazo: [], tablero: [], fase: 'fin', turno: -1, apuestaMax: 0, ultRaise: 0, resultado: null, log: [], reg: false, sb: 0, bb: 0, total: jug.length * STACK,
+    modo: modo === 'libre' ? 'libre' : 'torneo', ciegas: CIEGAS_LIBRE[ciegas] ? ciegas : 'baja', compras: jug.map(() => 1) };
   return S;
 }
 export const activos = S => S.jug.map((p, i) => i).filter(i => !S.jug[i].fuera);
@@ -66,10 +70,13 @@ const redond = x => Math.round(x / 5) * 5;
 
 export function nuevaMano(S) {
   if (S.fase !== 'fin') return false;
-  S.jug.forEach(p => { if (p.stack <= 0) p.fuera = true; });
+  if (S.modo === 'libre') S.jug.forEach((p, i) => { if (p.stack <= 0) { p.stack = STACK; S.compras[i]++; log(S, `${p.nombre} recompra ${STACK} fichas.`); } });
+  else S.jug.forEach(p => { if (p.stack <= 0) p.fuera = true; });
   const vivosJ = activos(S);
   if (vivosJ.length < 2) { S.fase = 'terminado'; S.turno = -1; return true; }
-  S.mano++; const nivel = Math.min(Math.floor((S.mano - 1) / MANOS_POR_NIVEL), CIEGAS.length - 1); [S.sb, S.bb] = CIEGAS[nivel];
+  S.mano++;
+  if (S.modo === 'libre') [S.sb, S.bb] = CIEGAS_LIBRE[S.ciegas];
+  else { const nivel = Math.min(Math.floor((S.mano - 1) / MANOS_POR_NIVEL), CIEGAS.length - 1); [S.sb, S.bb] = CIEGAS[nivel]; }
   S.boton = sig(S, S.boton, p => !p.fuera);
   S.mazo = barajar(nuevaBaraja(1)); S.tablero = []; S.resultado = null;
   for (const p of S.jug) { p.apuesta = 0; p.inv = 0; p.fold = false; p.allin = false; p.actuo = false; p.txt = ''; p.cartas = p.fuera ? [] : [S.mazo.pop(), S.mazo.pop()]; }
@@ -162,7 +169,7 @@ function showdown(S) {
   log(S, S.resultado.texto); S.fase = 'fin'; S.turno = -1;
 }
 export function evaluarFin(S) {                // ¿terminó el torneo? (devuelve 'victoria' | 'derrota' | null)
-  if (S.fase !== 'fin') return null;
+  if (S.fase !== 'fin' || S.modo === 'libre') return null;            // la partida libre no termina sola
   const quedan = S.jug.filter(p => p.stack > 0);
   if (S.jug[0].stack <= 0) return 'derrota';
   if (quedan.length === 1 && quedan[0] === S.jug[0]) return 'victoria';
@@ -205,5 +212,8 @@ export function validar(d) {
   const res = d.resultado && typeof d.resultado === 'object' && Array.isArray(d.resultado.ganadores) && typeof d.resultado.texto === 'string'
     ? { ganadores: d.resultado.ganadores.filter(g => g && ent(g.i, 0, jug.length - 1) && ent(g.monto, 0, 1e7)).map(g => ({ i: g.i, monto: g.monto, mano: String(g.mano || '').slice(0, 40) })), showdown: !!d.resultado.showdown, valores: Array.isArray(d.resultado.valores) ? d.resultado.valores.filter(Number.isFinite) : undefined, texto: d.resultado.texto.slice(0, 200) } : null;
   return { jug, nivel: d.nivel, boton: d.boton, mano: ent(d.mano, 0, 1e5) ? d.mano : 0, mazo: d.mazo.slice(), tablero: d.tablero.slice(), fase: d.fase, turno: d.turno, apuestaMax: ent(d.apuestaMax, 0, 1e7) ? d.apuestaMax : 0, ultRaise: ent(d.ultRaise, 0, 1e7) ? d.ultRaise : 0,
-    resultado: res, log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 6).map(x => x.slice(0, 120)) : [], reg: !!d.reg, sb: ent(d.sb, 0, 1e6) ? d.sb : 10, bb: ent(d.bb, 0, 1e6) ? d.bb : 20, total: ent(d.total, 0, 1e8) ? d.total : jug.length * STACK };
+    resultado: res, log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 6).map(x => x.slice(0, 120)) : [], reg: !!d.reg, sb: ent(d.sb, 0, 1e6) ? d.sb : 10, bb: ent(d.bb, 0, 1e6) ? d.bb : 20, total: ent(d.total, 0, 1e8) ? d.total : jug.length * STACK,
+    modo: d.modo === 'libre' ? 'libre' : 'torneo', ciegas: CIEGAS_LIBRE[d.ciegas] ? d.ciegas : 'baja',
+    compras: Array.isArray(d.compras) && d.compras.length === jug.length && d.compras.every(v => ent(v, 1, 1e5)) ? d.compras.slice() : jug.map(() => 1),
+    cuenta: ent(d.cuenta, 0, 1e5) ? d.cuenta : 0, mio: d.mio && typeof d.mio === 'object' ? { vpip: !!d.mio.vpip, pfr: !!d.mio.pfr } : { vpip: false, pfr: false } };
 }

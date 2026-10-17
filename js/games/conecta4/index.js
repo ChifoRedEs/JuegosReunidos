@@ -52,7 +52,7 @@ function pintar(e, ctx, v) {
 }
 
 const duelo = crearDuelo({
-  id: 'conecta4', css: new URL('./conecta4.css', import.meta.url), variantes: VARIANTES, nombres: ['Rojo', 'Amarillo'],
+  id: 'conecta4', css: new URL('./conecta4.css', import.meta.url), iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Rojo', 'Amarillo'],
   chip: n => `<i class="ch c4${n}"></i>`,
   aspecto: [
     { clave: 'tablero', titulo: 'Color del tablero', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2457A6'] }, { id: 'morado', nombre: 'Morado', sw: ['#6B3FD4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0B9A6B'] }, { id: 'coral', nombre: 'Coral', sw: ['#F0572D'] }, { id: 'negro', nombre: 'Noche', sw: ['#262B4A'] }] },

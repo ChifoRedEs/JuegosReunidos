@@ -1,5 +1,5 @@
 // IA de la Brisca: Fácil (casi al azar), Medio (reglas de experto) y Difícil (simulación de Monte Carlo con las cartas desconocidas).
-import { puntos, fuerza, jugar, cerrarBaza, ganadorMesa, equipoDe, puntosEquipo, numEquipos } from './motor.js';
+import { puntos, fuerza, jugar, cerrarBaza, ganadorMesa, equipoDe, puntosEquipo } from './motor.js';
 import { paloEs } from '../../core/cartas.js';
 
 const copia = S => ({ ...S, mazo: S.mazo.slice(), manos: S.manos.map(m => m.slice()), mesa: S.mesa.map(m => ({ ...m })), ganadas: S.ganadas.map(g => g.slice()), ultimaBaza: null, resultado: null });

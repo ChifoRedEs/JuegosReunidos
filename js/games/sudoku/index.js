@@ -1,10 +1,12 @@
-import { $, esc, esperar, fmtTiempo } from '../../core/dom.js';
+import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTablero } from '../../core/aspectos.js';
 import { PARES, candidatos, generar } from './generador.js';
 
-const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
+const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', experto: 'Experto' };
+const NIVEL_RETO = 'dificil';
+const MAX_DESHACER = 60;                                       // pasos de deshacer que se guardan con la partida
 let asp = null, S = null, api = null, cel = [], hist = null, crono = null, notasOn = false, ocupado = false, onKey = null, rootEl = null;
 const POP = m => { let n = 0; while (m) { n += m & 1; m >>= 1; } return n; };
 
@@ -15,7 +17,10 @@ export function validar(d) {
   // la solución debe ser un sudoku válido y las casillas dadas deben coincidir con ella
   for (let i = 0; i < 81; i++) { for (const j of PARES[i]) if (d.sol[j] === d.sol[i]) return null; if (d.given[i] && d.cur[i] !== d.sol[i]) return null; }
   const notas = Array.isArray(d.notas) && d.notas.length === 81 && d.notas.every(v => Number.isInteger(v) && v >= 0 && v < 1024) ? d.notas.slice() : new Array(81).fill(0);
+  // historial de deshacer guardado: cada paso debe respetar las casillas dadas
+  const hist = Array.isArray(d.hist) ? d.hist.filter(h => h && digitos(h.cur, 0) && Array.isArray(h.notas) && h.notas.length === 81 && h.notas.every(v => Number.isInteger(v) && v >= 0 && v < 1024) && h.cur.every((v, i) => !d.given[i] || v === d.sol[i])).slice(-MAX_DESHACER) : [];
   return {
+    hist, reto: typeof d.reto === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.reto) ? d.reto : null,
     sol: d.sol.slice(), cur: d.cur.slice(), given: d.given.map(Boolean), notas,
     level: Object.hasOwn(LVL, d.level) ? d.level : 'medio',
     t: Number.isInteger(d.t) && d.t >= 0 ? d.t : 0, pistas: Number.isInteger(d.pistas) && d.pistas >= 0 ? d.pistas : 0,
@@ -27,17 +32,20 @@ const completo = s => s.cur.every((v, i) => v && !conflicto(s, i));
 function conflicto(s, i) { const v = s.cur[i]; return !!v && PARES[i].some(j => s.cur[j] === v); }
 export function resumen(d) {
   const ok = completo(d);
-  return { texto: ok ? `Completado · ${LVL[d.level]} · ${fmtTiempo(d.t)}` : `${LVL[d.level]} · ${rellenas(d)}/81`, fin: ok };
+  const pre = d.reto ? '📅 Reto · ' : '';
+  return { texto: ok ? `${pre}Completado · ${LVL[d.level]} · ${fmtTiempo(d.t)}` : `${pre}${LVL[d.level]} · ${rellenas(d)}/81`, fin: ok };
 }
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
   api = a; rootEl = root; asp = api.aspecto([grupoTablero(), { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }, { id: 'color', nombre: 'De colores', sw: ['#E5383B', '#F77F00', '#2BA84A', '#2F6BFF', '#7A4DFF'] }] }]);
-  hist = new Pila(300); notasOn = false; ocupado = false;
+  notasOn = false; ocupado = false;
   await api.css(new URL('./sudoku.css', import.meta.url));
   const guardado = api.cargar();
   S = guardado ? { ...guardado, sel: -1, done: completo(guardado) } : null;
+  hist = new Pila(MAX_DESHACER, guardado ? guardado.hist : []);
   root.innerHTML = `
+    <div id="sdReto"></div>
     <div class="bar" id="sdNiv">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div>
     <div class="info"><span class="mut" id="sdInfo"></span><span id="sdCrono" aria-label="Tiempo">0:00</span></div>
     <div class="sd" id="sdTab" role="group" aria-label="Tablero de Sudoku">${Array.from({ length: 81 }, (_, i) => `<button type="button" data-i="${i}"></button>`).join('')}</div>
@@ -54,6 +62,7 @@ export async function mount(root, a) {
 }
 function menuItems() { api.menu([
   { texto: 'Nuevo juego', accion: () => nuevo(S ? S.level : 'medio') },
+  { texto: '📅 Reto del día', accion: () => nuevo(NIVEL_RETO, false, true) },
   { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menuItems(); }, activo: api.pref('errores', false) },
   { texto: 'Reiniciar tablero', accion: reiniciar, peligro: true },
   { texto: '🎨 Apariencia', accion: () => asp.abrir() },
@@ -70,14 +79,16 @@ function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.de
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S && !S.done && S.cur.some((v, i) => v && !S.given[i]);
-async function nuevo(nivel, forzar = false) {
+async function nuevo(nivel, forzar = false, reto = false) {
   if (ocupado) return;
+  if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un Sudoku nuevo? Perderás la partida actual.')) return;
   ocupado = true; crono.detener();
   $('#sdMsg').textContent = 'Generando tablero…'; $('#sdMsg').className = 'msg';
   await esperar(30);
-  const { sol, cur } = generar(nivel);
-  S = { sol, cur, given: cur.map(v => v > 0), notas: new Array(81).fill(0), level: nivel, t: 0, pistas: 0, sel: -1, done: false };
+  const fecha = api.reto.fecha();
+  const { sol, cur } = reto ? api.reto.generar(() => generar(nivel)) : generar(nivel);   // el reto: mismo tablero para todos
+  S = { sol, cur, given: cur.map(v => v > 0), notas: new Array(81).fill(0), level: nivel, t: 0, pistas: 0, sel: -1, done: false, reto: reto ? fecha : null };
   hist.vaciar(); ocupado = false;
   crono = new Cronometro(crono.alTick, 0); arrancar();
   $('#sdCrono').textContent = '0:00';
@@ -89,7 +100,7 @@ function reiniciar() {
 }
 function guardar() {
   if (!S) return;
-  const d = { sol: S.sol, cur: S.cur, given: S.given, notas: S.notas, level: S.level, t: S.t, pistas: S.pistas };
+  const d = { sol: S.sol, cur: S.cur, given: S.given, notas: S.notas, level: S.level, t: S.t, pistas: S.pistas, reto: S.reto || null, hist: hist ? hist.toJSON().slice(-MAX_DESHACER) : [] };
   const r = resumen(d); api.guardar(d, r.texto, r.fin);
 }
 const push = () => hist.push({ cur: S.cur.slice(), notas: S.notas.slice() });
@@ -134,7 +145,8 @@ function pintar() {
   const ok = completo(S);
   if (ok && !S.done) {
     S.done = true; crono.detener(); S.t = crono.s;
-    api.registrar({ res: 'victoria', tiempo: S.t, variante: LVL[S.level], limpio: S.pistas === 0 });
+    api.registrar({ res: 'victoria', tiempo: S.t, variante: S.reto ? 'Reto del día' : LVL[S.level], limpio: S.pistas === 0 });
+    if (S.reto && api.reto.completar(S.reto)) setTimeout(() => api.aviso('📅 ¡Reto del día completado!'), 300);
     api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar();
   }
   for (let i = 0; i < 81; i++) {
@@ -152,12 +164,20 @@ function pintar() {
   document.querySelectorAll('#sdPad [data-n]').forEach(b => { const n = +b.dataset.n; if (!n) return; const rest = Math.max(0, 9 - cuenta[n]); b.querySelector('small').textContent = rest; b.disabled = rest === 0 || S.done; });
   document.querySelectorAll('#sdNiv [data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.level));
   const bn = document.querySelector('[data-ac="notas"]'); bn.classList.toggle('on', notasOn); bn.setAttribute('aria-pressed', String(notasOn));
-  $('#sdInfo').textContent = `${LVL[S.level]} · ${rellenas(S)}/81${S.pistas ? ` · ${S.pistas} pista${S.pistas > 1 ? 's' : ''}` : ''}`;
+  pintarReto();
+  $('#sdInfo').textContent = `${S.reto ? '📅 ' : ''}${LVL[S.level]} · ${rellenas(S)}/81${S.pistas ? ` · ${S.pistas} pista${S.pistas > 1 ? 's' : ''}` : ''}`;
   $('#sdCrono').textContent = fmtTiempo(S.t);
   const m = $('#sdMsg');
   m.className = 'msg' + (S.done ? ' win' : ''); m.textContent = S.done ? `¡Sudoku completado en ${fmtTiempo(S.t)}!` : notasOn ? 'Modo notas: los números se anotan como candidatos.' : 'Toca una casilla y elige un número.';
 }
 
+// Tarjeta del Reto del día (encima de los niveles)
+function pintarReto() {
+  const r = $('#sdReto'); if (!r) return;
+  const hoy = api.reto.fecha(), hecho = api.reto.hecho(), jugando = S && S.reto === hoy;
+  const k = `${hoy}|${hecho}|${jugando}`; if (r.dataset.k === k) return; r.dataset.k = k;
+  r.innerHTML = `<div class="reto ${hecho ? 'hecho' : ''}"><span>${hecho ? '✅' : '📅'}</span><div><b>Reto del día · ${api.reto.texto(hoy)}</b>${hecho ? 'Completado. Vuelve mañana para otro.' : jugando ? 'Estás jugando el reto: el mismo tablero para todo el mundo.' : `Un Sudoku ${LVL[NIVEL_RETO].toLowerCase()}, el mismo para todos hoy.`}</div>${hecho || jugando ? '' : '<button class="btn on" data-ac="reto">Jugar</button>'}</div>`;
+}
 /* ---------- entrada ---------- */
 function clic(e) {
   const b = e.target.closest('button'); if (!b || !S) return;
@@ -169,6 +189,7 @@ function clic(e) {
   else if (ac === 'undo') deshacer();
   else if (ac === 'pista') pista();
   else if (ac === 'nuevo') nuevo(S.level);
+  else if (ac === 'reto') nuevo(NIVEL_RETO, false, true);
   else if (ac === 'aspecto') asp.abrir();
   else if (ac === 'reglas') reglas();
 }
@@ -189,6 +210,9 @@ function reglas() {
   api.modal('Sudoku', `<ul>
     <li>Rellena la cuadrícula para que cada fila, columna y caja de 3×3 contenga los números del 1 al 9.</li>
     <li>Todos los tableros tienen <b>una única solución</b>: nunca hace falta adivinar.</li>
+    <li>Niveles por técnica: <b>Fácil</b> y <b>Medio</b> salen con únicos; <b>Difícil</b> exige técnicas intermedias (candidatos bloqueados, parejas…) y <b>Experto</b>, técnicas avanzadas (X-wing, cadenas…).</li>
+    <li><b>Reto del día</b>: cada día hay un tablero igual para todo el mundo. Completarlo cuenta para los 🏅 logros.</li>
+    <li>El historial de <b>deshacer</b> se guarda con la partida: puedes cerrar la app y seguir deshaciendo al volver.</li>
     <li><b>Notas</b>: anota candidatos a lápiz; al poner un número se borran solos en su fila, columna y caja.</li>
     <li>La <b>Pista</b> rellena la casilla elegida (o la más fácil si no hay ninguna). Con pistas no cuenta el récord de tiempo.</li>
     <li>El número pequeño de cada tecla indica cuántos te quedan por colocar.</li>

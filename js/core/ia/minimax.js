@@ -35,7 +35,9 @@ export function mejorJugada({ estado, jugadas, aplicar, evaluar, profundidad = 4
     try {
       const pts = []; let mejorV = -Infinity, mejorJ = orden[0];
       for (const j of orden) {
-        const v = -neg(aplicar(estado, j), d - 1, -Infinity, Infinity, 0);
+        // Sin ruido solo importa la mejor jugada: las demás se buscan con ventana estrecha (poda mucho más).
+        // Con ruido hacen falta las puntuaciones exactas de todas para elegir con azar entre las buenas.
+        const v = -neg(aplicar(estado, j), d - 1, -Infinity, ruido ? Infinity : -mejorV, 0);
         pts.push([j, v]);
         if (v > mejorV) { mejorV = v; mejorJ = j; }
       }

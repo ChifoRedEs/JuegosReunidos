@@ -2,10 +2,13 @@
 // Estado: { tab: [{d:[ids boca abajo], u:[ids boca arriba]} ×8 (la 0 es la casilla extra, solo si extra)], extra: bool, fund: [[ids] ×4 (por palo)], stock: [ids] (el siguiente se saca con pop), waste: [ids], robar: 1|3, mov }
 import { nuevaBaraja, barajar, paloDe, rangoDe, esRoja, RANGOS, PALOS } from '../../core/cartas.js';
 
-export function nuevo(robar = 1, extra = true) {
+// vegas: puntuación de Las Vegas (se paga 52 $ por partida, cada carta en las bases vale 5 $) y pasadas limitadas por el mazo
+export const PASADAS_VEGAS = { 1: 1, 3: 3 };
+export const puntosVegas = S => -52 + 5 * S.fund.reduce((n, f) => n + f.length, 0);
+export function nuevo(robar = 1, extra = true, vegas = false) {
   const m = barajar(nuevaBaraja(1)), tab = [{ d: [], u: [] }];           // columna 0: la casilla extra «libre» (admite cualquier carta cuando está vacía)
   for (let i = 0; i < 7; i++) { const cs = m.splice(0, i + 1); tab.push({ d: cs.slice(0, i), u: [cs[i]] }); }
-  return { tab, fund: [[], [], [], []], stock: m, waste: [], robar: robar === 3 ? 3 : 1, mov: 0, extra: !!extra };
+  return { tab, fund: [[], [], [], []], stock: m, waste: [], robar: robar === 3 ? 3 : 1, mov: 0, extra: !!extra, vegas: !!vegas, pasada: 1 };
 }
 export const copia = S => JSON.parse(JSON.stringify(S));
 export const gana = S => S.fund.every(f => f.length === 13);
@@ -39,7 +42,11 @@ export function mover(S, o, a) {
   S.mov++; return true;
 }
 export function robarStock(S) {
-  if (!S.stock.length) { if (!S.waste.length) return false; S.stock = S.waste.reverse(); S.waste = []; S.mov++; return true; }
+  if (!S.stock.length) {
+    if (!S.waste.length) return false;
+    if (S.vegas && (S.pasada || 1) >= PASADAS_VEGAS[S.robar]) return false;        // Vegas: el mazo no se puede volver a pasar
+    S.stock = S.waste.reverse(); S.waste = []; S.mov++; S.pasada = (S.pasada || 1) + 1; return true;
+  }
   for (let i = 0; i < S.robar && S.stock.length; i++) S.waste.push(S.stock.pop());
   S.mov++; return true;
 }
@@ -56,7 +63,6 @@ export function destinoAuto(S, o) {
   }
   return mejor ? { t: 'tab', col: mejor.col } : null;
 }
-export function todoArriba(S) { return S.tab.every(c => !c.d.length) && !S.stock.length; }
 export function autoSiguiente(S) {                                    // siguiente jugada a las bases (para autocompletar)
   const orig = [{ t: 'waste' }, ...S.tab.map((c, col) => ({ t: 'tab', col, idx: c.u.length - 1 }))];
   for (const o of orig) { if (o.t === 'tab' && o.idx < 0) continue; if (o.t === 'waste' && !S.waste.length) continue; if (puede(S, o, { t: 'fund' })) return o; }
@@ -102,7 +108,7 @@ export function pista(S) {
   }
   c.sort((x, y) => y.p - x.p);
   if (c.length) return { ...c[0], txt: `${nombre(cartaDe(S, c[0].o))} → ${c[0].a.t === 'fund' ? 'a la base' : `columna ${c[0].a.col + 1}`}` };
-  if (S.stock.length || S.waste.length) return { o: { t: 'stock' }, a: null, txt: S.stock.length ? 'Roba del mazo' : 'Vuelve a pasar el mazo' };
+  if (S.stock.length || (S.waste.length && !(S.vegas && (S.pasada || 1) >= PASADAS_VEGAS[S.robar]))) return { o: { t: 'stock' }, a: null, txt: S.stock.length ? 'Roba del mazo' : 'Vuelve a pasar el mazo' };
   return null;
 }
 const nombre = id => RANGOS[rangoDe(id)] + PALOS[paloDe(id)].s;
@@ -118,5 +124,6 @@ export function validar(d) {
   const fund = [];
   for (let p = 0; p < 4; p++) { const f = d.fund[p]; if (!lista(f, 13) || f.some((id, i) => id !== p * 13 + i)) return null; fund.push(f.slice()); }
   if (!lista(d.stock, 24) || !lista(d.waste, 24) || vistos.size !== 52) return null;
-  return { tab, fund, stock: d.stock.slice(), waste: d.waste.slice(), robar: d.robar === 3 ? 3 : 1, mov: ent(d.mov, 0, 1e6) ? d.mov : 0, extra: antigua ? false : !!d.extra };
+  return { tab, fund, stock: d.stock.slice(), waste: d.waste.slice(), robar: d.robar === 3 ? 3 : 1, mov: ent(d.mov, 0, 1e6) ? d.mov : 0, extra: antigua ? false : !!d.extra,
+    vegas: !!d.vegas, pasada: ent(d.pasada, 1, 999) ? d.pasada : 1, cobrado: !!d.cobrado };
 }

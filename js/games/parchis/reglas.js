@@ -5,14 +5,23 @@ export const nombre = (P, c) => (P.names && P.names[c]) || PNAME[c];
 export const actual = P => P.order[P.turn];
 export const esCPU = (P, c) => P.cfg[c] === 'c';
 export function log(P, t) { P.log.unshift(t); if (P.log.length > 5) P.log.length = 5; }
+// ---------- Por parejas: Amarillo + Rojo contra Azul + Verde (colores enfrentados) ----------
+export const COMPANERO = { am: 'ro', ro: 'am', az: 've', ve: 'az' };
+export const equipo = c => (c === 'am' || c === 'ro' ? 0 : 1);
+export const amigos = (P, a, b) => a === b || (!!P.parejas && COMPANERO[a] === b);
+const acabado = (P, c) => P.pieces[c].every(p => p === 71);
+// Con qué fichas juega el color c: las suyas o, si ya las ha metido todas, las de su compañero
+export const fichasDe = (P, c) => (P.parejas && acabado(P, c) && !acabado(P, COMPANERO[c]) ? COMPANERO[c] : c);
+export const nombreEquipo = (P, c) => `${nombre(P, c)} y ${nombre(P, COMPANERO[c])}`;
 
 export function nuevaPartida(cfg, names = {}, opts = {}) {
-  const order = PC.filter(c => cfg[c]);
+  const order = PC.filter(c => cfg[c]), parejas = !!opts.parejas && order.length === 4;
   const P = { cfg: { ...cfg }, names: { ...names }, order, pieces: Object.fromEntries(order.map(c => [c, [-1, -1, -1, -1]])), turn: Math.floor(Math.random() * order.length),
     phase: 'roll', die: null, step: 0, kind: 'die', pend: [], sixes: 0, again: false, lastMoved: null, winner: null, note: '', log: [], moves: [], ov: null,
-    salidaLibre: !!opts.salidaLibre, primera: Object.fromEntries(order.map(c => [c, true])), extraSalida: false };
+    salidaLibre: !!opts.salidaLibre, primera: Object.fromEntries(order.map(c => [c, true])), extraSalida: false, parejas, lastC: null };
   log(P, `Empieza ${nombre(P, actual(P))}.`);
   if (P.salidaLibre) log(P, 'Salida libre activada.');
+  if (parejas) log(P, 'Por parejas: Amarillo y Rojo contra Azul y Verde.');
   return P;
 }
 export function ocupacion(P) {
@@ -24,7 +33,7 @@ export function movsSalida(P, c) {                      // sacar una ficha de ca
   const o = ocupacion(P), pc = P.pieces[c], res = [];
   if (!pc.includes(-1)) return res;
   const here = o['T' + PSTART[c]] || []; let cap = null, ok = true;
-  if (here.length >= 2) { cap = here.find(x => x.c !== c) || null; if (!cap) ok = false; }
+  if (here.length >= 2) { cap = here.find(x => !amigos(P, x.c, c)) || null; if (!cap) ok = false; }
   if (ok) pc.forEach((p, i) => { if (p === -1) res.push({ c, i, from: -1, to: 0, cap }); });
   return res;
 }
@@ -41,7 +50,7 @@ export function legales(P, c, step, kind) {
     if (t < 71) {
       const h = o[pKey(c, t)] || [];
       if (h.length >= 2) return;
-      if (h.length === 1 && h[0].c !== c && t <= 63 && !PSAFE.has(absOf(c, t))) cap = h[0];
+      if (h.length === 1 && !amigos(P, h[0].c, c) && t <= 63 && !PSAFE.has(absOf(c, t))) cap = h[0];
     }
     res.push({ c, i, from: p, to: t, cap });
   });
@@ -55,7 +64,7 @@ export function legales(P, c, step, kind) {
 }
 function peligro(P, c, a) {   // cuántas fichas rivales podrían alcanzar la casilla a con una tirada
   let n = 0;
-  for (const o of P.order) { if (o === c) continue; P.pieces[o].forEach(p => { if (p < 0 || p > 63) return; const d = (a - absOf(o, p) + 68) % 68; if (d >= 1 && d <= 7 && p + d <= 63) n++; }); }
+  for (const o of P.order) { if (amigos(P, o, c)) continue; P.pieces[o].forEach(p => { if (p < 0 || p > 63) return; const d = (a - absOf(o, p) + 68) % 68; if (d >= 1 && d <= 7 && p + d <= 63) n++; }); }
   return n;
 }
 export function puntuar(P, m) {
@@ -75,31 +84,31 @@ export function puntuar(P, m) {
 export const mejorJugada = P => { const sc = P.moves.map(m => puntuar(P, m)); return P.moves[sc.indexOf(Math.max(...sc))]; };
 
 function fijarPaso(P, step, kind) {
-  P.step = step; P.kind = kind; P.moves = legales(P, actual(P), step, kind);
+  P.step = step; P.kind = kind; P.moves = legales(P, fichasDe(P, actual(P)), step, kind);
   if (P.moves.length) P.phase = 'move';
   else { P.phase = 'pass'; P.note = kind === 'bonus' ? `Ninguna ficha puede contar ${step}: se pierde el premio.` : kind === 'libre' ? 'No se puede sacar otra ficha de casa.' : `${nombre(P, actual(P))} no puede mover.`; }
 }
 // Aplica una tirada v (1..6)
 export function tirar(P, v) {
   if (P.phase !== 'roll') return;
-  const c = actual(P); P.die = v; P.again = false; P.note = '';
-  const primera = !!(P.primera && P.primera[c]); if (P.primera) P.primera[c] = false; P.extraSalida = false;
+  const yo = actual(P), c = fichasDe(P, yo); P.die = v; P.again = false; P.note = '';
+  const primera = !!(P.primera && P.primera[yo]); if (P.primera) P.primera[yo] = false; P.extraSalida = false;
   if (v === 6) {
     P.sixes++;
     if (P.sixes === 3) {
-      P.sixes = 0; const i = P.lastMoved, p = i == null ? -1 : P.pieces[c][i];
-      if (p >= 0 && p <= 63) { P.pieces[c][i] = -1; P.note = 'Tercer 6 seguido: la última ficha movida vuelve a casa.'; }
+      P.sixes = 0; const lc = P.lastC || c, i = P.lastMoved, p = i == null ? -1 : P.pieces[lc][i];
+      if (p >= 0 && p <= 63) { P.pieces[lc][i] = -1; P.note = 'Tercer 6 seguido: la última ficha movida vuelve a casa.'; }
       else P.note = 'Tercer 6 seguido: se acaba el turno.';
-      log(P, `${nombre(P, c)} saca el tercer 6 seguido.`); P.phase = 'pass'; return;
+      log(P, `${nombre(P, yo)} saca el tercer 6 seguido.`); P.phase = 'pass'; return;
     }
     P.again = true;
   } else P.sixes = 0;
   if (P.salidaLibre && v !== 5 && P.pieces[c].includes(-1) && !P.pieces[c].some(p => p >= 0 && p < 71)) {   // salida libre: sin fichas en juego, sale una con cualquier número
-    log(P, `${nombre(P, c)} saca ${v}: salida libre.`); return fijarPaso(P, v, 'libre');
+    log(P, `${nombre(P, yo)} saca ${v}: salida libre.`); return fijarPaso(P, v, 'libre');
   }
   if (P.salidaLibre && v === 5 && primera) P.extraSalida = true;
   const step = v === 6 && !P.pieces[c].includes(-1) ? 7 : v;
-  log(P, `${nombre(P, c)} saca ${v}${step === 7 ? ' (cuenta 7)' : ''}.`);
+  log(P, `${nombre(P, yo)} saca ${v}${step === 7 ? ' (cuenta 7)' : ''}${c !== yo ? ` y mueve las fichas de ${nombre(P, c)}` : ''}.`);
   fijarPaso(P, step, 'die');
 }
 // Mueve una ficha. Devuelve datos para animar la jugada.
@@ -110,9 +119,13 @@ export function mover(P, m) {
   if (m.from === -1) log(P, `${nombre(P, c)} saca una ficha de casa.`);
   if (m.cap) { info.cap = { c: m.cap.c, i: m.cap.i, p: P.pieces[m.cap.c][m.cap.i] }; P.pieces[m.cap.c][m.cap.i] = -1; P.pend.push(20); log(P, `${nombre(P, c)} se come una ficha de ${nombre(P, m.cap.c)} y cuenta 20.`); }
   if (m.to === 71) { P.pend.push(10); log(P, `${nombre(P, c)} mete una ficha en meta y cuenta 10.`); }
-  if (P.kind !== 'bonus') P.lastMoved = m.i;
+  if (P.kind !== 'bonus') { P.lastMoved = m.i; P.lastC = c; }
   if (P.extraSalida && m.from === -1) { P.extraSalida = false; if (P.pieces[c].includes(-1)) { P.pend.unshift(0); log(P, `${nombre(P, c)} abre con un 5: saca una segunda ficha.`); } }
-  if (P.pieces[c].every(p => p === 71)) { P.phase = 'over'; P.winner = c; P.pend = []; P.moves = []; log(P, `¡${nombre(P, c)} gana la partida!`); return info; }
+  if (acabado(P, c)) {
+    if (!P.parejas) { P.phase = 'over'; P.winner = c; P.pend = []; P.moves = []; log(P, `¡${nombre(P, c)} gana la partida!`); return info; }
+    if (acabado(P, COMPANERO[c])) { P.phase = 'over'; P.winner = c; P.pend = []; P.moves = []; log(P, `¡${nombreEquipo(P, c)} ganan la partida!`); return info; }
+    log(P, `${nombre(P, c)} ha metido sus 4 fichas: ahora ayuda a ${nombre(P, COMPANERO[c])}.`);
+  }
   siguiente(P);
   return info;
 }

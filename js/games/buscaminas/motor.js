@@ -21,14 +21,77 @@ export function numeros(S) {
   for (let i = 0; i < N; i++) if (!esM[i]) num[i] = vecinos(S.w, S.h, i).reduce((s, j) => s + esM[j], 0);
   return { esM, num };
 }
-export const nuevo = nivel => { const c = NIVELES[nivel]; return { w: c.w, h: c.h, m: c.m, minas: null, rev: new Array(c.w * c.h).fill(0), fin: null, boom: -1 }; };
+// Tablero personalizado: límites razonables para pantallas de móvil
+export const LIMITES = { w: [5, 20], h: [5, 24] };
+export const maxMinas = (w, h) => Math.max(1, Math.floor(w * h * 0.3));
+export function medidas(nivel, dims) {
+  if (nivel !== 'personal') return NIVELES[nivel];
+  const ent = (v, a, b, d) => Number.isInteger(v) && v >= a && v <= b ? v : d;
+  const w = ent(dims && dims.w, ...LIMITES.w, 10), h = ent(dims && dims.h, ...LIMITES.h, 12);
+  return { w, h, m: ent(dims && dims.m, 1, maxMinas(w, h), Math.round(w * h * 0.15)) };
+}
+export const nuevo = (nivel, dims = null) => { const c = medidas(nivel, dims); return { w: c.w, h: c.h, m: c.m, minas: null, rev: new Array(c.w * c.h).fill(0), fin: null, boom: -1 }; };
+
+// ---------- «Sin adivinar»: tableros que se resuelven por pura lógica desde el primer toque ----------
+// Resolvedor con las deducciones que haría una persona: reglas de un número (todas minas / todas seguras),
+// comparación de pares de números (subconjuntos) y el recuento total de minas.
+export function resolublePorLogica(w, h, minas, inicio) {
+  const N = w * h, esM = new Uint8Array(N); minas.forEach(i => { esM[i] = 1; });
+  if (esM[inicio]) return false;
+  const num = new Uint8Array(N), V = Array.from({ length: N }, (_, i) => vecinos(w, h, i));
+  for (let i = 0; i < N; i++) if (!esM[i]) num[i] = V[i].reduce((s, j) => s + esM[j], 0);
+  const est = new Uint8Array(N);                                   // 0 desconocida · 1 abierta · 2 mina deducida
+  let abiertas = 0, minasMarcadas = 0;
+  const abrir = i => { const pila = [i]; while (pila.length) { const k = pila.pop(); if (est[k]) continue; if (esM[k]) return false; est[k] = 1; abiertas++; if (!num[k]) for (const j of V[k]) if (!est[j]) pila.push(j); } return true; };
+  const marcar = i => { if (!est[i]) { est[i] = 2; minasMarcadas++; } };
+  if (!abrir(inicio)) return false;
+  const objetivo = N - minas.length;
+  for (let vuelta = 0; vuelta < 4 * N && abiertas < objetivo; vuelta++) {
+    let hizo = false; const res = [];
+    for (let i = 0; i < N; i++) {
+      if (est[i] !== 1 || !num[i]) continue;
+      const U = V[i].filter(j => !est[j]); if (!U.length) continue;
+      const r = num[i] - V[i].filter(j => est[j] === 2).length;
+      if (r === 0) { for (const j of U) if (!abrir(j)) return false; hizo = true; }
+      else if (r === U.length) { U.forEach(marcar); hizo = true; }
+      else res.push({ U, r });
+    }
+    if (hizo) continue;
+    for (let a = 0; a < res.length && !hizo; a++) for (let b = 0; b < res.length && !hizo; b++) {   // A ⊂ B
+      if (a === b) continue; const A = res[a], B = res[b];
+      if (A.U.length >= B.U.length || !A.U.every(j => B.U.includes(j))) continue;
+      const D = B.U.filter(j => !A.U.includes(j)), r = B.r - A.r;
+      if (r === 0) { for (const j of D) if (!abrir(j)) return false; hizo = true; }
+      else if (r === D.length) { D.forEach(marcar); hizo = true; }
+    }
+    if (hizo) continue;
+    const desc = []; for (let i = 0; i < N; i++) if (!est[i]) desc.push(i);       // recuento global
+    const quedan = minas.length - minasMarcadas;
+    if (quedan === 0) { for (const j of desc) if (!abrir(j)) return false; continue; }
+    if (quedan === desc.length) { desc.forEach(marcar); continue; }
+    return false;
+  }
+  return abiertas === objetivo;
+}
+// Coloca las minas hasta dar con un tablero resoluble por lógica (con tope de tiempo; si no, uno normal)
+export function crearMinasLogicas(w, h, m, seguro, ms = 1500) {
+  const t0 = Date.now(); let ult = null;
+  for (let k = 0; k < 4000 && Date.now() - t0 < ms; k++) {
+    ult = crearMinas(w, h, m, seguro);
+    if (resolublePorLogica(w, h, ult, seguro)) return { minas: ult, ok: true };
+  }
+  return { minas: ult || crearMinas(w, h, m, seguro), ok: false };
+}
 export const banderas = S => S.rev.filter(x => x === 2).length;
-export const abiertas = S => S.rev.filter(x => x === 1).length;
+const abiertas = S => S.rev.filter(x => x === 1).length;
 
 // Abre una casilla (con expansión de ceros). Devuelve true si hizo algo.
 export function abrir(S, i, N) {
   if (S.fin || S.rev[i] !== 0) return false;
-  if (!S.minas) { S.minas = crearMinas(S.w, S.h, S.m, i); }
+  if (!S.minas) {
+    if (S.sa) { const r = crearMinasLogicas(S.w, S.h, S.m, i); S.minas = r.minas; S.saOk = r.ok; }
+    else S.minas = crearMinas(S.w, S.h, S.m, i);
+  }
   const { esM, num } = N.get(S);
   if (esM[i]) { S.rev[i] = 1; S.fin = 'pierde'; S.boom = i; return true; }
   const pila = [i];

@@ -9,9 +9,15 @@ export const FLOTAS = {
     barcos: [['Portaaviones', 5], ['Acorazado', 4], ['Crucero', 3], ['Submarino', 3], ['Destructor', 2]] },
   rapida: { nombre: 'Rápida', desc: '8×8 · 4 barcos (4, 3, 3, 2)', n: 8,
     barcos: [['Acorazado', 4], ['Crucero', 3], ['Submarino', 3], ['Destructor', 2]] },
+  piratas: { nombre: '🏴‍☠️ Piratas', desc: '9×9 · 6 barcos piratas (galeón de 4, fragata y bergantín de 3, goleta y balandra de 2, chalupa de 1)', n: 9,
+    barcos: [['Galeón', 4], ['Fragata', 3], ['Bergantín', 3], ['Goleta', 2], ['Balandra', 2], ['Chalupa', 1]] },
+  armada: { nombre: 'Gran armada', desc: '12×12 · 8 barcos (5, 4, 4, 3, 3, 3, 2, 2): una batalla larga', n: 12,
+    barcos: [['Portaaviones', 5], ['Acorazado', 4], ['Acorazado', 4], ['Crucero', 3], ['Crucero', 3], ['Submarino', 3], ['Destructor', 2], ['Destructor', 2]] },
+  relampago: { nombre: 'Relámpago', desc: '6×6 · 3 barcos (3, 2, 2): partidas de un par de minutos', n: 6,
+    barcos: [['Crucero', 3], ['Destructor', 2], ['Patrullera', 2]] },
 };
 export const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
-export const LETRAS = 'ABCDEFGHIJ';
+export const LETRAS = 'ABCDEFGHIJKL';
 export const nombreCasilla = (n, i) => LETRAS[Math.floor(i / n)] + (i % n + 1);
 
 /* ---------- colocación ---------- */

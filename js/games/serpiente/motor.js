@@ -1,6 +1,7 @@
 // Motor de la Serpiente (sin DOM, probable con Node). Tablero n×n, casilla i = fila * n + columna.
 // Direcciones: 0 arriba, 1 derecha, 2 abajo, 3 izquierda. La serpiente avanza una casilla por «paso».
-export const MODOS = { clasico: 'Clásico', libre: 'Sin paredes', laberinto: 'Laberinto' };
+export const MODOS = { clasico: 'Clásico', libre: 'Sin paredes', laberinto: 'Laberinto', obstaculos: 'Obstáculos' };
+export const CADA_ROCA = 4;                                  // modo Obstáculos: aparece una roca cada 4 manzanas
 export const VELOCIDADES = { lenta: { nombre: 'Lenta', ms: 175, mult: 1 }, normal: { nombre: 'Normal', ms: 125, mult: 2 }, rapida: { nombre: 'Rápida', ms: 88, mult: 3 } };
 export const TAMANOS = { pequeno: { nombre: 'Pequeño', n: 14 }, normal: { nombre: 'Normal', n: 18 }, grande: { nombre: 'Grande', n: 24 } };
 const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];
@@ -45,6 +46,7 @@ export function paso(S, dir = S.dir) {
   let ev = 'mover';
   if (ni === S.comida) {
     S.crecer += 1; S.comidas++; S.puntos += 10 * VELOCIDADES[S.vel].mult; ev = 'comer';
+    if (S.modo === 'obstaculos' && S.comidas % CADA_ROCA === 0) nuevaRoca(S);
     S.comida = libre(S);
     if (S.comidas % 7 === 0 && !S.estrella) { const e = libre(S); if (e >= 0) S.estrella = { i: e, t: ESTRELLA_PASOS }; }
   } else if (S.estrella && ni === S.estrella.i) {
@@ -54,6 +56,13 @@ export function paso(S, dir = S.dir) {
   if (S.estrella && --S.estrella.t <= 0) S.estrella = null;
   if (S.comida < 0) { S.fase = 'fin'; S.motivo = 'lleno'; return 'lleno'; }
   return ev;
+}
+// Modo Obstáculos: una roca nueva en una casilla libre lejos de la cabeza (nunca justo delante) y que no encierre la comida
+function nuevaRoca(S) {
+  const n = S.n, cab = S.serp[0], hx = cab % n, hy = Math.floor(cab / n), cerca = [];
+  for (let i = 0; i < n * n; i++) { const x = i % n, y = Math.floor(i / n); if (Math.abs(x - hx) + Math.abs(y - hy) < 4 || x === 0 || y === 0 || x === n - 1 || y === n - 1) cerca.push(i); }
+  if (S.muros.length >= Math.floor(n * n * 0.12)) return;           // como mucho un 12 % del tablero
+  const r = libre(S, cerca); if (r >= 0) S.muros = [...S.muros, r];
 }
 function morir(S, motivo) { S.fase = 'fin'; S.motivo = motivo; return 'muerte'; }
 export const variante = S => `${MODOS[S.modo]} · ${VELOCIDADES[S.vel].nombre}`;
@@ -67,7 +76,10 @@ export function validar(d) {
     const ok = (dx + dy === 1) || (d.modo === 'libre' && ((dx === n - 1 && dy === 0) || (dy === n - 1 && dx === 0)));
     if (!ok) return null;
   }
-  const mu = muros(n, d.modo);
+  const mu = d.modo === 'obstaculos'
+    ? (Array.isArray(d.muros) && d.muros.length <= n * n * 0.12 && d.muros.every(celda) ? [...new Set(d.muros)] : null)
+    : muros(n, d.modo);
+  if (!mu) return null;
   if (d.serp.some(i => mu.includes(i)) || !ent(d.dir, 0, 3) || !ent(d.crecer, 0, 50) || !(d.comida === -1 || celda(d.comida)) || !ent(d.puntos, 0, 1e7) || !ent(d.comidas, 0, 1e5) || !ent(d.pasos, 0, 1e8)) return null;
   if (!['jugar', 'pausa', 'fin'].includes(d.fase)) return null;
   const estrella = d.estrella && celda(d.estrella.i) && ent(d.estrella.t, 1, ESTRELLA_PASOS) ? { i: d.estrella.i, t: d.estrella.t } : null;

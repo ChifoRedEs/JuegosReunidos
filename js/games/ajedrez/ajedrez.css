@@ -77,3 +77,14 @@
 .ch.axch2{color:var(--pzn);-webkit-text-stroke:.8px var(--pzn-l);paint-order:stroke fill}
 .juego-ajedrez #duOps > .bar:first-of-type{display:none}
 .axcap .pz.b{-webkit-text-stroke-width:.8px}.axcap .pz.n{-webkit-text-stroke-width:.5px}
+/* reloj y revisión */
+.axrel{display:flex;justify-content:space-between;align-items:center;margin:6px 0;padding:6px 12px;border-radius:12px;background:var(--card);border:2px solid var(--line);font-weight:800;font-size:14px;color:var(--mut)}
+.axrel b{font:800 22px/1 'Baloo 2',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)}
+.axrel.on{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 12%,var(--card))}
+.axrel.poco b{color:var(--red)}
+.axrev{display:flex;align-items:center;gap:6px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.axrev[hidden]{display:none}
+.axrev span{min-width:110px;text-align:center;font-weight:800;font-size:14px}
+.axrev .btn{min-height:38px;padding:6px 12px}
+.axlista [data-k]{cursor:pointer;border-radius:6px;padding:0 3px}
+.axlista [data-k]:hover{background:var(--sel)}

@@ -29,3 +29,4 @@
 .mz{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:52px}
 .mz .carta{--cw:46px}
 .mz small{font-weight:800;font-size:11px;opacity:.9;text-align:center}
+.juego-brisca .brult{min-height:32px;padding:4px 10px;font-size:12.5px}

@@ -1,4 +1,4 @@
-import { $, esc, esperar, fmtTiempo } from '../../core/dom.js';
+import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTablero } from '../../core/aspectos.js';
 import { TEMAS } from './palabras.js';
@@ -33,14 +33,15 @@ export function validar(d) {
     if (!h || !Number.isInteger(h.i) || h.i < 0 || h.i >= palabras.length || vistos.has(h.i) || !Number.isInteger(h.a) || !Number.isInteger(h.b) || h.a < 0 || h.b < 0 || h.a >= N || h.b >= N || !linea(n, h.a, h.b)) continue;
     vistos.add(h.i); hall.push({ i: h.i, a: h.a, b: h.b, r: h.r ? 1 : 0 });
   }
-  return { tema, nivel, n, grid: d.grid.slice(), palabras, halladas: hall, t: Number.isInteger(d.t) && d.t >= 0 ? d.t : 0, pistas: Number.isInteger(d.pistas) && d.pistas >= 0 ? d.pistas : 0, rendido: !!d.rendido };
+  return { tema, nivel, n, grid: d.grid.slice(), palabras, halladas: hall, t: Number.isInteger(d.t) && d.t >= 0 ? d.t : 0, pistas: Number.isInteger(d.pistas) && d.pistas >= 0 ? d.pistas : 0, rendido: !!d.rendido , reto: typeof d.reto === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.reto) ? d.reto : null };
 }
 export const migrarV1 = d => d;
 const nHalladas = d => d.halladas.filter(h => !h.r).length;
 const completa = d => nHalladas(d) === d.palabras.length;
 export function resumen(d) {
   const fin = completa(d) || d.rendido;
-  return { texto: `${temaNombre(d.tema)} · ${LVL[d.nivel]} · ${d.rendido ? 'reveladas' : nHalladas(d) + '/' + d.palabras.length}`, fin };
+  const pre = d.reto ? '📅 Reto · ' : '';
+  return { texto: pre + (`${temaNombre(d.tema)} · ${LVL[d.nivel]} · ${d.rendido ? 'reveladas' : nHalladas(d) + '/' + d.palabras.length}`), fin };
 }
 
 /* ---------- ciclo de vida ---------- */
@@ -53,7 +54,7 @@ export async function mount(r, a) {
   await api.css(new URL('./sopa.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g } : null;
-  root.innerHTML = `
+  root.innerHTML = `<div id="spReto"></div>
     <details class="ops" id="spOps"><summary id="spSum"></summary>
       <div class="bar"><span class="lbl">Tema</span><div class="seg">${[...Object.entries(TEMAS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }]].map(([k, t]) => `<button class="btn" data-tema="${k}">${t.icono} ${t.nombre}</button>`).join('')}</div></div>
       <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div></div>
@@ -68,6 +69,7 @@ export async function mount(r, a) {
   gr.addEventListener('pointerdown', pDown); gr.addEventListener('pointermove', pMove); gr.addEventListener('pointerup', pUp); gr.addEventListener('pointercancel', pCancel);
   api.menu([
     { texto: 'Nueva sopa', accion: () => nueva(S.tema, S.nivel) },
+    { texto: '📅 Reto del día', accion: () => nueva(RETO.tema, RETO.nivel, false, true) },
     { texto: '💡 Pista', accion: pista },
     { texto: 'Mostrar soluciones', accion: rendirse, peligro: true },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() },
@@ -88,21 +90,23 @@ function arrancar() { crono.s = S.t; if (!completa(S) && !S.rendido) crono.inici
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S && !completa(S) && !S.rendido && S.halladas.length > 0;
-async function nueva(tema, nivel, forzar = false) {
+async function nueva(tema, nivel, forzar = false, reto = false) {
   if (ocupado) return;
+  if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una sopa nueva? Perderás la actual.')) return;
   if (!Object.hasOwn(TEMAS, tema) && tema !== 'mezcla') tema = 'animales';
   ocupado = true; if (crono) crono.detener();
   await esperar(20);
-  const g = generar(tema, nivel);
+  const g = reto ? api.reto.generar(() => generar(tema, nivel)) : generar(tema, nivel);   // reto: mismo tablero para todos
   S = { tema, nivel, n: g.n, grid: g.grid, palabras: g.palabras, halladas: [], t: 0, pistas: 0, rendido: false };
-  api.setPref('tema', tema); api.setPref('nivel', nivel);
+  if (!reto) { api.setPref('tema', tema); api.setPref('nivel', nivel); }
+  S.reto = reto ? api.reto.fecha() : null;
   ocupado = false; ancla = null; sel = null; pistaCel = -1;
   crono = new Cronometro(crono.alTick, 0);
   construir(); arrancar(); pintar(); guardar();
   $('#spOps').open = false;
 }
-function guardar() { if (!S) return; const d = { tema: S.tema, nivel: S.nivel, n: S.n, grid: S.grid, palabras: S.palabras, halladas: S.halladas, t: S.t, pistas: S.pistas, rendido: S.rendido }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
+function guardar() { if (!S) return; const d = { tema: S.tema, nivel: S.nivel, n: S.n, grid: S.grid, palabras: S.palabras, halladas: S.halladas, t: S.t, pistas: S.pistas, rendido: S.rendido , reto: S.reto || null }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 function rendirse() {
   if (!S || completa(S) || S.rendido || !api.confirmar('¿Mostrar todas las palabras? La partida no contará en estadísticas.')) return;
   S.palabras.forEach((w, i) => { if (!S.halladas.some(h => h.i === i)) S.halladas.push({ i, a: w.f, b: w.f + (w.p.length - 1) * (w.d[0] * S.n + w.d[1]), r: 1 }); });
@@ -137,12 +141,21 @@ function dibujar() {
   if (pistaCel >= 0) { const [x, y] = centro(n, pistaCel); h += `<circle class="hint" cx="${x}" cy="${y}" r=".46"/>`; }
   $('#spSvg').innerHTML = h;
 }
+const RETO = { tema: 'mezcla', nivel: 'medio' };
+function pintarReto() {
+  const r = $('#spReto'); if (!r || !S) return;
+  const hoy = api.reto.fecha(), hecho = api.reto.hecho(), jugando = S.reto === hoy, k = `${hoy}|${hecho}|${jugando}`;
+  if (r.dataset.k === k) return; r.dataset.k = k;
+  r.innerHTML = `<div class="reto ${hecho ? 'hecho' : ''}"><span>${hecho ? '✅' : '📅'}</span><div><b>Reto del día · ${api.reto.texto(hoy)}</b>${hecho ? 'Completado. Vuelve mañana para otro.' : jugando ? 'Estás jugando el reto: una sopa igual para todo el mundo.' : 'Una sopa de temas variados, la misma para todos hoy.'}</div>${hecho || jugando ? '' : '<button class="btn on" data-ac="reto">Jugar</button>'}</div>`;
+}
 function pintar() {
   if (!S) return;
+  pintarReto();
   const fin = completa(S) || S.rendido;
   if (completa(S) && !S.done) {
     S.done = true; crono.detener(); S.t = crono.s;
-    api.registrar({ res: 'victoria', tiempo: S.t, variante: LVL[S.nivel], limpio: S.pistas === 0 });
+    api.registrar({ res: 'victoria', tiempo: S.t, variante: S.reto ? 'Reto del día' : LVL[S.nivel], limpio: S.pistas === 0 });
+    if (S.reto && api.reto.completar(S.reto)) setTimeout(() => api.aviso('📅 ¡Reto del día completado!'), 300);
     api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar();
   }
   cel.forEach((b, i) => b.classList.toggle('an', ancla === i));
@@ -199,7 +212,7 @@ function clic(e) {
   const d = b.dataset;
   if (d.tema) return nueva(d.tema, S.nivel);
   if (d.niv) return nueva(S.tema, d.niv);
-  if (d.ac === 'nueva') nueva(S.tema, S.nivel); else if (d.ac === 'pista') pista(); else if (d.ac === 'aspecto') asp.abrir();
+  if (d.ac === 'nueva') nueva(S.tema, S.nivel); else if (d.ac === 'reto') nueva(RETO.tema, RETO.nivel, false, true); else if (d.ac === 'pista') pista(); else if (d.ac === 'aspecto') asp.abrir();
 }
 function reglas() {
   api.modal('Sopa de letras', `<ul><li>Encuentra todas las palabras de la lista escondidas en el tablero.</li>

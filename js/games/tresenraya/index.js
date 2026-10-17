@@ -41,7 +41,7 @@ function pintar(e, ctx, v) {
 }
 
 const duelo = crearDuelo({
-  id: 'tresenraya', css: new URL('./tresenraya.css', import.meta.url), variantes: VARIANTES, nombres: ['X', 'O'],
+  id: 'tresenraya', css: new URL('./tresenraya.css', import.meta.url), iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['X', 'O'],
   chip: (n, vals = {}) => EMOJIS[vals.fichas] ? `<i class="ch em">${EMOJIS[vals.fichas][n - 1]}</i>` : `<i class="ch tr${n}">${n === 1 ? '✕' : '○'}</i>`,
   aspecto: [
     grupoTablero(),

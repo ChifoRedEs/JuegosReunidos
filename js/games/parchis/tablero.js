@@ -2,8 +2,6 @@
 // Posición de cada ficha (relativa a su color): -1 casa · 0 salida · 0..63 vuelta de 68 casillas · 64..70 pasillo · 71 meta
 export const PC = ['am', 'az', 'ro', 've'];
 export const PNAME = { am: 'Amarillo', az: 'Azul', ro: 'Rojo', ve: 'Verde' };
-export const PCOL = { am: '#F2B84B', az: '#2B6CB0', ro: '#D6453D', ve: '#2E9E5B' };
-export const PINK = { am: '#1B2A3A', az: '#fff', ro: '#fff', ve: '#fff' };
 export const PSTART = { am: 5, az: 22, ro: 39, ve: 56 };
 export const PSAFE = new Set([5, 12, 17, 22, 29, 34, 39, 46, 51, 56, 63, 68]);
 export const PHOUSE = { am: [110, 110], az: [110, 0], ro: [0, 0], ve: [0, 110] };
