@@ -33,6 +33,7 @@ export const JUEGOS = [
   { id: 'ladrillos', nombre: 'Rompe-Ladrillos', icono: '🏓', color: '#FF4757', categoria: 'arcade', descripcion: '12 niveles, premios y editor de niveles propios.', cargar: () => import('./games/ladrillos/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
+  { id: 'magnate', nombre: 'Magnate Tecnológico', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas tecnológicas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
 ];
 
 // Juegos planificados (solo se muestran como aviso en Inicio hasta que existan).

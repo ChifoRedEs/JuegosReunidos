@@ -1,5 +1,7 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import { Partida as MTPartida, validar as validarMT, MAZOS as MTMAZOS } from '../js/games/magnate/motor.js';
+import { CASILLAS as MTC, GRUPOS as MTG } from '../js/games/magnate/datos.js';
 import { calificar } from '../js/games/sudoku/generador.js';
 import { cuadradoLatino } from '../js/games/kenken/generador.js';
 import { conSemilla, mulberry32 } from '../js/core/semilla.js';
@@ -453,4 +455,28 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
 // ---- Flota y Rosco: contenido nuevo ----
 { assert.ok(Object.keys(FL.FLOTAS).length >= 6); for (const L of LRosco) assert.ok(BRosco[L].length >= 16, L);
   ok('Hundir la Flota: 6 flotas · El Rosco: 16 palabras por letra'); }
+
+// ---- Magnate Tecnológico ----
+{ assert.equal(MTC.length, 40); for (const s of MTC) if (s.g) assert.ok(MTG[s.g]);
+  const mudo = { render() {}, log() {}, async paso() {}, async dados() {}, flash() {}, async pregunta(t, x, b) { return b[0]; }, async carta() {}, async comprar() { return true; }, async puja() { return 0; }, async aceptar() { return false; }, async gestionar() {}, async fin() {} };
+  let terminadas = 0;
+  for (let k = 0; k < 40; k++) {
+    const n = 2 + k % 3, g = new MTPartida(Array.from({ length: n }, (_, i) => ({ nombre: 'CPU ' + i, ficha: '🤖', color: '#2F6BFF', bot: true })), mudo, { rondas: k % 2 ? 60 : 0 });
+    let t = 0;
+    while (!g.terminada && t++ < 3000) {
+      await g.jugarTurno();
+      assert.ok(g.oficinas >= 0 && g.sedes >= 0 && g.jug.every(p => p.dinero >= 0));
+      for (const m of Object.keys(MTMAZOS)) assert.equal(g.mazos[m].length + g.jug.reduce((a, p) => a + p.pases.filter(x => x === m).length, 0), MTMAZOS[m].length);   // los pases no se duplican
+      if (t % 40 === 0) { const v = validarMT(JSON.parse(JSON.stringify(g))); assert.ok(v); assert.equal(JSON.stringify(MTPartida.desde(v, mudo)), JSON.stringify(g)); }
+    }
+    if (g.terminada) { terminadas++; assert.ok(g.ganador >= 0 && !g.jug[g.ganador].fuera); }
+  }
+  assert.ok(terminadas >= 38, 'partidas terminadas: ' + terminadas);
+  const g = new MTPartida([{ nombre: 'A', ficha: '🦊', color: '#FF4757' }, { nombre: 'B', ficha: '🤖', color: '#2F6BFF', bot: true }], mudo);
+  g.c[1].dueno = 0;
+  assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: -50, pide: [], pideM: 0 }), 'dinero negativo');
+  assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [3], daM: 0, pide: [], pideM: 0 }), 'empresa ajena');
+  assert.ok(g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: 10, pide: [], pideM: 0 }));
+  assert.equal(validarMT({ ...JSON.parse(JSON.stringify(g)), oficinas: 3 }), null);
+  ok('Magnate Tecnológico: 40 partidas entre CPU (con y sin límite de rondas), guardado de ida y vuelta, pases sin duplicar y tratos validados'); }
 console.log(`\n${n} pruebas correctas`);

@@ -1,6 +1,6 @@
 # Juegos Reunidos 2.0
 
-30 juegos en 5 categorías: Sudoku, Nonogram, Buscaminas, KenKen (Lógica) · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, 3 en raya, Conecta 4, Trivial (Tablero) · BlackJack, Klondike, Texas Hold'em, Brisca, Chinchón, Mus, Cinquillo, Continental (Cartas) · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas (Palabras) · Serpiente, Bloques y Rompe-Ladrillos (Arcade).
+31 juegos en 5 categorías: Sudoku, Nonogram, Buscaminas, KenKen (Lógica) · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, Magnate Tecnológico, 3 en raya, Conecta 4, Trivial (Tablero) · BlackJack, Klondike, Texas Hold'em, Brisca, Chinchón, Mus, Cinquillo, Continental (Cartas) · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas (Palabras) · Serpiente, Bloques y Rompe-Ladrillos (Arcade).
 
 Con estadísticas, 🏅 logros, 📅 reto del día, 🏆 podio de los 10 mejores en los arcade, compartir resultado, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
 

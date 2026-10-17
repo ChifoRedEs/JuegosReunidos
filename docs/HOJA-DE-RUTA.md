@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-**Hecho (30 juegos):** Sudoku, Nonogram, Buscaminas, KenKen · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, 3 en raya, Conecta 4, Trivial · BlackJack, Klondike, Texas Hold'em, Brisca, Chinchón, Mus, Cinquillo, Continental · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas · Serpiente, Bloques y Rompe-Ladrillos.
+**Hecho (31 juegos):** Sudoku, Nonogram, Buscaminas, KenKen · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, Magnate Tecnológico, 3 en raya, Conecta 4, Trivial · BlackJack, Klondike, Texas Hold'em, Brisca, Chinchón, Mus, Cinquillo, Continental · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas · Serpiente, Bloques y Rompe-Ladrillos.
 
 Ideas para seguir (cada una = una carpeta nueva en `js/games/` + una línea en `registry.js`, ver `AÑADIR-JUEGO.md`):
 1. **Lógica:** Mastermind, Kakuro, Takuzu (Binairo), Sokoban, 2048.
