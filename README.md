@@ -29,6 +29,7 @@ y abre http://localhost:8000. (Cualquier otro servidor estático vale.)
                      logros, semilla (reto del día con el mismo tablero para todos), historial (manos y partidas de los juegos de cartas), arrastrar
     js/games/<id>/   index.js + (reglas/generador/ia) + <id>.css de cada juego
     js/games/_plantilla/   punto de partida para un juego nuevo
+    data/diccionario/ diccionario español para los juegos de palabras (lo genera tools/generar_diccionario.py; ver su LEEME.md)
     data/nonogramas/ fuentes.txt (dibujos hechos a mano) → pixelart.json (lo genera tools/verificar_nonogramas.mjs)
     tools/           generar_sw.py · generar_barajas.py · optimizar_imagenes.py · generar_iconos.py · verificar_nonogramas.mjs
     tests/motores.mjs   pruebas de los motores:  node tests/motores.mjs

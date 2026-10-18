@@ -1,5 +1,7 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import * as DIC from '../js/core/diccionario.js';
 import { Partida as MTPartida, validar as validarMT, MAZOS as MTMAZOS } from '../js/games/magnate/motor.js';
 import { CASILLAS as MTC, GRUPOS as MTG } from '../js/games/magnate/datos.js';
 import { calificar } from '../js/games/sudoku/generador.js';
@@ -479,4 +481,20 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   assert.ok(g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: 10, pide: [], pideM: 0 }));
   assert.equal(validarMT({ ...JSON.parse(JSON.stringify(g)), oficinas: 3 }), null);
   ok('Magnate Tecnológico: 40 partidas entre CPU (con y sin límite de rondas), guardado de ida y vuelta, pases sin duplicar y tratos validados'); }
+
+// ---- Diccionario español (juegos de palabras) ----
+{ const info = JSON.parse(readFileSync(new URL('../data/diccionario/indice.json', import.meta.url), 'utf8'));
+  DIC.desdeTexto(readFileSync(new URL('../data/diccionario/' + info.archivo, import.meta.url), 'utf8'));
+  assert.ok(info.palabras > 500000);
+  for (const w of ['casa', 'Pingüino', 'CAMIÓN', 'cantábamos', 'dámelo', 'ñu', 'quirófanos', 'eñe', 'desarrolladores']) assert.ok(DIC.existe(w), w);
+  for (const w of ['qwerty', 'casaz', 'Madrid', 'a', 'pingüinoss']) assert.ok(!DIC.existe(w), w);
+  for (let n = 2; n <= 15; n++) { const l = [...DIC.palabras(n)]; assert.equal(l.length, info.longitudes[n]); for (let k = 1; k < l.length; k += 997) assert.ok(l[k - 1] < l[k]); }
+  const f = DIC.formables('aeirstcon', { min: 4 }); assert.ok(f.length > 100 && f.every(w => DIC.existe(w)) && f[0].length >= f[f.length - 1].length);
+  DIC.lemasDesdeTexto(readFileSync(new URL('../data/diccionario/' + info.lemas, import.meta.url), 'utf8'));
+  const ln = DIC.lemas('n'), lv = DIC.lemas('v');
+  assert.equal(ln.length, info.lemasPorTipo.n); assert.equal(lv.length, info.lemasPorTipo.v); assert.ok(ln.length + lv.length > 45000);
+  assert.ok(ln.includes('pingüino') && ln.includes('camión') && lv.includes('cantar') && !ln.includes('cantábamos'));
+  assert.ok(DIC.lemas('n', { min: 4, max: 6 }).every(w => w.length >= 4 && w.length <= 6));
+  assert.ok(ln.slice(0, 2000).every(w => DIC.existe(w)), 'las palabras base están en el diccionario completo');
+  ok('Diccionario: ~590.000 formas de LibreOffice, búsqueda sin tildes, palabras añadidas y formables para Letras; ~47.000 palabras base para los demás juegos'); }
 console.log(`\n${n} pruebas correctas`);

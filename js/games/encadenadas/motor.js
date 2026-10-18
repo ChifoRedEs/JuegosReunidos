@@ -27,7 +27,11 @@ export function diccionario(extra = []) {
   extra.forEach(w => { const b = String(w).toLowerCase(); if (/^[a-záéíóúüñ]{3,}$/.test(b) && !DIC.has(norm(b))) { DIC.set(norm(b), b); porInicio = null; } });
   return DIC;
 }
-export const existe = w => diccionario().has(norm(w));
+// Diccionario grande (core/diccionario.js): si está cargado, valida cualquier palabra real del español (también plurales y
+// conjugaciones) y aporta las ~47.000 palabras base para que la CPU tenga mucha más variedad. Sin conexión, sigue el banco propio.
+let externo = null;
+export function ampliar({ existe: fn = null, palabras = [] } = {}) { if (fn) externo = fn; if (palabras.length) diccionario(palabras); }
+export const existe = w => diccionario().has(norm(w)) || (externo ? externo(w) : false);
 export const bonita = w => diccionario().get(norm(w)) || String(w).toLowerCase();
 function indice() {
   if (porInicio) return porInicio;

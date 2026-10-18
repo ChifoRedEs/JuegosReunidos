@@ -2,6 +2,7 @@ import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTablero } from '../../core/aspectos.js';
 import { TEMAS } from './palabras.js';
+import * as D from '../../core/diccionario.js';
 import { NIVELES, DIRS8, generar, linea, ajustar } from './generador.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -11,12 +12,21 @@ const MARCAS = {
   mono: ['var(--tb-acc)'],
 };
 let S = null, api = null, asp = null, root = null, crono = null, cel = [], ancla = null, sel = null, arrastre = false, pistaCel = -1, pistaT = null, ocupado = false;
-const temaNombre = t => t === 'mezcla' ? 'Mezcla' : TEMAS[t].nombre;
+const temaNombre = t => t === 'mezcla' ? 'Mezcla' : t === 'diccionario' ? 'Diccionario' : TEMAS[t].nombre;
+const esTema = t => t === 'mezcla' || t === 'diccionario' || Object.hasOwn(TEMAS, t);
+// Palabras base del diccionario de LibreOffice (sustantivos y adjetivos) en mayúsculas y sin tildes, como el resto de temas
+const sinTildes = w => w.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+async function palabrasDiccionario(n) {
+  if (!(await D.cargarLemas())) return null;
+  const l = D.lemas('n', { min: 4, max: n }).filter(w => !w.includes('ñ')), out = new Set();
+  while (out.size < 300 && out.size < l.length) out.add(sinTildes(l[Math.floor(Math.random() * l.length)]));
+  return [...out];
+}
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
   if (!d || typeof d !== 'object') return null;
-  const tema = d.tema === 'mezcla' || Object.hasOwn(TEMAS, d.tema) ? d.tema : null, nivel = Object.hasOwn(LVL, d.nivel) ? d.nivel : null;
+  const tema = esTema(d.tema) ? d.tema : null, nivel = Object.hasOwn(LVL, d.nivel) ? d.nivel : null;
   if (!tema || !nivel) return null;
   const n = NIVELES[nivel].n, N = n * n;
   if (d.n !== n || !Array.isArray(d.grid) || d.grid.length !== N || !d.grid.every(c => typeof c === 'string' && /^[A-Z]$/.test(c))) return null;
@@ -56,7 +66,7 @@ export async function mount(r, a) {
   S = g ? { ...g } : null;
   root.innerHTML = `<div id="spReto"></div>
     <details class="ops" id="spOps"><summary id="spSum"></summary>
-      <div class="bar"><span class="lbl">Tema</span><div class="seg">${[...Object.entries(TEMAS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }]].map(([k, t]) => `<button class="btn" data-tema="${k}">${t.icono} ${t.nombre}</button>`).join('')}</div></div>
+      <div class="bar"><span class="lbl">Tema</span><div class="seg">${[...Object.entries(TEMAS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }], ['diccionario', { nombre: 'Diccionario', icono: '📚' }]].map(([k, t]) => `<button class="btn" data-tema="${k}">${t.icono} ${t.nombre}</button>`).join('')}</div></div>
       <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div></div>
     </details>
     <div class="info"><span class="mut" id="spInfo"></span><span id="spCrono" aria-label="Tiempo">0:00</span></div>
@@ -94,10 +104,16 @@ async function nueva(tema, nivel, forzar = false, reto = false) {
   if (ocupado) return;
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una sopa nueva? Perderás la actual.')) return;
-  if (!Object.hasOwn(TEMAS, tema) && tema !== 'mezcla') tema = 'animales';
+  if (!esTema(tema)) tema = 'animales';
   ocupado = true; if (crono) crono.detener();
   await esperar(20);
-  const g = reto ? api.reto.generar(() => generar(tema, nivel)) : generar(tema, nivel);   // reto: mismo tablero para todos
+  let extra = null;
+  if (tema === 'diccionario' && !reto) {
+    $('#spMsg') && ($('#spMsg').textContent = '📚 Cargando el diccionario…');
+    extra = await palabrasDiccionario(NIVELES[nivel].n);
+    if (!extra) { api.aviso('No se pudo cargar el diccionario (sin conexión): sopa de temas variados'); tema = 'mezcla'; }
+  }
+  const g = reto ? api.reto.generar(() => generar(tema, nivel)) : generar(tema, nivel, extra);   // reto: mismo tablero para todos
   S = { tema, nivel, n: g.n, grid: g.grid, palabras: g.palabras, halladas: [], t: 0, pistas: 0, rendido: false };
   if (!reto) { api.setPref('tema', tema); api.setPref('nivel', nivel); }
   S.reto = reto ? api.reto.fecha() : null;
@@ -218,6 +234,7 @@ function reglas() {
   api.modal('Sopa de letras', `<ul><li>Encuentra todas las palabras de la lista escondidas en el tablero.</li>
     <li>En <b>Fácil</b> van en horizontal y vertical; en <b>Medio</b> también en diagonal; en <b>Difícil</b> en las 8 direcciones, ¡incluso al revés!</li>
     <li><b>Arrastra</b> el dedo de la primera a la última letra, o toca la primera y luego la última.</li>
+    <li>📚 <b>Diccionario</b>: palabras al azar entre las ~37.000 base del diccionario de LibreOffice. Muchas son poco corrientes: ¡buen momento para aprender alguna! (La primera vez se descarga la lista, ≈0,5 MB.)</li>
     <li>💡 <b>Pista</b> señala la primera letra de una palabra pendiente (con pistas no cuenta el récord de tiempo).</li>
     <li>En 🎨 Apariencia cambias los colores del tablero, el subrayado y el tipo de letra.</li></ul>`);
 }

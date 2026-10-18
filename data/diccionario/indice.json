@@ -1,0 +1,26 @@
+{
+ "archivo": "es-3a349cde.txt",
+ "palabras": 592289,
+ "longitudes": {
+  "2": 104,
+  "3": 471,
+  "4": 2500,
+  "5": 9011,
+  "6": 21274,
+  "7": 42535,
+  "8": 67084,
+  "9": 88152,
+  "10": 99253,
+  "11": 92528,
+  "12": 73482,
+  "13": 51164,
+  "14": 29707,
+  "15": 15024
+ },
+ "lemas": "lemas-1f6f9c6b.txt",
+ "lemasPorTipo": {
+  "n": 36895,
+  "v": 10480
+ },
+ "fuente": "Diccionario español de LibreOffice (RLA-ES) 2.1, Santiago Bosio · GPL 3 / LGPL 3 / MPL 1.1"
+}

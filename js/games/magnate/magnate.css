@@ -89,3 +89,4 @@
 .mtmodal .mtdinero{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:800;margin-top:6px}
 .mtmodal .mtdinero .pedir{font-size:15px;padding:6px 8px}
 .juego-magnate .mtc.ab.tendencias .mtnom,.juego-magnate .mtc.ar.tendencias .mtnom,.juego-magnate .mtc.ab.noticias .mtnom,.juego-magnate .mtc.ar.noticias .mtnom{font-size:.7em;overflow-wrap:normal}
+.juego-magnate .mtc.ab .mtnom.largo,.juego-magnate .mtc.ar .mtnom.largo{font-size:.68em;overflow-wrap:normal}   /* nombres largos (SoundCloud…) en una sola línea */

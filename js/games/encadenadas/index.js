@@ -2,6 +2,7 @@ import { $, esc } from '../../core/dom.js';
 import { crearTeclado } from '../../core/teclado.js';
 import { silabas } from './silabas.js';
 import * as E from './motor.js';
+import * as D from '../../core/diccionario.js';
 
 let S = null, api = null, asp = null, root = null, reg = false, tk = null, reloj = null, cpuT = null, onKey = null;
 let texto = '', duda = '', restante = 0, ultimo = 0, bocadillo = '', marcador = { g: 0, p: 0, record: 0 };
@@ -27,6 +28,8 @@ export async function mount(r, a) {
   await api.css(new URL('./encadenadas.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && ['solo', 'cpu', 'grupo'].includes(c0.modo) && E.NIVEL[c0.nivel] && E.ENLACES[c0.enlace] && E.TIEMPOS.includes(c0.tiempo)) cfg = { ...cfg, ...c0 };
   E.diccionario(aprendidas());
+  // Diccionario grande en segundo plano: cuando llega, valida cualquier palabra real y da más variedad a la CPU
+  Promise.all([D.cargar(), D.cargarLemas()]).then(([a, b]) => { if (a || b) E.ampliar({ existe: a ? D.existe : null, palabras: b ? D.lemas('todos', { min: 3 }) : [] }); });
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   tk = crearTeclado({ filas: ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM', '✔'], borrar: true, alPulsar: tecla, titulo: 'Encadenadas · escribe tu palabra' });
@@ -196,5 +199,6 @@ function reglas() {
     <li>Palabras de al menos 3 letras, sin repetir ninguna de la partida. Las tildes no importan.</li>
     <li>Como ninguna palabra empieza por «rr», la sílaba «rro» se enlaza con «ro» (pe·rro → ro·sa). Si ninguna palabra empieza por esa sílaba (mue·<b>ble</b>, can·<b>ción</b>…), vale con sus <b>dos últimas letras</b>; la app te lo avisa.</li>
     <li>Escribe con el <b>teclado emergente</b> (toca la casilla o ⌨️) y pulsa ✔. Si la palabra no está en el diccionario de la app, te pregunta si existe: si dices que sí, la aprende para siempre.</li>
+    <li>La app usa el <b>diccionario de LibreOffice</b> (unas 590.000 formas: plurales y conjugaciones incluidas) para comprobar tus palabras, y la CPU elige entre unas 47.000 palabras base. La primera vez se descarga (≈1,5 MB) y queda guardado para jugar sin conexión.</li>
     <li>Si se te acaba el tiempo o pulsas 🏳️ «No sé», pierdes una vida y empieza una cadena nueva. Cada jugador tiene ${E.VIDAS} vidas: gana el último que quede (en solitario, intenta batir tu récord de cadena).</li></ul>`);
 }

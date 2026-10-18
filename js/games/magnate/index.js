@@ -86,7 +86,7 @@ function armar() {
   root.innerHTML = `<div class="mtjug" id="mtJug"></div>
     <div class="mttab" id="mtTab">
       ${G.c.map((s, i) => { const [f, c] = celda(i); return `<button type="button" class="mtc ${lado(i)} ${s.tipo}" data-c="${i}" style="grid-row:${f};grid-column:${c}" aria-label="${esc(s.nombre)}">
-        ${s.g ? `<span class="mtbanda" style="--g:${GRUPOS[s.g].color}"></span>` : ''}<span class="mtnom">${s.tipo === 'esquina' ? `<i>${s.ico}</i>${esc(s.corto)}` : `${s.ico || ICONO[s.tipo] ? `<i>${s.ico || ICONO[s.tipo]}</i>` : ''}${esc(s.nombre)}`}</span><span class="mttk"></span></button>`; }).join('')}
+        ${s.g ? `<span class="mtbanda" style="--g:${GRUPOS[s.g].color}"></span>` : ''}<span class="mtnom ${s.nombre.length > 8 && s.tipo === 'empresa' ? 'largo' : ''}">${s.tipo === 'esquina' ? `<i>${s.ico}</i>${esc(s.corto)}` : `${s.ico || ICONO[s.tipo] ? `<i>${s.ico || ICONO[s.tipo]}</i>` : ''}${esc(s.nombre)}`}</span><span class="mttk"></span></button>`; }).join('')}
       <div class="mtcentro">
         <b class="mttit">Magnate<br>Tecnológico</b>
         <div class="mtturno" id="mtTurno"></div>
@@ -310,5 +310,5 @@ function reglas() {
     <li>🤝 <b>Tratos</b>: en tu turno puedes proponer cambiar empresas y dinero con otro jugador. Las CPU también te harán ofertas cuando les falte una empresa para completar un sector.</li>
     <li>Si no puedes pagar, quiebras y quedas fuera. Gana el último que siga en pie (o quien tenga más patrimonio si elegiste un límite de rondas). El banco tiene ${OFICINAS} oficinas y ${SEDES} sedes.</li>
     <li>Toca cualquier casilla para ver su ficha. Con la tecla Espacio también se tiran los dados.</li></ul>
-    <p class="note">Todas las empresas y marcas del juego son inventadas.</p>`);
+    <p class="note">Las marcas de las empresas pertenecen a sus dueños: el juego no tiene relación con ellas.</p>`);
 }

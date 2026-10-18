@@ -1,6 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import { grupoTablero } from '../../core/aspectos.js';
 import { NIVELES, temasDe, elegir, base, mayus } from './palabras.js';
+import * as D from '../../core/diccionario.js';
 import { DISENOS, TOTAL } from './dibujos.js';
 import { crearTeclado } from '../../core/teclado.js';
 
@@ -12,7 +13,7 @@ export function validar(d) {
   if (!d || typeof d !== 'object' || !Object.hasOwn(NIVELES, d.nivel)) return null;
   const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b, max = NIVELES[d.nivel].fallos;
   if (typeof d.palabra !== 'string' || d.palabra.length < 3 || d.palabra.length > 30 || !/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ -]+$/.test(d.palabra)) return null;
-  if (typeof d.pista !== 'string' || d.pista.length > 500 || typeof d.tema !== 'string' || !/^(mezcla|[cp]:[a-z]{2,12})$/.test(d.tema)) return null;
+  if (typeof d.pista !== 'string' || d.pista.length > 500 || typeof d.tema !== 'string' || !/^(mezcla|[cp]:[a-z]{2,12}|d:dic)$/.test(d.tema)) return null;
   const usadas = typeof d.usadas === 'string' && /^[A-ZÑ]*$/.test(d.usadas) && new Set(d.usadas).size === d.usadas.length ? d.usadas : null; if (usadas === null) return null;
   if (!ent(d.fallos, 0, max) || ![null, 'gana', 'pierde'].includes(d.fin)) return null;
   const m = d.marcador && typeof d.marcador === 'object' ? d.marcador : {};
@@ -54,7 +55,13 @@ function guardar() { if (!S) return; const d = { ...S }; const r = resumen(d); a
 
 /* ---------- partida ---------- */
 const fase = () => (S.fallos ? Math.min(TOTAL, Math.ceil(S.fallos * TOTAL / NIVELES[S.nivel].fallos)) : 0);
-function nueva(nivel, tema, forzar = false) {
+async function nueva(nivel, tema, forzar = false) {
+  if (tema === 'd:dic' && !D.lemasCargados()) {                  // la lista se descarga la primera vez (≈0,5 MB)
+    api.aviso('📚 Cargando el diccionario…');
+    const ok = await D.cargarLemas();
+    if (!asp) return;                                              // se ha salido del juego mientras cargaba
+    if (!ok) { api.aviso('No se pudo cargar el diccionario (sin conexión)'); tema = 'mezcla'; }
+  }
   if (!forzar && S && !S.fin && S.usadas.length && !api.confirmar('¿Cambiar de palabra? Perderás la partida actual.')) return;
   if (!temasDe(nivel).some(t => t.id === tema)) tema = 'mezcla';
   const prev = S ? S.ultimas.slice() : [], marc = S ? S.marcador : { g: 0, p: 0, racha: 0 }, w = elegir(nivel, tema, prev);
@@ -146,5 +153,6 @@ function reglas() {
     <li>La <b>pista</b> es la definición de la palabra. En Difícil y Experto verla cuesta un fallo, igual que 💡 Letra (en Fácil tienes una letra gratis).</li>
     <li>Las tildes no importan: la A vale para «á». Toca las casillas de la palabra (o ⌨️) para abrir el teclado: puedes arrastrarlo por la pantalla desde su barra y cerrarlo con ✕. Con el teclado del ordenador también puedes escribir las letras.</li>
     <li>En 🎨 Apariencia eliges paleta y dibujo: clásico, robot, globos o flor.</li>
+    <li>📚 <b>Diccionario</b>: palabras al azar del diccionario de LibreOffice (unas 47.000). No tienen definición: la pista dice si es verbo o sustantivo/adjetivo y por qué letra empieza. ¡Muchas son raras!</li>
     <li>👥 <b>2 jugadores</b>: uno escribe la palabra secreta (y, si quiere, una pista) y le pasa el móvil al otro para que la adivine. Los fallos permitidos son los del nivel elegido.</li></ul>`);
 }

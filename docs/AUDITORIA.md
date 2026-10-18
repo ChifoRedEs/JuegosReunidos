@@ -57,7 +57,7 @@ Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (kenken), `tod
 ## Magnate Tecnológico (juego nuevo, categoría Tablero)
 Integrado en `js/games/magnate/` (datos.js · motor.js · index.js · magnate.css) con la API de la app: guardado y validación de partidas, estadísticas, menú ⋯, 🎨 Apariencia (colores del tablero de la app), diálogos en hoja inferior, sonido y vibración globales, y tecla Espacio para tirar.
 
-**Para alejarlo de Monopoly** (ver la nota legal en la conversación): todas las empresas son inventadas (antes eran marcas reales: Netflix, Apple, Nvidia, AWS…), la economía es propia (precios, alquileres, multiplicadores, salario de 220M, fianza de 60M, 30 oficinas y 10 sedes en el banco), las casas y hoteles son «oficinas» y «sede central», y las cartas tienen textos y efectos propios.
+**Para alejarlo de Monopoly** (ver la nota legal en la conversación): la economía es propia (precios, alquileres, multiplicadores, salario de 220M, fianza de 60M, 30 oficinas y 10 sedes en el banco), las casas y hoteles son «oficinas» y «sede central», y las cartas tienen textos y efectos propios.
 
 **Errores corregidos del código original:**
 - La carta «Sales libre de la Auditoría» volvía al mazo aunque el jugador se la quedara: se podían acumular copias infinitas. Ahora sale del mazo y vuelve al usarla (o al quebrar).
@@ -68,3 +68,11 @@ Integrado en `js/games/magnate/` (datos.js · motor.js · index.js · magnate.cs
 - La tecla Espacio y los diálogos `<dialog>` globales chocaban con el resto de la app; la partida se guardaba en una clave propia (`mt_game`) fuera de la copia de seguridad.
 
 **Mejoras:** límite opcional de 20 o 40 rondas (gana el mayor patrimonio), 3 velocidades, fichas elegibles, carta «avanza hasta la próxima nube y paga el doble», carta de obras (paga por oficina y sede), ficha de cada empresa al tocar su casilla y prueba automática del motor (`tests/motores.mjs`).
+
+## Diccionario español para los juegos de palabras
+- Origen: diccionario ortográfico de LibreOffice (RLA-ES, `es_ANY` 2.1, Santiago Bosio; GPL 3 / LGPL 3 / MPL 1.1). Originales en `tools/diccionario/`.
+- `tools/generar_diccionario.py` expande las reglas de afijos (plurales, femeninos, conjugaciones y pronombres pegados: «dámelo»), quita nombres propios, tildes y diéresis y deja 592.289 palabras de 2 a 15 letras en `data/diccionario/es-<hash>.txt` (6 MB; 1,5 MB comprimido al servirlo).
+- 42 palabras que faltaban (pingüino, quirófano, champiñón, tucán, ñu, eñe…) se añaden desde `tools/diccionario/extra.txt`.
+- `js/core/diccionario.js` lo carga bajo demanda (0,16 s la primera vez, 0,06 s desde la caché) y busca sin trocear el texto: 100.000 búsquedas en 70 ms.
+- El service worker no lo instala con la app: lo guarda en la caché `jr-diccionario` la primera vez que un juego lo pide y lo conserva entre actualizaciones.
+- Palabras base para los demás juegos (`lemas-<hash>.txt`, 0,45 MB): 36.895 sustantivos y adjetivos y 10.480 verbos en infinitivo, con tildes. Las usan **Encadenadas** (valida cualquier palabra real, conjugaciones incluidas, y la CPU elige entre 47.000 palabras), la **Sopa de letras** (tema 📚 Diccionario) y el **Ahorcado** (tema 📚 Diccionario, con pista de tipo de palabra y primera letra). Crucigramas, Rosco, Trivial y Ruleta necesitan definiciones o frases, que el diccionario no trae.

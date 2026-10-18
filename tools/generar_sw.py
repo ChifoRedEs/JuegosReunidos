@@ -18,6 +18,9 @@ for base, dirs, files in os.walk(RAIZ):
     for f in sorted(files):
         if f in EXCLUIR_ARCHIVOS or os.path.splitext(f)[1].lower() not in EXT:
             continue
+        # El diccionario (~6 MB) no se instala con la app: se baja solo cuando un juego lo pide (caché jr-diccionario)
+        if re.fullmatch(r'(es|lemas)-[0-9a-f]{8}\.txt', f) and base.replace(os.sep, '/').endswith('data/diccionario'):
+            continue
         archivos.append(os.path.relpath(os.path.join(base, f), RAIZ).replace(os.sep, '/'))
 
 h = hashlib.sha1()

@@ -10,9 +10,10 @@ export const NIVELES = {
 export const DIRS8 = [[0, 1], [1, 0], [1, 1], [-1, 1], [0, -1], [-1, 0], [-1, -1], [1, -1]];
 const RELLENO = 'AAAEEEIIOOOUULNRSTDCMPBGVFHQJZXYKW';
 
-export function generar(tema, nivel) {
+// tema 'diccionario': las palabras llegan en `extra` (palabras base al azar del diccionario de LibreOffice)
+export function generar(tema, nivel, extra = null) {
   const cfg = NIVELES[nivel], n = cfg.n;
-  const banco = tema === 'mezcla' ? [...new Set(Object.values(TEMAS).flatMap(t => t.palabras))] : TEMAS[tema].palabras;
+  const banco = extra && extra.length ? extra : tema === 'mezcla' ? [...new Set(Object.values(TEMAS).flatMap(t => t.palabras))] : TEMAS[tema].palabras;
   for (let intento = 0; intento < 60; intento++) {
     const grid = new Array(n * n).fill(''), colocadas = [];
     for (const p of shuffle(banco.filter(w => w.length <= n).slice())) {
