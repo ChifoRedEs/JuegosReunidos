@@ -1,0 +1,47 @@
+.tvj{display:grid;grid-template-columns:repeat(var(--nj),minmax(0,1fr));gap:6px;margin:6px 0}
+.tvp{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:5px 6px;text-align:center;min-width:0}
+.tvp.turno{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
+.tvp .nom{display:flex;align-items:center;justify-content:center;gap:5px;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden}
+.tvp .nom i{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.tvp .qs{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-top:4px}
+.tvp .qs b{width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(0,0,0,.25);background:transparent}
+.tvp .qs b.on{background:var(--qc);border-color:rgba(0,0,0,.4)}
+.tvb{width:min(100%,430px);margin:6px auto;display:block;filter:drop-shadow(0 8px 14px color-mix(in srgb,var(--tb-acc) 30%,transparent))}
+.tvb .sq{stroke:var(--card);stroke-width:1.2}
+.tvb .dest{fill:rgba(255,255,255,.35);stroke:#fff;stroke-width:2.2;stroke-dasharray:3 2;cursor:pointer;animation:tvd .8s ease-in-out infinite alternate}
+@keyframes tvd{to{fill:rgba(255,255,255,.7)}}
+.tvb .tok{stroke:#fff;stroke-width:2}
+.tvb .toc{fill:#fff;font:800 8px Nunito,sans-serif;text-anchor:middle;pointer-events:none}
+.tvb .act{animation:tvp 1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes tvp{50%{transform:scale(1.25)}}
+.tvb .hub{fill:var(--card);stroke:var(--tb-line);stroke-width:2}
+.tvb .hn{fill:var(--ink);font:800 15px 'Baloo 2',sans-serif;text-anchor:middle}
+.tvb .hs{fill:var(--mut);font:800 9px Nunito,sans-serif;text-anchor:middle}
+.tvpanel{margin:8px 0}
+.tvdado{font:800 40px 'Baloo 2',sans-serif;text-align:center}
+.tvq{background:var(--card);border:3px solid var(--c);border-radius:20px;overflow:hidden;box-shadow:0 8px 20px color-mix(in srgb,var(--c) 30%,transparent)}
+.tvq .cab{background:var(--c);color:#fff;padding:8px 14px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.tvq .cab small{opacity:.9;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.tvq .def{padding:14px 14px 8px;font-size:16px;font-weight:700;line-height:1.4}
+.tvq .ops{padding:6px 12px 14px;display:grid;gap:8px}
+.tvq .op{text-align:left;border:2px solid var(--line);background:var(--card);border-radius:13px;padding:11px 12px;font:700 15px Nunito,sans-serif;color:var(--ink);min-height:46px}
+.tvq .op:active:not(:disabled){transform:scale(.98)}
+.tvq .op.ok{background:var(--ok);border-color:transparent;color:#fff}
+.tvq .op.mal{background:var(--red);border-color:transparent;color:#fff}
+.tvq .op.sel{border-color:var(--c)}
+.tvq .esc{padding:4px 12px 14px;display:grid;gap:8px}
+.tvq .esc input{font:700 17px Nunito,sans-serif;padding:11px 12px;border:2px solid var(--line);border-radius:13px;background:var(--card);color:var(--ink);width:100%}
+.tvq .fb{padding:0 14px 12px;font-weight:800}
+.tvq .fb.ok{color:var(--ok)}.tvq .fb.mal{color:var(--red)}
+.tvdir{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tvdir .btn{min-height:58px;font-size:14px;line-height:1.2}
+.tvlog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
+.tvlog li:first-child{color:var(--ink);font-weight:800}
+.tvres{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 14px;margin:8px 0}
+.tvres table{width:100%;border-collapse:collapse;font-size:14px}.tvres td{padding:3px 0}.tvres td:last-child{text-align:right;font-weight:800}
+.tvfin{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:10px 12px 0}
+.tvfin b{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;border:2.5px solid var(--qc);background:transparent;opacity:.55}
+.tvfin b.on{background:var(--qc);opacity:1}
+.tvfin b.act{opacity:1;box-shadow:0 0 0 3px color-mix(in srgb,var(--qc) 35%,transparent);animation:tvp 1s ease-in-out infinite}
+.tvfin b.mal{background:var(--red);border-color:var(--red);opacity:1}
+.tvfin0{background:var(--card);border:2px dashed var(--yel);border-radius:14px;padding:10px 12px;font-size:14px;text-align:center;margin:6px 0}

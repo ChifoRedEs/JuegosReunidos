@@ -1,0 +1,35 @@
+.juego-holdem .carta{--cw:50px}
+.hm{color:#fff;padding:10px 8px 12px;display:flex;flex-direction:column;gap:10px;min-height:520px}
+.hbots{display:grid;grid-template-columns:repeat(var(--nb),minmax(0,1fr));gap:6px}
+.seat{position:relative;background:rgba(0,0,0,.28);border:3px solid transparent;border-radius:14px;padding:5px 4px 6px;text-align:center;min-width:0}
+.seat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.seat.fold{opacity:.45}.seat.fuera{opacity:.25}
+.seat .nom{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .stk{font-weight:800;font-size:12px;color:#FFE08A}
+.seat .cs{display:flex;justify-content:center;height:calc(30px * 1.4 + 2px);margin:3px 0}
+.seat .carta{--cw:30px;margin:0 -3px}
+.seat .txt{font-size:11px;font-weight:800;min-height:14px}
+.seat .ap{display:inline-block;margin-top:2px;padding:1px 8px;border-radius:99px;background:rgba(255,194,26,.95);color:#3A2800;font-weight:800;font-size:12px}
+.seat .bt,.yo .bt{position:absolute;top:-8px;right:-4px;width:22px;height:22px;border-radius:50%;background:#fff;color:#17214A;font:800 12px/22px 'Baloo 2',sans-serif;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.hcentro{text-align:center}
+.hbote{display:inline-block;padding:3px 14px;border-radius:99px;background:rgba(0,0,0,.4);font:800 17px 'Baloo 2',system-ui,sans-serif;margin-bottom:6px}
+.hboard{display:flex;justify-content:center;gap:5px;min-height:calc(50px * 1.4 + 2px)}
+.hboard .ph{width:50px;height:70px;border-radius:7px;border:2px dashed rgba(255,255,255,.3)}
+.hmsg{text-align:center;font-weight:800;font-size:15px;min-height:22px;margin-top:6px}
+.yo{position:relative;text-align:center;border:3px solid transparent;border-radius:16px;padding:6px}
+.yo.turno{border-color:var(--yel);background:rgba(255,194,26,.18)}
+.yo.fold{opacity:.5}
+.yo .cs{display:flex;justify-content:center;gap:6px;margin:4px 0}
+.yo .carta{--cw:66px}
+.yo .nom{font-weight:800;font-size:15px}
+.hpanel{margin:10px 0}
+.hbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hbtns .btn{min-height:50px;font-size:15px}
+.hsub{margin:10px 0;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px}
+.hsub input[type=range]{width:100%;accent-color:var(--purple);height:34px}
+.hsub .pre{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.hsub b{font:800 20px 'Baloo 2',sans-serif}
+.htip{background:var(--card);border:2px solid var(--yel);border-radius:14px;padding:8px 12px;font-size:14px;font-weight:700;margin:8px 0}
+.hlog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
+.hlog li:first-child{color:var(--ink);font-weight:800}
+.hrank{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px}

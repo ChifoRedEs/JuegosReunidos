@@ -1,0 +1,62 @@
+/* Mus · usa css/cartas.css (mesa, dorso y baraja española) */
+.mstop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;font-weight:800;font-size:14px}
+.mstop .eq{padding:4px 12px;border-radius:99px;color:#fff}
+.mstop .eq b{font:800 19px 'Baloo 2',system-ui,sans-serif;margin-left:4px}
+.mstop .e0{background:linear-gradient(135deg,var(--purple),var(--blue))}
+.mstop .e1{background:linear-gradient(135deg,var(--red),var(--orange))}
+.mstop .meta{color:var(--mut);font-size:12.5px;text-align:center}
+.msm{color:#fff;padding:10px 8px 12px;display:flex;flex-direction:column;gap:8px}
+.msmid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:6px;align-items:center}
+.msseat{position:relative;background:rgba(0,0,0,.26);border:3px solid transparent;border-radius:14px;padding:5px 4px 6px;text-align:center;min-width:0}
+.msseat.arriba{width:min(62%,220px);margin:0 auto}
+.msseat.p1{box-shadow:inset 0 0 0 2px rgba(255,120,90,.45)}
+.msseat.p0{box-shadow:inset 0 0 0 2px rgba(150,170,255,.5)}
+.msseat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.msseat .nom{font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:var(--yel);color:#3a2a00;font:800 11px Nunito,sans-serif;font-style:normal;margin-right:4px;vertical-align:1px}
+.msseat .cs{display:flex;justify-content:center;margin:4px 0;min-height:calc(26px * 1.55)}
+.msseat .carta{--cw:26px;margin:0 -4px}
+.msseat .decl{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;min-height:16px}
+.msseat .decl span,.msyo .dl{font-size:10.5px;font-weight:800;background:rgba(255,255,255,.22);border-radius:99px;padding:1px 7px}
+.bocadillo{position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);background:#fff;color:#1B2340;font:800 12px Nunito,sans-serif;padding:3px 9px;border-radius:99px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.3);z-index:2;animation:msboc .25s ease-out}
+@keyframes msboc{from{transform:translate(-50%,6px);opacity:0}}
+.mslances{display:grid;gap:4px}
+.ml{background:rgba(0,0,0,.22);border-radius:10px;padding:3px 6px;display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:12.5px}
+.ml b{font-weight:800}
+.ml small{font-size:10.5px;font-weight:700;opacity:.85;text-align:right}
+.ml.act{background:var(--yel);color:#3a2a00}
+.ml.hecho{opacity:.75}
+.msmsg{text-align:center;font-weight:800;font-size:14.5px;min-height:20px;margin-top:6px}
+.msyo{position:relative;display:flex;justify-content:center;align-items:center;gap:6px;font-weight:800;font-size:13px;min-height:22px;border-radius:99px;padding:2px 0}
+.msyo.turno{background:rgba(255,194,26,.25)}
+.msyo .bocadillo{position:static;transform:none}
+.msmano{display:flex;justify-content:center;gap:8px}
+.msc{transition:transform .15s}
+.msc .carta{--cw:min(72px,calc((min(100vw,520px) - 90px) / 4.4));display:block}
+.msmano.desc .msc{cursor:pointer}
+.msc.sel{transform:translateY(-14px)}
+.msc.sel .carta{box-shadow:0 0 0 3px var(--red),0 6px 10px rgba(0,0,0,.4);opacity:.85}
+.msc:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:8px}
+.msinfo{text-align:center;font-size:12.5px;font-weight:800;opacity:.92}
+.msacc{justify-content:center}
+.msacc[hidden]{display:none}
+.msacc .btn.rojo{background:linear-gradient(135deg,var(--red),#B3182B);color:#fff;border-color:transparent}
+.msres{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:10px 12px;margin:10px 0}
+.msres h3{font-size:19px;margin-bottom:8px}
+.mrmanos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.mrh{border-radius:12px;padding:6px;background:color-mix(in srgb,var(--blue) 10%,transparent)}
+.mrh.p1{background:color-mix(in srgb,var(--red) 10%,transparent)}
+.mrh b{font-size:13px}
+.mrh .cs{display:flex;gap:2px;margin:3px 0}
+.mrh .carta{--cw:34px}
+.mrh small{font-size:11.5px;color:var(--mut);font-weight:700}
+.msres table{width:100%;border-collapse:collapse;font-size:13px}
+.msres td{padding:4px 2px;border-top:1px solid var(--line);vertical-align:top}
+.msres td:first-child{font-weight:800;white-space:nowrap}
+.msres td:last-child{text-align:right;font-weight:800;white-space:nowrap}
+.msres td.e0{color:var(--purple)}.msres td.e1{color:var(--red)}
+.mrtot{text-align:center;font-weight:700;margin:8px 0 2px}
+.mrtot b{font-size:18px}
+.mslog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
+.mslog li:first-child{color:var(--ink);font-weight:800}
+.msc{touch-action:none}

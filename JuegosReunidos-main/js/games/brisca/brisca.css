@@ -1,0 +1,32 @@
+.juego-brisca .carta{--cw:52px}
+.brtop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;font-size:14px;margin:6px 0}
+.brm{color:#fff;padding:10px 8px 12px;display:flex;flex-direction:column;gap:8px;min-height:540px}
+.bropps{display:grid;grid-template-columns:repeat(var(--no),minmax(0,1fr));gap:6px}
+.brseat{background:rgba(0,0,0,.28);border:3px solid transparent;border-radius:14px;padding:5px 4px 6px;text-align:center;min-width:0}
+.brseat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.brseat .nom{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brseat .eq{font-size:11px;opacity:.85;font-weight:700}
+.brseat .cs{display:flex;justify-content:center;margin:4px 0;min-height:calc(34px * 1.55)}
+.brseat .carta{--cw:34px;margin:0 -7px}
+.brseat .pts{font-size:12px;font-weight:800;color:#FFE08A}
+.brcentro{display:flex;align-items:center;justify-content:center;gap:14px;flex:1;min-height:200px}
+.brtri{display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.35);border-radius:99px;padding:2px 10px;font-weight:800;font-size:12px}
+.brtri svg{width:16px;height:16px}
+.brbaza{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:250px;min-height:130px;align-items:center}
+.brbaza .it{text-align:center;font-size:11px;font-weight:800}
+.brbaza .it .carta{--cw:54px;display:block;margin:0 auto 2px}
+.brbaza .it.gana .carta{outline:4px solid var(--yel);outline-offset:1px;animation:brgana .5s ease-in-out infinite alternate}
+@keyframes brgana{to{transform:translateY(-6px)}}
+.brmsg{text-align:center;font-weight:800;font-size:15px;min-height:22px}
+.brmano{display:flex;justify-content:center;gap:10px;margin-top:2px}
+.brmano .carta{--cw:78px;cursor:pointer;transition:transform .15s}
+.brmano.turno .carta:hover,.brmano.turno .carta:active{transform:translateY(-10px)}
+.brmano:not(.turno) .carta{opacity:.78;cursor:default}
+.brmano .carta.t{box-shadow:0 0 0 3px var(--yel),0 2px 4px rgba(0,0,0,.35)}
+.brres{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 14px;margin:10px 0}
+.brres table{width:100%;border-collapse:collapse;font-size:14px}.brres td{padding:3px 0}.brres td:last-child{text-align:right;font-weight:800}
+.brmazos{display:flex;gap:10px;align-items:flex-start}
+.mz{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:52px}
+.mz .carta{--cw:46px}
+.mz small{font-weight:800;font-size:11px;opacity:.9;text-align:center}
+.juego-brisca .brult{min-height:32px;padding:4px 10px;font-size:12.5px}
