@@ -7,14 +7,32 @@ import { NIVELES } from './niveles.js';
 const MOTOR = new URL('./motor.js', import.meta.url).href;
 const MODOS = { campana: '🗺️ Campaña', azar: '🎲 Generados' };
 const MAX_HIST = 400;
+// 🎨 Apariencia: escenario (muros, suelo y metas), cajas y personaje. Los colores están en sokoban.css (.tema-… y .cajas-…)
 const TEMAS = {
-  almacen: { nombre: 'Almacén', sw: ['#C98A4B', '#6B7A99'] },
-  hielo: { nombre: 'Hielo', sw: ['#7FD3FF', '#3A5BA0'] },
-  jardin: { nombre: 'Jardín', sw: ['#E0A458', '#3E8E5A'] },
+  almacen: { nombre: 'Almacén', sw: ['#6B7A99', '#EFE6D8'] }, hielo: { nombre: 'Hielo', sw: ['#3A5BA0', '#EAF6FF'] }, jardin: { nombre: 'Jardín', sw: ['#3E8E5A', '#F3EBD8'] },
+  noche: { nombre: 'Noche', sw: ['#1B2147', '#2E3566'] }, desierto: { nombre: 'Desierto', sw: ['#B5651D', '#F6DFB0'] }, caramelo: { nombre: 'Caramelo', sw: ['#E84A8A', '#FFE6F1'] },
+  mina: { nombre: 'Mina', sw: ['#4A3B33', '#8C7B6B'] }, playa: { nombre: 'Playa', sw: ['#1FA2B8', '#FFF1C9'] },
 };
-const FICHAS = { pinguino: '🐧', robot: '🤖', operario: '👷', gato: '🐱' };
+const CAJAS = {
+  madera: { nombre: 'Madera', sw: ['#C98A4B', '#9C6230'] }, roja: { nombre: 'Rojas', sw: ['#FF5A5F', '#C0303A'] }, azul: { nombre: 'Azules', sw: ['#4C8DFF', '#2453B8'] },
+  verde: { nombre: 'Verdes', sw: ['#3DCB7A', '#1E8F4E'] }, dorada: { nombre: 'Doradas', sw: ['#FFD23F', '#C99A00'] }, metal: { nombre: 'Metálicas', sw: ['#B8C2D1', '#6D7A8F'] },
+  regalo: { nombre: 'Regalos', sw: ['#9B5DE5', '#FFD23F'] }, carton: { nombre: 'Cartón', sw: ['#D9B27C', '#A8834F'] },
+};
+// Personajes por secciones. Los de «Animales» y «Vehículos» se giran según hacia dónde caminan.
+const PERSONAJES = {
+  Hombres: ['👨', '👨🏻', '👨🏽', '👨🏿', '👨‍🦰', '👨‍🦱', '👨‍🦳', '👨‍🦲', '🧔', '👴', '👦'],
+  Mujeres: ['👩', '👩🏻', '👩🏽', '👩🏿', '👩‍🦰', '👩‍🦱', '👩‍🦳', '👱‍♀️', '🧕', '👵', '👧'],
+  Oficios: ['👷', '👷‍♀️', '👮', '👮‍♀️', '🧑‍🚒', '👨‍🚒', '👩‍🚒', '👨‍🍳', '👩‍🍳', '👨‍🔧', '👩‍🔧', '👨‍⚕️', '👩‍⚕️', '👨‍🌾', '👩‍🌾', '👨‍🏭', '👩‍🏭', '👨‍🚀', '👩‍🚀', '🕵️', '💂', '🧑‍🎨'],
+  Fantasía: ['🧙', '🧝', '🧚', '🧛', '🧟', '🧞', '🦸', '🦹', '🥷', '🤖', '👽', '👻', '🎅', '🤶'],
+  Animales: ['🐧', '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🐸', '🐵', '🐷', '🐰', '🦁', '🐯', '🐮', '🐔', '🦉', '🐢', '🦖', '🐘', '🦒'],
+  Vehículos: ['🚜', '🚗', '🚕', '🚙', '🛻', '🚚', '🏎️', '🚓', '🚑', '🚒', '🛺', '🚲', '🛵', '🏍️'],
+};
+const NOMBRE_SEC = { Hombres: 'Hombre', Mujeres: 'Mujer', Oficios: 'Oficio', Fantasía: 'Fantasía', Animales: 'Animal', Vehículos: 'Vehículo' };
+const FICHAS = Object.fromEntries(Object.entries(PERSONAJES).flatMap(([sec, l]) => l.map((e, i) => [`${sec.slice(0, 3).toLowerCase()}${i}`, { e, sec }])));
+const GIRAN = new Set(['Animales', 'Vehículos']);
+const ficha = () => FICHAS[asp.valores.ficha] || FICHAS.ofi0;
 let S = null, L = null, api = null, asp = null, root = null, cfg = { modo: 'campana', tam: 'mediano' };
-let onKey = null, gesto = null, andando = null, ocupado = false, serie = 0;
+let onKey = null, gesto = null, andando = null, ocupado = false, serie = 0, mira = 'izquierda';
 
 /* ---------- validación / resumen ---------- */
 const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
@@ -38,8 +56,10 @@ export function resumen(d) { return { texto: `${titulo(d)} · ${d.done ? `resuel
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; andando = null;
-  asp = api.aspecto([{ clave: 'tema', titulo: 'Escenario', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    { clave: 'ficha', titulo: 'Personaje', def: 'operario', opciones: Object.entries(FICHAS).map(([id, e]) => ({ id, nombre: e, sw: ['#fff', '#fff'] })) }], () => { if (S) { construir(); pintar(); } });
+  asp = api.aspecto([{ clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+    { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+    { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: Object.entries(FICHAS).map(([id, f]) => ({ id, emoji: f.e, sec: f.sec, nombre: `${NOMBRE_SEC[f.sec]} ${f.e}` })) }],
+  () => { if (S && $('#skTab')) { construir(); pintar(); } });
   await api.css(new URL('./sokoban.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && MODOS[c0.modo] && K.TAMANOS[c0.tam]) cfg = { ...c0 };
   S = api.cargar(); L = S ? K.leer(S.mapa) : null;
@@ -67,7 +87,7 @@ function elegirModo(modo) {
     : `<p class="note">Niveles nuevos sin fin, creados al momento y comprobados: siempre tienen solución.</p>
       <div class="bar"><span class="lbl">Tamaño</span><div class="seg">${Object.entries(K.TAMANOS).map(([k, t]) => `<button class="btn ${cfg.tam === k ? 'on' : ''}" data-tam="${k}">${t.nombre} · ${t.cajas} cajas</button>`).join('')}</div></div>
       <div class="bar"><button class="btn on" data-ac="generar">🎲 Crear nivel</button></div>`}
-    ${S && !S.done ? `<div class="bar"><button class="btn" data-ac="volver">▶️ Volver a la partida</button></div>` : ''}`;
+    <div class="bar">${S && !S.done ? '<button class="btn" data-ac="volver">▶️ Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
 }
 function empezar(datos) {
   serie++; clearTimeout(andando); andando = null; ocupado = false;
@@ -95,10 +115,11 @@ function reto() {
 /* ---------- tablero ---------- */
 function armar() {
   root.innerHTML = `<div class="skcab"><b id="skTit"></b><span id="skCont"></span></div>
-    <div class="sktab tema-${asp.valores.tema}" id="skTab" role="application" aria-label="Almacén: usa las flechas o desliza el dedo"></div>
+    <div class="sktab" id="skTab" role="application" aria-label="Almacén: usa las flechas o desliza el dedo"></div>
     <div class="msg" id="skMsg" role="status" aria-live="polite"></div>
     <div class="skctl"><div class="skdpad"><button class="btn" data-dir="arriba" aria-label="Arriba">▲</button><button class="btn" data-dir="izquierda" aria-label="Izquierda">◀</button><button class="btn" data-dir="abajo" aria-label="Abajo">▼</button><button class="btn" data-dir="derecha" aria-label="Derecha">▶</button></div>
-      <div class="skacc"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="reiniciar">⟲ Reiniciar</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="menu">☰ Niveles</button></div></div>`;
+      <div class="skacc"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="reiniciar">⟲ Reiniciar</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="menu">☰ Niveles</button></div></div>
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
   const tab = $('#skTab');
   tab.addEventListener('pointerdown', e => { gesto = { x: e.clientX, y: e.clientY, t: performance.now() }; });
   tab.addEventListener('pointerup', e => {
@@ -110,18 +131,19 @@ function armar() {
 }
 function construir() {
   const tab = $('#skTab'); if (!tab || !L) return;
-  tab.className = `sktab tema-${asp.valores.tema}`;
+  tab.className = `sktab tema-${asp.valores.tema} cajas-${asp.valores.cajas}`;
   tab.style.setProperty('--w', L.w); tab.style.setProperty('--h', L.h);
   let html = '';
   for (let i = 0; i < L.w * L.h; i++) html += `<div class="skc ${L.muro[i] ? 'muro' : L.fuera[i] ? 'fuera' : 'suelo'}${L.meta[i] ? ' meta' : ''}" data-c="${i}"></div>`;
-  html += L.cajas.map((_, k) => `<div class="skcaja" data-k="${k}"></div>`).join('') + `<div class="skjug">${FICHAS[asp.valores.ficha] || '👷'}</div>`;
+  html += L.cajas.map((_, k) => `<div class="skcaja" data-k="${k}"></div>`).join('') + `<div class="skjug"><span>${ficha().e}</span></div>`;
   tab.innerHTML = html;
 }
 const pos = i => `--x:${i % L.w};--y:${(i / L.w) | 0}`;
 function pintar() {
   if (!S || !$('#skTab')) return;
   S.cajas.forEach((c, k) => { const el = $(`#skTab [data-k="${k}"]`); el.setAttribute('style', pos(c)); el.classList.toggle('en', !!L.meta[c]); });
-  $('#skTab .skjug').setAttribute('style', pos(S.jugador));
+  const j = $('#skTab .skjug'); j.setAttribute('style', pos(S.jugador));
+  j.classList.toggle('derecha', mira === 'derecha' && GIRAN.has(ficha().sec));   // los emojis de animales y vehículos miran a la izquierda
   const enMeta = S.cajas.filter(c => L.meta[c]).length, M = S.modo === 'campana' ? mejores()[S.nivel] : null;
   $('#skTit').textContent = titulo(S);
   $('#skCont').innerHTML = `📦 ${enMeta}/${S.cajas.length} · 👣 ${S.movs} · 🫸 ${S.empujes}${M ? ` · récord ${M[0]}` : ''}`;
@@ -142,6 +164,7 @@ function paso(dir, auto = false) {
   if (!S || S.done || (andando && !auto)) return false;
   const r = K.mover(L, S.cajas, S.jugador, dir); if (!r) { if (!auto) api.sonido('error'); return false; }
   S.hist.push([S.cajas, S.jugador, S.movs, S.empujes]); if (S.hist.length > MAX_HIST) S.hist.shift();
+  if (dir === 'izquierda' || dir === 'derecha') mira = dir;
   S.cajas = r.cajas; S.jugador = r.jugador; S.movs++;
   if (r.empuje >= 0) { S.empujes++; api.sonido(L.meta[r.cajas[r.empuje]] ? 'ok' : 'click'); api.vibrar(10); }
   if (K.resuelto(L, S.cajas)) ganar();
@@ -211,7 +234,7 @@ function clic(e) {
   if (a === 'deshacer') deshacer(); else if (a === 'reiniciar') reiniciar(); else if (a === 'pista') pista();
   else if (a === 'menu') { clearTimeout(andando); andando = null; elegirModo(S && S.modo === 'campana' ? 'campana' : cfg.modo); }
   else if (a === 'volver') armar(); else if (a === 'generar') generado(cfg.tam); else if (a === 'reto') reto();
-  else if (a === 'siguiente') nivelCampana(S.nivel + 1);
+  else if (a === 'siguiente') nivelCampana(S.nivel + 1); else if (a === 'aspecto') asp.abrir();
 }
 function reglas() {
   api.modal('Sokoban', `<ul><li>Eres el mozo del almacén: <b>empuja todas las cajas</b> hasta las casillas marcadas.</li>
@@ -219,6 +242,7 @@ function reglas() {
     <li>Cuidado con las esquinas: una caja arrinconada fuera de su meta ya no sale. Te avisaré si pasa.</li>
     <li>Muévete deslizando el dedo sobre el almacén, con las flechas de pantalla o del teclado (también WASD). <b>Toca una casilla</b> y el personaje irá andando hasta allí.</li>
     <li>↶ Deshacer (también Z) no tiene límite y se guarda con la partida. ⟲ Reiniciar vuelve al principio del nivel.</li>
+    <li>🎨 <b>Apariencia</b>: 8 escenarios, 8 tipos de caja y más de 90 personajes (hombres, mujeres, oficios, fantasía, animales y vehículos). Los animales y vehículos se giran según hacia dónde avanzan.</li>
     <li>💡 <b>Pista</b>: busco la mejor solución desde donde estás y hago por ti el siguiente empuje.</li>
     <li><b>Campaña</b>: 20 niveles de dificultad creciente. <b>Generados</b>: niveles nuevos sin fin en 3 tamaños, siempre con solución. <b>Reto del día</b>: el mismo nivel para todo el mundo.</li></ul>`);
 }

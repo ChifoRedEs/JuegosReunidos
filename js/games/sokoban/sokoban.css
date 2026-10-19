@@ -4,8 +4,25 @@
 .juego-sokoban .skcab span{font-size:13px;font-weight:800;color:var(--mut)}
 .juego-sokoban .sktab{--w:8;--h:8;--muro:#6B7A99;--muro2:#56637F;--suelo:#EFE6D8;--suelo2:#E6DBC9;--caja:#C98A4B;--caja2:#9C6230;--meta:#FF4757;
   position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 48px));aspect-ratio:var(--w)/var(--h);margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
-.juego-sokoban .sktab.tema-hielo{--muro:#3A5BA0;--muro2:#2E4A85;--suelo:#EAF6FF;--suelo2:#DDEFFC;--caja:#7FD3FF;--caja2:#3E9ACB;--meta:#FF4FA3}
-.juego-sokoban .sktab.tema-jardin{--muro:#3E8E5A;--muro2:#2F7046;--suelo:#F3EBD8;--suelo2:#E9DFC6;--caja:#E0A458;--caja2:#B0742B;--meta:#7B3FC4}
+/* escenarios: muro, juntas, suelo, líneas del suelo y metas */
+.juego-sokoban .sktab.tema-hielo{--muro:#3A5BA0;--muro2:#2E4A85;--suelo:#EAF6FF;--suelo2:#DDEFFC;--meta:#FF4FA3}
+.juego-sokoban .sktab.tema-jardin{--muro:#3E8E5A;--muro2:#2F7046;--suelo:#F3EBD8;--suelo2:#E9DFC6;--meta:#7B3FC4}
+.juego-sokoban .sktab.tema-noche{--muro:#1B2147;--muro2:#0F1430;--suelo:#2E3566;--suelo2:#272D58;--meta:#FFD23F}
+.juego-sokoban .sktab.tema-desierto{--muro:#B5651D;--muro2:#94501A;--suelo:#F6DFB0;--suelo2:#EED39C;--meta:#1F7A8C}
+.juego-sokoban .sktab.tema-caramelo{--muro:#E84A8A;--muro2:#C93372;--suelo:#FFE6F1;--suelo2:#FBD4E5;--meta:#7B3FC4}
+.juego-sokoban .sktab.tema-mina{--muro:#4A3B33;--muro2:#352A24;--suelo:#8C7B6B;--suelo2:#7F6F60;--meta:#FFC21A}
+.juego-sokoban .sktab.tema-playa{--muro:#1FA2B8;--muro2:#14829A;--suelo:#FFF1C9;--suelo2:#F7E4AE;--meta:#FF5A5F}
+/* cajas: color y borde (el aspa de las de madera usa el borde) */
+.juego-sokoban .sktab.cajas-roja{--caja:#FF5A5F;--caja2:#C0303A}
+.juego-sokoban .sktab.cajas-azul{--caja:#4C8DFF;--caja2:#2453B8}
+.juego-sokoban .sktab.cajas-verde{--caja:#3DCB7A;--caja2:#1E8F4E}
+.juego-sokoban .sktab.cajas-dorada{--caja:#FFD23F;--caja2:#C99A00}
+.juego-sokoban .sktab.cajas-metal{--caja:#B8C2D1;--caja2:#6D7A8F}
+.juego-sokoban .sktab.cajas-carton{--caja:#D9B27C;--caja2:#A8834F}
+.juego-sokoban .sktab.cajas-regalo{--caja:#9B5DE5;--caja2:#FFD23F}
+.juego-sokoban .sktab.cajas-regalo .skcaja::before{background-image:linear-gradient(90deg,transparent 42%,var(--caja2) 42% 58%,transparent 58%),linear-gradient(transparent 42%,var(--caja2) 42% 58%,transparent 58%);border-color:color-mix(in srgb,var(--caja) 70%,#000)}
+.juego-sokoban .sktab.cajas-metal .skcaja::before{background-image:radial-gradient(circle at 18% 18%,var(--caja2) 6%,transparent 7%),radial-gradient(circle at 82% 18%,var(--caja2) 6%,transparent 7%),radial-gradient(circle at 18% 82%,var(--caja2) 6%,transparent 7%),radial-gradient(circle at 82% 82%,var(--caja2) 6%,transparent 7%),linear-gradient(160deg,#fff6 0 30%,transparent 30%)}
+.juego-sokoban .sktab.cajas-carton .skcaja::before{background-image:linear-gradient(transparent 44%,#C9A06A 44% 56%,transparent 56%)}
 .juego-sokoban .skc{aspect-ratio:1}
 .juego-sokoban .skc.muro{background:var(--muro);background-image:linear-gradient(var(--muro2) 2px,transparent 2px),linear-gradient(90deg,var(--muro2) 2px,transparent 2px);background-size:50% 50%;border-radius:3px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
 .juego-sokoban .skc.suelo{background:var(--suelo);box-shadow:inset 0 0 0 1px var(--suelo2)}
@@ -16,6 +33,8 @@
   background-image:linear-gradient(45deg,transparent 45%,var(--caja2) 45% 55%,transparent 55%),linear-gradient(-45deg,transparent 45%,var(--caja2) 45% 55%,transparent 55%)}
 .juego-sokoban .skcaja.en::before{background-color:#2ECC71;border-color:#1E8F4E;background-image:none}
 .juego-sokoban .skcaja.en::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:800 clamp(14px,4vw,24px) 'Baloo 2',sans-serif}
+.juego-sokoban .skjug span{display:block;transition:transform .12s}
+.juego-sokoban .skjug.derecha span{transform:scaleX(-1)}
 .juego-sokoban .skjug{display:grid;place-items:center;font-size:clamp(18px,calc(80vw / var(--w) * .62),34px);line-height:1;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
 .juego-sokoban .skctl{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px}
 .juego-sokoban .skdpad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,46px);gap:4px}

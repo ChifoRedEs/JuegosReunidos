@@ -150,9 +150,12 @@ function crearApi(j, ent, mod, root) {
       poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...vals });
       const abrir = () => {
-        const cuerpo = defs.map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo),
-          el('div', { class: 'seg' }, g.opciones.map(o => el('button', { type: 'button', class: 'btn ap-o' + (vals[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id },
-            (o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.img ? el('img', { class: 'ap-th', src: o.img, alt: '', loading: 'lazy' }) : null, o.nombre)))));
+        // Opciones normales (muestras de color, miniatura y nombre) o, con `emoji`, una rejilla compacta de iconos;
+        // `sec` en las opciones agrupa la rejilla en secciones (Hombres, Mujeres, Animales…)
+        const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (vals[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
+          ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.img ? el('img', { class: 'ap-th', src: o.img, alt: '', loading: 'lazy' }) : null, o.nombre]));
+        const opciones = g => { const out = []; let sec = null; for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); } return out; };
+        const cuerpo = defs.map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo), el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g))));
         const wrap = el('div', {}, cuerpo);
         wrap.addEventListener('click', e => {
           const b = e.target.closest('.ap-o'); if (!b) return;
