@@ -113,14 +113,16 @@ function otraSolucion(n, cages, sol) {                    // busca una solución
       fila[r][v] = col[c][v] = 0; val[i] = 0; if (res || abort) return;
     }
   })(0, false);
-  return res;
+  return abort ? ABORTADO : res;                         // si se agota el tiempo NO se sabe si hay otra solución
 }
+const ABORTADO = Symbol('sin tiempo');
 function conectada(n, celdas) { const s = new Set(celdas), vis = new Set([celdas[0]]), pila = [celdas[0]]; while (pila.length) { const x = pila.pop(); for (const v of vec(n, x)) if (s.has(v) && !vis.has(v)) { vis.add(v); pila.push(v); } } return vis.size === celdas.length; }
 export function generar(n, dif) {
   for (let intento = 0; intento < 60; intento++) {
     const sol = cuadradoLatino(n), cages = particionar(n, dif); asignarOps(cages, sol, dif);
     for (let ronda = 0; ronda < 40; ronda++) {
       const otra = otraSolucion(n, cages, sol);
+      if (otra === ABORTADO) break;                      // no se ha podido comprobar a tiempo: se prueba con otro panel
       if (!otra) return { n, sol, cages: cages.map(g => ({ cells: g.cells, op: g.op, t: g.t })) };
       // reforzar: separar como casilla dada una celda en la que difieren, sin romper la conexión de su jaula
       const dif2 = [...Array(n * n).keys()].filter(i => otra[i] !== sol[i]);

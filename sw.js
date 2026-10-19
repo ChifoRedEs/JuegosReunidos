@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-bb501d05a9';
+const VERSION = 'jr-c43710caa4';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -92,6 +92,9 @@ const ARCHIVOS = [
 './js/games/holdem/holdem.css',
 './js/games/holdem/index.js',
 './js/games/holdem/motor.js',
+'./js/games/kakuro/generador.js',
+'./js/games/kakuro/index.js',
+'./js/games/kakuro/kakuro.css',
 './js/games/kenken/generador.js',
 './js/games/kenken/index.js',
 './js/games/kenken/kenken.css',

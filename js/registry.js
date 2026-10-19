@@ -16,6 +16,7 @@ export const JUEGOS = [
   { id: 'holdem', nombre: "Texas Hold'em", icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: 'Torneo o partida libre contra bots.', cargar: () => import('./games/holdem/index.js') },
   { id: 'pokercub', nombre: 'Póker cubierto', icono: '♣️', color: '#7B3FC4', categoria: 'cartas', descripcion: 'Cinco cartas tapadas, descarte y dos rondas de apuestas.', cargar: () => import('./games/pokercub/index.js') },
   { id: 'kenken', nombre: 'KenKen', icono: '➗', color: '#7A4DFF', categoria: 'logica', descripcion: 'Sudoku con operaciones. Reto del día.', cargar: () => import('./games/kenken/index.js') },
+  { id: 'kakuro', nombre: 'Kakuro', icono: '➕', color: '#3A7BD5', categoria: 'logica', descripcion: 'Crucigrama de sumas. 3 tamaños, 3 niveles y reto del día.', cargar: () => import('./games/kakuro/index.js') },
   { id: 'sokoban', nombre: 'Sokoban', icono: '📦', color: '#C47A2C', categoria: 'logica', descripcion: 'Empuja las cajas a su sitio. 20 niveles y generados.', cargar: () => import('./games/sokoban/index.js') },
   { id: 'ruleta', nombre: 'Ruleta de la Suerte', icono: '🎡', color: '#F59E0B', categoria: 'palabras', descripcion: 'Gira, di consonantes, compra vocales y resuelve.', cargar: () => import('./games/ruleta/index.js') },
   { id: 'ahorcado', nombre: 'El Ahorcado', icono: '🪢', color: '#E5622B', categoria: 'palabras', descripcion: '4 niveles, pistas y modo 2 jugadores.', cargar: () => import('./games/ahorcado/index.js') },

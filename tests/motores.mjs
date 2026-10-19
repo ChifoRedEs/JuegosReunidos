@@ -1,5 +1,7 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import * as KA from '../js/games/kakuro/generador.js';
+import { validar as validarKA } from '../js/games/kakuro/index.js';
 import * as SK from '../js/games/sokoban/motor.js';
 import { NIVELES as SKN } from '../js/games/sokoban/niveles.js';
 import * as AH from '../js/games/airhockey/motor.js';
@@ -406,7 +408,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
 // ---- KenKen: cuadrados latinos variados y 7×7 ----
 { const vistos = new Set(); for (let k = 0; k < 2500; k++) { const q = cuadradoLatino(4); for (let i = 0; i < 4; i++) { assert.equal(new Set(q.slice(i * 4, i * 4 + 4)).size, 4); assert.equal(new Set([0, 1, 2, 3].map(f => q[f * 4 + i])).size, 4); } vistos.add(q.join('')); }
   assert.ok(vistos.size > 432, 'cuadrados 4×4 distintos: ' + vistos.size);      // el generador anterior nunca pasaba de 432
-  for (const d of Object.keys(DKk)) { const p = generarKk(7, d); assert.equal(contarKk(7, p.cages, 2), 1); }
+  for (const d of Object.keys(DKk)) { const p = generarKk(7, d); assert.equal(contarKk(7, p.cages, 2, 20000), 1); }
   ok('KenKen: cuadrados latinos realmente aleatorios (más de los 432 a los que llegaba el anterior en 4×4) y 7×7 con solución única'); }
 // ---- Buscaminas: tableros sin adivinar y personalizado ----
 { for (const nv of Object.keys(BM.NIVELES)) { const c = BM.NIVELES[nv], ini = (c.h >> 1) * c.w + (c.w >> 1); const r = BM.crearMinasLogicas(c.w, c.h, c.m, ini, 5000); assert.ok(r.ok); assert.ok(BM.resolublePorLogica(c.w, c.h, r.minas, ini)); }
@@ -551,4 +553,18 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   assert.ok(a && a.texto === b.texto, 'la misma semilla da el mismo nivel (reto del día)');
   for (const t of ['pequeno', 'mediano']) { const g = SK.generar(t, 'prueba-' + t); const G = SK.leer(g.texto); assert.equal(G.cajas.length, SK.TAMANOS[t].cajas); assert.ok(SK.resolver(G, G.cajas, G.jugador, 200000)); assert.ok(G.cajas.every(c => !G.meta[c])); }
   ok(`Sokoban: los ${SKN.length} niveles de la campaña tienen solución, reglas de empuje y niveles generados (y repetibles con semilla) resolubles`); }
+
+// ---- Kakuro ----
+{ assert.deepEqual(KA.combinaciones(4, 2).map(KA.cifras), [[1, 3]]); assert.deepEqual(KA.combinaciones(45, 9).map(KA.cifras), [[1, 2, 3, 4, 5, 6, 7, 8, 9]]);
+  for (const [n, d] of [[6, 'facil'], [8, 'medio'], [8, 'dificil'], [10, 'medio']]) {
+    const p = KA.generar(n, d), ts = KA.tiras(n, p.negra), sumas = ts.map(t => t.celdas.reduce((a, i) => a + p.sol[i], 0));
+    assert.ok(ts.every(t => t.celdas.length >= 2 && t.celdas.length <= 9 && new Set(t.celdas.map(i => p.sol[i])).size === t.celdas.length), 'tiras válidas');
+    const r = KA.resolver(n, p.negra, ts, sumas, 2); assert.equal(r.n, 1, `solución única ${n} ${d}`); assert.deepEqual(r.sol, p.sol);
+    const guardado = { n, dif: d, negra: p.negra, pista: p.pista, sol: p.sol, cur: p.sol.map(() => 0), notas: p.sol.map(() => 0), t: 0, pistas: 0 };
+    assert.ok(validarKA(JSON.parse(JSON.stringify(guardado))));
+    const malo = JSON.parse(JSON.stringify(guardado)); const k = p.negra.findIndex(b => !b); malo.sol[k] = malo.sol[k] % 9 + 1; assert.equal(validarKA(malo), null, 'una solución que no suma lo que dicen las pistas');
+  }
+  const a = KA.generarTrabajo(6, 'medio', 0, '2026-10-19:kakuro'), b = KA.generarTrabajo(6, 'medio', 0, '2026-10-19:kakuro');
+  assert.deepEqual(a.sol, b.sol, 'reto del día: misma semilla, mismo panel');
+  ok('Kakuro: combinaciones, paneles de 6, 8 y 10 con solución única, guardado validado y reto del día repetible'); }
 console.log(`\n${n} pruebas correctas`);
