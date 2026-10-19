@@ -1,0 +1,45 @@
+/* Corazones · mesa de cartas como Póker cubierto y Brisca */
+.com{color:#fff;padding:10px 8px 12px;display:flex;flex-direction:column;gap:8px}
+.cofila{display:grid;grid-template-columns:72px 1fr 72px;gap:6px;align-items:center}
+.coseat{background:rgba(0,0,0,.28);border:3px solid transparent;border-radius:14px;padding:5px 4px;text-align:center;font-size:12px;min-width:0}
+.coseat.n{width:min(170px,60%);margin:0 auto}
+.coseat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.coseat b{display:block;font-size:13px}
+.coseat small{display:block;font-weight:800;color:#FFE08A}
+.coseat .cs{display:flex;justify-content:center;height:32px;margin:3px 0;overflow:hidden}
+.coseat .carta{--cw:22px;margin:0 -8px}
+.coseat.o .cs,.coseat.e .cs{height:34px}
+.coseat.o .carta,.coseat.e .carta{margin:0 -10px}
+/* baza en el centro: cada carta del lado de quien la juega */
+.cobaza{position:relative;height:clamp(200px,56vw,250px);display:flex;align-items:center;justify-content:center}
+.cobaza .cb{position:absolute;left:50%;top:50%}
+.cobaza .cb.in .carta{animation:coen .25s ease-out}
+.cobaza .carta{--cw:min(14vw,58px)}
+.cobaza .p0{transform:translate(-50%,6%)}
+.cobaza .p1{transform:translate(-140%,-50%)}
+.cobaza .p2{transform:translate(-50%,-106%)}
+.cobaza .p3{transform:translate(40%,-50%)}
+.cobaza .gana .carta{outline:4px solid var(--yel);outline-offset:1px}
+.cobaza .cor{font-weight:800;font-size:13px;opacity:.85}
+@keyframes coen{from{opacity:0;transform:scale(.85)}}
+.comsg{text-align:center;font-weight:800;font-size:15px;min-height:22px}
+.coyo{text-align:center;font-size:13px;border-radius:12px;padding:2px}
+.coyo.turno{color:var(--yel)}
+/* mi mano: 13 cartas solapadas en una fila */
+.comano{display:flex;justify-content:center;padding:18px 0 4px}
+.comano .coc{padding:0;border:0;background:none;margin-left:calc(min(12vw,56px) * -.45);transition:transform .12s;position:relative;cursor:pointer}
+.comano .coc:first-child{margin-left:0}
+.comano .carta{--cw:min(12vw,56px)}
+.comano.juega .cc:not(.no):hover,.comano.pasa .cc:hover{transform:translateY(-8px)}
+.comano .coc.sel{transform:translateY(-16px)}
+.comano .coc.sel .carta{outline:3px solid var(--yel);outline-offset:1px}
+.comano .coc.no{filter:brightness(.55);cursor:not-allowed}
+.comano .coc.nueva::after{content:'★';position:absolute;top:-14px;left:50%;translate:-50% 0;color:var(--yel);font-size:14px;text-shadow:0 1px 2px #0008}
+.cores{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin:8px 0;font-weight:800}
+.cores i{font-style:normal;color:var(--red)}
+.cotot{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0 0}
+.cotot span{display:flex;flex-direction:column;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:4px}
+.cotot span.lid{border-color:var(--ok)}
+.cotot small{font-size:12px;font-weight:800;color:var(--mut)}
+.cotot b{font:800 22px/1.1 'Baloo 2',system-ui,sans-serif}
+@media(prefers-reduced-motion:reduce){.cobaza .cb{animation:none}.comano .coc{transition:none}}

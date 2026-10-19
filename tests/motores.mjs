@@ -1,5 +1,6 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import * as CO from '../js/games/corazones/motor.js';
 import * as KA from '../js/games/kakuro/generador.js';
 import { validar as validarKA } from '../js/games/kakuro/index.js';
 import * as SK from '../js/games/sokoban/motor.js';
@@ -567,4 +568,26 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   const a = KA.generarTrabajo(6, 'medio', 0, '2026-10-19:kakuro'), b = KA.generarTrabajo(6, 'medio', 0, '2026-10-19:kakuro');
   assert.deepEqual(a.sol, b.sol, 'reto del día: misma semilla, mismo panel');
   ok('Kakuro: combinaciones, paneles de 6, 8 y 10 con solución única, guardado validado y reto del día repetible'); }
+
+// ---- Corazones ----
+{ let lunas = 0;
+  for (let g = 0; g < 40; g++) {
+    const S = CO.crear({ nivel: ['facil', 'medio', 'dificil'][g % 3], meta: 50, luna: g % 2 ? 'resta' : 'resto' });
+    while (S.fase !== 'fin') {
+      if (S.fase === 'pasar') { for (let j = 0; j < 4; j++) assert.ok(CO.elegirPase(S, j, CO.sugerirPase(S, j))); assert.ok(S.manos.every(m => m.length === 13)); }
+      else if (S.fase === 'jugar') {
+        const j = S.turno, ops = CO.jugables(S, j);
+        if (S.nbaza === 0 && !S.baza.length) assert.deepEqual(ops, [CO.DOS_TREBOLES], 'se sale con el 2 de tréboles');
+        if (S.baza.length && S.manos[j].some(c => CO.palo(c) === CO.palo(S.baza[0].c))) assert.ok(ops.every(c => CO.palo(c) === CO.palo(S.baza[0].c)), 'servir del palo');
+        if (!S.baza.length && !S.rotos && S.manos[j].some(c => CO.palo(c) !== CO.CORAZONES)) assert.ok(ops.every(c => CO.palo(c) !== CO.CORAZONES), 'corazones sin romper');
+        assert.ok(CO.jugar(S, j, CO.elegir(S, j)));
+      } else if (S.fase === 'baza') CO.cerrarBaza(S);
+      else if (S.fase === 'finMano') { if (S.lunaDe >= 0) lunas++; CO.nuevaMano(S); }
+      assert.ok(CO.validar(JSON.parse(JSON.stringify(S))));
+    }
+    for (const f of S.hist) assert.ok([26, 78, -26].includes(f.reduce((a, b) => a + b, 0)), 'cada mano reparte 26 puntos (o la luna)');
+    assert.ok(S.total.some(t => t >= 50));
+  }
+  const P0 = CO.crear(); if (P0.fase === 'pasar') assert.ok(!CO.jugar(P0, 0, P0.manos[0][0]), 'no se juega antes de pasar');
+  ok('Corazones: pases, salida con el 2 de tréboles, servir del palo, corazones rotos, 26 puntos por mano y tiro a la luna'); }
 console.log(`\n${n} pruebas correctas`);
