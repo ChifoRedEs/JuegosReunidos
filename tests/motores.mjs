@@ -1,5 +1,7 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import * as MG from '../js/games/minigolf/motor.js';
+import { HOYOS as MGH } from '../js/games/minigolf/hoyos.js';
 import * as CO from '../js/games/corazones/motor.js';
 import * as KA from '../js/games/kakuro/generador.js';
 import { validar as validarKA } from '../js/games/kakuro/index.js';
@@ -590,4 +592,23 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   }
   const P0 = CO.crear(); if (P0.fase === 'pasar') assert.ok(!CO.jugar(P0, 0, P0.manos[0][0]), 'no se juega antes de pasar');
   ok('Corazones: pases, salida con el 2 de tréboles, servir del palo, corazones rotos, 26 puntos por mano y tiro a la luna'); }
+
+// ---- Minigolf ----
+{ // cada hoyo se puede completar: un «jugador» voraz que busca el mejor golpe (hacia el hoyo rodeando muros y agua)
+  const mapa = H => { const T = 8, W = 50, A = 88, d = new Float32Array(W * A).fill(Infinity);
+    const libre = (x, y) => MG.dentro(H.borde, [x, y]) && !(H.muros || []).some(p => MG.dentro(p, [x, y])) && !(H.agua || []).some(p => MG.dentro(p, [x, y])) && !(H.topes || []).some(c => Math.hypot(x - c.x, y - c.y) < c.r);
+    const s = Math.floor(H.hoyo[1] / T) * W + Math.floor(H.hoyo[0] / T); d[s] = 0; const q = [s];
+    for (let k = 0; k < q.length; k++) { const c = q[k], x = c % W, y = c / W | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, n = ny * W + nx; if (nx < 0 || ny < 0 || nx >= W || ny >= A || d[n] <= d[c] + 1 || !libre(nx * T + 4, ny * T + 4)) continue; d[n] = d[c] + 1; q.push(n); } }
+    return (x, y) => d[Math.floor(y / T) * W + Math.floor(x / T)] ?? Infinity; };
+  MGH.forEach((h, k) => {
+    const H = MG.preparar(h), dist = mapa(H); assert.ok(MG.dentro(h.borde, h.salida) && MG.dentro(h.borde, h.hoyo), h.nombre);
+    let b = MG.bolaSalida(k), t = 0, golpes = 0, dentro = false;
+    while (golpes < h.par + 3 && !dentro) { golpes++; let mejor = null;
+      for (let a = 0; a < 48; a++) for (const f of [.2, .35, .5, .7, .9]) { const r = MG.simular(H, b, a / 48 * Math.PI * 2, f, t); const v = r.dentro ? -1 : r.agua ? 1e9 : dist(r.b.x, r.b.y); if (!mejor || v < mejor.v) mejor = { v, r }; }
+      b = mejor.r.b; t = mejor.r.t; dentro = !!mejor.r.dentro; assert.ok(MG.dentro(h.borde, [b.x, b.y]), 'la bola no sale del campo'); }
+    assert.ok(dentro, 'se puede completar el hoyo ' + h.nombre);
+  });
+  const S = MG.crear(['A', 'B']); MG.apuntar(S, 3); assert.equal(S.jugador, 1); MG.apuntar(S, 2); assert.equal(S.hoyo, 1); assert.equal(MG.total(S, 0), 3);
+  assert.ok(MG.validar(JSON.parse(JSON.stringify(S)))); S.tarjeta[0][0] = 99; assert.equal(MG.validar(JSON.parse(JSON.stringify(S))), null);
+  ok('Minigolf: los 9 hoyos se pueden completar, la bola no sale del campo, turnos y tarjeta validados'); }
 console.log(`\n${n} pruebas correctas`);

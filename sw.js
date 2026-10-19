@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-0f2a6b4368';
+const VERSION = 'jr-94ebac00cf';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -113,6 +113,10 @@ const ARCHIVOS = [
 './js/games/magnate/index.js',
 './js/games/magnate/magnate.css',
 './js/games/magnate/motor.js',
+'./js/games/minigolf/hoyos.js',
+'./js/games/minigolf/index.js',
+'./js/games/minigolf/minigolf.css',
+'./js/games/minigolf/motor.js',
 './js/games/mus/index.js',
 './js/games/mus/motor.js',
 './js/games/mus/mus.css',

@@ -1,0 +1,20 @@
+/* Minigolf */
+.juego-minigolf .mgrow{display:flex;align-items:center;gap:8px;margin:8px 0}
+.juego-minigolf .mgrow i{width:22px;height:22px;border-radius:50%;background:#fff;border:5px solid var(--c);flex:none}
+.juego-minigolf .mgrow .nom{flex:1;font:800 15px Nunito,sans-serif;padding:9px 11px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+.mghud{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin:4px auto 8px;max-width:440px}
+.mghud span{display:flex;flex-direction:column;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:4px 10px;min-width:0}
+.mghud span.jug{border-left:6px solid var(--c)}
+.mghud small{font-size:12px;font-weight:800;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mghud b{font:800 18px/1.15 'Baloo 2',system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mgzona{margin:0 auto;border-radius:18px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 12px 26px rgba(10,40,20,.3)}
+.mgzona canvas{display:block;width:100%;cursor:crosshair}
+.mgtarj{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
+.mgtarj span{display:flex;align-items:center;gap:5px;background:var(--card);border:2px solid var(--line);border-radius:99px;padding:3px 10px;font-weight:800;font-size:13px}
+.mgtarj i{width:12px;height:12px;border-radius:50%;border:3px solid var(--c);background:#fff}
+.mgtarj small{color:var(--mut)}
+.mgtabla{font-size:13px;text-align:center}
+.mgtabla th,.mgtabla td{padding:4px 5px;text-align:center !important;border-bottom:1px solid var(--line)}
+.mgtabla tr.par td{color:var(--mut);font-weight:800}
+.mgtabla td.bajo{color:var(--ok);font-weight:800}
+.mgtabla td.alto{color:var(--red)}
