@@ -1,5 +1,6 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import * as PC from '../js/games/pokercub/motor.js';
 import { readFileSync } from 'node:fs';
 import * as DIC from '../js/core/diccionario.js';
 import { Partida as MTPartida, validar as validarMT, MAZOS as MTMAZOS } from '../js/games/magnate/motor.js';
@@ -497,4 +498,25 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   assert.ok(DIC.lemas('n', { min: 4, max: 6 }).every(w => w.length >= 4 && w.length <= 6));
   assert.ok(ln.slice(0, 2000).every(w => DIC.existe(w)), 'las palabras base están en el diccionario completo');
   ok('Diccionario: ~590.000 formas de LibreOffice, búsqueda sin tildes, palabras añadidas y formables para Letras; ~47.000 palabras base para los demás juegos'); }
+
+// ---- Póker cubierto ----
+{ const A = [0, 13, 26];                                             // en core/cartas: rango = id % 13 (0 = as, 10 = jota)
+  assert.ok(PC.puedeAbrir([10, 23, 1, 2, 3])); assert.ok(!PC.puedeAbrir([9, 22, 1, 2, 3]));
+  assert.deepEqual(PC.sugerirDescarte([...A, 5, 7]), [3, 4]);         // trío de ases: cambia las 2 sueltas
+  assert.ok(PC.descarteValido([0, 2, 3, 4, 5], [1, 2, 3, 4]));         // 4 cartas si se queda con un as
+  assert.ok(!PC.descarteValido([1, 2, 3, 4, 5], [1, 2, 3, 4])); assert.ok(!PC.descarteValido([1, 2, 3, 4, 5], [0, 0]));
+  for (const [ap, n, modo] of [['libre', 3, 'torneo'], ['jotas', 5, 'torneo'], ['jotas', 2, 'libre']]) {
+    const S = PC.crear(n, 'facil', 'Tú', modo, 'media', ap); S.jug[0].bot = true; let manos = 0;
+    while (manos < 40 && S.fase !== 'terminado') {
+      if (S.fase === 'fin') { if (PC.evaluarFin(S)) break; PC.nuevaMano(S); manos++; continue; }
+      const i = S.turno;
+      if (S.fase === 'descarte') assert.ok(PC.descartar(S, i, PC.descarteBot(S, i)));
+      else { const a = PC.decidir(S, i); if (!PC.actuar(S, i, a)) assert.ok(PC.actuar(S, i, PC.legal(S, i).pasar ? { t: 'check' } : { t: 'call' })); }
+      const cartas = [...S.mazo, ...S.pila, ...S.jug.flatMap(p => p.cartas)]; assert.equal(new Set(cartas).size, cartas.length);
+      if (S.fase !== 'fin') assert.equal(S.jug.reduce((s, p) => s + p.stack + p.inv, 0), S.compras.reduce((a, b) => a + b, 0) * PC.STACK);
+      assert.ok(PC.validar(JSON.parse(JSON.stringify(S))));
+    }
+    assert.ok(manos > 0);
+  }
+  ok('Póker cubierto: apertura con jotas, descarte (3 o 4 con as), fichas y cartas sin duplicar, guardado válido'); }
 console.log(`\n${n} pruebas correctas`);

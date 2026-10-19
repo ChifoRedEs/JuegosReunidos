@@ -1,0 +1,48 @@
+/* Póker cubierto · mismo estilo de mesa que el Texas Hold'em */
+.juego-pokercub .carta{--cw:50px}
+.pcm{color:#fff;padding:10px 8px 12px;display:flex;flex-direction:column;gap:10px}
+.pcbots{display:grid;grid-template-columns:repeat(var(--nb),minmax(0,1fr));gap:6px}
+.juego-pokercub .seat{position:relative;background:rgba(0,0,0,.28);border:3px solid transparent;border-radius:14px;padding:5px 4px 6px;text-align:center;min-width:0}
+.juego-pokercub .seat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.juego-pokercub .seat.gana{border-color:#3DDC84;background:rgba(61,220,132,.2)}
+.juego-pokercub .seat.fold{opacity:.45}.juego-pokercub .seat.fuera{opacity:.25}
+.juego-pokercub .seat .nom{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.juego-pokercub .seat .stk{font-weight:800;font-size:12px;color:#FFE08A}
+.juego-pokercub .seat .cs{display:flex;justify-content:center;height:calc(26px * 1.4 + 2px);margin:3px 0}
+.juego-pokercub .seat .carta{--cw:26px;margin:0 -5px}
+.juego-pokercub .seat .txt{font-size:11px;font-weight:800;min-height:14px;line-height:1.2}
+.juego-pokercub .seat .txt small{display:block;color:#FFE08A;font-size:10.5px}
+.juego-pokercub .ap{display:inline-block;margin-top:2px;padding:1px 8px;border-radius:99px;background:rgba(255,194,26,.95);color:#3A2800;font-weight:800;font-size:12px}
+.juego-pokercub .bt{position:absolute;top:-8px;right:-4px;width:22px;height:22px;border-radius:50%;background:#fff;color:#17214A;font:800 12px/22px 'Baloo 2',sans-serif;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.pccentro{text-align:center}
+.pcbote{display:inline-block;padding:3px 14px;border-radius:99px;background:rgba(0,0,0,.4);font:800 16px 'Baloo 2',system-ui,sans-serif}
+.pcmsg{text-align:center;font-weight:800;font-size:15px;min-height:22px;margin-top:8px}
+.pcyo{position:relative;text-align:center;border:3px solid transparent;border-radius:16px;padding:6px}
+.pcyo.turno{border-color:var(--yel);background:rgba(255,194,26,.18)}
+.pcyo.gana{border-color:#3DDC84;background:rgba(61,220,132,.18)}
+.pcyo.fold{opacity:.5}
+.pcyo .nom{font-weight:800;font-size:15px}
+.pcyo .cs{display:flex;justify-content:center;gap:4px;margin:6px 0 4px}
+.pcyo .cs.elige{padding-top:18px}
+.pcyo .carta{--cw:min(15vw,60px)}
+.pcyo .txt{font-size:13px;font-weight:700;min-height:18px}
+/* descarte: las cartas marcadas suben y se oscurecen */
+.pcyo .pcc{padding:0;border:0;background:none;border-radius:8px;transition:transform .15s,filter .15s;cursor:pointer}
+.pcyo .cs.elige .pcc:not(.fuera){animation:pclat 1.6s ease-in-out infinite}
+.pcyo .pcc.fuera{transform:translateY(-16px);filter:brightness(.55)}
+.pcyo .pcc.fuera::after{content:'✕';position:absolute;inset:0;display:grid;place-items:center;font:800 26px 'Baloo 2',sans-serif;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.pcyo .pcc{position:relative}
+@keyframes pclat{50%{transform:translateY(-3px)}}
+.pcpanel{margin:10px 0}
+.juego-pokercub .hbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.juego-pokercub .hbtns .btn{min-height:50px;font-size:15px}
+.juego-pokercub .hsub{margin:10px 0;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px}
+.juego-pokercub .hsub input[type=range]{width:100%;accent-color:var(--purple);height:34px}
+.juego-pokercub .hsub .pre{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.juego-pokercub .hsub b{font:800 20px 'Baloo 2',sans-serif}
+.juego-pokercub .htip{background:var(--card);border:2px solid var(--yel);border-radius:14px;padding:8px 12px;font-size:14px;font-weight:700;margin:8px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.juego-pokercub .htip .btn{min-height:32px;padding:4px 10px;font-size:13px}
+.pclog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
+.pclog li:first-child{color:var(--ink);font-weight:800}
+.hrank{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px}
+@media(prefers-reduced-motion:reduce){.pcyo .pcc{animation:none!important;transition:none}}
