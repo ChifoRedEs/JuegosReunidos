@@ -32,6 +32,7 @@ export const JUEGOS = [
   { id: 'serpiente', nombre: 'Serpiente', icono: '🐍', color: '#4E7CF6', categoria: 'arcade', descripcion: 'Come y crece. 4 modos, récords y podio.', cargar: () => import('./games/serpiente/index.js') },
   { id: 'bloques', nombre: 'Bloques', icono: '🧱', color: '#A24DE0', categoria: 'arcade', descripcion: '4 modos de juego y podio de récords.', cargar: () => import('./games/bloques/index.js') },
   { id: 'ladrillos', nombre: 'Rompe-Ladrillos', icono: '🏓', color: '#FF4757', categoria: 'arcade', descripcion: '12 niveles, premios y editor de niveles propios.', cargar: () => import('./games/ladrillos/index.js') },
+  { id: 'airhockey', nombre: 'Air Hockey', icono: '🏒', color: '#1E9BD7', categoria: 'arcade', descripcion: 'Contra la CPU o 2 jugadores en el mismo móvil.', cargar: () => import('./games/airhockey/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
   { id: 'magnate', nombre: 'Magnate Tecnológico', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas tecnológicas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },

@@ -1,5 +1,6 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import * as AH from '../js/games/airhockey/motor.js';
 import * as PC from '../js/games/pokercub/motor.js';
 import { readFileSync } from 'node:fs';
 import * as DIC from '../js/core/diccionario.js';
@@ -519,4 +520,22 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
     assert.ok(manos > 0);
   }
   ok('Póker cubierto: apertura con jotas, descarte (3 o 4 con as), fichas y cartas sin duplicar, guardado válido'); }
+
+// ---- Air Hockey ----
+{ // CPU difícil contra CPU fácil (en los dos lados): gana siempre la difícil; el disco nunca sale de la mesa salvo por las porterías
+  const partido = (nAbajo, nArriba) => {
+    const S = AH.crear({ nivel: nArriba, meta: 3 }), mem = { x: 300, y: 880, t: 0 }; S.fase = 'juego'; let t = 0;
+    while (S.fase !== 'fin' && t < 400) {
+      AH.avanzar(S, 1 / 60, [AH.objetivoIA(S, 0, 1 / 60, nAbajo, mem)]); t += 1 / 60;
+      const d = S.disco, enBoca = Math.abs(d.x - AH.ANCHO / 2) < AH.PORTERIA / 2;
+      assert.ok(d.x >= 0 && d.x <= AH.ANCHO && (enBoca || (d.y >= 0 && d.y <= AH.ALTO)), 'el disco se ha salido de la mesa');
+      assert.ok(S.m[0].y >= AH.ALTO / 2 && S.m[1].y <= AH.ALTO / 2, 'cada mazo en su mitad');
+      if (Math.round(t * 60) % 300 === 0) assert.ok(AH.validar(JSON.parse(JSON.stringify(S))));
+    }
+    return AH.ganador(S);
+  };
+  for (let k = 0; k < 4; k++) { assert.equal(partido('dificil', 'facil'), 0); assert.equal(partido('facil', 'dificil'), 1); }
+  const S = AH.crear({ modo: 'dos', meta: 5 }); S.goles = [5, 2]; S.fase = 'fin'; assert.equal(AH.ganador(AH.validar(JSON.parse(JSON.stringify(S)))), 0);
+  S.fase = 'juego'; assert.equal(AH.validar(JSON.parse(JSON.stringify(S))), null, 'marcador terminado pero partido en juego');
+  ok('Air Hockey: física sin escapes, cada mazo en su mitad, la CPU difícil gana a la fácil y guardado válido'); }
 console.log(`\n${n} pruebas correctas`);
