@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-91a1d66e28';
+const VERSION = 'jr-f543e65042';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -137,6 +137,10 @@ const ARCHIVOS = [
 './js/games/serpiente/index.js',
 './js/games/serpiente/motor.js',
 './js/games/serpiente/serpiente.css',
+'./js/games/sokoban/index.js',
+'./js/games/sokoban/motor.js',
+'./js/games/sokoban/niveles.js',
+'./js/games/sokoban/sokoban.css',
 './js/games/sopa/generador.js',
 './js/games/sopa/index.js',
 './js/games/sopa/palabras.js',

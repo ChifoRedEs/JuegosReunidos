@@ -1,0 +1,37 @@
+/* Sokoban */
+.juego-sokoban .skcab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
+.juego-sokoban .skcab b{font:800 18px 'Baloo 2',system-ui,sans-serif}
+.juego-sokoban .skcab span{font-size:13px;font-weight:800;color:var(--mut)}
+.juego-sokoban .sktab{--w:8;--h:8;--muro:#6B7A99;--muro2:#56637F;--suelo:#EFE6D8;--suelo2:#E6DBC9;--caja:#C98A4B;--caja2:#9C6230;--meta:#FF4757;
+  position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 48px));aspect-ratio:var(--w)/var(--h);margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.juego-sokoban .sktab.tema-hielo{--muro:#3A5BA0;--muro2:#2E4A85;--suelo:#EAF6FF;--suelo2:#DDEFFC;--caja:#7FD3FF;--caja2:#3E9ACB;--meta:#FF4FA3}
+.juego-sokoban .sktab.tema-jardin{--muro:#3E8E5A;--muro2:#2F7046;--suelo:#F3EBD8;--suelo2:#E9DFC6;--caja:#E0A458;--caja2:#B0742B;--meta:#7B3FC4}
+.juego-sokoban .skc{aspect-ratio:1}
+.juego-sokoban .skc.muro{background:var(--muro);background-image:linear-gradient(var(--muro2) 2px,transparent 2px),linear-gradient(90deg,var(--muro2) 2px,transparent 2px);background-size:50% 50%;border-radius:3px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.juego-sokoban .skc.suelo{background:var(--suelo);box-shadow:inset 0 0 0 1px var(--suelo2)}
+.juego-sokoban .skc.meta{position:relative}
+.juego-sokoban .skc.meta::after{content:'';position:absolute;inset:32%;border-radius:50%;background:var(--meta);box-shadow:0 0 0 3px color-mix(in srgb,var(--meta) 30%,transparent)}
+.juego-sokoban .skcaja,.juego-sokoban .skjug{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));left:calc(var(--x) * 100% / var(--w));top:calc(var(--y) * 100% / var(--h));transition:left .09s linear,top .09s linear;pointer-events:none}
+.juego-sokoban .skcaja::before{content:'';position:absolute;inset:7%;border-radius:12%;background:var(--caja);border:3px solid var(--caja2);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);
+  background-image:linear-gradient(45deg,transparent 45%,var(--caja2) 45% 55%,transparent 55%),linear-gradient(-45deg,transparent 45%,var(--caja2) 45% 55%,transparent 55%)}
+.juego-sokoban .skcaja.en::before{background-color:#2ECC71;border-color:#1E8F4E;background-image:none}
+.juego-sokoban .skcaja.en::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:800 clamp(14px,4vw,24px) 'Baloo 2',sans-serif}
+.juego-sokoban .skjug{display:grid;place-items:center;font-size:clamp(18px,calc(80vw / var(--w) * .62),34px);line-height:1;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.juego-sokoban .skctl{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.juego-sokoban .skdpad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,46px);gap:4px}
+.juego-sokoban .skdpad .btn{min-height:0;padding:0;font-size:18px}
+.juego-sokoban .skdpad [data-dir="arriba"]{grid-column:2}
+.juego-sokoban .skdpad [data-dir="izquierda"]{grid-column:1;grid-row:2}
+.juego-sokoban .skdpad [data-dir="abajo"]{grid-column:2;grid-row:2}
+.juego-sokoban .skdpad [data-dir="derecha"]{grid-column:3;grid-row:2}
+.juego-sokoban .skacc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.juego-sokoban .skacc .btn{min-height:42px;padding:6px 10px;font-size:14px}
+.juego-sokoban .skniveles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:8px 0}
+.juego-sokoban .sknv{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.juego-sokoban .sknv b{font:800 22px/1 'Baloo 2',system-ui,sans-serif}
+.juego-sokoban .sknv span{font-size:12px;font-weight:800;text-align:center;line-height:1.15}
+.juego-sokoban .sknv small{font-size:11px;color:var(--mut);min-height:14px}
+.juego-sokoban .sknv.ok{border-color:#2ECC71;background:color-mix(in srgb,#2ECC71 12%,var(--card))}
+.juego-sokoban .sknv:disabled{opacity:.45;cursor:default}
+.juego-sokoban .sk-cargando{text-align:center;font-size:17px;padding:40px 0}
+@media(prefers-reduced-motion:reduce){.juego-sokoban .skcaja,.juego-sokoban .skjug{transition:none}}

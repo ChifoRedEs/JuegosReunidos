@@ -1,5 +1,7 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import * as SK from '../js/games/sokoban/motor.js';
+import { NIVELES as SKN } from '../js/games/sokoban/niveles.js';
 import * as AH from '../js/games/airhockey/motor.js';
 import * as PC from '../js/games/pokercub/motor.js';
 import { readFileSync } from 'node:fs';
@@ -538,4 +540,15 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   const S = AH.crear({ modo: 'dos', meta: 5 }); S.goles = [5, 2]; S.fase = 'fin'; assert.equal(AH.ganador(AH.validar(JSON.parse(JSON.stringify(S)))), 0);
   S.fase = 'juego'; assert.equal(AH.validar(JSON.parse(JSON.stringify(S))), null, 'marcador terminado pero partido en juego');
   ok('Air Hockey: física sin escapes, cada mazo en su mitad, la CPU difícil gana a la fácil y guardado válido'); }
+
+// ---- Sokoban ----
+{ for (const n of SKN) { const L = SK.leer(n.mapa); assert.equal(L.cajas.length, L.meta.filter(Boolean).length, n.nombre); const s = SK.resolver(L, L.cajas, L.jugador, 400000); assert.ok(s, 'sin solución: ' + n.nombre);
+    let cs = L.cajas, j = L.jugador; for (const d of s.pasos) { const r = SK.mover(L, cs, j, d); assert.ok(r); cs = r.cajas; j = r.jugador; } assert.ok(SK.resuelto(L, cs), 'la solución no resuelve ' + n.nombre); }
+  const L = SK.leer('#######\n#@$$ .#\n#######');
+  assert.equal(SK.mover(L, L.cajas, L.jugador, 'derecha'), null, 'dos cajas seguidas no se mueven');
+  assert.equal(SK.mover(L, L.cajas, L.jugador, 'arriba'), null, 'muro');
+  const a = SK.generar('pequeno', 'prueba-1'), b = SK.generar('pequeno', 'prueba-1');
+  assert.ok(a && a.texto === b.texto, 'la misma semilla da el mismo nivel (reto del día)');
+  for (const t of ['pequeno', 'mediano']) { const g = SK.generar(t, 'prueba-' + t); const G = SK.leer(g.texto); assert.equal(G.cajas.length, SK.TAMANOS[t].cajas); assert.ok(SK.resolver(G, G.cajas, G.jugador, 200000)); assert.ok(G.cajas.every(c => !G.meta[c])); }
+  ok(`Sokoban: los ${SKN.length} niveles de la campaña tienen solución, reglas de empuje y niveles generados (y repetibles con semilla) resolubles`); }
 console.log(`\n${n} pruebas correctas`);
