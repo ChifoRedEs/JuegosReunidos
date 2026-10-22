@@ -1,4 +1,4 @@
-# Juegos Reunidos 2.0
+# Juegos Reunidos 3.0
 
 37 juegos en 5 categorías: Sudoku, Nonogram, Buscaminas, KenKen, Kakuro, Sokoban (Lógica) · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, Magnate Tecnológico, 3 en raya, Conecta 4, Trivial (Tablero) · BlackJack, Klondike, Texas Hold'em, Póker cubierto, Corazones, Brisca, Chinchón, Mus, Cinquillo, Continental (Cartas) · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas (Palabras) · Serpiente, Bloques, Rompe-Ladrillos, Air Hockey y Minigolf (Arcade).
 
