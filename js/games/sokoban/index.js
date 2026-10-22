@@ -3,6 +3,7 @@ import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import * as K from './motor.js';
 import { NIVELES } from './niveles.js';
+import { FICHAS, opcionesPersonajes } from '../../core/personajes.js';
 
 const MOTOR = new URL('./motor.js', import.meta.url).href;
 const MODOS = { campana: '🗺️ Campaña', azar: '🎲 Generados' };
@@ -18,17 +19,7 @@ const CAJAS = {
   verde: { nombre: 'Verdes', sw: ['#3DCB7A', '#1E8F4E'] }, dorada: { nombre: 'Doradas', sw: ['#FFD23F', '#C99A00'] }, metal: { nombre: 'Metálicas', sw: ['#B8C2D1', '#6D7A8F'] },
   regalo: { nombre: 'Regalos', sw: ['#9B5DE5', '#FFD23F'] }, carton: { nombre: 'Cartón', sw: ['#D9B27C', '#A8834F'] },
 };
-// Personajes por secciones. Los de «Animales» y «Vehículos» se giran según hacia dónde caminan.
-const PERSONAJES = {
-  Hombres: ['👨', '👨🏻', '👨🏽', '👨🏿', '👨‍🦰', '👨‍🦱', '👨‍🦳', '👨‍🦲', '🧔', '👴', '👦'],
-  Mujeres: ['👩', '👩🏻', '👩🏽', '👩🏿', '👩‍🦰', '👩‍🦱', '👩‍🦳', '👱‍♀️', '🧕', '👵', '👧'],
-  Oficios: ['👷', '👷‍♀️', '👮', '👮‍♀️', '🧑‍🚒', '👨‍🚒', '👩‍🚒', '👨‍🍳', '👩‍🍳', '👨‍🔧', '👩‍🔧', '👨‍⚕️', '👩‍⚕️', '👨‍🌾', '👩‍🌾', '👨‍🏭', '👩‍🏭', '👨‍🚀', '👩‍🚀', '🕵️', '💂', '🧑‍🎨'],
-  Fantasía: ['🧙', '🧝', '🧚', '🧛', '🧟', '🧞', '🦸', '🦹', '🥷', '🤖', '👽', '👻', '🎅', '🤶'],
-  Animales: ['🐧', '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🐸', '🐵', '🐷', '🐰', '🦁', '🐯', '🐮', '🐔', '🦉', '🐢', '🦖', '🐘', '🦒'],
-  Vehículos: ['🚜', '🚗', '🚕', '🚙', '🛻', '🚚', '🏎️', '🚓', '🚑', '🚒', '🛺', '🚲', '🛵', '🏍️'],
-};
-const NOMBRE_SEC = { Hombres: 'Hombre', Mujeres: 'Mujer', Oficios: 'Oficio', Fantasía: 'Fantasía', Animales: 'Animal', Vehículos: 'Vehículo' };
-const FICHAS = Object.fromEntries(Object.entries(PERSONAJES).flatMap(([sec, l]) => l.map((e, i) => [`${sec.slice(0, 3).toLowerCase()}${i}`, { e, sec }])));
+// Personajes por secciones (js/core/personajes.js). Los de «Animales» y «Vehículos» se giran según hacia dónde caminan.
 const GIRAN = new Set(['Animales', 'Vehículos']);
 const ficha = () => FICHAS[asp.valores.ficha] || FICHAS.ofi0;
 let S = null, L = null, api = null, asp = null, root = null, cfg = { modo: 'campana', tam: 'mediano' };
@@ -58,7 +49,7 @@ export async function mount(r, a) {
   api = a; root = r; ocupado = false; andando = null;
   asp = api.aspecto([{ clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: Object.entries(FICHAS).map(([id, f]) => ({ id, emoji: f.e, sec: f.sec, nombre: `${NOMBRE_SEC[f.sec]} ${f.e}` })) }],
+    { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: opcionesPersonajes() }],
   () => { if (S && $('#skTab')) { construir(); pintar(); } });
   await api.css(new URL('./sokoban.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && MODOS[c0.modo] && K.TAMANOS[c0.tam]) cfg = { ...c0 };

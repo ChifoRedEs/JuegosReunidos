@@ -47,3 +47,5 @@ Las imágenes van a 240 px de ancho en WebP calidad 78 (`tools/optimizar_imagene
 ## Comodines (Continental y Chinchón)
 Al repartir hay un check «Jugar con comodines». Continental: 3 comodines con 2 o 3 jugadores, 4 con 4 (activado por defecto). Chinchón: 2 con 2 o 3 jugadores, 3 con 4 (desactivado por defecto).
 El comodín usa la imagen `00` de la baraja elegida (si existe en `img/cartas/...`) y, si no, se dibuja.
+
+**Magnate Tecnológico · 🎨 Apariencia:** cada casilla de empresa tiene la banda de color dividida en 4 huecos (2×2) para las oficinas, y la sede central ocupa los 4. Se puede elegir «Tu personaje» (los personajes de Sokoban, comunes en `js/core/personajes.js`) para el jugador 1 y el par de iconos de oficina/sede (casas y hotel, oficinas, obreros, técnicos, astronautas o cajas).

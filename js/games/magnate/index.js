@@ -1,11 +1,18 @@
 // Magnate Tecnológico · juego de compraventa de empresas tecnológicas (2 a 4 jugadores, personas o CPU).
 import { $, esc, esperar } from '../../core/dom.js';
 import { grupoTablero } from '../../core/aspectos.js';
+import { FICHAS as PERSONAJES, opcionesPersonajes } from '../../core/personajes.js';
 import { GRUPOS, CASILLAS, NUBE, RED, SALARIO, FIANZA, OFICINAS, SEDES, COLORES_JUGADOR, FICHAS } from './datos.js';
 import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
 const ICONO = { nube: '☁️', noticias: '📰', tendencias: '📈', impuesto: '💸' };
+// Iconos de las oficinas (hasta 4 por casilla) y de la sede central, a elegir en 🎨 Apariencia. Los personajes y cajas son los de Sokoban.
+const EDIFICIOS = {
+  casas: { nombre: '🏠 + 🏨 Casas y hotel', of: '🏠', sede: '🏨' }, oficinas: { nombre: '🏢 + 🏙️ Oficinas y rascacielos', of: '🏢', sede: '🏙️' },
+  obreros: { nombre: '👷 + 🏗️ Obreros y grúa', of: '👷', sede: '🏗️' }, tecnicos: { nombre: '👨‍🔧 + 🏭 Técnicos y fábrica', of: '👨‍🔧', sede: '🏭' },
+  astronautas: { nombre: '👨‍🚀 + 🚀 Astronautas y cohete', of: '👨‍🚀', sede: '🚀' }, cajas: { nombre: '📦 + 🏬 Cajas y almacén', of: '📦', sede: '🏬' },
+};
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550 }, rapida: { nombre: 'Rápida', paso: 45, bot: 200 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0 } };
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0;
 // sesion: cambia al salir del juego o empezar otra partida; los turnos que estuvieran a medias se cancelan (ABORTO)
@@ -24,7 +31,10 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; vivo = true; jugando = false; pendiente = null;
-  asp = api.aspecto([grupoTablero()], () => {});
+  asp = api.aspecto([grupoTablero(),
+    { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
+    { clave: 'edif', titulo: 'Iconos de oficinas y sede', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) }],
+  () => { if (G && $('#mtTab')) { aplicarPersonaje(); pintar(); } });
   await api.css(new URL('./magnate.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', jug: c0.jug.map(([n, t, f], i) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n', Number.isInteger(f) && FICHAS[f] ? f : i]) };
@@ -69,9 +79,19 @@ function nuevaSetup() {
   sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; }
   api.borrar(); setup();
 }
+// «Tu personaje»: sustituye la ficha del primer jugador humano; si otro jugador tenía la misma, éste pasa a una libre.
+const personajeElegido = () => (PERSONAJES[asp.valores.ficha] || {}).e || null;
+function aplicarPersonaje() {
+  const i = G.jug.findIndex(p => !p.bot); if (i < 0) return;
+  const orig = cfg.jug.filter(j => j[1] !== 'n')[i], e = personajeElegido() || (orig ? FICHAS[orig[2]] : null);
+  if (!e || G.jug[i].ficha === e) return;
+  G.jug[i].ficha = e; const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (t) t.textContent = e; guardar();
+}
 function empezar() {
   const jugadores = cfg.jug.map(([nombre, t, f], i) => ({ nombre: nombre.trim() || `Jugador ${i + 1}`, ficha: FICHAS[f], color: COLORES_JUGADOR[i], bot: t === 'c', t })).filter(j => j.t !== 'n');
   if (jugadores.length < 2) return;
+  const mio = personajeElegido(), h = jugadores.find(j => !j.bot);
+  if (mio && h) { h.ficha = mio; jugadores.forEach(j => { if (j !== h && j.ficha === mio) j.ficha = FICHAS.find(f => !jugadores.some(q => q.ficha === f)) || j.ficha; }); }
   api.setPref('cfg', cfg);
   sesion++; G = new Partida(jugadores, crearGanchos(sesion), { bote: cfg.bote, subasta: cfg.subasta, dinero: cfg.dinero, rondas: cfg.rondas }); reg = false;
   armar(); pintar(); log(`¡Empieza la partida! Cada jugador recibe ${cfg.dinero}M.`); guardar();
@@ -114,7 +134,8 @@ function pintar() {
   G.c.forEach((s, i) => {
     const d = root.querySelector(`.mtc[data-c="${i}"]`), o = s.dueno === null ? null : G.jug[s.dueno];
     d.style.setProperty('--dueno', o ? o.color : 'transparent'); d.classList.toggle('propia', !!o); d.classList.toggle('hip', s.hip);
-    const b = d.querySelector('.mtbanda'); if (b) b.textContent = s.of === 5 ? '🏢' : '▪'.repeat(s.of);
+    const b = d.querySelector('.mtbanda'), ed = EDIFICIOS[asp.valores.edif] || EDIFICIOS.casas;
+    if (b) { d.classList.toggle('con', s.of > 0); b.innerHTML = s.of === 5 ? `<i class="mtsede">${ed.sede}</i>` : [1, 2, 3, 4].map(k => `<i class="${k <= s.of ? 'on' : ''}">${k <= s.of ? ed.of : ''}</i>`).join(''); }
     d.setAttribute('aria-label', `${s.nombre}${s.precio ? ` · ${s.precio}M` : ''}${o ? ` · de ${o.nombre}` : ''}${s.hip ? ' · hipotecada' : ''}${s.of ? ` · ${s.of === 5 ? 'sede central' : s.of + ' oficinas'}` : ''}`);
   });
   const act = G.terminada ? -1 : G.turno;
