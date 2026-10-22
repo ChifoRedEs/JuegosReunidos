@@ -3,10 +3,6 @@
 .juego[data-mesa="azul"]{--mesa1:#2E6BE8;--mesa2:#173F9E}
 .juego[data-mesa="burdeos"]{--mesa1:#B02A47;--mesa2:#701629}
 .juego[data-mesa="noche"]{--mesa1:#3B4468;--mesa2:#171B33}
-.juego[data-dorso="rojo"]{--d1:#FF4757;--d2:#B3182B}
-.juego[data-dorso="verde"]{--d1:#1FBF73;--d2:#0A7040}
-.juego[data-dorso="morado"]{--d1:#8B5CF6;--d2:#4C25B5}
-.juego[data-palos="cuatro"]{--p1:#E0243A;--p2:#1F6BFF;--p3:#12984F;--p0:#1B2340}
 .carta{--cw:52px;position:relative;display:inline-block;width:var(--cw);height:calc(var(--cw) * 1.4);flex:none;border-radius:calc(var(--cw) * .13);background:#fff;color:#1B2340;border:1px solid #AEB8D4;box-shadow:0 2px 4px rgba(0,0,0,.35);font-family:'Baloo 2',system-ui,sans-serif;line-height:1;user-select:none;-webkit-user-select:none;overflow:hidden}
 .carta .cr{position:absolute;left:9%;top:5%;font-size:calc(var(--cw) * .36);font-weight:800}
 .carta .cs{position:absolute;left:10%;top:calc(var(--cw) * .42);font-size:calc(var(--cw) * .27);font-style:normal}

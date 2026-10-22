@@ -1,7 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import { anotarPartida, htmlPartidas, historialVacio, validarHistorial, seguir, htmlTabla } from '../../core/historial.js';
 import { cartaHTML, nombreCarta } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
 import { hacerOrdenable, ordenarMano } from '../../core/arrastrar.js';
 import * as K from './motor.js';
 
@@ -28,7 +28,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; arr = null; sel = null; robada = -1;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./continental.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [1, 2, 3].includes(c0.rivales) && K.NIVEL[c0.nivel]) cfg = { ...c0, comodines: c0.comodines !== false };
   ord = { modo: MODOS.includes(api.pref('orden', 'palo')) ? api.pref('orden', 'palo') : 'palo', ids: [] };
@@ -74,6 +74,7 @@ function armar() {
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
+  asp.sortear();
   hm = historialVacio();
   api.setPref('cfg', cfg);
   const jugadores = [{ nombre: 'Tú', cpu: false }, ...Array.from({ length: cfg.rivales }, (_, k) => ({ nombre: cfg.rivales === 1 ? 'CPU' : `CPU ${k + 1}`, cpu: true }))];

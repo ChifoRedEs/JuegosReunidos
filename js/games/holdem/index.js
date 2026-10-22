@@ -1,6 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
 import * as H from './motor.js';
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -49,7 +49,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./holdem.css', import.meta.url));
   const g = api.cargar(); S = g; consejo = api.pref('consejo', true);
   const c0 = api.pref('cfg', null); if (c0 && c0.bots >= 2 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel, modo: c0.modo === 'libre' ? 'libre' : 'torneo', ciegas: H.CIEGAS_LIBRE[c0.ciegas] ? c0.ciegas : 'baja' };
@@ -91,6 +91,7 @@ function levantarse() {
   setup();
 }
 function empezar() {
+  asp.sortear();
   S = H.crear(cfg.bots, cfg.nivel, 'Tú', cfg.modo, cfg.ciegas); S.mio = { vpip: false, pfr: false }; api.setPref('cfg', cfg); prevTab = 0; armar(); H.nuevaMano(S); pintar(); guardar(); bucle();
 }
 

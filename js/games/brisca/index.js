@@ -56,6 +56,7 @@ function armar() {
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar(lider = null) {
+  asp.sortear();
   api.setPref('cfg', cfg); S = B.nueva(cfg.n, cfg.nivel, cfg.cambio, lider); reg = false; prevMesa = 0; armar(); pintar(); guardar(); bucle();
 }
 

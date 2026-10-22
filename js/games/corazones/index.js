@@ -1,7 +1,7 @@
 // Corazones: 4 jugadores (tú y tres CPU), evita llevarte corazones y la dama de picas… o llévatelos todos.
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
 import { anotarPartida, htmlPartidas, htmlTabla } from '../../core/historial.js';
 import * as C from './motor.js';
 
@@ -21,7 +21,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; sel = new Set();
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./corazones.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && NIVEL[c0.nivel] && C.METAS.includes(c0.meta)) cfg = { nivel: c0.nivel, meta: c0.meta, luna: c0.luna === 'resta' ? 'resta' : 'resto' };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -45,6 +45,7 @@ function setup() {
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; api.borrar(); setup(); }
 function empezar() {
+  asp.sortear();
   api.setPref('cfg', cfg); S = C.crear(cfg); reg = false; sel = new Set();
   armar(); pintar(); guardar(); bucle();
 }

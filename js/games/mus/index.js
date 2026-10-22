@@ -74,6 +74,7 @@ function armar() {
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
+  asp.sortear();
   hm = historialVacio();
   api.setPref('cfg', cfg); S = M.crear({ nivel: cfg.nivel, meta: cfg.meta, juegos: cfg.juegos, reyes: cfg.reyes }); reg = false; selDesc = new Set(); dichos = {};
   armar(); pintar(); guardar(); bucle();

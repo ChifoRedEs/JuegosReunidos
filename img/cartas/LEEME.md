@@ -1,6 +1,6 @@
 # Imágenes de cartas
 
-Todo lo que pongas aquí aparece en **🎨 Apariencia** de los juegos de cartas.
+Todo lo que pongas aquí aparece en **🎨 Apariencia** de los juegos de cartas. Por defecto la baraja y el dorso son **🎲 Aleatorios**: se sortea una al abrir el juego y en cada partida nueva (se puede fijar una concreta).
 
 | Carpeta | Qué va dentro | Juegos que la usan |
 |---|---|---|

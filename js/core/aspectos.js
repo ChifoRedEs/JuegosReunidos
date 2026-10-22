@@ -12,10 +12,10 @@ export const grupoTablero = (titulo = 'Colores del tablero') => ({ clave: 'table
 
 // Grupos comunes de los juegos de cartas
 export const grupoMesa = () => ({ clave: 'mesa', titulo: 'Color de la mesa', def: 'verde', opciones: [{ id: 'verde', nombre: 'Verde', sw: ['#12A05C'] }, { id: 'azul', nombre: 'Azul', sw: ['#2E6BE8'] }, { id: 'burdeos', nombre: 'Burdeos', sw: ['#B02A47'] }, { id: 'noche', nombre: 'Noche', sw: ['#3B4468'] }] });
-export const grupoDorso = () => ({ clave: 'dorso', titulo: 'Dorso de las cartas', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2F6BFF'] }, { id: 'rojo', nombre: 'Rojo', sw: ['#FF4757'] }, { id: 'verde', nombre: 'Verde', sw: ['#1FBF73'] }, { id: 'morado', nombre: 'Morado', sw: ['#8B5CF6'] },
-  ...BARAJAS.dorsos.map(d => ({ id: d.id, nombre: d.nombre, img: urlDorso(d) }))] });   // dorsos de imagen: carpeta img/cartas/dorsos
-// Baraja de imágenes (carpetas img/cartas/espanola y img/cartas/francesa). «Dibujada» = la baraja hecha con CSS de siempre.
-const grupoBaraja = (tipo, clave, titulo, sw) => ({ clave, titulo, def: 'css', opciones: [{ id: 'css', nombre: 'Dibujada', sw }, ...BARAJAS[tipo].map(b => ({ id: b.id, nombre: b.nombre, img: urlMuestra(b) }))] });
-export const grupoBarajaEs = () => grupoBaraja('espanola', 'barajaes', 'Baraja española', ['#F2B600', '#E0243A']);
-export const grupoBarajaFr = () => grupoBaraja('francesa', 'barajafr', 'Baraja francesa', ['#1B2340', '#E0243A']);
-export const grupoPalos = () => ({ clave: 'palos', titulo: 'Colores de los palos', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicos (rojo y negro)', sw: ['#E0243A', '#1B2340'] }, { id: 'cuatro', nombre: 'Cuatro colores', sw: ['#1B2340', '#E0243A', '#1F6BFF', '#12984F'] }] });
+// Dorsos y barajas de imagen (carpeta img/cartas). «Aleatoria» (por defecto) sortea una al abrir el juego y en cada partida nueva;
+// si se elige una concreta, se queda fija. Sin imágenes (índice no cargado) el grupo se oculta y se ven las cartas dibujadas de siempre.
+const AZAR = { id: 'azar', nombre: '🎲 Aleatoria', azar: true };
+export const grupoDorso = () => ({ clave: 'dorso', titulo: 'Dorso de las cartas', def: 'azar', opciones: [AZAR, ...BARAJAS.dorsos.map(d => ({ id: d.id, nombre: d.nombre, img: urlDorso(d) }))] });
+const grupoBaraja = (tipo, clave, titulo) => ({ clave, titulo, def: 'azar', opciones: [AZAR, ...BARAJAS[tipo].map(b => ({ id: b.id, nombre: b.nombre, img: urlMuestra(b) }))] });
+export const grupoBarajaEs = () => grupoBaraja('espanola', 'barajaes', 'Baraja española');
+export const grupoBarajaFr = () => grupoBaraja('francesa', 'barajafr', 'Baraja francesa');

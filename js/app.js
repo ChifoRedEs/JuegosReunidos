@@ -5,7 +5,7 @@ import * as store from './core/storage.js';
 import * as aj from './core/ajustes.js';
 import * as stats from './core/stats.js';
 import * as son from './core/sonido.js';
-import { cargarBarajas, precargarSeleccion } from './core/cartas.js';
+import { BARAJAS, cargarBarajas, precargarSeleccion } from './core/cartas.js';
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 
@@ -144,31 +144,39 @@ function crearApi(j, ent, mod, root) {
       },
     },
     aspecto(defs, alCambiar) {
-      const gd = aj.pref(id, 'aspecto', {}) || {}, vals = {};
+      // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
+      defs = defs.filter(g => g.opciones.some(o => !o.azar) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
+      const gd = aj.pref(id, 'aspecto', {}) || {}, elec = {}, vals = {};
+      const resolver = nuevo => defs.forEach(g => {
+        if (elec[g.clave] !== 'azar') { vals[g.clave] = elec[g.clave]; return; }
+        if (!nuevo && vals[g.clave]) return;
+        const l = g.opciones.filter(o => !o.azar), c = l.length > 1 ? l.filter(o => o.id !== vals[g.clave]) : l;   // distinta de la anterior
+        vals[g.clave] = c[Math.random() * c.length | 0].id;
+      });
       const poner = () => { defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; }); precargarSeleccion(vals); };
-      defs.forEach(g => { vals[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
-      poner();
-      const guardar = () => aj.setPref(id, 'aspecto', { ...vals });
+      defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
+      resolver(true); poner();
+      const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
       const abrir = () => {
         // Opciones normales (muestras de color, miniatura y nombre) o, con `emoji`, una rejilla compacta de iconos;
         // `sec` en las opciones agrupa la rejilla en secciones (Hombres, Mujeres, Animales…)
-        const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (vals[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
+        const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
           ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.img ? el('img', { class: 'ap-th', src: o.img, alt: '', loading: 'lazy' }) : null, o.nombre]));
         const opciones = g => { const out = []; let sec = null; for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); } return out; };
         const cuerpo = defs.map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo), el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g))));
         const wrap = el('div', {}, cuerpo);
         wrap.addEventListener('click', e => {
           const b = e.target.closest('.ap-o'); if (!b) return;
-          vals[b.dataset.g] = b.dataset.o; poner(); guardar();
+          elec[b.dataset.g] = b.dataset.o; delete vals[b.dataset.g]; resolver(false); poner(); guardar();
           wrap.querySelectorAll(`.ap-o[data-g="${b.dataset.g}"]`).forEach(x => x.classList.toggle('on', x === b));
           if (alCambiar) alCambiar({ ...vals });
         });
         let cerrar;
-        const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { vals[g.clave] = g.def; }); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
+        const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { elec[g.clave] = g.def; delete vals[g.clave]; }); resolver(true); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
         const ok = el('button', { class: 'btn on', onclick: () => cerrar() }, 'Listo');
         cerrar = hoja([el('h2', {}, '🎨 Apariencia'), wrap, el('div', { class: 'bar', style: 'margin-top:14px' }, rest, ok)]);
       };
-      return { valores: vals, abrir };
+      return { valores: vals, abrir, sortear() { resolver(true); poner(); } };   // sortear(): nueva baraja/dorso al azar (partida nueva)
     },
     css(url) {
       const href = String(url);
@@ -415,8 +423,8 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaVersion && !recargado) { recargado = true; location.reload(); } });
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
   // en segundo plano: guardar las imágenes de los naipes para jugar sin conexión (solo baja las que falten)
-  // Solo las barajas y dorsos elegidos en 🎨 Apariencia (no los ~2 MB de todas), y nunca con «Ahorro de datos» activado.
-  const elegidas = () => { const ids = new Set(); for (const p of Object.values(aj.ajustes().j || {})) { const a = p && p.aspecto; if (a && typeof a === 'object') ['barajaes', 'barajafr', 'dorso'].forEach(k => { if (typeof a[k] === 'string' && a[k] !== 'css') ids.add(a[k]); }); } return [...ids]; };
+  // Como baraja y dorso cambian al azar, se guardan todas las imágenes (~2 MB), salvo con «Ahorro de datos» activado.
+  const elegidas = () => [...BARAJAS.espanola, ...BARAJAS.francesa, ...BARAJAS.dorsos].map(x => x.id);
   const ahorro = navigator.connection && navigator.connection.saveData;
   if (!ahorro) navigator.serviceWorker.ready.then(r => setTimeout(() => r.active && r.active.postMessage({ tipo: 'guardar-cartas', ids: elegidas() }), 4000)).catch(() => {});
 }

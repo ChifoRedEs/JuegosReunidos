@@ -1,7 +1,7 @@
 // Póker cubierto (de descarte, 5 cartas) contra bots: torneo o partida libre, apertura libre o con jotas o mejor.
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
-import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
 import * as P from './motor.js';
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -49,7 +49,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; marcadas = new Set();
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./pokercub.css', import.meta.url));
   S = api.cargar(); consejo = api.pref('consejo', true);
   const c0 = api.pref('cfg', null);
@@ -94,6 +94,7 @@ function levantarse() {
   setup();
 }
 function empezar() {
+  asp.sortear();
   S = P.crear(cfg.bots, cfg.nivel, 'Tú', cfg.modo, cfg.ante, cfg.apertura); S.mio = { vpip: false }; api.setPref('cfg', cfg);
   armar(); P.nuevaMano(S); marcadas = new Set(); pintar(); guardar(); bucle();
 }

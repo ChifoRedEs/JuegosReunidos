@@ -1,7 +1,7 @@
 import { $, fmtTiempo } from '../../core/dom.js';
 import { cartaHTML, PALOS } from '../../core/cartas.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoMesa, grupoDorso, grupoPalos, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
 import * as K from './motor.js';
 
 const DY_ABAJO = .2, DY_ARRIBA = .38;
@@ -43,7 +43,7 @@ function cobrarVegas() {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; pst = null; drag = null; auto = null; popAn = null; tAuto = null; estadoBurb = null; worker = null; jobId = 0; estadoAn = 'calc'; pendiente = false; feedback = ''; sinWorker = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoPalos(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./klondike.css', import.meta.url));
   const g = api.cargar();
   if (g) { S = g.s; hist = g.hist; reg = g.reg; ac = g.ac; } else { S = K.nuevo(api.pref('robar', 1), api.pref('extra', true), api.pref('vegas', false)); hist = []; reg = false; ac = { b: 0, m: 0 }; }
@@ -142,6 +142,7 @@ const hayProgreso = () => S.mov > 0 && !K.gana(S);
 async function nueva(robar, extra, forzar = false, vegas = S ? S.vegas : api.pref('vegas', false)) {
   if (repartiendo) return;
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+  asp.sortear();
   cobrarVegas();
   clearInterval(auto); auto = null; clearTimeout(tAuto); crono.detener(); crono = new Cronometro(crono.alTick, 0);
   api.setPref('robar', robar); api.setPref('extra', extra); api.setPref('vegas', !!vegas);
