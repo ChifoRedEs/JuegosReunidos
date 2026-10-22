@@ -1,5 +1,6 @@
 // Pruebas de los motores (sin navegador):  node tests/motores.mjs
 import assert from 'node:assert/strict';
+import * as CY from '../js/games/cifrasletras/motor.js';
 import * as BI from '../js/games/billar/motor.js';
 import * as CO from '../js/games/corazones/motor.js';
 import * as KA from '../js/games/kakuro/generador.js';
@@ -612,4 +613,25 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   const S = BI.crear({ modo: 'pool9' }); assert.deepEqual(BI.legales(S), [1]);
   const Q = BI.crear({ modo: 'snooker' }); assert.ok(BI.legales(Q).every(id => id <= 6), 'en snooker se empieza por las rojas');
   ok('Billar: Pool 8, Pool 9 y Snooker entre CPU hasta el final, sin bolas fuera de la mesa y con guardado válido'); }
+
+// ---- Cifras y Letras ----
+{ let exactas = 0;
+  for (let k = 0; k < 60; k++) {
+    const { numeros, objetivo } = CY.numerosAlAzar(); assert.equal(numeros.length, 6); assert.ok(objetivo >= 101 && objetivo <= 999);
+    const r = CY.resolverCifras(numeros, objetivo); if (r.valor === objetivo) exactas++;
+    const pool = numeros.slice();                                       // la solución usa cada número una vez y operaciones válidas
+    for (const [a, op, b, z] of r.pasos) { for (const x of [a, b]) { const i = pool.indexOf(x); assert.ok(i >= 0, 'número no disponible'); pool.splice(i, 1); } assert.equal(CY.operar(a, op, b), z); pool.push(z); }
+    assert.ok(pool.includes(r.valor) || numeros.includes(r.valor));
+    const f = CY.cifrasCPU(numeros, objetivo, 'facil'); assert.ok(Math.abs(f.valor - objetivo) >= Math.abs(r.valor - objetivo));
+  }
+  assert.ok(exactas > 45, 'la mayoría de los objetivos tienen solución exacta: ' + exactas);
+  assert.equal(CY.operar(7, '÷', 2), null); assert.equal(CY.operar(3, '-', 5), null); assert.equal(CY.puntosCifras(500, 500), 10); assert.equal(CY.puntosCifras(495, 500), 7); assert.equal(CY.puntosCifras(489, 500), 0);
+  assert.ok(CY.cabe('cámara', ['C', 'A', 'M', 'A', 'R', 'A', 'X', 'Y', 'Z'])); assert.ok(!CY.cabe('casas', ['C', 'A', 'S', 'X', 'Y', 'Z', 'Q', 'W', 'E']));
+  for (let k = 0; k < 50; k++) { const l = CY.letrasAlAzar(); assert.equal(l.length, 9); assert.ok(l.filter(CY.esVocal).length >= 3 && l.filter(x => !CY.esVocal(x)).length >= 3); }
+  assert.deepEqual(CY.puedePedir(['B', 'C', 'D', 'F', 'G', 'H']), { v: true, c: false }, 'si faltan vocales obligatorias no se pueden pedir más consonantes');
+  assert.equal(CY.puntosLetras('ABCDEFGHI'), 18);
+  const S = CY.crear({ rival: 'cpu' }); S.objetivo = 500;
+  assert.deepEqual(CY.puntuar(S, 'cifras', { valor: 500 }, { valor: 498 }), [10, 0], 'solo puntúa la mejor');
+  assert.deepEqual(CY.puntuar(S, 'letras', { palabra: 'CASA', valida: true }, { palabra: 'COSA', valida: true }), [4, 4], 'empate: los dos');
+  ok('Cifras y Letras: soluciones de cifras correctas (y casi siempre exactas), letras con 3 vocales y 3 consonantes, puntos como en el concurso'); }
 console.log(`\n${n} pruebas correctas`);

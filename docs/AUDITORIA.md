@@ -116,3 +116,11 @@ Física con 400 subpasos por segundo, rozamiento del césped y de la arena, rebo
 - **Controles:** tocar o arrastrar sobre la mesa para apuntar, ↺ ↻ para afinar, fuerza y Tirar (o teclado). Línea de ayuda larga, corta o desactivada, con «bola fantasma», trayectoria de la bola tocada y una ✕ si es una bola que no puedes tocar primero.
 - **CPU (3 niveles):** en un Worker calcula el golpe fantasma hacia cada tronera para cada bola legal, simula varias fuerzas y elige el mejor; el nivel cambia cuántos tiros prueba y lo que se desvía al tirar. Con bola en mano, prueba varios sitios.
 - **🎨 Apariencia:** color del tapete, tapete de imagen, bandas, bolas y taco.
+
+## Cifras y Letras (juego nuevo, categoría Palabras · versión 3.2.0)
+`js/games/cifrasletras/` (motor.js · index.js · cifrasletras.css). Partidas de 4, 6 o 10 rondas que alternan Letras y Cifras, con 30, 45 o 60 segundos (o sin límite), contra la CPU (3 niveles) o en solitario.
+- **Letras:** se piden 9 letras (vocal o consonante, al menos 3 de cada; o 🎲 al azar) con frecuencias del español y la Ñ. La palabra se forma tocando las fichas o con el teclado y se comprueba con el diccionario completo (`core/diccionario.js`: plurales, femeninos y conjugaciones; sin importar las tildes). Cada letra vale un punto y 9 letras, 18. Al final de la ronda se ven las palabras más largas posibles.
+- **Cifras:** 6 números (1-10 dos veces, 25, 50, 75 y 100) y un objetivo de 101 a 999. Se toca un número, una operación y otro número; el resultado pasa a ser una ficha nueva. Divisiones exactas y sin negativos. Exacto 10 puntos, a 5 o menos 7, a 10 o menos 5. Un resolvedor exhaustivo enseña una solución (exacta en ~97 % de los casos) en unos milisegundos.
+- **Contra la CPU** solo puntúa la mejor respuesta de cada ronda (si empatan, los dos), como en el concurso. La CPU busca entre todas las palabras posibles (más cortas cuanto más fácil) y en cifras usa como mucho 3, 4 o 6 números según el nivel.
+- **Reto del día:** 4 rondas con las mismas letras y cifras para todo el mundo.
+- **🎨 Apariencia:** Fondo de Tablero con los tapetes de imagen (🎲 aleatorio por defecto en este juego), paleta del tablero y 4 estilos de fichas (Concurso, Madera, Pizarra y Del tablero).

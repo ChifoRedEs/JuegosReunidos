@@ -32,6 +32,7 @@ export const JUEGOS = [
   { id: 'continental', nombre: 'Continental', icono: '🎴', color: '#6A3DF0', categoria: 'cartas', descripcion: '7 rondas con contratos de tríos y escaleras.', cargar: () => import('./games/continental/index.js') },
   { id: 'rosco', nombre: 'El Rosco', icono: '🔵', color: '#1E4FD8', categoria: 'palabras', descripcion: 'Una definición por letra contra el reloj. ¡Pasapalabra!', cargar: () => import('./games/rosco/index.js') },
   { id: 'encadenadas', nombre: 'Encadenadas', icono: '🔗', color: '#12B76A', categoria: 'palabras', descripcion: 'Cada palabra empieza por la última sílaba de la anterior.', cargar: () => import('./games/encadenadas/index.js') },
+  { id: 'cifrasletras', nombre: 'Cifras y Letras', icono: '🔠', color: '#1D3A8A', categoria: 'palabras', descripcion: 'La palabra más larga y el número exacto, contra el reloj.', cargar: () => import('./games/cifrasletras/index.js') },
   { id: 'serpiente', nombre: 'Serpiente', icono: '🐍', color: '#4E7CF6', categoria: 'arcade', descripcion: 'Come y crece. 4 modos, récords y podio.', cargar: () => import('./games/serpiente/index.js') },
   { id: 'bloques', nombre: 'Bloques', icono: '🧱', color: '#A24DE0', categoria: 'arcade', descripcion: '4 modos de juego y podio de récords.', cargar: () => import('./games/bloques/index.js') },
   { id: 'ladrillos', nombre: 'Rompe-Ladrillos', icono: '🏓', color: '#FF4757', categoria: 'arcade', descripcion: '12 niveles, premios y editor de niveles propios.', cargar: () => import('./games/ladrillos/index.js') },
