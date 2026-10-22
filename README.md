@@ -1,6 +1,6 @@
-# Juegos Reunidos 3.0
+# Juegos Reunidos 3.1
 
-37 juegos en 5 categorías: Sudoku, Nonogram, Buscaminas, KenKen, Kakuro, Sokoban (Lógica) · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, Magnate Tecnológico, 3 en raya, Conecta 4, Trivial (Tablero) · BlackJack, Klondike, Texas Hold'em, Póker cubierto, Corazones, Brisca, Chinchón, Mus, Cinquillo, Continental (Cartas) · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas (Palabras) · Serpiente, Bloques, Rompe-Ladrillos, Air Hockey y Minigolf (Arcade).
+37 juegos en 5 categorías: Sudoku, Nonogram, Buscaminas, KenKen, Kakuro, Sokoban (Lógica) · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, Magnate Tecnológico, 3 en raya, Conecta 4, Trivial (Tablero) · BlackJack, Klondike, Texas Hold'em, Póker cubierto, Corazones, Brisca, Chinchón, Mus, Cinquillo, Continental (Cartas) · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas (Palabras) · Serpiente, Bloques, Rompe-Ladrillos, Air Hockey y Billar (Arcade).
 
 Con estadísticas, 🏅 logros, 📅 reto del día, 🏆 podio de los 10 mejores en los arcade, compartir resultado, ajustes, sonido, tema claro/oscuro, copia de seguridad y modo sin conexión (PWA). Sin compilación: JavaScript con módulos nativos.
 
@@ -33,7 +33,7 @@ y abre http://localhost:8000. (Cualquier otro servidor estático vale.)
     data/nonogramas/ fuentes.txt (dibujos hechos a mano) → pixelart.json (lo genera tools/verificar_nonogramas.mjs)
     tools/           generar_sw.py · generar_barajas.py · optimizar_imagenes.py · generar_iconos.py · verificar_nonogramas.mjs
     tests/motores.mjs   pruebas de los motores:  node tests/motores.mjs
-    docs/            AÑADIR-JUEGO.md · MEJORAS-INCLUIDAS.md · HOJA-DE-RUTA.md · AUDITORIA.md
+    docs/            ANADIR-JUEGO.md · MEJORAS-INCLUIDAS.md · HOJA-DE-RUTA.md · AUDITORIA.md
 
 ## Guardado
 Una clave de localStorage por juego (`jr2:juego:<id>`, versión 2), más `jr2:indice` (resumen ligero de cada partida para el Inicio), `jr2:stats`, `jr2:ajustes`, `jr2:logros`, `jr2:retos` y `jr2:podio:<id>`. Todo entra en la copia de seguridad. Si el almacenamiento se llena, la app avisa. Tus partidas de la versión 1 (`juegos-reunidos-save`) se migran solas la primera vez; la clave antigua no se borra. Los archivos .json exportados de la versión 1 también se pueden importar.
@@ -50,4 +50,19 @@ El comodín usa la imagen `00` de la baraja elegida (si existe en `img/cartas/..
 
 **Magnate Tecnológico · 🎨 Apariencia:** cada casilla de empresa tiene la banda de color dividida en 4 huecos (2×2) para las oficinas, y la sede central ocupa los 4. Se puede elegir «Tu personaje» (los personajes de Sokoban, comunes en `js/core/personajes.js`) para el jugador 1 y el par de iconos de oficina/sede (casas y hotel, oficinas, obreros, técnicos, astronautas o cajas).
 
-**🎨 Apariencia · Fondo de Tablero y Personajes:** todos los juegos que no son de cartas tienen «Fondo de Tablero» (los 12 tapetes de `img/cartas/tapetes/`, o 🎲 aleatorio; por defecto «Sin fondo»). Los juegos de canvas (Air Hockey, Ladrillos, Bloques, Minigolf, Serpiente) pintan el tapete con `imagenTapete` + `pintarTapete` (`js/core/cartas.js`); el resto lo pone una regla CSS detrás del tablero (`grupoFondo('selector')` en `js/core/aspectos.js`). «Personajes» (los de Sokoban, `js/core/personajes.js`) está en Serpiente (cabeza), Rompe-Ladrillos (bola), Air Hockey (tu mazo), Minigolf (bola), Parchís, Oca, Damas, Conecta 4, 3 en raya y Trivial (tus fichas), Sokoban y Magnate.
+**🎨 Apariencia · Fondo de Tablero y Personajes:** todos los juegos que no son de cartas tienen «Fondo de Tablero» (los 12 tapetes de `img/cartas/tapetes/`, o 🎲 aleatorio; por defecto «Sin fondo»). Los juegos de canvas (Air Hockey, Ladrillos, Bloques, Serpiente) pintan el tapete con `imagenTapete` + `pintarTapete` (`js/core/cartas.js`); el resto lo pone una regla CSS detrás del tablero (`grupoFondo('selector')` en `js/core/aspectos.js`). «Personajes» (los de Sokoban, `js/core/personajes.js`) está en Serpiente (cabeza), Rompe-Ladrillos (bola), Air Hockey (tu mazo), Parchís, Oca, Damas, Conecta 4, 3 en raya y Trivial (tus fichas), Sokoban y Magnate.
+
+**Billar · 🎨 Apariencia:** color del tapete, tapete de imagen (los de `img/cartas/tapetes/`, encima del color), bandas de madera, colores de las bolas (en Pool; en Snooker los colores son los del reglamento) y 4 tacos.
+
+## Versión
+La versión está en `js/version.js` y se ve al pie de ⚙️ Ajustes. Al publicar cambios, sube el número allí y añade una línea aquí.
+Formato MAYOR.MENOR.PARCHE: MAYOR = cambios grandes en toda la app · MENOR = juegos o funciones nuevas · PARCHE = arreglos.
+
+## Historial de versiones
+| Versión | Fecha | Cambios |
+|---|---|---|
+| **3.1.0** | 19/10/2026 | 🎱 **Billar** (Pool 8, Pool 9 y Snooker de 6 rojas, contra la CPU o 2 jugadores) sustituye al Minigolf. Número de versión al pie de Ajustes. Guía `docs/ANADIR-JUEGO.md` sin «Ñ» en el nombre. |
+| 3.0.0 | 10/2026 | Nueva 🎨 Apariencia: cada categoría en su propia ventana, tapetes de imagen, dorsos y barajas aleatorios, «Fondo de Tablero» y «Personajes» en todos los juegos; iconos de oficinas/sede elegibles en Magnate. |
+| 2.6.0 | 10/2026 | Corazones, Kakuro, Sokoban, Póker cubierto y Air Hockey. Diccionario español (LibreOffice). |
+| 2.5.0 | 10/2026 | Magnate Tecnológico. Menú superior por categorías, fichas 3:2 y estadísticas por categoría. |
+| 2.0.0 | 10/2026 | Auditoría completa: logros, reto del día, podio, compartir, IA en segundo plano, mejoras en todos los juegos. |

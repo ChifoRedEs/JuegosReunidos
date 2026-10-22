@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-7c078c5ee1';
+const VERSION = 'jr-9955bb75f1';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -19,6 +19,7 @@ const ARCHIVOS = [
 './img/cartas/tapetes/nombres.json',
 './js/app.js',
 './js/registry.js',
+'./js/version.js',
 './js/core/ajustes.js',
 './js/core/arrastrar.js',
 './js/core/aspectos.js',
@@ -50,6 +51,9 @@ const ARCHIVOS = [
 './js/games/ajedrez/ajedrez.css',
 './js/games/ajedrez/index.js',
 './js/games/ajedrez/reglas.js',
+'./js/games/billar/billar.css',
+'./js/games/billar/index.js',
+'./js/games/billar/motor.js',
 './js/games/blackjack/blackjack.css',
 './js/games/blackjack/index.js',
 './js/games/blackjack/motor.js',

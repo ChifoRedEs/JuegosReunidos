@@ -1,0 +1,17 @@
+/* Billar */
+.bihud{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px auto 8px;max-width:440px}
+.bihud span{display:flex;flex-direction:column;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:4px 10px;min-width:0}
+.bihud span.turno{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 25%,transparent)}
+.bihud span.gana{border-color:var(--ok)}
+.bihud small{font-weight:800;font-size:13px;color:var(--mut)}
+.bihud em{font-style:normal;font-size:14px;font-weight:700}
+.bihud em b{font:800 18px 'Baloo 2',system-ui,sans-serif}
+.bizona{margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 12px 22px rgba(0,0,0,.3))}
+.bizona canvas{display:block;width:100%;cursor:crosshair}
+.bimsg{text-align:center;min-height:22px;font-size:14px}
+.bictl{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;max-width:440px;margin:6px auto}
+.bictl.apagado{opacity:.55}
+.bictl .btn{min-height:46px;padding:6px 12px;font-size:18px}
+.bictl .bitirar{font-size:16px}
+.bifza{display:flex;flex-direction:column;font-size:12px;font-weight:800;color:var(--mut)}
+.bifza input{width:100%;accent-color:var(--red);height:30px}

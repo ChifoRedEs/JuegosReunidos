@@ -248,3 +248,5 @@ main{padding-top:14px}
 .ap-emojis{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
 .ap-emojis .ap-sec{grid-column:1/-1;font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
 .ap-o.ap-e{justify-content:center;padding:4px;min-height:46px;font-size:26px;line-height:1}
+/* versión al pie de Ajustes */
+.version{text-align:center;color:var(--mut);font-size:12.5px;font-weight:800;margin:18px 0 6px;letter-spacing:.02em}

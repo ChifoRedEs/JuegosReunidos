@@ -104,3 +104,15 @@ Ayudas: 💡 sugerencia de pase, cartas recibidas marcadas con ★, cartas que n
 ## Minigolf (juego nuevo, categoría Arcade)
 `js/games/minigolf/` (hoyos.js · motor.js · index.js · minigolf.css). Recorrido propio de 9 hoyos (par 25) con curvas, rampas, arena, agua (+1 golpe y la bola vuelve), topes y un molino con aspas que giran. Golpe tipo tirachinas: se arrastra hacia atrás y se suelta; la línea marca la dirección y el color, la fuerza. De 1 a 4 jugadores por turnos (cada uno completa el hoyo), tarjeta con birdies y bogeys, máximo de golpes por hoyo (par + 4), podio de los 10 mejores (un jugador) y 4 campos en 🎨 Apariencia.
 Física con 400 subpasos por segundo, rozamiento del césped y de la arena, rebotes en bordes, muros, topes y aspas (que empujan la bola con su giro), y hoyo que solo atrapa la bola si llega despacio. Una prueba comprueba que cada hoyo se puede completar sin que la bola salga del campo.
+
+## Billar sustituye al Minigolf (versión 3.1.0)
+**Por qué se quitó el Minigolf:** una bola podía quedarse parada para siempre dentro de una rampa apoyada contra un muro. La rampa la seguía empujando contra la pared, así que nunca llegaba a «pararse» y el juego esperaba sin fin a que terminara el golpe. (No era que la rampa se dibujara encima de la bola.)
+
+`js/games/billar/` (motor.js · index.js · billar.css). Mesa vertical en canvas para el móvil, con física por pasos (480 por segundo): choques entre bolas, bandas, troneras y rozamiento del paño.
+- **Pool 8:** grupos de lisas y rayadas (la mesa queda abierta hasta que alguien mete una bola tras el saque) y la 8 al final; meterla antes de tiempo o con falta hace perder.
+- **Pool 9:** siempre hay que tocar primero la bola más baja; gana quien mete la 9.
+- **Snooker de 6 rojas:** roja y color alternos (los colores vuelven a su sitio), color libre tras la última roja, colores en orden al final, faltas de al menos 4 puntos y bola en mano dentro de la D.
+- **Faltas comunes:** meter la blanca, no tocar ninguna bola, tocar primero una que no toca y, en Pool, que ninguna bola toque banda. Tras una falta, el rival tiene bola en mano.
+- **Controles:** tocar o arrastrar sobre la mesa para apuntar, ↺ ↻ para afinar, fuerza y Tirar (o teclado). Línea de ayuda larga, corta o desactivada, con «bola fantasma», trayectoria de la bola tocada y una ✕ si es una bola que no puedes tocar primero.
+- **CPU (3 niveles):** en un Worker calcula el golpe fantasma hacia cada tronera para cada bola legal, simula varias fuerzas y elige el mejor; el nivel cambia cuántos tiros prueba y lo que se desvía al tirar. Con bola en mano, prueba varios sitios.
+- **🎨 Apariencia:** color del tapete, tapete de imagen, bandas, bolas y taco.

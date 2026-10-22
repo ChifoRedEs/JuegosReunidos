@@ -1,5 +1,5 @@
 // PLANTILLA DE JUEGO — copia esta carpeta (js/games/_plantilla → js/games/<tu-id>), renombra y rellena.
-// Después añade una línea en js/registry.js. Guía completa: docs/AÑADIR-JUEGO.md
+// Después añade una línea en js/registry.js. Guía completa: docs/ANADIR-JUEGO.md
 //
 // El módulo exporta (con nombre) estas funciones, que app.js llama:
 //   mount(root, api)  pinta el juego dentro de `root`. Puede ser async.
