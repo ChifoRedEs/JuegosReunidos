@@ -1,6 +1,8 @@
 // Air Hockey: contra la CPU (3 niveles) o 2 jugadores en el mismo móvil (cada uno controla su mitad con un dedo).
 import { $ } from '../../core/dom.js';
 import * as A from './motor.js';
+import { grupoFondo, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, esc = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, dedos = new Map(), obj = [null, null], teclas = {}, rastro = [], cartel = null, ultGolpe = 0, hudAnt = '';
@@ -24,7 +26,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; dedos = new Map(); obj = [null, null]; rastro = []; cartel = null;
-  asp = api.aspecto([{ clave: 'tema', titulo: 'Mesa', def: 'hielo', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPersonaje('Personajes (tu mazo)'), { clave: 'tema', titulo: 'Mesa', def: 'hielo', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) }], () => { if (S) dibujar(); });
   await api.css(new URL('./airhockey.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && A.MODOS[c0.modo] && A.NIVELES[c0.nivel] && A.METAS.includes(c0.meta)) cfg = { ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -146,7 +148,8 @@ function dibujar() {
   if (!cv || !S) return;
   const T = TEMAS[asp.valores.tema] || TEMAS.hielo, k = esc * dpr, W = A.ANCHO, H = A.ALTO, bocaX = (W - A.PORTERIA) / 2;
   ctx.setTransform(k, 0, 0, k, 0, 0);
-  ctx.fillStyle = T.mesa; ctx.fillRect(0, 0, W, H);
+  const tap = tapeteElegido(asp), im = tap ? imagenTapete(tap, () => dibujar()) : null;      // «Fondo de Tablero»
+  if (im) pintarTapete(ctx, im, W, H, .35); else { ctx.fillStyle = T.mesa; ctx.fillRect(0, 0, W, H); }
   ctx.strokeStyle = T.linea; ctx.lineWidth = 5;
   ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
   ctx.beginPath(); ctx.arc(W / 2, H / 2, 90, 0, Math.PI * 2); ctx.stroke();
@@ -173,6 +176,8 @@ function dibujar() {
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(m.x, m.y, A.R_MAZO, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = shade(COL[j]); ctx.beginPath(); ctx.arc(m.x, m.y, A.R_MAZO * .42, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = COL[j]; ctx.beginPath(); ctx.arc(m.x - 3, m.y - 4, A.R_MAZO * .3, 0, Math.PI * 2); ctx.fill();
+    const emo = j === 0 ? emojiPersonaje(asp) : null;      // «Personajes»: tu mazo lleva tu personaje
+    if (emo) { ctx.font = `${Math.round(A.R_MAZO * 1.5)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, m.x, m.y + A.R_MAZO * .06); }
   });
   if (cartel) {
     ctx.globalAlpha = Math.min(1, cartel.t * 2); ctx.fillStyle = cartel.color; ctx.font = "800 64px 'Baloo 2', system-ui, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';

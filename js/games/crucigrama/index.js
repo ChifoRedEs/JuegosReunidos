@@ -1,6 +1,6 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { BANCOS } from './pistas.js';
 import { NIVELES, generar, numerar, celdasDe } from './generador.js';
 import { crearTeclado } from '../../core/teclado.js';
@@ -41,7 +41,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; malas = new Set();
-  asp = api.aspecto([grupoTablero(), { clave: 'letras', titulo: 'Letras', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondas' }, { id: 'imprenta', nombre: 'Imprenta' }, { id: 'clasico', nombre: 'Clásicas' }] }]);
+  asp = api.aspecto([grupoFondo('.cwv'), grupoTablero(), { clave: 'letras', titulo: 'Letras', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondas' }, { id: 'imprenta', nombre: 'Imprenta' }, { id: 'clasico', nombre: 'Clásicas' }] }]);
   await api.css(new URL('./crucigrama.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: null, done: completo(g) } : null;

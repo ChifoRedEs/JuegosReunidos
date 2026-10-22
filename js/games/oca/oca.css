@@ -24,6 +24,7 @@
 .occ.salida{background:linear-gradient(135deg,#FFFFFF,#D9E4FF)}
 .ocfichas{position:absolute;inset:6px;pointer-events:none}
 .ocf{position:absolute;width:calc(min(100vw,460px) / 8 * .38);height:calc(min(100vw,460px) / 8 * .38);border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 40%,#fff),var(--c) 60%);border:2px solid #fff;box-shadow:0 3px 5px rgba(0,0,0,.45);transform:translate(-50%,-50%);transition:left .16s ease-out,top .16s ease-out;z-index:2}
+.ocf.pj{display:grid;place-items:center;font-size:calc(min(100vw,460px) / 8 * .27);line-height:1}
 .ocf.turno{z-index:3;animation:ocbota 1s ease-in-out infinite}
 .ocf.mueve{animation:none;transform:translate(-50%,-62%) scale(1.15);z-index:4}
 @keyframes ocbota{50%{transform:translate(-50%,-62%)}}

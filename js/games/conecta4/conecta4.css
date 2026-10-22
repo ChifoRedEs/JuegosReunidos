@@ -25,6 +25,8 @@
 .d{display:none;position:absolute;inset:10%;border-radius:50%;z-index:1}
 .d.p1,.d.p2{display:block;background:radial-gradient(circle at 36% 30%,color-mix(in srgb,var(--dc) 68%,#fff),var(--dc) 64%);box-shadow:inset 0 0 0 .2em rgba(0,0,0,.13)}
 .d.p1{--dc:var(--r)}.d.p2{--dc:var(--y)}
+.d.pj{place-items:center;font-size:min(6.6vw,30px);line-height:1}
+.d.p1.pj,.d.p2.pj{display:grid}
 .d.ult::after{content:"";position:absolute;inset:33%;border-radius:50%;border:.14em solid rgba(0,0,0,.3)}
 .d.cae{animation:cae .5s both}
 @keyframes cae{

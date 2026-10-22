@@ -1,6 +1,6 @@
 // Magnate Tecnológico · juego de compraventa de empresas tecnológicas (2 a 4 jugadores, personas o CPU).
 import { $, esc, esperar } from '../../core/dom.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { FICHAS as PERSONAJES, opcionesPersonajes } from '../../core/personajes.js';
 import { GRUPOS, CASILLAS, NUBE, RED, SALARIO, FIANZA, OFICINAS, SEDES, COLORES_JUGADOR, FICHAS } from './datos.js';
 import { Partida, REGLAS, validar as validarPartida } from './motor.js';
@@ -31,7 +31,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; vivo = true; jugando = false; pendiente = null;
-  asp = api.aspecto([grupoTablero(),
+  asp = api.aspecto([grupoFondo('#mtTab'), grupoTablero(),
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
     { clave: 'edif', titulo: 'Iconos de oficinas y sede', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) }],
   () => { if (G && $('#mtTab')) { aplicarPersonaje(); pintar(); } });

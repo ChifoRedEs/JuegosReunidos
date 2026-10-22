@@ -1,5 +1,5 @@
 import { $, esc, esperar } from '../../core/dom.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 import * as T from './motor.js';
 
 const FORMAS = ['circulo', 'estrella', 'diamante', 'cuadrado'];
@@ -16,7 +16,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; rodando = false;
-  asp = api.aspecto([grupoTablero(), { clave: 'ficha', titulo: 'Fichas de los jugadores', def: 'circulo', opciones: [{ id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'cuadrado', nombre: '■ Cuadrado' }] }], () => { if (S) pintar(); });
+  asp = api.aspecto([grupoFondo('#tvB'), grupoPersonaje('Personajes (tu ficha)'), grupoTablero(), { clave: 'ficha', titulo: 'Fichas de los jugadores', def: 'circulo', opciones: [{ id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'cuadrado', nombre: '■ Cuadrado' }] }], () => { if (S) pintar(); });
   await api.css(new URL('./trivial.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [6, 9].includes(c0.nCat) && ['opciones', 'escribir'].includes(c0.modo) && T.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...c0, banco: T.BANCOS[c0.banco] ? c0.banco : 'mix', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -54,9 +54,10 @@ const CX = 160, CY = 160, RO = 154, RI = 120;
 const P = (r, a) => [CX + r * Math.cos(a), CY + r * Math.sin(a)];
 const sector = (r1, r2, a0, a1) => { const [x0, y0] = P(r2, a0), [x1, y1] = P(r2, a1), [x2, y2] = P(r1, a1), [x3, y3] = P(r1, a0); const g = a1 - a0 > Math.PI ? 1 : 0; return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r2} ${r2} 0 ${g} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}A${r1} ${r1} 0 ${g} 0 ${x3.toFixed(1)} ${y3.toFixed(1)}Z`; };
 const estrella = (x, y, R) => Array.from({ length: 10 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? R * .5 : R; return `${(x + Math.cos(a) * q).toFixed(1)},${(y + Math.sin(a) * q).toFixed(1)}`; }).join(' ');
-function ficha(forma, x, y, col, ini, activa) {
+function ficha(forma, x, y, col, ini, activa, emo = null) {
   const R = activa ? 9.5 : 8, cl = activa ? 'tok act' : 'tok';
   const f = forma === 'estrella' ? `<polygon class="${cl}" points="${estrella(x, y, R + 2)}" fill="${col}" stroke-linejoin="round"/>` : forma === 'diamante' ? `<polygon class="${cl}" points="${x},${y - R - 1.5} ${x + R + 1},${y} ${x},${y + R + 1.5} ${x - R - 1},${y}" fill="${col}" stroke-linejoin="round"/>` : forma === 'cuadrado' ? `<rect class="${cl}" x="${x - R + .5}" y="${y - R + .5}" width="${(R - .5) * 2}" height="${(R - .5) * 2}" rx="3" fill="${col}"/>` : `<circle class="${cl}" cx="${x}" cy="${y}" r="${R}" fill="${col}"/>`;
+  if (emo) return f + `<text class="toc" x="${x}" y="${y + 1}" style="font-size:${activa ? 15 : 13}px" text-anchor="middle" dominant-baseline="central">${emo}</text>`;      // «Personajes»: tu ficha lleva tu personaje
   return f + `<text class="toc" x="${x}" y="${y + 3}">${esc(ini)}</text>`;
 }
 function tablero() {
@@ -76,7 +77,7 @@ function tablero() {
   h += `<text class="hn" x="${CX}" y="${CY - 3}">${esc(yo.nombre)}</text><text class="hs" x="${CX}" y="${CY + 11}">${yo.centro ? `final ${yo.final.length}/${S.nCat}` : `${yo.q.filter(Boolean).length}/${S.nCat} quesitos`}</text>`;
   // fichas
   const porCasilla = {}; S.jug.forEach((p, j) => { (porCasilla[p.pos] = porCasilla[p.pos] || []).push(j); });
-  S.jug.forEach((p, j) => { const grupo = porCasilla[p.pos], k = grupo.indexOf(j), a = a0(p.pos) + da / 2, r = (RO + RI) / 2 + (grupo.length > 1 ? (k - (grupo.length - 1) / 2) * 13 : 0), [x, y] = P(r, a); h += ficha(asp.valores.ficha, x, y, T.COLORES_J[j], p.nombre.trim()[0] ? p.nombre.trim()[0].toUpperCase() : '?', j === S.turno && S.fase !== 'fin'); });
+  S.jug.forEach((p, j) => { const grupo = porCasilla[p.pos], k = grupo.indexOf(j), a = a0(p.pos) + da / 2, r = (RO + RI) / 2 + (grupo.length > 1 ? (k - (grupo.length - 1) / 2) * 13 : 0), [x, y] = P(r, a); h += ficha(asp.valores.ficha, x, y, T.COLORES_J[j], p.nombre.trim()[0] ? p.nombre.trim()[0].toUpperCase() : '?', j === S.turno && S.fase !== 'fin', p.cpu ? null : emojiPersonaje(asp)); });
   if (humano) S.destinos.forEach((d, k) => { h += `<path class="dest" data-dir="${k ? 'a' : 'h'}" d="${sector(RI, RO, a0(d), a0(d) + da)}"><title>${k ? 'Antihorario' : 'Horario'}</title></path>`; });
   $('#tvB').innerHTML = h;
 }

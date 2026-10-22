@@ -1,6 +1,6 @@
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { NIVELES, LIMITES, maxMinas, medidas, nuevo, abrir, acorde, bandera, pista as pistaMotor, banderas, crearCache, crearMinasLogicas } from './motor.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'Personalizado' };
@@ -37,7 +37,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; modo = 'abrir'; pst = null; press = null; pulsando = false;
-  asp = api.aspecto([grupoTablero(),
+  asp = api.aspecto([grupoFondo('#bmTab'), grupoTablero(),
     { clave: 'minas', titulo: 'Minas', def: 'bomba', opciones: Object.entries(MINAS).map(([id, e]) => ({ id, nombre: e })) },
     { clave: 'banderas', titulo: 'Banderas', def: 'bandera', opciones: Object.entries(BANDERAS).map(([id, e]) => ({ id, nombre: e })) },
     { clave: 'estilo', titulo: 'Estilo de las casillas', def: 'relieve', opciones: [{ id: 'relieve', nombre: 'Relieve' }, { id: 'plano', nombre: 'Planas' }] }],

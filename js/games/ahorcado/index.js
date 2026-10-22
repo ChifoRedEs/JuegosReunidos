@@ -1,5 +1,5 @@
 import { $, esc } from '../../core/dom.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { NIVELES, temasDe, elegir, base, mayus } from './palabras.js';
 import * as D from '../../core/diccionario.js';
 import { DISENOS, TOTAL } from './dibujos.js';
@@ -31,7 +31,7 @@ const acertada = d => letrasDe(d.palabra).every(l => d.usadas.includes(l));
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; recienRevelada = new Set();
-  asp = api.aspecto([grupoTablero(), { clave: 'dibujo', titulo: 'Dibujo', def: 'clasico', opciones: Object.entries(DISENOS).map(([id, d]) => ({ id, nombre: d.nombre })) }], () => pintar(false));
+  asp = api.aspecto([grupoFondo('#ahFig'), grupoTablero(), { clave: 'dibujo', titulo: 'Dibujo', def: 'clasico', opciones: Object.entries(DISENOS).map(([id, d]) => ({ id, nombre: d.nombre })) }], () => pintar(false));
   await api.css(new URL('./ahorcado.css', import.meta.url));
   const g = api.cargar(); S = g ? { ...g } : null;
   root.innerHTML = `

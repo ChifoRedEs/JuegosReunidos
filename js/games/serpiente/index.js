@@ -1,5 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
+import { grupoFondo, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, cv = null, ctx = null, dpr = 1, raf = 0, acc = 0, tPrev = 0, cola = [], reg = false;
 let onKey = null, onVis = null, onRes = null, toque = null, efecto = null, nuevoRecord = false, recordAct = 0, hudAnt = '', fondo = null, podioPos = -1;
@@ -18,7 +20,7 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; cola = []; efecto = null; nuevoRecord = false;
-  asp = api.aspecto([{ clave: 'tema', titulo: 'Estilo', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPersonaje('Personajes (cabeza)'), { clave: 'tema', titulo: 'Estilo', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./serpiente.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.MODOS[c0.modo] && M.VELOCIDADES[c0.vel] && M.TAMANOS[c0.tam]) cfg = { ...cfg, ...c0, cruceta: c0.cruceta !== false };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -166,7 +168,9 @@ function dibujar() {
   ctx.shadowBlur = 0;
   // ojos
   const cab = S.serp[0], hx = cab % n * c + c / 2, hy = Math.floor(cab / n) * c + c / 2, d = S.dir, px = [0, 1, 0, -1][d], py = [-1, 0, 1, 0][d];
-  for (const s of [-1, 1]) {
+  const emo = emojiPersonaje(asp);      // «Personajes»: tu personaje es la cabeza de la serpiente
+  if (emo) { ctx.font = `${Math.round(c * .95)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, hx, hy + c * .04); }
+  else for (const s of [-1, 1]) {
     const ex = hx + px * c * .12 + (-py) * s * c * .2, ey = hy + py * c * .12 + px * s * c * .2;
     ctx.fillStyle = T.ojo; ctx.beginPath(); ctx.arc(ex, ey, c * .14, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = S.fase === 'fin' && S.motivo !== 'lleno' ? T.comida : T.txt; ctx.beginPath();
@@ -180,10 +184,12 @@ function dibujar() {
   }
 }
 function fondoDe(T, n, L, c) {
-  const clave = `${asp.valores.tema}|${n}|${L}|${S.modo}`;
+  const tap = tapeteElegido(asp), im = tap ? imagenTapete(tap, () => { fondo = null; dibujar(); }) : null;      // «Fondo de Tablero»
+  const clave = `${asp.valores.tema}|${n}|${L}|${S.modo}|${im ? tap : ''}`;
   if (fondo && fondo.clave === clave) return fondo.cv;
   const f = document.createElement('canvas'); f.width = f.height = L; const g = f.getContext('2d');
-  for (let y = 0; y < n; y++) for (let k = 0; k < n; k++) { g.fillStyle = (y + k) % 2 ? T.b : T.a; g.fillRect(k * c, y * c, c + 1, c + 1); }
+  if (im) pintarTapete(g, im, L, L, .3);
+  else for (let y = 0; y < n; y++) for (let k = 0; k < n; k++) { g.fillStyle = (y + k) % 2 ? T.b : T.a; g.fillRect(k * c, y * c, c + 1, c + 1); }
   g.strokeStyle = T.marco; g.lineWidth = Math.max(2, c * .12); g.strokeRect(g.lineWidth / 2, g.lineWidth / 2, L - g.lineWidth, L - g.lineWidth);
   if (S.modo === 'libre') { g.setLineDash([c * .3, c * .3]); g.strokeStyle = T.s1; g.globalAlpha = .35; g.strokeRect(1, 1, L - 2, L - 2); }
   fondo = { clave, cv: f };

@@ -4,6 +4,7 @@ import { enSegundoPlano } from '../../core/ia/remoto.js';
 import * as K from './motor.js';
 import { NIVELES } from './niveles.js';
 import { FICHAS, opcionesPersonajes } from '../../core/personajes.js';
+import { grupoFondo } from '../../core/aspectos.js';
 
 const MOTOR = new URL('./motor.js', import.meta.url).href;
 const MODOS = { campana: '🗺️ Campaña', azar: '🎲 Generados' };
@@ -47,7 +48,7 @@ export function resumen(d) { return { texto: `${titulo(d)} · ${d.done ? `resuel
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; andando = null;
-  asp = api.aspecto([{ clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+  asp = api.aspecto([grupoFondo('#skTab'), { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: opcionesPersonajes() }],
   () => { if (S && $('#skTab')) { construir(); pintar(); } });

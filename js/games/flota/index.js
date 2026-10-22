@@ -1,5 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import * as F from './motor.js';
+import { grupoFondo } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, onKey = null;
 let sel = 0, vertical = false, pista = -1, efecto = null, marcador = { g: 0, p: 0 };
@@ -22,7 +23,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; sel = 0; vertical = false; pista = -1; efecto = null;
-  asp = api.aspecto([
+  asp = api.aspecto([grupoFondo('#flCuerpo'), 
     { clave: 'mar', titulo: 'Color del mar', def: 'oceano', opciones: [{ id: 'oceano', nombre: 'Océano', sw: ['#2F80ED', '#1B4FA8'] }, { id: 'tropical', nombre: 'Tropical', sw: ['#16C1C8', '#0B8A9A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3A78', '#141C40'] }, { id: 'papel', nombre: 'Papel', sw: ['#EEF2FB', '#9DB0D8'] }] },
     { clave: 'barcos', titulo: 'Color de los barcos', def: 'gris', opciones: [{ id: 'gris', nombre: 'Gris naval', sw: ['#6B7A90'] }, { id: 'verde', nombre: 'Verde militar', sw: ['#5F7A3A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#F07B22'] }] },
   ], () => { if (S) pintar(); });

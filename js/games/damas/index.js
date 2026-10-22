@@ -2,6 +2,7 @@ import { $ } from '../../core/dom.js';
 import { REGLAS, tableroInicial, jugadas, aplicar, contar, clavePos, esRey, dueno, fichasIniciales } from './reglas.js';
 import { elegirPorRegla } from './ia.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
+import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 const IA_URL = new URL('./ia.js', import.meta.url).href;
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -35,7 +36,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
   api = a; rootEl = root; pensando = false; anim = null;
-  asp = api.aspecto([
+  asp = api.aspecto([grupoFondo('#dmTab'), grupoPersonaje('Personajes (tus fichas)'), 
     { clave: 'tablero', titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
     { clave: 'colores', titulo: 'Colores de las fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Marfil / Rojo', sw: ['#FFFDF6', '#C21F2A'] }, { id: 'oceano', nombre: 'Celeste / Naranja', sw: ['#52C7F0', '#E26A00'] }, { id: 'bosque', nombre: 'Verde / Morado', sw: ['#56C94A', '#6B2FD1'] }, { id: 'oro', nombre: 'Oro / Negro', sw: ['#E0A800', '#161B33'] }] },
     { clave: 'fichas', titulo: 'Forma de las fichas', def: 'disco', opciones: [{ id: 'disco', nombre: '● Disco' }, { id: 'anillo', nombre: '◎ Anillo' }, { id: 'gema', nombre: '⬢ Gema' }, { id: 'cuadrada', nombre: '▢ Cuadrada' }] },
@@ -184,15 +185,15 @@ function pintar() {
   const ult = new Set(C.ultimo ? C.ultimo.path.map(pos) : []);
   const rutaS = new Set(C.ruta ? C.ruta.map(pos) : []), sig = new Set();
   if (C.ruta) candidatas().forEach(m => { const n = m.path[C.ruta.length]; if (n) sig.add(pos(n)); });
-  const n = R().n;
+  const n = R().n, emo = emojiPersonaje(asp);      // «Personajes»: tus fichas (las de abajo) llevan tu personaje
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
     const p = C.b[r][c], k = pos([r, c]), s = sq[r * n + c];
     const fl = (ult.has(k) ? 'l' : '') + (C.ruta && igual(C.ruta[0], [r, c]) ? 's' : rutaS.has(k) ? 'r' : '') + (sig.has(k) ? 't' : '');
-    const key = (p || '') + '|' + fl;
+    const pj = !!(emo && p && dueno(p) === 'w'), key = (p || '') + '|' + fl + '|' + (pj ? emo : '');
     if (s.dataset.k === key) continue;
     s.dataset.k = key;
     s.className = 'sq' + ((r + c) % 2 ? ' d' : '') + [...fl].map(x => ' ' + x).join('');
-    s.innerHTML = p ? `<div class="pc ${dueno(p)}">${esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
+    s.innerHTML = p ? `<div class="pc ${dueno(p)}${pj ? ' pj' : ''}">${pj ? `${emo}${esRey(p) ? '<b class="cr">♛\uFE0E</b>' : ''}` : esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
     if ((r + c) % 2) s.setAttribute('aria-label', `Fila ${r + 1}, columna ${c + 1}, ${p ? (dueno(p) === 'w' ? 'ficha blanca' : 'ficha roja') + (esRey(p) ? ' dama' : '') : 'vacía'}`);
   }
   if (anim) {

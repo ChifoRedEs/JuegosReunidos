@@ -1,7 +1,7 @@
 import { $, esperar, fmtTiempo, rnd } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { SIZES, runs, colsOf, generarAleatorio } from './solver.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -33,7 +33,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
   api = a; rootEl = root;
-  asp = api.aspecto([grupoTablero(),
+  asp = api.aspecto([grupoFondo('.ngwrap'), grupoTablero(),
     { clave: 'relleno', titulo: 'Color del relleno', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2F6BFF'] }, { id: 'rosa', nombre: 'Rosa', sw: ['#FF3FA4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0FB56A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#FF7A1A'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#7A4DFF'] }] },
     { clave: 'forma', titulo: 'Forma de las casillas rellenas', def: 'redondeado', opciones: [{ id: 'redondeado', nombre: '▢ Redondeada' }, { id: 'cuadrado', nombre: '■ Cuadrada' }, { id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'corazon', nombre: '♥ Corazón' }] }]);
   modo = 'f'; ocupado = false; drag = null;

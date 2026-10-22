@@ -1,5 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import * as B from './motor.js';
+import { grupoFondo, tapeteElegido } from '../../core/aspectos.js';
+import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, onKey = null, onKeyUp = null, onVis = null;
 let cv = null, ctx = null, cvR = null, cvN = null, dpr = 1, bajando = false, rep = null, gesto = null, flash = null, letrero = null, nuevoRecord = false, onRes = null, hudAnt = '', rejilla = null, podioPos = -1;
@@ -25,7 +27,7 @@ const reloj = ms => { const s = Math.max(0, ms) / 1000; return `${Math.floor(s /
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; bajando = false; flash = null; letrero = null; nuevoRecord = false;
-  asp = api.aspecto([{ clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
+  asp = api.aspecto([grupoFondo(''), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
     { clave: 'fantasma', titulo: 'Pieza fantasma', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./bloques.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && B.MODOS[c0.modo] && Number.isInteger(c0.nivel) && c0.nivel >= 1 && c0.nivel <= 15) cfg = { ...cfg, ...c0, botones: c0.botones !== false };
@@ -211,10 +213,12 @@ function dibujar() {
   mini(cvN, S.cola.slice(0, 3), P, F, false);
 }
 function fondoRejilla(F, L) {
-  const clave = F[0] + cv.width + 'x' + cv.height;
+  const tap = tapeteElegido(asp), im = tap ? imagenTapete(tap, () => { rejilla = null; dibujar(); }) : null;      // «Fondo de Tablero»
+  const clave = F[0] + cv.width + 'x' + cv.height + (im ? tap : '');
   if (rejilla && rejilla.clave === clave) return rejilla.cv;
   const f = document.createElement('canvas'); f.width = cv.width; f.height = cv.height; const g = f.getContext('2d');
-  g.fillStyle = F[0]; g.fillRect(0, 0, f.width, f.height); g.strokeStyle = F[1]; g.lineWidth = 1; g.beginPath();
+  if (im) pintarTapete(g, im, f.width, f.height, .42); else { g.fillStyle = F[0]; g.fillRect(0, 0, f.width, f.height); }
+  g.strokeStyle = im ? 'rgba(255,255,255,.16)' : F[1]; g.lineWidth = 1; g.beginPath();
   for (let x = 1; x < B.W; x++) { g.moveTo(x * L, 0); g.lineTo(x * L, f.height); }
   for (let y = 1; y < B.VISIBLES; y++) { g.moveTo(0, y * L); g.lineTo(f.width, y * L); }
   g.stroke(); rejilla = { clave, cv: f };

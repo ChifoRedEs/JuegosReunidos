@@ -1,5 +1,5 @@
 import { $, esc } from '../../core/dom.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { crearTeclado } from '../../core/teclado.js';
 import { CATEGORIAS } from './paneles.js';
 import * as R from './motor.js';
@@ -24,7 +24,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; girando = false; res = null; recien = new Set();
-  asp = api.aspecto([grupoTablero('Colores del panel'), { clave: 'ruleta', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { dibujar(); pintar(); } });
+  asp = api.aspecto([grupoFondo('#rlJuego'), grupoTablero('Colores del panel'), { clave: 'ruleta', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { dibujar(); pintar(); } });
   await api.css(new URL('./ruleta.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && R.RONDAS.includes(c0.rondas) && R.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 3) cfg = { ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };

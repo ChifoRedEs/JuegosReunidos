@@ -1,5 +1,6 @@
 import { crearDuelo } from '../../core/duelo.js';
 import { VARIANTES, estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML } from './reglas.js';
+import { grupoFondo, grupoPersonaje, emojiDeValores } from '../../core/aspectos.js';
 
 let tab = null, cols = [], discos = [], holes = [], prevN = -1, vAct = null;
 
@@ -24,15 +25,16 @@ function montar(cont, ctx, v) {
 }
 function pintar(e, ctx, v) {
   if (!tab || v !== vAct) return;
-  const V = VARIANTES[v], linea = new Set(e.fin ? e.fin.linea : []);
+  const V = VARIANTES[v], linea = new Set(e.fin ? e.fin.linea : []), emo = emojiDeValores(ctx.valores());      // «Personajes»: tus fichas llevan tu personaje
   if (prevN < 0) prevN = e.n;
   for (let i = 0; i < V.cols * V.filas; i++) {
     const val = e.b[i], d = discos[i], hl = holes[i], r = i / V.cols | 0, c = i % V.cols;
-    const key = val + (i === e.ult ? 'u' : '') + (linea.has(i) ? 'g' : '');
+    const pj = !!(emo && val && val === ctx.yo()), key = val + (i === e.ult ? 'u' : '') + (linea.has(i) ? 'g' : '') + (pj ? emo : '');
     if (d.dataset.k !== key) {
       const prev = +d.dataset.val || 0, cae = val && prev !== val && i === e.ult && e.n === prevN + 1;
       const conserva = val && prev === val && d.classList.contains('cae');
-      d.className = 'd' + (val ? ' p' + val : '') + (i === e.ult ? ' ult' : '') + (cae || conserva ? ' cae' : '');
+      d.textContent = pj ? emo : '';
+      d.className = 'd' + (val ? ' p' + val : '') + (pj ? ' pj' : '') + (i === e.ult ? ' ult' : '') + (cae || conserva ? ' cae' : '');
       if (cae) d.style.setProperty('--f', r);
       d.dataset.k = key; d.dataset.val = val;
       hl.classList.toggle('gana', linea.has(i));
@@ -54,7 +56,7 @@ function pintar(e, ctx, v) {
 const duelo = crearDuelo({
   id: 'conecta4', css: new URL('./conecta4.css', import.meta.url), iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Rojo', 'Amarillo'],
   chip: n => `<i class="ch c4${n}"></i>`,
-  aspecto: [
+  aspecto: [grupoFondo('#duTab'), grupoPersonaje('Personajes (tus fichas)'), 
     { clave: 'tablero', titulo: 'Color del tablero', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2457A6'] }, { id: 'morado', nombre: 'Morado', sw: ['#6B3FD4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0B9A6B'] }, { id: 'coral', nombre: 'Coral', sw: ['#F0572D'] }, { id: 'negro', nombre: 'Noche', sw: ['#262B4A'] }] },
     { clave: 'colores', titulo: 'Colores de las fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Rojo / Amarillo', sw: ['#FF4757', '#FFC21A'] }, { id: 'frio', nombre: 'Celeste / Naranja', sw: ['#2ED3FF', '#FF8A00'] }, { id: 'neon', nombre: 'Neón', sw: ['#FF2E88', '#7CFF3A'] }, { id: 'bn', nombre: 'Blanco / Negro', sw: ['#F6F7FB', '#1B2038'] }] },
     { clave: 'forma', titulo: 'Forma de las fichas', def: 'redonda', opciones: [{ id: 'redonda', nombre: '● Redonda' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'corazon', nombre: '♥ Corazón' }] },

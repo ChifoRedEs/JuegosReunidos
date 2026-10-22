@@ -1,4 +1,5 @@
 import { BARAJAS, urlMuestra, urlDorso, urlTapete } from './cartas.js';
+import { opcionesPersonajes } from './personajes.js';
 // Opciones de apariencia compartidas por varios juegos.
 // Cada juego declara sus grupos y llama a api.aspecto(defs, alCambiar); el valor elegido de cada grupo
 // se escribe como atributo data-<clave> en el contenedor del juego y se guarda en sus preferencias.
@@ -20,3 +21,16 @@ export const grupoMesa = () => ({ clave: 'mesa', titulo: 'Tapetes', icono: '🟩
 const grupoBaraja = (tipo, clave, titulo) => ({ clave, titulo, icono: '🃏', ventana: true, forma: 'carta', def: 'azar', opciones: [AZAR, ...BARAJAS[tipo].map(b => ({ id: b.id, nombre: b.nombre, img: urlMuestra(b) }))] });
 export const grupoBarajaEs = () => grupoBaraja('espanola', 'barajaes', 'Barajas');
 export const grupoBarajaFr = () => grupoBaraja('francesa', 'barajafr', 'Barajas');
+
+// «Fondo de Tablero» (todos los juegos que no son de cartas): una imagen de tapete detrás del tablero. `sel` = elemento del tablero (CSS);
+// los juegos de canvas pasan sel = '' y pintan el tapete ellos mismos (core/cartas.js: imagenTapete + pintarTapete) cuando asp.valores.tapete empieza por «t-».
+export const grupoFondo = sel => ({ clave: 'tapete', titulo: 'Fondo de Tablero', icono: '🖼️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
+  opciones: [{ id: 'ninguno', nombre: 'Sin fondo', icono: '🚫', nada: true }, AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
+// «Personajes»: tu personaje (los de Sokoban) sustituye a la ficha, bola o cabeza del jugador. Valor 'auto' = el diseño de siempre.
+export const grupoPersonaje = (titulo = 'Personajes') => ({ clave: 'pj', titulo, icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de siempre', sec: 'Por defecto' }, ...opcionesPersonajes()] });
+// Emoji del personaje elegido (o null)
+import { FICHAS as _PJ } from './personajes.js';
+export const emojiDeValores = v => (_PJ[v && v.pj] || {}).e || null;
+export const emojiPersonaje = asp => (_PJ[asp && asp.valores && asp.valores.pj] || {}).e || null;
+// ¿Hay un tapete elegido? → id 't-…' o null
+export const tapeteElegido = asp => { const v = asp && asp.valores && asp.valores.tapete; return v && v.startsWith('t-') ? v : null; };

@@ -1,5 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import * as L from './motor.js';
+import { grupoFondo, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, escala = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, gesto = null, teclas = { izq: false, der: false }, palaX = null, particulas = [], aviso = null, nuevoRecord = false;
@@ -17,7 +19,7 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; particulas = []; aviso = null; nuevoRecord = false;
-  asp = api.aspecto([{ clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./ladrillos.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && L.MODOS[c0.modo] && Number.isInteger(c0.nivel)) cfg = { ...cfg, ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -204,7 +206,9 @@ function dibujar() {
   if (!S || !cv || !ctx) return;
   const k = escala * dpr, T = TEMAS[asp.valores.fondo] || TEMAS.noche, ahora = performance.now();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  const g = ctx.createLinearGradient(0, 0, 0, cv.height); g.addColorStop(0, T[0]); g.addColorStop(1, T[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, cv.width, cv.height);
+  const tap = tapeteElegido(asp), im = tap ? imagenTapete(tap, () => dibujar()) : null;      // «Fondo de Tablero»
+  if (im) pintarTapete(ctx, im, cv.width, cv.height, .4);
+  else { const g = ctx.createLinearGradient(0, 0, 0, cv.height); g.addColorStop(0, T[0]); g.addColorStop(1, T[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, cv.width, cv.height); }
   ctx.setTransform(k, 0, 0, k, 0, 0);
   // ladrillos: los fijos se pintan en una capa aparte y solo se rehace cuando se rompe o agrieta alguno
   const firma = S.ladrillos.map(l => l.c + l.f * 10 + l.golpes * 100).join(',') + '|' + cv.width;
@@ -257,6 +261,8 @@ function dibujarResto(k, ahora) {
   // bolas
   for (const b of S.bolas) {                                    // halo con un círculo translúcido (shadowBlur es muy caro en móvil)
     ctx.fillStyle = S.efectos.fuego ? 'rgba(255,159,28,.28)' : 'rgba(159,208,255,.28)'; ctx.beginPath(); ctx.arc(b.x, b.y, L.RADIO * 1.9, 0, Math.PI * 2); ctx.fill();
+    const emo = emojiPersonaje(asp);      // «Personajes»: la bola es tu personaje
+    if (emo) { ctx.font = `${Math.round(L.RADIO * 3)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, b.x, b.y + L.RADIO * .1); continue; }
     ctx.fillStyle = S.efectos.fuego ? '#FFB347' : '#FFFFFF'; ctx.beginPath(); ctx.arc(b.x, b.y, L.RADIO, 0, Math.PI * 2); ctx.fill();
   }
   // partículas

@@ -2,6 +2,8 @@
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { HOYOS, PAR_TOTAL } from './hoyos.js';
+import { grupoFondo, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 const CAMPOS = {
   clasico: { nombre: 'Clásico', cesped: '#3DBE5A', raya: '#36AE51', borde: '#8B5A2B', muro: '#A86E3A', sw: ['#3DBE5A', '#8B5A2B'] },
@@ -27,7 +29,7 @@ const ganadores = s => { const t = s.nombres.map((_, k) => M.total(s, k)), m = M
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; arrastre = null; cartel = null;
-  asp = api.aspecto([{ clave: 'campo', titulo: 'Campo', def: 'clasico', opciones: Object.entries(CAMPOS).map(([id, c]) => ({ id, nombre: c.nombre, sw: c.sw })) }], () => dibujar());
+  asp = api.aspecto([grupoFondo(''), grupoPersonaje('Personajes (tu bola)'), { clave: 'campo', titulo: 'Campo', def: 'clasico', opciones: Object.entries(CAMPOS).map(([id, c]) => ({ id, nombre: c.nombre, sw: c.sw })) }], () => dibujar());
   await api.css(new URL('./minigolf.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4 && c0.n >= 1 && c0.n <= 4) cfg = { jug: c0.jug.map(x => String(x).slice(0, 14)), n: c0.n };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -151,7 +153,8 @@ function dibujar() {
   if (!cv || !S || S.fase === 'fin' || !H) return;
   const C = CAMPOS[asp.valores.campo] || CAMPOS.clasico, k = esc2 * dpr;
   ctx.setTransform(k, 0, 0, k, 0, 0);
-  ctx.fillStyle = '#1A2B1F'; ctx.fillRect(0, 0, 400, 700);
+  const tap = tapeteElegido(asp), im = tap ? imagenTapete(tap, () => dibujar()) : null;      // «Fondo de Tablero»: rodea el recorrido
+  if (im) pintarTapete(ctx, im, 400, 700, .3); else { ctx.fillStyle = '#1A2B1F'; ctx.fillRect(0, 0, 400, 700); }
   const camino = p => { ctx.beginPath(); p.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); };
   // césped a rayas
   ctx.save(); camino(H.borde); ctx.clip();
@@ -190,6 +193,8 @@ function dibujar() {
     ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.arc(b.x + 2, b.y + 3, M.RB, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, M.RB, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = COLORES[S.jugador]; ctx.lineWidth = 3; ctx.stroke();
+    const emo = emojiPersonaje(asp);      // «Personajes»: tu bola es tu personaje (sobre la bola, que sigue marcando el punto de golpeo)
+    if (emo) { ctx.font = `${Math.round(M.RB * 2.7)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, b.x, b.y + M.RB * .1); }
     if (S.fase === 'apuntar' && !arrastre) { ctx.strokeStyle = `rgba(255,255,255,${.4 + Math.sin(S.t * 5) * .3})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, M.RB + 8, 0, Math.PI * 2); ctx.stroke(); }
   }
   if (cartel) {

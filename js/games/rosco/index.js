@@ -1,6 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import { crearTeclado } from '../../core/teclado.js';
 import * as R from './motor.js';
+import { grupoFondo } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, reg = false, tk = null, reloj = null, cpuT = null, onKey = null, onVis = null;
 let texto = '', ultimo = 0, flash = null, bocadillo = '', marcador = { g: 0, p: 0, e: 0, mejor: 0 };
@@ -22,7 +23,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; texto = ''; flash = null; bocadillo = '';
-  asp = api.aspecto([{ clave: 'rosco', titulo: 'Colores del rosco', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul de concurso', sw: ['#1E4FD8', '#0B1E5B'] }, { id: 'morado', nombre: 'Morado', sw: ['#8B5CF6', '#3B1E7A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#0E1330'] }] }], () => { if (S) pintar(); });
+  asp = api.aspecto([grupoFondo('#rcRosco'), { clave: 'rosco', titulo: 'Colores del rosco', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul de concurso', sw: ['#1E4FD8', '#0B1E5B'] }, { id: 'morado', nombre: 'Morado', sw: ['#8B5CF6', '#3B1E7A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#0E1330'] }] }], () => { if (S) pintar(); });
   await api.css(new URL('./rosco.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && ['solo', 'cpu'].includes(c0.modo) && R.NIVEL[c0.nivel] && R.TIEMPOS.includes(c0.tiempo)) cfg = { ...c0 };
   const g = api.cargar();

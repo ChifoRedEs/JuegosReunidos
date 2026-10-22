@@ -1,6 +1,7 @@
 import { $, esc, rnd } from '../../core/dom.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
 import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, mejorJugada, fichasDe, equipo, nombreEquipo, COMPANERO } from './reglas.js';
+import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 const VEL = { rapida: .5, normal: 1, lenta: 1.7 };
 let P = null, api = null, asp = null, rootEl = null, modo = 'setup', timer = null, ivDado = null, ivAnim = null, rodando = false, ptsMov = [], ultFoco = '';
@@ -45,6 +46,7 @@ function guardar() {
 
 /* ---------- ciclo de vida ---------- */
 const DEFS_ASPECTO = [
+  grupoFondo('#pzView'), grupoPersonaje('Personajes (tus fichas)'),
   { clave: 'tablero', titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
   { clave: 'colores', titulo: 'Colores de los jugadores', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicos', sw: ['#FFC21A', '#2F6BFF', '#FF4757', '#0FB56A'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#FFD76A', '#7FA8FF', '#FF8FA0', '#7FDDA8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FFE600', '#00C8FF', '#FF2E88', '#39E614'] }, { id: 'accesible', nombre: 'Daltonismo', sw: ['#F0E442', '#0072B2', '#D55E00', '#009E73'] }] },
   { clave: 'fichas', titulo: 'Forma de las fichas', def: 'canica', opciones: [{ id: 'canica', nombre: '● Canica' }, { id: 'peon', nombre: '♟ Peón' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }] },
@@ -215,6 +217,8 @@ const posVis = (c, i) => (P.ov && P.ov[c + ',' + i] !== undefined ? P.ov[c + ','
 const estrellaPts = (x, y, R, r) => Array.from({ length: 10 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? r : R; return (x + Math.cos(a) * q).toFixed(2) + ',' + (y + Math.sin(a) * q).toFixed(2); }).join(' ');
 function ficha(f, c, x, y, r) {
   const col = `style="fill:var(--pz-${c})"`, st = 'stroke="rgba(0,0,0,.55)" stroke-width=".8" stroke-linejoin="round"';
+  const emo = emojiPersonaje(asp);     // «Personajes»: tus fichas (las de los jugadores humanos) llevan el emoji sobre su color
+  if (emo && P && !esCPU(P, c)) return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/><text x="${x}" y="${y + r * .04}" font-size="${(r * 1.5).toFixed(2)}" text-anchor="middle" dominant-baseline="central" style="pointer-events:none">${emo}</text>`;
   if (f === 'estrella') return `<polygon points="${estrellaPts(x, y + .3, r * 1.3, r * .56)}" ${col} ${st}/><circle cx="${x}" cy="${y}" r="${r * .26}" fill="#fff" opacity=".6"/>`;
   if (f === 'diamante') return `<polygon points="${x},${y - r * 1.18} ${x + r * .98},${y} ${x},${y + r * 1.18} ${x - r * .98},${y}" ${col} ${st}/><polygon points="${x},${y - r * 1.18} ${x + r * .98},${y} ${x},${y}" fill="#fff" opacity=".3"/>`;
   if (f === 'peon') {

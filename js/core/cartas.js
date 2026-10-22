@@ -108,5 +108,22 @@ export function precargarSeleccion(vals) {
     else for (let rg = 1; rg <= 13; rg++) FR_L.forEach(l => lanzar(urlCarta(b, l + n2(rg))));
   }
   const d = vals.dorso && BARAJAS.dorsos.find(x => x.id === vals.dorso); if (d) lanzar(urlDorso(d));
-  const t = vals.mesa && BARAJAS.tapetes.find(x => x.id === vals.mesa); if (t) lanzar(urlTapete(t));
+  const t = BARAJAS.tapetes.find(x => x.id === (vals.mesa || vals.tapete)); if (t) lanzar(urlTapete(t));
+}
+
+// Tapete como imagen para los juegos de canvas (Air Hockey, Ladrillos, Serpiente…): devuelve la imagen ya cargada o null (y llama a alCargar al terminar).
+const _imgs = new Map();
+export function imagenTapete(id, alCargar) {
+  const t = BARAJAS.tapetes.find(x => x.id === id); if (!t) return null;
+  let e = _imgs.get(id);
+  if (!e) { e = { im: new Image(), ok: false, cbs: [] }; e.im.onload = () => { e.ok = true; e.cbs.splice(0).forEach(f => f()); }; e.im.src = urlTapete(t); _imgs.set(id, e); }
+  if (e.ok) return e.im;
+  if (alCargar && !e.cbs.includes(alCargar)) e.cbs.push(alCargar);
+  return null;
+}
+// Pinta la imagen cubriendo w×h (como background-size: cover) y un velo oscuro para que se lean las piezas.
+export function pintarTapete(ctx, im, w, h, velo = 0.22) {
+  const k = Math.max(w / im.naturalWidth, h / im.naturalHeight), iw = im.naturalWidth * k, ih = im.naturalHeight * k;
+  ctx.drawImage(im, (w - iw) / 2, (h - ih) / 2, iw, ih);
+  if (velo) { ctx.fillStyle = `rgba(0,0,0,${velo})`; ctx.fillRect(0, 0, w, h); }
 }

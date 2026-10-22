@@ -16,6 +16,8 @@
 @keyframes pdest{to{transform:scale(.7)}}
 .ck .sq:focus-visible{outline:3px solid #fff;outline-offset:-3px}
 .pc{width:80%;height:80%;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(13px,4.8vw,22px);line-height:1;overflow:hidden;box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 -3px 0 rgba(0,0,0,.14);z-index:1}
+.pc.pj{position:relative;font-size:clamp(16px,6.2vw,30px)}
+.pc .cr{position:absolute;top:-3px;right:-2px;font-size:.55em;color:#FFC21A;text-shadow:0 1px 1px #000}
 .pc.w{background:radial-gradient(circle at 35% 30%,var(--pw1),var(--pw2));color:var(--pwi);border:3px solid var(--pw2)}
 .pc.b{background:radial-gradient(circle at 35% 30%,var(--pb1),var(--pb2));color:var(--pbi);border:3px solid var(--pb2)}
 .juego-damas[data-fichas="anillo"] .pc::before{content:"";position:absolute;inset:20%;border-radius:50%;border:3px solid currentColor;opacity:.55}

@@ -1,5 +1,6 @@
 import { $, esc, esperar } from '../../core/dom.js';
 import * as O from './motor.js';
+import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 let animJ = -1;
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, anim = false, vis = {}, dadosVis = null, msgEvento = '';
@@ -18,7 +19,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; anim = false; vis = {}; dadosVis = null; msgEvento = '';
-  asp = api.aspecto([{ clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (S) pintar(); });
+  asp = api.aspecto([grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (S) pintar(); });
   await api.css(new URL('./oca.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4 && [1, 2].includes(c0.dados)) cfg = { ...cfg, ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
@@ -72,6 +73,7 @@ function colocarFichas() {
     const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
     const dx = m > 1 ? (k % 2 ? .22 : -.22) : 0, dy = m > 2 ? (k < 2 ? -.2 : .2) : m === 2 ? 0 : 0;
     const f0 = el.querySelector(`[data-f="${j}"]`);
+    const emo = emojiPersonaje(asp), pj = !!emo && !J.cpu; f0.textContent = pj ? emo : ''; f0.classList.toggle('pj', pj);      // «Personajes»: tu ficha lleva el emoji
     f0.style.left = `${(c + .5 + dx) * 12.5}%`; f0.style.top = `${(f + .58 + dy) * 12.5}%`;
     f0.classList.toggle('turno', j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim)); f0.classList.toggle('mueve', vis[j] != null);
   });

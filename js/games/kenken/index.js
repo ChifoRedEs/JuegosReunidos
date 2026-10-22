@@ -1,7 +1,7 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { TAMANOS, DIFICULTADES, generar, cumple, simbolo } from './generador.js';
 
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], ocupado = false, notasOn = false, onKey = null, info = null, malas = new Set();
@@ -40,7 +40,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
-  asp = api.aspecto([grupoTablero(), { clave: 'jaulas', titulo: 'Jaulas', def: 'bordes', opciones: [{ id: 'bordes', nombre: 'Solo bordes' }, { id: 'colores', nombre: 'De colores', sw: ['#FF8FA3', '#FFC857', '#6FD99B', '#6FCFE8', '#B79BFF'] }] }, { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
+  asp = api.aspecto([grupoFondo('#kkTab'), grupoTablero(), { clave: 'jaulas', titulo: 'Jaulas', def: 'bordes', opciones: [{ id: 'bordes', nombre: 'Solo bordes' }, { id: 'colores', nombre: 'De colores', sw: ['#FF8FA3', '#FFC857', '#6FD99B', '#6FCFE8', '#B79BFF'] }] }, { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
   await api.css(new URL('./kenken.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;

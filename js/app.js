@@ -5,7 +5,7 @@ import * as store from './core/storage.js';
 import * as aj from './core/ajustes.js';
 import * as stats from './core/stats.js';
 import * as son from './core/sonido.js';
-import { BARAJAS, cargarBarajas, precargarSeleccion } from './core/cartas.js';
+import { BARAJAS, urlTapete, cargarBarajas, precargarSeleccion } from './core/cartas.js';
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 
@@ -145,15 +145,23 @@ function crearApi(j, ent, mod, root) {
     },
     aspecto(defs, alCambiar) {
       // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
-      defs = defs.filter(g => g.opciones.some(o => !o.azar) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
+      defs = defs.filter(g => g.opciones.some(o => !o.azar && !o.nada) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
       const gd = aj.pref(id, 'aspecto', {}) || {}, elec = {}, vals = {};
       const resolver = nuevo => defs.forEach(g => {
         if (elec[g.clave] !== 'azar') { vals[g.clave] = elec[g.clave]; return; }
         if (!nuevo && vals[g.clave]) return;
-        const l = g.opciones.filter(o => !o.azar), c = l.length > 1 ? l.filter(o => o.id !== vals[g.clave]) : l;   // distinta de la anterior
+        const l = g.opciones.filter(o => !o.azar && !o.nada), c = l.length > 1 ? l.filter(o => o.id !== vals[g.clave]) : l;   // distinta de la anterior
         vals[g.clave] = c[Math.random() * c.length | 0].id;
       });
-      const poner = () => { defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; }); precargarSeleccion(vals); };
+      // Grupo con `sel` («Fondo de Tablero»): la imagen elegida va a --tapete-url y una regla de <style> la pone detrás del tablero del juego.
+      const gF = defs.find(g => g.sel !== undefined);
+      let stF = document.getElementById('jr-tapete-sel'); if (!stF) { stF = document.createElement('style'); stF.id = 'jr-tapete-sel'; document.head.append(stF); }
+      stF.textContent = gF && gF.sel ? `.juego[data-${gF.clave}^="t-"] ${gF.sel}{background:var(--tapete-url) center/cover no-repeat!important;padding:6px;box-sizing:border-box;border-radius:14px}` : '';
+      const poner = () => {
+        defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; }); precargarSeleccion(vals);
+        const t = gF && BARAJAS.tapetes.find(x => x.id === vals[gF.clave]);
+        if (t) root.style.setProperty('--tapete-url', `url("${urlTapete(t)}")`); else root.style.removeProperty('--tapete-url');
+      };
       defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
       resolver(true); poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
@@ -179,7 +187,7 @@ function crearApi(j, ent, mod, root) {
           const imgs = g.opciones.some(o => o.img) && g.forma;
           const cuerpo = imgs
             ? el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => {
-              const bt = el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), title: o.nombre }, o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, '🎲'), el('small', {}, o.nombre));
+              const bt = el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), title: o.nombre }, o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || '🎲'), el('small', {}, o.nombre));
               bt.addEventListener('click', () => { elegir(g, o.id); pintarEnlace(g); cerrarV(); }); return bt;
             }))
             : el('div', { class: 'ap-g' }, contenedor(g));
