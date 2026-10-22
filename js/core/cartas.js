@@ -48,7 +48,7 @@ const ESP_L = ['O', 'C', 'E', 'B'], FR_L = ['P', 'C', 'D', 'T'];
 const n2 = n => String(n).padStart(2, '0');
 const claveEs = id => ESP_L[paloEs(id)] + n2(rangoEs(id));
 const claveFr = id => FR_L[paloDe(id)] + n2(rangoDe(id) + 1);
-export const BARAJAS = { espanola: [], francesa: [], dorsos: [] };
+export const BARAJAS = { espanola: [], francesa: [], dorsos: [], tapetes: [] };
 const RAIZ_IMG = new URL('../../img/cartas/', import.meta.url);
 const EXT_OK = ['webp', 'png', 'jpg', 'jpeg'];
 const ID_OK = /^[a-z0-9-]{1,40}$/;
@@ -57,6 +57,7 @@ const urlImg = r => new URL(r.split('/').map(encodeURIComponent).join('/'), RAIZ
 export const urlCarta = (b, clave) => urlImg(`${b.ruta}/${clave.slice(1)}-${clave[0]}.${b.ext}`);
 export const urlMuestra = b => urlImg(`${b.ruta}/${b.muestra}.${b.ext}`);
 export const urlDorso = d => urlImg(d.archivo);
+export const urlTapete = t => urlImg(t.archivo);
 const urlJoker = b => urlImg(`${b.ruta}/00.${EXT_OK.includes(b.joker) ? b.joker : b.ext}`);   // joker: extensión del comodín (o true si es la del mazo)
 
 function cssBarajas() {
@@ -72,6 +73,8 @@ function cssBarajas() {
     if (b.joker) r.push(`${sel} .carta.comodin{background:url("${urlJoker(b)}") center/100% 100% no-repeat;border:0;${RAD}}${sel} .carta.comodin>*{display:none}`);
   }
   for (const d of BARAJAS.dorsos) r.push(`.juego[data-dorso="${d.id}"] .carta.dorso{background:#fff url("${urlDorso(d)}") center/cover no-repeat;border:0;${RAD}}`);
+  // tapetes: fondo de la mesa (.mesa en los juegos de cartas, .rmmesa en Rummy)
+  for (const t of BARAJAS.tapetes) r.push(`.juego[data-mesa="${t.id}"] :is(.mesa,.rmmesa){background:#1b5e3a url("${urlTapete(t)}") center/cover no-repeat}`);
   return r.join('\n');
 }
 const limpiar = (lista, tipo) => (Array.isArray(lista) ? lista : []).filter(x => x && ID_OK.test(x.id) && typeof x.nombre === 'string'
@@ -84,7 +87,7 @@ export function cargarBarajas() {
       const r = await fetch(new URL('barajas.json', RAIZ_IMG));
       if (!r.ok) throw new Error('barajas.json ' + r.status);
       const d = await r.json();
-      BARAJAS.espanola = limpiar(d.espanola); BARAJAS.francesa = limpiar(d.francesa); BARAJAS.dorsos = limpiar(d.dorsos, 'dorso');
+      BARAJAS.espanola = limpiar(d.espanola); BARAJAS.francesa = limpiar(d.francesa); BARAJAS.dorsos = limpiar(d.dorsos, 'dorso'); BARAJAS.tapetes = limpiar(d.tapetes, 'dorso');
       let st = document.getElementById('cartas-img-css');
       if (!st) { st = document.createElement('style'); st.id = 'cartas-img-css'; document.head.appendChild(st); }
       st.textContent = cssBarajas();
@@ -105,4 +108,5 @@ export function precargarSeleccion(vals) {
     else for (let rg = 1; rg <= 13; rg++) FR_L.forEach(l => lanzar(urlCarta(b, l + n2(rg))));
   }
   const d = vals.dorso && BARAJAS.dorsos.find(x => x.id === vals.dorso); if (d) lanzar(urlDorso(d));
+  const t = vals.mesa && BARAJAS.tapetes.find(x => x.id === vals.mesa); if (t) lanzar(urlTapete(t));
 }

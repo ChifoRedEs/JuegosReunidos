@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-2a94af420f';
+const VERSION = 'jr-98bf73991e';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -16,6 +16,7 @@ const ARCHIVOS = [
 './icons/icon.svg',
 './img/cartas/barajas.json',
 './img/cartas/dorsos/nombres.json',
+'./img/cartas/tapetes/nombres.json',
 './js/app.js',
 './js/registry.js',
 './js/core/ajustes.js',
@@ -173,7 +174,7 @@ const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas', DICC = 'jr-diccionario';    
 const esDiccionario = url => url.origin === location.origin && /\/data\/diccionario\/(es|lemas)-[0-9a-f]{8}\.txt$/.test(url.pathname);
 // Imágenes de los naipes (img/cartas): no van en la lista de arriba para no volver a bajar varios MB en cada actualización.
 // Se guardan en su propia caché al usarlas. En segundo plano solo se descargan las barajas y el dorso que el usuario
-// tiene elegidos en 🎨 Apariencia (más una carta de muestra de cada baraja), no todas: así no se gastan datos móviles.
+// tiene elegidos en 🎨 Apariencia (más una carta de muestra de cada baraja; los tapetes también), no todas: así no se gastan datos móviles.
 const esImgCarta = url => url.origin === location.origin && url.pathname.includes('/img/cartas/') && /\.(webp|png|jpe?g)$/i.test(url.pathname);
 const EXT_OK = ['webp', 'png', 'jpg', 'jpeg'];
 const extJoker = b => (EXT_OK.includes(b.joker) ? b.joker : b.ext);       // igual que urlJoker() en js/core/cartas.js
@@ -193,7 +194,7 @@ async function guardarCartas(elegidas) {
     rs.forEach(x => todas.add(x)); todas.add(muestra); bajar.add(muestra);
     if (quiero.has(b.id)) rs.forEach(x => bajar.add(x));
   }
-  for (const x of d.dorsos || []) { todas.add(x.archivo); if (quiero.has(x.id)) bajar.add(x.archivo); }
+  for (const x of [...(d.dorsos || []), ...(d.tapetes || [])]) { todas.add(x.archivo); if (quiero.has(x.id)) bajar.add(x.archivo); }
   const url = x => new URL(x.split('/').map(encodeURIComponent).join('/'), base).href, ok = x => typeof x === 'string' && !x.includes('..');
   const validas = new Set([...todas].filter(ok).map(url)), urls = [...bajar].filter(ok).map(url), c = await caches.open(CARTAS);
   for (const req of await c.keys()) if (!validas.has(req.url)) await c.delete(req);   // barajas que ya no están

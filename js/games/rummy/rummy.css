@@ -1,8 +1,5 @@
-/* Rummy de fichas · colores por 🎨 Apariencia (data-mesa y data-fichas en .juego-rummy) */
+/* Rummy de fichas · colores por 🎨 Apariencia (data-mesa = tapete e data-fichas en .juego-rummy) */
 .juego-rummy{--rm1:#12A05C;--rm2:#0A6B3C;--fz:#FFF8E7;--fz2:#EADFC4;--fb:#C9B88F;--k0:#E0243A;--k1:#1F6BFF;--k2:#F28C1B;--k3:#1B2340;--fw:min(34px,calc((min(100vw,520px) - 60px) / 10.5))}
-.juego-rummy[data-mesa="azul"]{--rm1:#2E6BE8;--rm2:#173F9E}
-.juego-rummy[data-mesa="madera"]{--rm1:#A0682E;--rm2:#6B4426}
-.juego-rummy[data-mesa="noche"]{--rm1:#3B4468;--rm2:#171B33}
 .juego-rummy[data-fichas="blanco"]{--fz:#FFFFFF;--fz2:#E8ECF4;--fb:#B8C2D6}
 .juego-rummy[data-fichas="oscuro"]{--fz:#2C3658;--fz2:#1C2440;--fb:#11162C;--k3:#E8ECF7;--k1:#5C9BFF}
 

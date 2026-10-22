@@ -1,8 +1,5 @@
 /* Cartas dibujadas con CSS. Se cargan desde los juegos de cartas con api.css(new URL('../../../css/cartas.css', import.meta.url)). */
 .juego{--mesa1:#12A05C;--mesa2:#0A6B3C;--d1:#2F6BFF;--d2:#1B3FA8;--p1:#E0243A;--p2:#E0243A;--p3:#1B2340;--p0:#1B2340}
-.juego[data-mesa="azul"]{--mesa1:#2E6BE8;--mesa2:#173F9E}
-.juego[data-mesa="burdeos"]{--mesa1:#B02A47;--mesa2:#701629}
-.juego[data-mesa="noche"]{--mesa1:#3B4468;--mesa2:#171B33}
 .carta{--cw:52px;position:relative;display:inline-block;width:var(--cw);height:calc(var(--cw) * 1.4);flex:none;border-radius:calc(var(--cw) * .13);background:#fff;color:#1B2340;border:1px solid #AEB8D4;box-shadow:0 2px 4px rgba(0,0,0,.35);font-family:'Baloo 2',system-ui,sans-serif;line-height:1;user-select:none;-webkit-user-select:none;overflow:hidden}
 .carta .cr{position:absolute;left:9%;top:5%;font-size:calc(var(--cw) * .36);font-weight:800}
 .carta .cs{position:absolute;left:10%;top:calc(var(--cw) * .42);font-size:calc(var(--cw) * .27);font-style:normal}

@@ -1,6 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import { hacerOrdenable, ordenarMano } from '../../core/arrastrar.js';
 import * as R from './motor.js';
+import { grupoMesa } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, arr = null;
 let W = null, recientes = new Set(), marcador = { g: 0, p: 0 };
@@ -25,7 +26,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; W = null; recientes = new Set(); arr = null;
   asp = api.aspecto([
-    { clave: 'mesa', titulo: 'Color de la mesa', def: 'verde', opciones: [{ id: 'verde', nombre: 'Verde', sw: ['#12A05C'] }, { id: 'azul', nombre: 'Azul', sw: ['#2E6BE8'] }, { id: 'madera', nombre: 'Madera', sw: ['#A0682E'] }, { id: 'noche', nombre: 'Noche', sw: ['#3B4468'] }] },
+    grupoMesa(),
     { clave: 'fichas', titulo: 'Fichas', def: 'marfil', opciones: [{ id: 'marfil', nombre: 'Marfil', sw: ['#FFF8E7'] }, { id: 'blanco', nombre: 'Blanco', sw: ['#FFFFFF'] }, { id: 'oscuro', nombre: 'Oscuras', sw: ['#26304F'] }] },
   ], () => { if (S) pintar(); });
   await api.css(new URL('./rummy.css', import.meta.url));

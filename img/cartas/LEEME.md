@@ -1,12 +1,13 @@
 # Imágenes de cartas
 
-Todo lo que pongas aquí aparece en **🎨 Apariencia** de los juegos de cartas. Por defecto la baraja y el dorso son **🎲 Aleatorios**: se sortea una al abrir el juego y en cada partida nueva (se puede fijar una concreta).
+Todo lo que pongas aquí aparece en **🎨 Apariencia** de los juegos de cartas. Por defecto el tapete, la baraja y el dorso son **🎲 Aleatorios**: se sortea una al abrir el juego y en cada partida nueva (se puede fijar una concreta).
 
 | Carpeta | Qué va dentro | Juegos que la usan |
 |---|---|---|
 | `espanola/<MAZO>/` | una baraja española por carpeta | Brisca, Chinchón, Mus, Cinquillo |
 | `francesa/<MAZO>/` | una baraja francesa por carpeta | BlackJack, Klondike, Texas Hold'em, Continental |
 | `dorsos/` | imágenes de dorso (valen para las dos barajas) | todos los de cartas |
+| `tapetes/` | fondos de mesa (webp de ~1280 px de ancho, 50–170 KB). `nombres.json` permite poner tildes | todos los de cartas y Rummy |
 
 ## Nombres de archivo (respeta mayúsculas)
 - **Española** (`NN-X`): `01-O.webp` … `12-O.webp`. NN = 01–07, 10, 11, 12 (los 08 y 09 se permiten pero no se usan). X = **O** oros · **C** copas · **E** espadas · **B** bastos.

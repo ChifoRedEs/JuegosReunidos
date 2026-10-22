@@ -163,7 +163,20 @@ function crearApi(j, ent, mod, root) {
         const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
           ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.img ? el('img', { class: 'ap-th', src: o.img, alt: '', loading: 'lazy' }) : null, o.nombre]));
         const opciones = g => { const out = []; let sec = null; for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); } return out; };
-        const cuerpo = defs.map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo), el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g))));
+        // Grupos con `ventana` (tapetes, dorsos, barajas): un enlace que abre su propia ventana con las imágenes
+        const nombreElec = g => { const o = g.opciones.find(x => x.id === elec[g.clave]); return o ? o.nombre : ''; };
+        const ventana = (g, enl) => {
+          let cerrarV;
+          const elegir = o => { elec[g.clave] = o.id; delete vals[g.clave]; resolver(false); poner(); guardar(); enl.querySelector('small').textContent = nombreElec(g); if (alCambiar) alCambiar({ ...vals }); cerrarV(); };
+          const rej = el('div', { class: 'ap-rej ap-' + (g.forma || 'carta') }, ...g.opciones.map(o => {
+            const bt = el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), title: o.nombre }, o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, '🎲'), el('small', {}, o.nombre));
+            bt.addEventListener('click', () => elegir(o)); return bt;
+          }));
+          cerrarV = hoja([el('h2', {}, g.titulo), rej, el('div', { class: 'bar', style: 'margin-top:14px' }, el('button', { class: 'btn', onclick: () => cerrarV() }, 'Cerrar'))]);
+        };
+        const enlace = g => { const b = el('button', { type: 'button', class: 'ap-link' }, el('span', { class: 'ap-li' }, g.icono || '🎨'), el('b', {}, g.titulo), el('small', {}, nombreElec(g)), el('i', {}, '›')); b.addEventListener('click', () => ventana(g, b)); return b; };
+        const enlaces = defs.filter(g => g.ventana).map(enlace);
+        const cuerpo = (enlaces.length ? [el('div', { class: 'ap-links' }, ...enlaces)] : []).concat(defs.filter(g => !g.ventana).map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo), el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g)))));
         const wrap = el('div', {}, cuerpo);
         wrap.addEventListener('click', e => {
           const b = e.target.closest('.ap-o'); if (!b) return;
@@ -423,8 +436,8 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaVersion && !recargado) { recargado = true; location.reload(); } });
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
   // en segundo plano: guardar las imágenes de los naipes para jugar sin conexión (solo baja las que falten)
-  // Como baraja y dorso cambian al azar, se guardan todas las imágenes (~2 MB), salvo con «Ahorro de datos» activado.
-  const elegidas = () => [...BARAJAS.espanola, ...BARAJAS.francesa, ...BARAJAS.dorsos].map(x => x.id);
+  // Como baraja y dorso cambian al azar, se guardan todas las imágenes (~3 MB), salvo con «Ahorro de datos» activado.
+  const elegidas = () => [...BARAJAS.espanola, ...BARAJAS.francesa, ...BARAJAS.dorsos, ...BARAJAS.tapetes].map(x => x.id);
   const ahorro = navigator.connection && navigator.connection.saveData;
   if (!ahorro) navigator.serviceWorker.ready.then(r => setTimeout(() => r.active && r.active.postMessage({ tipo: 'guardar-cartas', ids: elegidas() }), 4000)).catch(() => {});
 }

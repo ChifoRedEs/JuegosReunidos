@@ -10,6 +10,8 @@ Convención de nombres (¡respeta mayúsculas y minúsculas!):
   <MAZO>/info.json                      opcional: {"nombre": "Nombre que verás en la app"}
   img/cartas/dorsos/<nombre>.ext        dorsos (valen para las dos barajas)
   img/cartas/dorsos/nombres.json        opcional: {"arcoiris": "Arcoíris"}
+  img/cartas/tapetes/<nombre>.ext       fondos de mesa (tapetes) para todos los juegos de cartas (ideal: webp de ~1280 px de ancho)
+  img/cartas/tapetes/nombres.json       opcional: {"marmol": "Mármol"}
 Formatos: webp (recomendado), png, jpg, jpeg. Un mazo incompleto no se publica (el aviso dice qué cartas faltan)."""
 import json, os, re, struct, unicodedata
 
@@ -114,8 +116,8 @@ def barajas(tipo):
     return salida
 
 
-def dorsos():
-    base = os.path.join(CARTAS, 'dorsos')
+def dorsos(carpeta='dorsos', pref='i-'):
+    base = os.path.join(CARTAS, carpeta)
     salida = []
     if not os.path.isdir(base):
         return salida
@@ -125,16 +127,16 @@ def dorsos():
         if e not in EXTS:
             continue
         nom = nombres.get(n) if isinstance(nombres.get(n), str) else bonito(n)
-        salida.append({'id': 'i-' + slug(n), 'nombre': nom[:30], 'archivo': 'dorsos/' + f})
+        salida.append({'id': pref + slug(n), 'nombre': nom[:30], 'archivo': carpeta + '/' + f})
     salida.sort(key=lambda d: d['nombre'].lower())   # agrupa por color en la lista de la app
     return salida
 
 
-indice = {'version': 1, 'espanola': barajas('espanola'), 'francesa': barajas('francesa'), 'dorsos': dorsos()}
+indice = {'version': 1, 'espanola': barajas('espanola'), 'francesa': barajas('francesa'), 'dorsos': dorsos(), 'tapetes': dorsos('tapetes', 't-')}
 os.makedirs(CARTAS, exist_ok=True)
 with open(os.path.join(CARTAS, 'barajas.json'), 'w', encoding='utf-8') as f:
     json.dump(indice, f, ensure_ascii=False, indent=1)
     f.write('\n')
-print('barajas.json: %d española(s), %d francesa(s), %d dorso(s)' % (len(indice['espanola']), len(indice['francesa']), len(indice['dorsos'])))
+print('barajas.json: %d española(s), %d francesa(s), %d dorso(s), %d tapete(s)' % (len(indice['espanola']), len(indice['francesa']), len(indice['dorsos']), len(indice['tapetes'])))
 for a in avisos:
     print('AVISO ' + a)
