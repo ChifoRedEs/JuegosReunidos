@@ -66,7 +66,7 @@ function hoja(contenido, alCerrar = null) {
   const m = el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' }, el('div', { class: 'hoja' }, contenido));
   let cerrada = false;
   const cerrar = () => { if (cerrada) return; cerrada = true; m.remove(); document.removeEventListener('keydown', esc_); if (alCerrar) alCerrar(); };
-  const esc_ = e => { if (e.key === 'Escape') cerrar(); };
+  const esc_ = e => { if (e.key === 'Escape' && [...document.querySelectorAll('.modal')].pop() === m) cerrar(); };   // con ventanas apiladas, Esc cierra solo la de encima
   m.addEventListener('click', e => { if (e.target === m) cerrar(); });
   document.addEventListener('keydown', esc_);
   document.body.append(m);
@@ -157,32 +157,43 @@ function crearApi(j, ent, mod, root) {
       defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
       resolver(true); poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
+      // 🎨 Apariencia: cada grupo es un enlace que abre su propia ventana con las opciones (muestras de color, iconos o imágenes).
+      // Los grupos de 2 opciones (sí/no) se quedan a la vista como botones, salvo que el grupo diga `ventana: true/false`.
+      const enVentana = g => (g.ventana !== undefined ? !!g.ventana : g.opciones.length > 2);
       const abrir = () => {
-        // Opciones normales (muestras de color, miniatura y nombre) o, con `emoji`, una rejilla compacta de iconos;
-        // `sec` en las opciones agrupa la rejilla en secciones (Hombres, Mujeres, Animales…)
         const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
           ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.img ? el('img', { class: 'ap-th', src: o.img, alt: '', loading: 'lazy' }) : null, o.nombre]));
+        // `emoji` = rejilla compacta de iconos; `sec` en las opciones agrupa la rejilla en secciones (Hombres, Mujeres, Animales…)
         const opciones = g => { const out = []; let sec = null; for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); } return out; };
-        // Grupos con `ventana` (tapetes, dorsos, barajas): un enlace que abre su propia ventana con las imágenes
-        const nombreElec = g => { const o = g.opciones.find(x => x.id === elec[g.clave]); return o ? o.nombre : ''; };
-        const ventana = (g, enl) => {
-          let cerrarV;
-          const elegir = o => { elec[g.clave] = o.id; delete vals[g.clave]; resolver(false); poner(); guardar(); enl.querySelector('small').textContent = nombreElec(g); if (alCambiar) alCambiar({ ...vals }); cerrarV(); };
-          const rej = el('div', { class: 'ap-rej ap-' + (g.forma || 'carta') }, ...g.opciones.map(o => {
-            const bt = el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), title: o.nombre }, o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, '🎲'), el('small', {}, o.nombre));
-            bt.addEventListener('click', () => elegir(o)); return bt;
-          }));
-          cerrarV = hoja([el('h2', {}, g.titulo), rej, el('div', { class: 'bar', style: 'margin-top:14px' }, el('button', { class: 'btn', onclick: () => cerrarV() }, 'Cerrar'))]);
+        const contenedor = g => el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g));
+        const actual = g => g.opciones.find(x => x.id === elec[g.clave]) || g.opciones[0];
+        const elegir = (g, id) => { elec[g.clave] = id; delete vals[g.clave]; resolver(false); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); };
+        const enlaces = new Map();
+        const pintarEnlace = g => {
+          const b = enlaces.get(g.clave), o = actual(g);
+          const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
+          b.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre), el('i', {}, '›'));
         };
-        const enlace = g => { const b = el('button', { type: 'button', class: 'ap-link' }, el('span', { class: 'ap-li' }, g.icono || '🎨'), el('b', {}, g.titulo), el('small', {}, nombreElec(g)), el('i', {}, '›')); b.addEventListener('click', () => ventana(g, b)); return b; };
-        const enlaces = defs.filter(g => g.ventana).map(enlace);
-        const cuerpo = (enlaces.length ? [el('div', { class: 'ap-links' }, ...enlaces)] : []).concat(defs.filter(g => !g.ventana).map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo), el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g)))));
-        const wrap = el('div', {}, cuerpo);
-        wrap.addEventListener('click', e => {
-          const b = e.target.closest('.ap-o'); if (!b) return;
-          elec[b.dataset.g] = b.dataset.o; delete vals[b.dataset.g]; resolver(false); poner(); guardar();
+        const ventana = g => {
+          let cerrarV;
+          const imgs = g.opciones.some(o => o.img) && g.forma;
+          const cuerpo = imgs
+            ? el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => {
+              const bt = el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), title: o.nombre }, o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, '🎲'), el('small', {}, o.nombre));
+              bt.addEventListener('click', () => { elegir(g, o.id); pintarEnlace(g); cerrarV(); }); return bt;
+            }))
+            : el('div', { class: 'ap-g' }, contenedor(g));
+          if (!imgs) cuerpo.addEventListener('click', e => { const b = e.target.closest('.ap-o'); if (!b) return; elegir(g, b.dataset.o); pintarEnlace(g); cerrarV(); });
+          cerrarV = hoja([el('h2', {}, g.titulo), cuerpo, el('div', { class: 'bar', style: 'margin-top:14px' }, el('button', { class: 'btn', onclick: () => cerrarV() }, 'Cerrar'))]);
+        };
+        const enlace = g => { const b = el('button', { type: 'button', class: 'ap-link' }); enlaces.set(g.clave, b); pintarEnlace(g); b.addEventListener('click', () => ventana(g)); return b; };
+        const lista = defs.filter(enVentana).map(enlace);
+        const fijos = defs.filter(g => !enVentana(g)).map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo), contenedor(g)));
+        const wrap = el('div', {}, lista.length ? el('div', { class: 'ap-links' }, ...lista) : null, ...fijos);
+        wrap.addEventListener('click', e => {      // opciones a la vista (grupos pequeños)
+          const b = e.target.closest('.ap-g .ap-o'); if (!b) return;
+          elegir(defs.find(g => g.clave === b.dataset.g), b.dataset.o);
           wrap.querySelectorAll(`.ap-o[data-g="${b.dataset.g}"]`).forEach(x => x.classList.toggle('on', x === b));
-          if (alCambiar) alCambiar({ ...vals });
         });
         let cerrar;
         const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { elec[g.clave] = g.def; delete vals[g.clave]; }); resolver(true); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');

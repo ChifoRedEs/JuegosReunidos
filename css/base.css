@@ -97,8 +97,10 @@ details li{margin:3px 0}
 .ap-links{display:flex;flex-direction:column;gap:8px;margin:12px 0}
 .ap-link{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;font:inherit;color:var(--ink);min-height:54px}
 .ap-link .ap-li{font-size:24px;line-height:1}
-.ap-link b{font-size:16px;font-weight:800}
-.ap-link small{margin-left:auto;font-size:13px;font-weight:700;color:var(--mut);text-align:right}
+.ap-link b{font-size:16px;font-weight:800;min-width:0;text-align:left}
+.ap-lsw{display:inline-flex;align-items:center;gap:0;flex:none}
+.ap-lsw .sw{width:20px;height:20px;margin-right:-5px}
+.ap-link small{margin-left:auto;padding-left:6px;font-size:13px;font-weight:700;color:var(--mut);text-align:right}
 .ap-link i{font-style:normal;font-size:22px;font-weight:800;color:var(--mut)}
 .ap-rej{display:grid;gap:10px;margin:10px 0}
 .ap-rej.ap-tapete{grid-template-columns:repeat(2,1fr)}
