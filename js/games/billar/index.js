@@ -92,26 +92,34 @@ function armar() {
   cv.addEventListener('pointerdown', abajo); cv.addEventListener('pointermove', mueve);
   for (const t of ['pointerup', 'pointercancel']) cv.addEventListener(t, () => { arrastre = null; });
   gruposVistos = S.jug.map(j => j.grupo || '').join(); popHasta = 0; hudPrev = '';
-  ajustar(true); crearPanel(); pintarHud(); cancelAnimationFrame(raf); tPrev = performance.now(); raf = requestAnimationFrame(bucle);
+  ajustar(true); crearPanel(); pintarHud(); requestAnimationFrame(verMesa); cancelAnimationFrame(raf); tPrev = performance.now(); raf = requestAnimationFrame(bucle);
   turnoCPU();
 }
-// Tamaño fijo de la mesa: ocupa casi todo el ancho de la pantalla (sale del margen de la página) y NO depende del alto,
-// así no encoge al hacer scroll en el móvil (la barra del navegador cambia el alto) ni al abrir/cerrar nada.
-// Devuelve true si ha cambiado el tamaño.
+// Tamaño fijo de la mesa: cabe de alto en la pantalla (debajo de la barra superior, que se queda fija) y deja
+// un margen a los lados para poder hacer scroll con el dedo fuera de la mesa (dentro, el dedo apunta).
+// El alto se mide con 100svh (la pantalla con la barra del navegador a la vista), así la mesa no cambia de tamaño
+// al hacer scroll en el móvil. Solo se vuelve a medir si cambia el ANCHO (p. ej. al girar el móvil). Devuelve true si cambia.
+function altoPantalla() {
+  const p = document.createElement('div'); p.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:100vh;height:100svh;visibility:hidden;pointer-events:none';
+  document.body.append(p); const h = p.offsetHeight || innerHeight; p.remove(); return h;
+}
 function ajustar(forzar = false) {
   if (!cv) return false;
   const vw = document.documentElement.clientWidth || innerWidth;
   if (!forzar && vw === anchoPrev) return false;
   anchoPrev = vw;
-  const W = B.ANCHO + 2 * M, H = B.ALTO + 2 * M;
-  let ancho = Math.min(vw - 8, 640);
-  if (vw >= 760 && matchMedia('(pointer: fine)').matches) ancho = Math.min(ancho, Math.max(460, (innerHeight - 30) * W / H));   // ordenador: que quepa de alto
-  ancho = Math.floor(ancho); const alto = Math.round(ancho * H / W);
-  const zona = $('#biZona'), cont = zona.parentElement.getBoundingClientRect().width;
-  zona.style.width = ancho + 'px'; zona.style.marginLeft = Math.min(0, (cont - ancho) / 2) + 'px';
-  if (ancho <= cont) zona.style.marginLeft = 'auto';
+  const W = B.ANCHO + 2 * M, H = B.ALTO + 2 * M, cab = ($('.top') || { offsetHeight: 0 }).offsetHeight;
+  const altoDisp = Math.max(320, altoPantalla() - cab - 12);
+  const ancho = Math.floor(Math.max(200, Math.min(altoDisp * W / H, vw - 56, 640))), alto = Math.round(ancho * H / W);   // vw - 56: 28 px libres a cada lado
+  const zona = $('#biZona'); zona.style.width = ancho + 'px'; zona.style.marginLeft = 'auto';
   cv.width = ancho * dpr; cv.height = alto * dpr; cv.style.height = alto + 'px'; k = ancho / W;
   return true;
+}
+// Deja la mesa entera a la vista justo debajo de la barra superior
+function verMesa() {
+  const z = $('#biZona'); if (!z) return;
+  const cab = ($('.top') || { offsetHeight: 0 }).offsetHeight, y = z.getBoundingClientRect().top + scrollY - cab - 6;
+  scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
 }
 
 /* ---------- panel de tiro flotante (se arrastra desde el asa a cualquier sitio de la pantalla) ---------- */
