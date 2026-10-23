@@ -1,14 +1,11 @@
 /* Worms (Arcade) */
 .juego-worms .wmfondo{border-radius:14px;padding:8px;background:linear-gradient(180deg,#8ecbff,#e8f6ff)}
-.juego-worms .wmmenu{display:flex;flex-direction:column;gap:12px;padding:12px;color:#102;background-position:center;background-size:cover}
-.juego-worms .wmmenu::before{content:'';position:absolute;inset:0;border-radius:14px;background:rgba(255,255,255,.55);pointer-events:none}
-.juego-worms .wmmenu{position:relative;isolation:isolate}
-.juego-worms .wmmenu>*{position:relative}
+.juego-worms .wmmenu{display:flex;flex-direction:column;gap:12px;padding:12px}
 .juego-worms .wmtitulo{display:flex;gap:12px;align-items:center}
 .juego-worms .wmtitulo img{width:56px;height:56px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 .juego-worms .wmtitulo b{display:block;font:800 28px 'Baloo 2',system-ui,sans-serif;line-height:1.05;color:#B01C58}
 .juego-worms .wmtitulo small{font-weight:700;color:#333}
-.juego-worms .wmop{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,.72);border-radius:12px;padding:8px 10px}
+.juego-worms .wmop{display:flex;flex-direction:column;gap:5px;border-radius:12px;padding:8px 10px}
 .juego-worms .wmop .lbl{font-weight:800;font-size:13px;color:#333}
 .juego-worms .wmop .seg{display:flex;flex-wrap:wrap;gap:6px}
 .juego-worms .wmop .seg .btn{flex:1 1 auto;min-width:0}
@@ -71,3 +68,5 @@
 .wmarmas .wmar i{grid-area:c;font-style:normal;font-weight:800;font-size:12px}
 .wmarmas .wmar small{grid-area:d;font-size:11px;line-height:1.2;opacity:.8}
 @media (max-width:360px){.wmarmas{grid-template-columns:1fr}}
+.juego-worms .wmbajo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:2px}
+.juego-worms .wmbajo .btn{flex:1 1 40%;padding:8px 6px;font-size:13px}

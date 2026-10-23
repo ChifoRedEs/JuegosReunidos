@@ -88,7 +88,7 @@ function ajustes() {
   cancelAnimationFrame(raf); raf = 0; cv = null; zona = null; S = null; piloto = null; cargando = false; Object.keys(teclas).forEach(k => teclas[k] = false);
   const hay = api.cargar(), sigue = hay && hay.s.ganador === null;
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  root.innerHTML = `<div class="wmfondo wmmenu">
+  root.innerHTML = `<div class="wmmenu">
     <div class="wmtitulo"><img src="${urlIcono('lanzamisiles')}" alt=""><div><b>Worms</b><small>Dos ejércitos de gusanos, un solo campo de batalla</small></div></div>
     <div class="wmop"><span class="lbl">Modo</span>${seg('modo', [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']])}</div>
     ${cfg.modo === 'cpu' ? `<div class="wmop"><span class="lbl">Nivel</span>${seg('nivel', M.NIVELES.map((n, i) => [i, n]))}</div>` : ''}
@@ -138,6 +138,7 @@ function armar() {
           <button class="wmfuego" id="wmFuego" data-hold="fuego" aria-label="Disparar"><i id="wmPot"></i><span id="wmFTxt">FUEGO</span></button>
         </div>
       </div>
+      <div class="bar wmbajo"><button class="btn" data-ac="pasar">⏭️ Pasar turno</button><button class="btn" data-ac="nuevaJ">🪱 Nueva partida</button><button class="btn" data-ac="aspectoJ">🎨 Apariencia</button><button class="btn" data-ac="salir">🚪 Salir</button></div>
       <p class="note wmayuda">Teclado: ← → andar · ↑ ↓ apuntar · Intro salto · Retroceso salto alto · Espacio (mantén) fuego · Tab armas · +/− zoom · 1–9 armas</p>
     </div></div>`;
   cv = $('#wmCv'); ctx = cv.getContext('2d'); zona = $('#wmZona'); ajustar();
@@ -265,6 +266,10 @@ function clic(e) {
   else if (ac === 'centrar') cam.libre = false;
   else if (ac === 'temp') { if (humano()) { M.ajustarTemp(S, S.turno.temp % 5 + 1); api.sonido('click'); } }
   else if (ac === 'seguirpausa') poner_pausa(false);
+  else if (ac === 'pasar') { if (humano()) { M.terminarTurno(S); api.sonido('click'); } else api.aviso('Espera a tu turno'); }
+  else if (ac === 'nuevaJ') { if (!S || S.turno.fase === 'fin' || api.confirmar('¿Dejar la partida actual y crear otra?')) ajustes(); }
+  else if (ac === 'aspectoJ') { poner_pausa(true); asp.abrir(); }
+  else if (ac === 'salir') { if (!S || S.turno.fase === 'fin' || api.confirmar('¿Salir? La partida queda guardada.')) { guardar(); location.hash = '#/cat/arcade'; } }
   else if (ac === 'otra') nuevaPartida();
   else if (ac === 'menu') ajustes();
 }
