@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-c3a9b78d38';
+const VERSION = 'jr-97007184ee';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -153,6 +153,12 @@ const ARCHIVOS = [
 './js/games/rummy/index.js',
 './js/games/rummy/motor.js',
 './js/games/rummy/rummy.css',
+'./js/games/scrabble/diccio.js',
+'./js/games/scrabble/index.js',
+'./js/games/scrabble/motor.js',
+'./js/games/scrabble/scrabble.css',
+'./js/games/scrabble/servicio.js',
+'./js/games/scrabble/trabajador.js',
 './js/games/serpiente/index.js',
 './js/games/serpiente/motor.js',
 './js/games/serpiente/serpiente.css',

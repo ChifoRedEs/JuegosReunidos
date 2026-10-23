@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import * as CY from '../js/games/cifrasletras/motor.js';
 import * as BI from '../js/games/billar/motor.js';
+import * as SC from '../js/games/scrabble/motor.js';
+import { construir as construirSC, aFichas } from '../js/games/scrabble/diccio.js';
 import * as CO from '../js/games/corazones/motor.js';
 import * as KA from '../js/games/kakuro/generador.js';
 import { validar as validarKA } from '../js/games/kakuro/index.js';
@@ -634,4 +636,34 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   assert.deepEqual(CY.puntuar(S, 'cifras', { valor: 500 }, { valor: 498 }), [10, 0], 'solo puntúa la mejor');
   assert.deepEqual(CY.puntuar(S, 'letras', { palabra: 'CASA', valida: true }, { palabra: 'COSA', valida: true }), [4, 4], 'empate: los dos');
   ok('Cifras y Letras: soluciones de cifras correctas (y casi siempre exactas), letras con 3 vocales y 3 consonantes, puntos como en el concurso'); }
+
+// ---- Scrabble ----
+{ // el diccionario (DIC) ya está cargado más arriba
+  const dic = construirSC(DIC);
+  assert.ok(dic.existe(aFichas('calle')) && dic.existe(aFichas('perro')) && dic.existe(aFichas('chico')) && dic.existe('casa'));
+  assert.ok(!dic.existe('calle'), 'LL es una sola ficha: «calle» con dos L no vale');
+  assert.equal(Object.values(SC.FICHAS).reduce((a, [n]) => a + n, 0), 100);
+  assert.equal([...SC.PREMIO].filter(c => c === 'T').length, 8); assert.equal([...SC.PREMIO].filter(c => c === 'D').length, 17);
+  assert.equal([...SC.PREMIO].filter(c => c === 't').length, 12); assert.equal([...SC.PREMIO].filter(c => c === 'd').length, 24);
+  // reglas de colocación y puntos
+  const vac = '.'.repeat(225), pone = (w, i0, paso = 1) => [...w].map((t, k) => ({ i: i0 + k * paso, t, b: false }));
+  assert.equal(SC.evaluar(vac, [], pone('casa', 0)).ok, false, 'la primera pasa por el centro');
+  const e1 = SC.evaluar(vac, [], pone('casa', 110), dic); assert.ok(e1.ok); assert.equal(e1.pts, (3 + 1 + 1 + 1) * 2);
+  assert.equal(SC.evaluar(vac, [], [{ i: 112, t: 'c', b: false }, { i: 114, t: 'a', b: false }]).ok, false, 'sin huecos');
+  assert.equal(SC.evaluar(vac, [], [{ i: 112, t: 'c' }, { i: 128, t: 'a' }]).ok, false, 'en una fila o columna');
+  const conBl = SC.evaluar(vac, [], [{ i: 110, t: 'c', b: true }, ...pone('asa', 111)]); assert.equal(conBl.pts, 3 * 2, 'el comodín vale 0');
+  assert.ok(!SC.evaluar(vac, [], pone('xqzj', 110), dic).ok, 'palabra inexistente');
+  // partidas entre CPU: cada jugada de la CPU es válida y puntúa igual que en evaluar; el guardado se valida
+  for (const nivel of ['facil', 'medio', 'dificil']) {
+    const S = SC.crear({ jugadores: [{ nombre: 'A', cpu: true }, { nombre: 'B', cpu: true }, ...(nivel === 'medio' ? [{ nombre: 'C', cpu: true }] : [])], nivel });
+    for (let k = 0; k < 300 && S.fase !== 'fin'; k++) {
+      const d = SC.pensar(S, dic);
+      if (d.tipo === 'jugar') { const ev = SC.evaluar(S.tab, S.bl, d.coloc, dic); assert.ok(ev.ok, ev.error); assert.equal(ev.pts, d.pts); SC.jugar(S, d.coloc, ev); }
+      else if (d.tipo === 'cambiar') assert.ok(SC.cambiar(S, d.fichas)); else SC.pasar(S);
+      assert.ok(SC.validar(JSON.parse(JSON.stringify(S))), 'guardado válido');
+    }
+    assert.equal(S.fase, 'fin', nivel + ': la partida termina');
+  }
+  const T = SC.crear(); T.bolsa.pop(); assert.equal(SC.validar(JSON.parse(JSON.stringify(T))), null, 'faltan fichas: no vale');
+  ok('Scrabble: 100 fichas con CH/LL/RR, tablero de premios, colocación y puntos, y partidas completas entre CPU de los 3 niveles'); }
 console.log(`\n${n} pruebas correctas`);

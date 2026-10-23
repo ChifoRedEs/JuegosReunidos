@@ -1,0 +1,91 @@
+/* Scrabble · el fondo de .scmesa puede ser un tapete (🎨 Fondo de Tablero) */
+.juego-scrabble{--sc-cel:#EFE6CF;--sc-lin:#B9AE93;--sc-T:#D9453B;--sc-Tt:#fff;--sc-D:#F2A1A8;--sc-Dt:#6B1D24;--sc-t:#2E7BC4;--sc-tt:#fff;--sc-d:#A9D3F2;--sc-dt:#123A5C;--sc-borde:#7A6A48;
+  --sc-f:#F7E7BE;--sc-fb:#C9A86A;--sc-ft:#2A1C0B}
+.juego-scrabble[data-tabsc="torneo"]{--sc-cel:#1E7A4E;--sc-lin:#0F4F31;--sc-T:#C8372D;--sc-Tt:#fff;--sc-D:#E58A8A;--sc-Dt:#4A0F12;--sc-t:#2763B6;--sc-tt:#fff;--sc-d:#7FB7E3;--sc-dt:#0D2D4F;--sc-borde:#0A3A24}
+.juego-scrabble[data-tabsc="madera"]{--sc-cel:#D9B98A;--sc-lin:#8A6235;--sc-T:#9E2B25;--sc-Tt:#fff;--sc-D:#C97A5A;--sc-Dt:#fff;--sc-t:#2E5D7D;--sc-tt:#fff;--sc-d:#7FA7B8;--sc-dt:#10293A;--sc-borde:#5A3A1C}
+.juego-scrabble[data-tabsc="noche"]{--sc-cel:#1E2546;--sc-lin:#0D1128;--sc-T:#FF4F7B;--sc-Tt:#fff;--sc-D:#B05CFF;--sc-Dt:#fff;--sc-t:#00B3FF;--sc-tt:#06243A;--sc-d:#2CD3A6;--sc-dt:#063328;--sc-borde:#05081A}
+.juego-scrabble[data-tabsc="pastel"]{--sc-cel:#FFF8EF;--sc-lin:#E9D8C8;--sc-T:#FF8FA3;--sc-Tt:#4A0E1B;--sc-D:#FFC8D2;--sc-Dt:#6B2333;--sc-t:#8EC5FF;--sc-tt:#0F2F55;--sc-d:#CDE6FF;--sc-dt:#244A73;--sc-borde:#D8C2AE}
+.juego-scrabble[data-tabsc="mar"]{--sc-cel:#E6F4F7;--sc-lin:#9CC6D0;--sc-T:#0E6E8C;--sc-Tt:#fff;--sc-D:#48A9C5;--sc-Dt:#fff;--sc-t:#F08A4B;--sc-tt:#fff;--sc-d:#FFD3A8;--sc-dt:#6A3410;--sc-borde:#4C8C9C}
+.juego-scrabble[data-fichas="madera"]{--sc-f:#D8A86A;--sc-fb:#8A5A2B;--sc-ft:#2B1606}
+.juego-scrabble[data-fichas="negro"]{--sc-f:#2A2C33;--sc-fb:#0E0F12;--sc-ft:#F5F0E6}
+.juego-scrabble[data-fichas="azul"]{--sc-f:#2F6BFF;--sc-fb:#1A3FA8;--sc-ft:#fff}
+.juego-scrabble[data-fichas="rosa"]{--sc-f:#FFB6D0;--sc-fb:#D9708F;--sc-ft:#3A0D1C}
+.juego-scrabble[data-fichas="menta"]{--sc-f:#9FE6C4;--sc-fb:#3FA77A;--sc-ft:#0B3A26}
+.juego-scrabble[data-fichas="oro"]{--sc-f:#F4C542;--sc-fb:#B8860B;--sc-ft:#3A2A00}
+
+.scmesa{background:linear-gradient(160deg,var(--card),color-mix(in srgb,var(--sc-cel) 30%,var(--card)));border:2px solid var(--line);border-radius:20px;padding:10px;margin:6px 0;display:flex;flex-direction:column;gap:8px}
+.scinicio .bar{margin:4px 0}
+.msg.mal{color:var(--red)}
+/* marcador */
+.schud{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px}
+.schud span{display:flex;flex-direction:column;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:3px 4px;min-width:0}
+.schud span.turno{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 25%,transparent)}
+.schud span.gana{border-color:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+.schud small{font-weight:800;font-size:12px;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.schud b{font:800 22px/1.1 'Baloo 2',system-ui,sans-serif}
+.schud .scbolsa b{font-size:17px}
+.scmsg{text-align:center;font-size:14px;min-height:20px;margin:0;background:color-mix(in srgb,var(--card) 88%,transparent);border-radius:10px;padding:3px 8px}
+/* tablero: casi todo el ancho de la pantalla (sale del margen de la página) */
+.sctabw{--w:min(calc(100vw - 12px),620px);width:var(--w);position:relative;left:50%;margin-left:calc(var(--w) / -2);border-radius:12px}
+.sctabw.zoom{overflow:auto;max-height:min(78vh,700px);-webkit-overflow-scrolling:touch;box-shadow:inset 0 0 0 2px var(--sc-borde)}
+.sctab{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:1px;padding:3px;background:var(--sc-lin);border:3px solid var(--sc-borde);border-radius:12px;container-type:inline-size;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.sctabw.zoom .sctab{width:600px}
+.scc{position:relative;aspect-ratio:1;min-width:0;padding:0;margin:0;border:0;border-radius:2px;background:var(--sc-cel);color:var(--ink);display:grid;place-items:center;
+  font:800 calc(100cqw / 15 * .5)/1 'Baloo 2',system-ui,sans-serif;cursor:pointer;touch-action:manipulation;overflow:hidden}
+.scc i{font-style:normal;font:800 calc(100cqw / 15 * .3)/1 Nunito,system-ui,sans-serif;letter-spacing:-.02em;opacity:.95}
+.juego-scrabble[data-rotulo="no"] .scc i{display:none}
+.scc.p-T{background:var(--sc-T);color:var(--sc-Tt)}.scc.p-D{background:var(--sc-D);color:var(--sc-Dt)}
+.scc.p-t{background:var(--sc-t);color:var(--sc-tt)}.scc.p-d{background:var(--sc-d);color:var(--sc-dt)}
+.scc.centro{font-size:calc(100cqw / 15 * .62)}
+.scc.cur{box-shadow:inset 0 0 0 2px var(--purple);background:color-mix(in srgb,var(--purple) 22%,var(--sc-cel))}
+.scc em{font-style:normal;color:var(--purple);font-size:calc(100cqw / 15 * .55)}
+.scc.sobre{box-shadow:inset 0 0 0 3px var(--yel);background:color-mix(in srgb,var(--yel) 40%,var(--sc-cel))}
+/* fichas (en el tablero y en el atril) */
+.scc.f,.scf{background:linear-gradient(160deg,color-mix(in srgb,#fff 25%,var(--sc-f)),var(--sc-f));color:var(--sc-ft);box-shadow:inset 0 -2px 0 var(--sc-fb),0 1px 1px rgba(0,0,0,.3);border-radius:12%}
+.scc.f .scl{transform:translateY(-4%)}
+.scc.f sub{position:absolute;right:7%;bottom:4%;font:800 calc(100cqw / 15 * .24)/1 Nunito,system-ui,sans-serif}
+.scc.f.dos .scl{font-size:calc(100cqw / 15 * .36);letter-spacing:-.04em}
+.scc.bl .scl,.scf.bl .scl{color:#C0262D;font-style:italic}
+.juego-scrabble[data-fichas="negro"] .scc.bl .scl,.juego-scrabble[data-fichas="azul"] .scc.bl .scl{color:#FFD23F}
+.scc.tmp{outline:2px solid var(--yel);outline-offset:-2px;background:linear-gradient(160deg,#fff,color-mix(in srgb,var(--yel) 45%,var(--sc-f)));touch-action:none;animation:scpon .18s ease-out}
+.scc.ult{box-shadow:inset 0 -2px 0 var(--sc-fb),inset 0 0 0 2px var(--ok)}
+@keyframes scpon{from{transform:scale(.6)}to{transform:none}}
+.scc.scorig{opacity:.35}
+/* vista previa */
+.scprev{text-align:center;font-size:13.5px;font-weight:700;min-height:20px;background:color-mix(in srgb,var(--card) 90%,transparent);border-radius:10px;padding:4px 8px}
+.scprev:empty{display:none}
+.scprev.bien{color:var(--ok)}.scprev.mal{color:var(--red)}
+.scprev b{color:var(--ink)}.scprev b.no{color:var(--red);text-decoration:line-through}
+/* atril */
+.scatril{display:flex;justify-content:center;gap:4px;padding:8px 6px;background:linear-gradient(#7A5232,#5A3A22);border-radius:14px;box-shadow:inset 0 -5px 0 rgba(0,0,0,.25)}
+.scatril.apagado .scf{filter:saturate(.6) brightness(.92)}
+.scf{position:relative;display:grid;place-items:center;width:min(calc((100% - 36px) / 7),52px);aspect-ratio:1;padding:0;border:0;font:800 min(7.4vw,31px)/1 'Baloo 2',system-ui,sans-serif;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;flex:none}
+.scf.bl .scl{opacity:.35;font-style:normal;color:var(--sc-ft)}
+.scf sub{position:absolute;right:8%;bottom:6%;font:800 min(3vw,12px)/1 Nunito,system-ui,sans-serif}
+.scf.dos .scl{font-size:min(5vw,21px);letter-spacing:-.04em}
+.scf.sel{transform:translateY(-6px);outline:3px solid var(--yel);outline-offset:1px}
+.scf.cam{transform:translateY(-6px);outline:3px solid var(--red);outline-offset:1px}
+.scf.hueco,.scf.vacia{background:rgba(0,0,0,.18);box-shadow:inset 0 2px 4px rgba(0,0,0,.35);cursor:default}
+.scf.scorig{opacity:.3}
+.scfant{position:fixed;z-index:60;pointer-events:none;transform:scale(1.1);box-shadow:0 10px 22px rgba(0,0,0,.45)!important;opacity:.95}
+/* controles */
+.scctl{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.scctl .btn{min-height:44px;margin:0;font-size:14px;padding:6px 10px}
+.scctl .scjugar{flex:1 1 100%;font-size:17px}
+.scctl .btn:disabled{opacity:.45}
+.scfin{width:100%;background:var(--card);border-radius:12px}
+.scfin tr.gana td{font-weight:800;color:var(--ok)}
+.scfin td,.scfin th{padding:4px 8px;text-align:center}
+/* tapa entre turnos (2 o más personas en el mismo móvil) */
+.scmesa{position:relative}
+.sctapa{position:absolute;left:8px;right:8px;bottom:8px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:color-mix(in srgb,var(--card) 96%,transparent);border:2px dashed var(--purple);border-radius:16px;z-index:3;text-align:center;padding:10px}
+.sctapa[hidden]{display:none}
+.sctapa small{color:var(--mut);font-weight:700}
+/* comodín: elegir letra */
+.scletras{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.scletras .btn{font:800 20px 'Baloo 2',system-ui,sans-serif;min-height:46px;margin:0}
+/* historial */
+.schist{margin:8px 0;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:6px 12px}
+.schist summary{font-weight:800;cursor:pointer}
+.schist ol{margin:6px 0 2px;padding-left:22px;max-height:220px;overflow:auto;font-size:14px}
+.schist li{margin:2px 0}
