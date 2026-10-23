@@ -33,3 +33,7 @@
 .hlog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .hlog li:first-child{color:var(--ink);font-weight:800}
 .hrank{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px}
+
+/* mesa 3D */
+.juego-holdem .e3d.pk3{aspect-ratio:10/7.4;width:min(calc(100vw - 28px),760px)}
+.juego-holdem .hc3{margin:2px 0 4px}

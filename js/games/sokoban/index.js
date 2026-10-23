@@ -24,6 +24,8 @@ const CAJAS = {
 const GIRAN = new Set(['Animales', 'Vehículos']);
 const ficha = () => FICHAS[asp.valores.ficha] || FICHAS.ofi0;
 let S = null, L = null, api = null, asp = null, root = null, cfg = { modo: 'campana', tam: 'mediano' };
+let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
 let onKey = null, gesto = null, andando = null, ocupado = false, serie = 0, mira = 'izquierda';
 
 /* ---------- validación / resumen ---------- */
@@ -47,11 +49,12 @@ export function resumen(d) { return { texto: `${titulo(d)} · ${d.done ? `resuel
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; ocupado = false; andando = null;
-  asp = api.aspecto([grupoFondo('#skTab'), { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+  api = a; root = r; ocupado = false; andando = null; forzar2d = false; modo3d = false;
+  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#skTab'), { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: opcionesPersonajes() }],
-  () => { if (S && $('#skTab')) { construir(); pintar(); } });
+  () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });
   await api.css(new URL('./sokoban.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && MODOS[c0.modo] && K.TAMANOS[c0.tam]) cfg = { ...c0 };
   S = api.cargar(); L = S ? K.leer(S.mapa) : null;
@@ -61,7 +64,7 @@ export async function mount(r, a) {
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (S) armar(); else elegirModo(cfg.modo);
 }
-export function unmount() { serie++; clearTimeout(andando); andando = null; document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; L = null; asp = null; }
+export function unmount() { cerrar3D(); modo3d = false; serie++; clearTimeout(andando); andando = null; document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; L = null; asp = null; }
 function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.texto, r.fin); }
 const superados = () => { const s = api.pref('superados', []); return Array.isArray(s) ? s.filter(i => ent(i, 0, NIVELES.length - 1)) : []; };
 const mejores = () => { const m = api.pref('mejores', {}); return m && typeof m === 'object' ? m : {}; };
@@ -104,25 +107,45 @@ function reto() {
   generado('mediano', `${api.reto.fecha()}:sokoban`);
 }
 
+/* ---------- vista 3D ---------- */
+function cerrar3D() { tok3++; if (V3) { V3.destruir(); V3 = null; } }
+async function iniciar3D() {
+  const t = ++tok3, host = $('#skTab'); if (!host || !L) return; host.dataset.iniciando = '1';
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearSokoban3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
+    const v = await crearSokoban3D(host, L, { cajas: asp.valores.cajas }); if (t !== tok3 || !root) { v.destruir(); return; }
+    b3.botonesCamara(host, v.E); const g = host.querySelector('[data-cam="girar"]'); if (g) g.remove();       // girar cambiaría el sentido de los gestos
+    v.alDeslizar = d => paso(d); v.alCasilla = i => irA(i); V3 = v; delete host.dataset.iniciando; v.recolor({ cajas: asp.valores.cajas }); pintar(); V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: ficha().e, volteo: false, nuevo: true });
+  } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); } }
+}
+
 /* ---------- tablero ---------- */
 function armar() {
   root.innerHTML = `<div class="skcab"><b id="skTit"></b><span id="skCont"></span></div>
-    <div class="sktab" id="skTab" role="application" aria-label="Almacén: usa las flechas o desliza el dedo"></div>
+    <div id="skTab" role="application" aria-label="Almacén: usa las flechas o desliza el dedo"></div>
     <div class="msg" id="skMsg" role="status" aria-live="polite"></div>
     <div class="skctl"><div class="skdpad"><button class="btn" data-dir="arriba" aria-label="Arriba">▲</button><button class="btn" data-dir="izquierda" aria-label="Izquierda">◀</button><button class="btn" data-dir="abajo" aria-label="Abajo">▼</button><button class="btn" data-dir="derecha" aria-label="Derecha">▶</button></div>
       <div class="skacc"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="reiniciar">⟲ Reiniciar</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="menu">☰ Niveles</button></div></div>
     <div class="bar" style="justify-content:center"><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+  cerrar3D(); modo3d = quiere3D();
   const tab = $('#skTab');
+  if (!modo3d) {
   tab.addEventListener('pointerdown', e => { gesto = { x: e.clientX, y: e.clientY, t: performance.now() }; });
   tab.addEventListener('pointerup', e => {
     if (!gesto) return; const dx = e.clientX - gesto.x, dy = e.clientY - gesto.y; gesto = null;
     if (Math.hypot(dx, dy) > 24) return paso(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'derecha' : 'izquierda') : (dy > 0 ? 'abajo' : 'arriba'));
     const c = e.target.closest('[data-c]'); if (c) irA(+c.dataset.c);
   });
+  }
   construir(); pintar();
 }
 function construir() {
   const tab = $('#skTab'); if (!tab || !L) return;
+  if (modo3d) {
+    tab.className = `e3d sk3 tema-${asp.valores.tema} cajas-${asp.valores.cajas}`;
+    if (V3) V3.recolor({ cajas: asp.valores.cajas }); else if (!tab.dataset.iniciando) iniciar3D();
+    return;
+  }
   tab.className = `sktab tema-${asp.valores.tema} cajas-${asp.valores.cajas}`;
   tab.style.setProperty('--w', L.w); tab.style.setProperty('--h', L.h);
   let html = '';
@@ -133,9 +156,10 @@ function construir() {
 const pos = i => `--x:${i % L.w};--y:${(i / L.w) | 0}`;
 function pintar() {
   if (!S || !$('#skTab')) return;
-  S.cajas.forEach((c, k) => { const el = $(`#skTab [data-k="${k}"]`); el.setAttribute('style', pos(c)); el.classList.toggle('en', !!L.meta[c]); });
-  const j = $('#skTab .skjug'); j.setAttribute('style', pos(S.jugador));
-  j.classList.toggle('derecha', mira === 'derecha' && GIRAN.has(ficha().sec));   // los emojis de animales y vehículos miran a la izquierda
+  if (modo3d) { if (V3) V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: ficha().e, volteo: mira === 'derecha' && GIRAN.has(ficha().sec) }); }
+  else S.cajas.forEach((c, k) => { const el = $(`#skTab [data-k="${k}"]`); el.setAttribute('style', pos(c)); el.classList.toggle('en', !!L.meta[c]); });
+  const j = modo3d ? null : $('#skTab .skjug'); if (j) { j.setAttribute('style', pos(S.jugador));
+  j.classList.toggle('derecha', mira === 'derecha' && GIRAN.has(ficha().sec)); }   // los emojis de animales y vehículos miran a la izquierda
   const enMeta = S.cajas.filter(c => L.meta[c]).length, M = S.modo === 'campana' ? mejores()[S.nivel] : null;
   $('#skTit').textContent = titulo(S);
   $('#skCont').innerHTML = `📦 ${enMeta}/${S.cajas.length} · 👣 ${S.movs} · 🫸 ${S.empujes}${M ? ` · récord ${M[0]}` : ''}`;
@@ -181,7 +205,7 @@ function ganar() {
   }
   api.registrar({ res: 'victoria', variante: S.modo === 'campana' ? 'Campaña' : S.modo === 'reto' ? 'Reto del día' : `Generado ${K.TAMANOS[S.tam].nombre.toLowerCase()}`, limpio: !S.pistas });
   if (S.reto && api.reto.completar(S.reto)) setTimeout(() => api.aviso('📅 ¡Reto del día completado!'), 400);
-  api.sonido('ganar'); api.vibrar([60, 40, 60]);
+  api.sonido('ganar'); api.vibrar([60, 40, 60]); if (V3) V3.celebrar();
 }
 function deshacer() {
   if (!S || S.done || andando || !S.hist.length) return;

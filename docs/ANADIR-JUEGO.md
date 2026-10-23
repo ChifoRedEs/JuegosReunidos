@@ -64,9 +64,10 @@ Cada juego conserva su id, su partida guardada y sus estadísticas.
 **Módulos comunes (`js/core/`)**
 - `escena3d.js`: `crearEscena(contenedor, opciones)` (renderer transparente, luz, sombras, cámara orbital con arrastre/pellizco/rueda, toques con `E.alTocar(ev)` y `E.raycast`, `E.alArrastrar` para que el juego se quede con el arrastre, `E.alFrame`, `E.tween`, `E.camara(modo)`), `botonesCamara(host, E)` (⟳ girar, ⤒ cenital, ⌖ reencuadrar), `hayWebGL()`, `emojiTextura`, `textura`, `lienzo`.
 - `mesa3d.js`: tableros cuadrados (Ajedrez y Damas): `crearMesa3D(cont, { n, juego, alTocar(r, c) })` → `pintar({ piezas, ult, sel, dest, jaque, pista, flip })`.
+- `mesacartas3d.js`: mesa de póker (Hold'em y Póker cubierto): `crearMesaCartas3D(cont)` → `pintar({ bote, tablero, bots, yo, nCartas, mostrarTablero })`, `alCarta(k)` y `recolor()`.
 - `anillo3d.js`: tableros de 40 casillas en anillo (Magnate): `crearVista(cont, { estilo, grupos, titulo, ... })`. Hotel tiene su propia escena (`hotel/vista3d.js`) y respaldo SVG (`hotel/vista2d.js`).
 
-**Vistas propias** (junto al juego): `parchis/vista3d.js`, `oca/vista3d.js`, `flota/vista3d.js`, `billar/vista3d.js`, `ruleta/vista3d.js`. Todas siguen el mismo patrón: la vista **solo dibuja** (recibe el estado y devuelve toques) y el juego conserva sus reglas.
+**Vistas propias** (junto al juego): `sokoban/vista3d.js`, `rummy/vista3d.js`, `parchis/vista3d.js`, `oca/vista3d.js`, `flota/vista3d.js`, `billar/vista3d.js`, `ruleta/vista3d.js`. Todas siguen el mismo patrón: la vista **solo dibuja** (recibe el estado y devuelve toques) y el juego conserva sus reglas.
 
 **Cómo se integra en un juego existente (patrón usado en los 9 juegos)**
 1. Grupo de Apariencia `{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }`.

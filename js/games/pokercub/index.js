@@ -6,6 +6,8 @@ import * as P from './motor.js';
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 let S = null, api = null, asp = null, root = null, timer = null, consejo = true, subir = 0, marcadas = new Set();
+let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
 let cfg = { bots: 3, nivel: 'medio', modo: 'torneo', ante: 'baja', apertura: 'libre' };
 
 // Estadísticas de tus manos (acumuladas en las preferencias)
@@ -48,8 +50,10 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; marcadas = new Set();
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
+  api = a; root = r; marcadas = new Set(); forzar2d = false; modo3d = false;
+  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  asp = api.aspecto([...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []), grupoMesa(), grupoDorso(), grupoBarajaFr()],
+    () => { if (S && $('#pcMsg')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else if (V3) { V3.recolor(); pintar(); } } });
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./pokercub.css', import.meta.url));
   S = api.cargar(); consejo = api.pref('consejo', true);
   const c0 = api.pref('cfg', null);
@@ -60,7 +64,7 @@ export async function mount(r, a) {
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); } S = null; asp = null; }
+export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); } S = null; asp = null; }
 function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
@@ -76,10 +80,12 @@ function setup() {
     <p class="note">${cfg.apertura === 'jotas' ? '<b>Jotas o mejor</b>: para hacer la primera apuesta hace falta al menos una pareja de jotas. Si nadie puede abrir, se reparte de nuevo y el bote se acumula. ' : ''}Cada bot tiene su estilo: conservador, equilibrado, agresivo o farolero.</p>`;
 }
 function armar() {
-  root.innerHTML = `<div class="mesa pcm"><div class="pcbots" id="pcBots"></div>
+  cerrar3D(); modo3d = quiere3D();
+  root.innerHTML = `${modo3d ? '<div class="e3d pk3" id="pcVista"></div><div class="pccentro hc3"><div class="pcbote" id="pcBote"></div><div class="pcmsg" id="pcMsg" role="status" aria-live="polite"></div></div>' : `<div class="mesa pcm"><div class="pcbots" id="pcBots"></div>
     <div class="pccentro"><div class="pcbote" id="pcBote"></div><div class="pcmsg" id="pcMsg" role="status" aria-live="polite"></div></div>
-    <div class="pcyo" id="pcYo"></div></div><div class="pcpanel" id="pcPanel"></div><ul class="pclog" id="pcLog"></ul>
+    <div class="pcyo" id="pcYo"></div></div>`}<div class="pcpanel" id="pcPanel"></div><ul class="pclog" id="pcLog"></ul>
     <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="rank">Ranking</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+  if (modo3d) iniciar3D();
 }
 function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
 function levantarse() {
@@ -103,8 +109,19 @@ function empezar() {
 const enJuego = () => !['fin', 'terminado'].includes(S.fase);
 const mostrarCartas = i => i === 0 || (S.resultado && S.resultado.showdown && !S.jug[i].fold);
 function pintar() {
-  if (!S || !$('#pcBots')) return;
+  if (!S || !$('#pcMsg')) return;
   const bots = S.jug.map((p, i) => i).slice(1), gan = new Set(S.resultado ? S.resultado.ganadores.map(g => g.i) : []);
+  const yo = S.jug[0], descartando = S.fase === 'descarte' && S.turno === 0;
+  if (!descartando) marcadas.clear();
+  if (modo3d) { if (V3) pintar3D(bots, gan, descartando); } else pintar2D(bots, gan, descartando);
+  pie(yo, descartando);
+}
+function pintar3D(bots, gan, descartando) {
+  const yo = S.jug[0], dat = (i, esYo) => { const p = S.jug[i], ver = esYo || mostrarCartas(i); return { nombre: p.nombre, stack: p.stack, txt: p.fuera ? '' : (esYo ? [p.cartas.length && !p.fold ? P.nombreMano(P.valorMano(p.cartas)) : '', p.txt].filter(Boolean).join(' · ') : p.txt), sub: !esYo && S.resultado && S.resultado.showdown && !p.fold && !p.fuera && S.resultado.valores ? P.nombreMano(S.resultado.valores[i]) : '', fold: p.fold, fuera: p.fuera, turno: S.turno === i, gana: gan.has(i), apuesta: p.apuesta, boton: S.boton === i, cartas: p.cartas, ver, elige: esYo && descartando ? marcadas : null }; };
+  V3.pintar({ bote: P.bote(S), tablero: [], nCartas: 5, mostrarTablero: false, bots: bots.map(i => dat(i, false)), yo: dat(0, true) });
+}
+function pintar2D(bots, gan, descartando) {
+  const yo = S.jug[0];
   $('#pcBots').style.setProperty('--nb', Math.min(bots.length, 3));
   $('#pcBots').innerHTML = bots.map(i => {
     const p = S.jug[i], t = S.turno === i;
@@ -112,13 +129,13 @@ function pintar() {
       <div class="cs">${p.cartas.map(c => cartaHTML(c, { oculta: !mostrarCartas(i) })).join('')}</div>
       <div class="txt">${p.fuera ? 'Eliminado' : esc(p.txt)}${S.resultado && S.resultado.showdown && !p.fold && !p.fuera && S.resultado.valores ? `<small>${esc(P.nombreMano(S.resultado.valores[i]))}</small>` : ''}</div>${p.apuesta ? `<span class="ap">${p.apuesta}</span>` : ''}</div>`;
   }).join('');
-  $('#pcBote').textContent = `Bote 🪙 ${P.bote(S)} · entrada ${S.ante}${S.modo === 'libre' ? ` · balance ${P.neto(S) >= 0 ? '+' : ''}${P.neto(S)}` : ''}`;
-  const yo = S.jug[0], descartando = S.fase === 'descarte' && S.turno === 0;
-  if (!descartando) marcadas.clear();
   $('#pcYo').className = 'pcyo' + (S.turno === 0 ? ' turno' : '') + (yo.fold ? ' fold' : '') + (gan.has(0) ? ' gana' : '');
   $('#pcYo').innerHTML = `${S.boton === 0 ? '<span class="bt">D</span>' : ''}<div class="nom">${esc(yo.nombre)} · 🪙 ${yo.stack} ${yo.apuesta ? `<span class="ap">${yo.apuesta}</span>` : ''}</div>
     <div class="cs ${descartando ? 'elige' : ''}">${yo.cartas.map((c, k) => descartando ? `<button type="button" class="pcc ${marcadas.has(k) ? 'fuera' : ''}" data-carta="${k}" aria-pressed="${marcadas.has(k)}" aria-label="Carta ${k + 1}${marcadas.has(k) ? ': se cambia' : ''}">${cartaHTML(c)}</button>` : cartaHTML(c)).join('')}</div>
     <div class="txt">${yo.cartas.length && !yo.fold ? `<b>${esc(P.nombreMano(P.valorMano(yo.cartas)))}</b>` : ''}${yo.txt ? ` · ${esc(yo.txt)}` : ''}</div>`;
+}
+function pie(yo, descartando) {
+  $('#pcBote').textContent = `Bote 🪙 ${P.bote(S)} · entrada ${S.ante}${S.modo === 'libre' ? ` · balance ${P.neto(S) >= 0 ? '+' : ''}${P.neto(S)}` : ''}`;
   const m = $('#pcMsg');
   if (S.fase === 'terminado' || (S.fase === 'fin' && P.evaluarFin(S))) m.textContent = S.modo === 'libre' ? 'Te has levantado de la mesa' : yo.stack > 0 ? '🏆 ¡Has ganado el torneo!' : 'Has sido eliminado';
   else if (S.fase === 'fin') m.textContent = S.resultado ? S.resultado.texto : '';
@@ -127,6 +144,16 @@ function pintar() {
   else m.textContent = S.turno >= 0 ? `${S.fase === 'descarte' ? 'Descarta' : 'Juega'} ${S.jug[S.turno].nombre}…` : '';
   $('#pcLog').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
   panel();
+}
+function cerrar3D() { tok3++; if (V3) { V3.destruir(); V3 = null; } }
+async function iniciar3D() {
+  const t = ++tok3, host = $('#pcVista'); if (!host) return;
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearMesaCartas3D } = await import('../../core/mesacartas3d.js'); if (t !== tok3 || !root) return;
+    const v = crearMesaCartas3D(host, { etiqueta: 'Mesa de Póker cubierto en 3D' }); b3.botonesCamara(host, v.E); const g = host.querySelector('[data-cam="girar"]'); if (g) g.remove();
+    v.alCarta = k => { if (S && S.fase === 'descarte' && S.turno === 0) { if (marcadas.has(k)) marcadas.delete(k); else marcadas.add(k); api.sonido('click'); pintar(); } };
+    V3 = v; v.recolor(); if (S) pintar();
+  } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); pintar(); } }
 }
 function panel() {
   const p = $('#pcPanel');

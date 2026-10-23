@@ -54,3 +54,21 @@
 .juego-sokoban .sknv:disabled{opacity:.45;cursor:default}
 .juego-sokoban .sk-cargando{text-align:center;font-size:17px;padding:40px 0}
 @media(prefers-reduced-motion:reduce){.juego-sokoban .skcaja,.juego-sokoban .skjug{transition:none}}
+
+/* vista 3D: el contenedor lleva las mismas variables de color que el tablero 2D */
+.juego-sokoban .sk3{--muro:#6B7A99;--muro2:#56637F;--suelo:#EFE6D8;--suelo2:#E6DBC9;--caja:#C98A4B;--caja2:#9C6230;--meta:#FF4757;}
+.juego-sokoban .sk3.tema-hielo{--muro:#3A5BA0;--muro2:#2E4A85;--suelo:#EAF6FF;--suelo2:#DDEFFC;--meta:#FF4FA3}
+.juego-sokoban .sk3.tema-jardin{--muro:#3E8E5A;--muro2:#2F7046;--suelo:#F3EBD8;--suelo2:#E9DFC6;--meta:#7B3FC4}
+.juego-sokoban .sk3.tema-noche{--muro:#1B2147;--muro2:#0F1430;--suelo:#2E3566;--suelo2:#272D58;--meta:#FFD23F}
+.juego-sokoban .sk3.tema-desierto{--muro:#B5651D;--muro2:#94501A;--suelo:#F6DFB0;--suelo2:#EED39C;--meta:#1F7A8C}
+.juego-sokoban .sk3.tema-caramelo{--muro:#E84A8A;--muro2:#C93372;--suelo:#FFE6F1;--suelo2:#FBD4E5;--meta:#7B3FC4}
+.juego-sokoban .sk3.tema-mina{--muro:#4A3B33;--muro2:#352A24;--suelo:#8C7B6B;--suelo2:#7F6F60;--meta:#FFC21A}
+.juego-sokoban .sk3.tema-playa{--muro:#1FA2B8;--muro2:#14829A;--suelo:#FFF1C9;--suelo2:#F7E4AE;--meta:#FF5A5F}
+.juego-sokoban .sk3.cajas-roja{--caja:#FF5A5F;--caja2:#C0303A}
+.juego-sokoban .sk3.cajas-azul{--caja:#4C8DFF;--caja2:#2453B8}
+.juego-sokoban .sk3.cajas-verde{--caja:#3DCB7A;--caja2:#1E8F4E}
+.juego-sokoban .sk3.cajas-dorada{--caja:#FFD23F;--caja2:#C99A00}
+.juego-sokoban .sk3.cajas-metal{--caja:#B8C2D1;--caja2:#6D7A8F}
+.juego-sokoban .sk3.cajas-carton{--caja:#D9B27C;--caja2:#A8834F}
+.juego-sokoban .sk3.cajas-regalo{--caja:#9B5DE5;--caja2:#FFD23F}
+.juego-sokoban .e3d.sk3{width:min(calc(100vw - 28px),560px);touch-action:none}

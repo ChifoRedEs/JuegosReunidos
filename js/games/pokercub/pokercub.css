@@ -46,3 +46,7 @@
 .pclog li:first-child{color:var(--ink);font-weight:800}
 .hrank{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px}
 @media(prefers-reduced-motion:reduce){.pcyo .pcc{animation:none!important;transition:none}}
+
+/* mesa 3D */
+.juego-pokercub .e3d.pk3{aspect-ratio:10/7.4;width:min(calc(100vw - 28px),760px)}
+.juego-pokercub .hc3{margin:2px 0 4px}

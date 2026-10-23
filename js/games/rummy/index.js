@@ -4,6 +4,8 @@ import * as R from './motor.js';
 import { grupoMesa } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, arr = null;
+let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
 let W = null, recientes = new Set(), marcador = { g: 0, p: 0 };
 let cfg = { rivales: 1, nivel: 'medio' }, ord = { modo: 'color', ids: [] };
 const MODOS = ['color', 'numero', 'libre'];
@@ -24,11 +26,13 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; W = null; recientes = new Set(); arr = null;
+  api = a; root = r; W = null; recientes = new Set(); arr = null; forzar2d = false; modo3d = false;
+  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([
+    ...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     grupoMesa(),
     { clave: 'fichas', titulo: 'Fichas', def: 'marfil', opciones: [{ id: 'marfil', nombre: 'Marfil', sw: ['#FFF8E7'] }, { id: 'blanco', nombre: 'Blanco', sw: ['#FFFFFF'] }, { id: 'oscuro', nombre: 'Oscuras', sw: ['#26304F'] }] },
-  ], () => { if (S) pintar(); });
+  ], () => { if (S && $('#rmMesa')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else { if (V3) V3.recolor(); pintar(); } } });
   await api.css(new URL('./rummy.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [1, 2, 3].includes(c0.rivales) && R.NIVEL[c0.nivel]) cfg = { ...c0 };
   ord = { modo: MODOS.includes(api.pref('orden', 'color')) ? api.pref('orden', 'color') : 'color', ids: [] };
@@ -38,7 +42,7 @@ export async function mount(r, a) {
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); empezarTurno(); pintar(); bucle(); } else setup();
 }
-export function unmount() { clearTimeout(timer); if (arr) { arr.destruir(); arr = null; } if (root) root.removeEventListener('click', clic); S = null; asp = null; W = null; }
+export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (arr) { arr.destruir(); arr = null; } if (root) root.removeEventListener('click', clic); S = null; asp = null; W = null; }
 function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
@@ -52,8 +56,9 @@ function setup() {
     <div class="bar"><button class="btn on" data-ac="start">Repartir fichas</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
 }
 function armar() {
+  cerrar3D(); modo3d = quiere3D();
   root.innerHTML = `<div class="rmrivales" id="rmRiv"></div>
-    <div class="rmmesa" id="rmMesa"></div>
+    ${modo3d ? '<div class="e3d rm3" id="rmMesa"></div>' : '<div class="rmmesa" id="rmMesa"></div>'}
     <div class="rmmsg" id="rmMsg" role="status" aria-live="polite"></div>
     <div class="bar rmdest" id="rmDest"></div>
     <div class="rmatril">
@@ -66,6 +71,17 @@ function armar() {
     <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#rmAtril'), { sel: '.rmf', clave: el => +el.dataset.id, alSoltar: ids => { ord = { modo: 'libre', ids }; pintar(); guardar(); } });
+  if (modo3d) iniciar3D();
+}
+function cerrar3D() { tok3++; if (V3) { V3.destruir(); V3 = null; } }
+async function iniciar3D() {
+  const t = ++tok3, host = $('#rmMesa'); if (!host) return;
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearRummy3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
+    const v = crearRummy3D(host); b3.botonesCamara(host, v.E); const g = host.querySelector('[data-cam="girar"]'); if (g) g.remove();
+    v.alFicha = id => { if (S && S.fase === 'jugar' && S.turno === 0) elegir(id); }; v.alJugada = k => { if (W && W.sel.size) mover(k); };
+    V3 = v; v.recolor(); if (S) pintar();
+  } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); pintar(); } }
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
@@ -88,7 +104,8 @@ function pintar() {
   $('#rmRiv').innerHTML = S.jug.map((j, k) => k === 0 ? '' : `<div class="rmriv ${S.turno === k && S.fase === 'jugar' ? 'turno' : ''}"><b>${esc(j.nombre)}</b><span>${j.fichas.length} 🀫</span><small>${j.bajado ? '✓ bajado' : 'sin bajar'}</small></div>`).join('') + `<div class="rmriv bolsa"><b>Bolsa</b><span>${S.bolsa.length}</span><small>fichas</small></div>`;
   // mesa
   const editable = id => miTurno && (yo.bajado || W.inicio.has(id));
-  $('#rmMesa').innerHTML = mesa.length ? mesa.map((s, k) => {
+  if (modo3d) { if (V3) V3.pintar({ mesa, validas: mesa.map(R.valida), sel, recientes, mias: W ? W.inicio : new Set(), editable, conMas: !!(miTurno && sel.size) }); }
+  else $('#rmMesa').innerHTML = mesa.length ? mesa.map((s, k) => {
     const ok = R.valida(s);
     return `<div class="rmset ${ok ? '' : 'mal'}">${s.map(id => fichaHTML(id, `${sel.has(id) ? 'sel' : ''} ${recientes.has(id) ? 'nueva' : ''} ${W && W.inicio.has(id) ? 'mia' : ''} ${editable(id) ? '' : 'fija'}`)).join('')}${miTurno && sel.size ? `<button type="button" class="rmmas" data-dest="${k}" aria-label="Añadir a esta jugada">＋</button>` : ''}</div>`;
   }).join('') : '<p class="rmvacia">La mesa está vacía. La primera bajada de cada jugador debe sumar 30 puntos.</p>';

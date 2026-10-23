@@ -5,6 +5,8 @@ import * as H from './motor.js';
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 let S = null, api = null, asp = null, root = null, timer = null, prevTab = 0, cfg = { bots: 3, nivel: 'medio', modo: 'torneo', ciegas: 'baja' }, consejo = true, subir = 0, ocupado = false;
+let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
 // Estadísticas de tus manos (acumuladas en las preferencias): VPIP = manos en las que pusiste fichas voluntariamente antes del flop
 const EST0 = { manos: 0, vpip: 0, pfr: 0, ganadas: 0, showdowns: 0, showGanados: 0, mayorBote: 0, mejor: 0, mejorTxt: '' };
 const est = () => ({ ...EST0, ...(api.pref('estad', {}) || {}) });
@@ -48,8 +50,10 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; ocupado = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
+  api = a; root = r; ocupado = false; forzar2d = false; modo3d = false;
+  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  asp = api.aspecto([...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []), grupoMesa(), grupoDorso(), grupoBarajaFr()],
+    () => { if (S && $('#hMsg')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else if (V3) { V3.recolor(); pintar(); } } });
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./holdem.css', import.meta.url));
   const g = api.cargar(); S = g; consejo = api.pref('consejo', true);
   const c0 = api.pref('cfg', null); if (c0 && c0.bots >= 2 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel, modo: c0.modo === 'libre' ? 'libre' : 'torneo', ciegas: H.CIEGAS_LIBRE[c0.ciegas] ? c0.ciegas : 'baja' };
@@ -57,7 +61,7 @@ export async function mount(r, a) {
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📊 Mis estadísticas', accion: verEstad }, { texto: 'Mostrar mis probabilidades', accion: () => { consejo = !consejo; api.setPref('consejo', consejo); pintar(); }, activo: consejo }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: 'Reglas', accion: reglas }]);
   if (S) { prevTab = S.tablero.length; armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); } S = null; asp = null; }
+export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); } S = null; asp = null; }
 function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
@@ -73,10 +77,12 @@ function setup() {
 }
 function armar() {
   const nb = S.jug.length - 1;
-  root.innerHTML = `<div class="mesa hm"><div class="hbots" id="hBots" style="--nb:${Math.min(nb, 3)}"></div>
+  cerrar3D(); modo3d = quiere3D();
+  root.innerHTML = `${modo3d ? '<div class="e3d pk3" id="hVista"></div><div class="hcentro hc3"><div class="hbote" id="hBote"></div><div class="hmsg" id="hMsg" role="status" aria-live="polite"></div></div>' : `<div class="mesa hm"><div class="hbots" id="hBots" style="--nb:${Math.min(nb, 3)}"></div>
     <div class="hcentro"><div class="hbote" id="hBote"></div><div class="hboard" id="hBoard"></div><div class="hmsg" id="hMsg" role="status" aria-live="polite"></div></div>
-    <div class="yo" id="hYo"></div></div><div class="hpanel" id="hPanel"></div><ul class="hlog" id="hLog"></ul>
+    <div class="yo" id="hYo"></div></div>`}<div class="hpanel" id="hPanel"></div><ul class="hlog" id="hLog"></ul>
     <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="rank">Ranking</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+  if (modo3d) iniciar3D();
 }
 function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
 // Partida libre: al levantarse se anota el balance (ganada si terminas con más fichas de las que compraste)
@@ -98,25 +104,46 @@ function empezar() {
 /* ---------- pintado ---------- */
 const mostrarCartas = (i) => { const p = S.jug[i]; if (!p.cartas.length) return false; if (i === 0) return true; return S.resultado && S.resultado.showdown && !p.fold; };
 function pintar() {
-  if (!S || !$('#hBots')) return;
+  if (!S || !$('#hMsg')) return;
   const bots = S.jug.map((p, i) => i).slice(1), ocupados = S.fase === 'fin' || S.fase === 'terminado';
+  if (!modo3d) pintar2D(bots);
+  else if (V3) pintar3D(bots);
+  $('#hBote').textContent = `Bote 🪙 ${H.bote(S)}${S.modo === 'libre' ? ` · ciegas ${S.sb}/${S.bb} · balance ${H.neto(S) >= 0 ? '+' : ''}${H.neto(S)}` : ''}`;
+  pie();
+}
+function pintar2D(bots) {
   $('#hBots').style.setProperty('--nb', Math.min(bots.length, 3));
   $('#hBots').innerHTML = bots.map(i => { const p = S.jug[i], t = S.turno === i;
     return `<div class="seat ${t ? 'turno' : ''} ${p.fold ? 'fold' : ''} ${p.fuera ? 'fuera' : ''}">${S.boton === i && !p.fuera ? '<span class="bt">D</span>' : ''}<div class="nom">${esc(p.nombre)}</div><div class="stk">🪙 ${p.stack}</div>
       <div class="cs">${p.cartas.length ? p.cartas.map(c => cartaHTML(c, { oculta: !mostrarCartas(i) })).join('') : ''}</div><div class="txt">${p.fuera ? 'Eliminado' : esc(p.txt)}</div>${p.apuesta ? `<span class="ap">${p.apuesta}</span>` : ''}</div>`; }).join('');
-  $('#hBote').textContent = `Bote 🪙 ${H.bote(S)}${S.modo === 'libre' ? ` · ciegas ${S.sb}/${S.bb} · balance ${H.neto(S) >= 0 ? '+' : ''}${H.neto(S)}` : ''}`;
   $('#hBoard').innerHTML = [0, 1, 2, 3, 4].map(k => k < S.tablero.length ? cartaHTML(S.tablero[k], { clase: k >= prevTab ? 'in' : '', estilo: k >= prevTab ? `--dl:${(k - Math.min(prevTab, 3)) * .12}s;animation-delay:${(k - prevTab) * .15}s` : '' }) : '<div class="ph"></div>').join('');
   prevTab = S.tablero.length;
   const yo = S.jug[0];
   $('#hYo').className = 'yo' + (S.turno === 0 ? ' turno' : '') + (yo.fold ? ' fold' : '');
   $('#hYo').innerHTML = `${S.boton === 0 ? '<span class="bt">D</span>' : ''}<div class="nom">${esc(yo.nombre)} · 🪙 ${yo.stack} ${yo.apuesta ? `<span class="ap" style="background:#FFC21A;color:#3A2800;padding:1px 8px;border-radius:99px;font-size:12px">${yo.apuesta}</span>` : ''}</div><div class="cs">${yo.cartas.map(c => cartaHTML(c)).join('')}</div><div class="txt" style="font-size:12px;font-weight:800;min-height:16px">${esc(yo.txt)}</div>`;
-  const m = $('#hMsg');
+}
+function pintar3D(bots) {
+  const mostrar = i => mostrarCartas(i), dat = (i, esYo) => { const p = S.jug[i]; return { nombre: p.nombre, stack: p.stack, txt: p.fuera ? '' : p.txt, fold: p.fold, fuera: p.fuera, turno: S.turno === i, apuesta: p.apuesta, boton: S.boton === i, cartas: p.cartas, ver: esYo || mostrar(i), gana: !!(S.resultado && S.resultado.ganadores.some(g => g.i === i)) }; };
+  V3.pintar({ bote: H.bote(S), tablero: S.tablero, nCartas: 2, mostrarTablero: true, bots: bots.map(i => dat(i, false)), yo: dat(0, true) });
+  prevTab = S.tablero.length;
+}
+function pie() {
+  const yo = S.jug[0], m = $('#hMsg');
   if (S.fase === 'terminado' || (S.fase === 'fin' && H.evaluarFin(S))) m.textContent = S.modo === 'libre' ? 'Te has levantado de la mesa' : yo.stack > 0 ? '🏆 ¡Has ganado el torneo!' : 'Has sido eliminado';
   else if (S.fase === 'fin') m.textContent = S.resultado ? S.resultado.texto : '';
   else if (S.turno === 0) m.textContent = 'Tu turno';
   else m.textContent = S.turno >= 0 ? `Juega ${S.jug[S.turno].nombre}…` : '';
   $('#hLog').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
   panel();
+}
+function cerrar3D() { tok3++; if (V3) { V3.destruir(); V3 = null; } }
+async function iniciar3D() {
+  const t = ++tok3, host = $('#hVista'); if (!host) return;
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearMesaCartas3D } = await import('../../core/mesacartas3d.js'); if (t !== tok3 || !root) return;
+    const v = crearMesaCartas3D(host, { etiqueta: "Mesa de Texas Hold'em en 3D" }); b3.botonesCamara(host, v.E); const g = host.querySelector('[data-cam="girar"]'); if (g) g.remove();
+    V3 = v; v.recolor(); if (S) pintar();
+  } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); pintar(); } }
 }
 function panel() {
   const p = $('#hPanel'), fin = S.fase === 'fin' || S.fase === 'terminado';

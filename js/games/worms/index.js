@@ -301,6 +301,11 @@ function procesar(dt) {
       const pal = paleta(), n = Math.min(26, 6 + f.r / 2.2 | 0);
       for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = 90 + Math.random() * (140 + f.r * 4); parts.push({ x: f.x, y: f.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 70, t: 0, dur: .8 + Math.random() * .8, g: 700, r: 1.5 + Math.random() * 2.5, c: `rgb(${pal.mid[0]},${pal.mid[1]},${pal.mid[2]})` }); }
       for (let i = 0; i < 4 + f.r / 12; i++) anims.push({ k: 'humo', x: f.x + (Math.random() - .5) * f.r, y: f.y + (Math.random() - .5) * f.r * .6, r: f.r * (.25 + Math.random() * .3), t: -Math.random() * .15, dur: 1 + Math.random() * .6 });
+      anims.push({ k: 'flash', x: f.x, y: f.y, r: f.r, t: 0, dur: .2 });
+      const nd = Math.min(14, 4 + f.r / 5 | 0), nb = Math.min(24, 6 + f.r / 3 | 0), tierra = `rgb(${Math.max(0, pal.mid[0] - 40)},${Math.max(0, pal.mid[1] - 40)},${Math.max(0, pal.mid[2] - 40)})`;
+      for (let i = 0; i < nd; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 2.4, v = 120 + Math.random() * (120 + f.r * 3); parts.push({ x: f.x, y: f.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, dur: 1 + Math.random() * .9, g: 650, r: 3 + Math.random() * 4, c: i % 3 ? tierra : `rgb(${pal.mid[0]},${pal.mid[1]},${pal.mid[2]})`, rot: Math.random() * 6, vr: (Math.random() - .5) * 14, rastro: true }); }
+      for (let i = 0; i < nb; i++) { const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * (110 + f.r * 2.5); parts.push({ x: f.x, y: f.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 90, t: 0, dur: .6 + Math.random() * .8, g: 380, r: 1.3 + Math.random() * 1.8, c: Math.random() < .5 ? '#ffd166' : '#ff8a3d', brasa: true }); }
+      anims.push({ k: 'polvo', x: f.x, y: f.y + f.r * .3, r: f.r, t: 0, dur: 1.1 });
       shake = Math.max(shake, Math.min(9, f.r / 6)); ultExp = { x: f.x, y: f.y, t: S.reloj };
       if (f.r >= 30) api.vibrar(f.r >= 55 ? [40, 30, 40] : 25);
     } else if (f.t === 'dano') anims.push({ k: 'txt', x: f.x, y: f.y, txt: '-' + f.n, c: f.n >= 40 ? '#ff4d4d' : '#ffffff', t: 0, dur: 1.3 });
@@ -319,7 +324,8 @@ function procesar(dt) {
   for (const p of S.proy) if (p.t > 0 && (p.k === 'granada' || p.k === 'racimo' || p.k === 'sagrada' || p.k === 'dinamita')) { const n = Math.ceil(p.t), ant = ticAnt.get(p); if (ant !== undefined && n !== ant) api.sonido('tic'); ticAnt.set(p, n); }
   if (ticAnt.size > 30) ticAnt = new Map();
   for (const a of anims) a.t += dt; anims = anims.filter(a => a.t < a.dur);
-  for (const p of parts) { p.t += dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; } parts = parts.filter(p => p.t < p.dur); if (parts.length > 360) parts.splice(0, parts.length - 360);
+  for (const p of parts) { p.t += dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.rot !== undefined) p.rot += p.vr * dt; if (p.rastro && anims.length < 140 && Math.random() < dt * 16) anims.push({ k: 'humo', x: p.x, y: p.y, r: 2.5 + Math.random() * 2, t: 0, dur: .6, claro: true }); }
+  parts = parts.filter(p => p.t < p.dur); if (parts.length > 420) parts.splice(0, parts.length - 420);
   shake = Math.max(0, shake - dt * 22);
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) { const b = $('#wmBan'); if (b) b.classList.remove('on'); } }
 }
@@ -426,18 +432,26 @@ function dibujarAnims() {
     const p = Math.max(0, a.t / a.dur); if (a.t < 0) continue;
     if (a.k === 'expl') {
       const nombre = a.c === 'racimo' || a.c === 'bomba' ? 'explosion2' : a.c === 'minibomba' || a.c === 'escopeta' || a.c === 'ultimo' ? 'explosion3' : 'explosion1', tam = (a.c === 'sagrada' ? 2.9 : 2.5) * a.r * (.55 + p * .55);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; { const R = a.r * (.75 + p * .85), al = Math.max(0, 1 - p * 1.15), g = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, R); g.addColorStop(0, `rgba(255,255,235,${al})`); g.addColorStop(.25, `rgba(255,214,90,${al * .9})`); g.addColorStop(.6, `rgba(255,110,30,${al * .7})`); g.addColorStop(1, 'rgba(120,20,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, R, 0, 7); ctx.fill(); } ctx.restore();
       ctx.save(); ctx.globalAlpha = Math.max(0, 1 - p * p * 1.1);
       if (a.c === 'sagrada') { const g = ctx.createRadialGradient(a.x, a.y, 4, a.x, a.y, a.r * 2.4); g.addColorStop(0, 'rgba(255,245,170,.95)'); g.addColorStop(1, 'rgba(255,220,80,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, a.r * 2.4, 0, 7); ctx.fill(); }
       if (!spr(nombre, a.x, a.y, tam)) { ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.arc(a.x, a.y, a.r * (.6 + p), 0, 7); ctx.fill(); }
       ctx.globalAlpha = Math.max(0, .8 - p); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(a.x, a.y, a.r * (.5 + p * 1.5), 0, 7); ctx.stroke(); ctx.restore();
-    } else if (a.k === 'humo') { ctx.save(); ctx.globalAlpha = Math.max(0, .5 * (1 - p)); ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(a.x, a.y - p * 30, a.r * (1 + p), 0, 7); ctx.fill(); ctx.restore(); }
+    } else if (a.k === 'flash') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const R = a.r * 3.2, g = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, R); g.addColorStop(0, `rgba(255,250,220,${.85 * (1 - p)})`); g.addColorStop(1, 'rgba(255,200,80,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, R, 0, 7); ctx.fill(); ctx.restore(); }
+    else if (a.k === 'polvo') { ctx.save(); ctx.globalAlpha = Math.max(0, .55 * (1 - p)); ctx.strokeStyle = '#d9c7a3'; ctx.lineWidth = 6 * (1 - p) + 1; ctx.beginPath(); ctx.ellipse(a.x, a.y, a.r * (.6 + p * 1.7), a.r * (.18 + p * .3), 0, 0, 7); ctx.stroke(); ctx.restore(); }
+    else if (a.k === 'humo') { ctx.save(); const R = a.r * (1 + p * 1.1), y = a.y - p * (a.claro ? 14 : 34); ctx.globalAlpha = Math.max(0, (a.claro ? .4 : .55) * (1 - p)); const g = ctx.createRadialGradient(a.x, y, 0, a.x, y, R); const c0 = a.claro ? '210,210,210' : (p < .3 ? '90,70,60' : '70,70,74'); g.addColorStop(0, `rgba(${c0},1)`); g.addColorStop(1, `rgba(${c0},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, y, R, 0, 7); ctx.fill(); ctx.restore(); }
     else if (a.k === 'txt') { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - Math.max(0, p - .6) / .4); ctx.font = 'bold 13px Nunito,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.fillStyle = a.c; const y = a.y - p * 34; ctx.strokeText(a.txt, a.x, y); ctx.fillText(a.txt, a.x, y); ctx.restore(); }
     else if (a.k === 'tele') { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - p); spr('teletransporte', a.x, a.y, 20 + p * 46, p * 8); ctx.restore(); }
     else if (a.k === 'traza') { ctx.save(); ctx.globalAlpha = 1 - p; ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x2, a.y2); ctx.stroke(); ctx.restore(); }
     else if (a.k === 'fogonazo') { ctx.save(); ctx.fillStyle = '#ffd966'; ctx.globalAlpha = 1 - p; ctx.beginPath(); ctx.arc(a.x, a.y, 7 * (1 - p * .4), 0, 7); ctx.fill(); ctx.restore(); }
     else if (a.k === 'gancho') { ctx.save(); ctx.globalAlpha = a.fallo ? 1 - p : 1; ctx.strokeStyle = '#d2a679'; ctx.lineWidth = 2; const q = a.fallo ? Math.min(1, p * 3) : Math.min(1, p * 1.2); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + (a.ax - a.x) * q, a.y + (a.ay - a.y) * q); ctx.stroke(); ctx.restore(); }
   }
-  for (const q of parts) { ctx.globalAlpha = Math.max(0, 1 - q.t / q.dur); ctx.fillStyle = q.c; ctx.fillRect(q.x - q.r / 2, q.y - q.r / 2, q.r, q.r); } ctx.globalAlpha = 1;
+  for (const q of parts) {
+    ctx.globalAlpha = Math.max(0, 1 - q.t / q.dur);
+    if (q.brasa) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = q.c; ctx.beginPath(); ctx.arc(q.x, q.y, q.r * 1.6, 0, 7); ctx.globalAlpha *= .45; ctx.fill(); ctx.globalAlpha = Math.max(0, 1 - q.t / q.dur); ctx.beginPath(); ctx.arc(q.x, q.y, q.r * .8, 0, 7); ctx.fill(); ctx.restore(); }
+    else if (q.rot !== undefined) { ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.rot); ctx.fillStyle = q.c; ctx.fillRect(-q.r, -q.r * .6, q.r * 2, q.r * 1.2); ctx.restore(); }
+    else { ctx.fillStyle = q.c; ctx.fillRect(q.x - q.r / 2, q.y - q.r / 2, q.r, q.r); }
+  } ctx.globalAlpha = 1;
 }
 function dibujarAgua(t, x0, x1) {
   const pal = paleta().agua, y = S.agua, ola = x => y + Math.sin(x * .045 + t * 2.2) * 2.6 + Math.sin(x * .021 - t * 1.3) * 2;

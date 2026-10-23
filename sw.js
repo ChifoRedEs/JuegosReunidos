@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-e89f0a1890';
+const VERSION = 'jr-d0f377fde0';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -35,6 +35,7 @@ const ARCHIVOS = [
 './js/core/historial.js',
 './js/core/logros.js',
 './js/core/mesa3d.js',
+'./js/core/mesacartas3d.js',
 './js/core/personajes.js',
 './js/core/semilla.js',
 './js/core/sonido.js',
@@ -168,6 +169,7 @@ const ARCHIVOS = [
 './js/games/rummy/index.js',
 './js/games/rummy/motor.js',
 './js/games/rummy/rummy.css',
+'./js/games/rummy/vista3d.js',
 './js/games/scrabble/diccio.js',
 './js/games/scrabble/index.js',
 './js/games/scrabble/motor.js',
@@ -181,6 +183,7 @@ const ARCHIVOS = [
 './js/games/sokoban/motor.js',
 './js/games/sokoban/niveles.js',
 './js/games/sokoban/sokoban.css',
+'./js/games/sokoban/vista3d.js',
 './js/games/sopa/generador.js',
 './js/games/sopa/index.js',
 './js/games/sopa/palabras.js',
