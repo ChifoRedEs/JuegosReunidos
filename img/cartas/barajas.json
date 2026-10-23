@@ -164,9 +164,39 @@
    "archivo": "tapetes/azul-oscuro.webp"
   },
   {
+   "id": "t-bosque",
+   "nombre": "Bosque",
+   "archivo": "tapetes/bosque.webp"
+  },
+  {
+   "id": "t-ciudad",
+   "nombre": "Ciudad",
+   "archivo": "tapetes/ciudad.webp"
+  },
+  {
+   "id": "t-desierto",
+   "nombre": "Desierto",
+   "archivo": "tapetes/desierto.webp"
+  },
+  {
+   "id": "t-espacio",
+   "nombre": "Espacio",
+   "archivo": "tapetes/espacio.webp"
+  },
+  {
+   "id": "t-deportivo",
+   "nombre": "Estadio",
+   "archivo": "tapetes/deportivo.webp"
+  },
+  {
    "id": "t-galaxia",
    "nombre": "Galaxia",
    "archivo": "tapetes/galaxia.webp"
+  },
+  {
+   "id": "t-infierno",
+   "nombre": "Infierno",
+   "archivo": "tapetes/infierno.webp"
   },
   {
    "id": "t-ladrillos",
@@ -174,9 +204,19 @@
    "archivo": "tapetes/ladrillos.webp"
   },
   {
+   "id": "t-lago",
+   "nombre": "Lago",
+   "archivo": "tapetes/lago.webp"
+  },
+  {
    "id": "t-madera",
    "nombre": "Madera",
    "archivo": "tapetes/madera.webp"
+  },
+  {
+   "id": "t-medieval",
+   "nombre": "Medieval",
+   "archivo": "tapetes/medieval.webp"
   },
   {
    "id": "t-morado",

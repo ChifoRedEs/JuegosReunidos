@@ -34,3 +34,8 @@ export const emojiDeValores = v => (_PJ[v && v.pj] || {}).e || null;
 export const emojiPersonaje = asp => (_PJ[asp && asp.valores && asp.valores.pj] || {}).e || null;
 // ¿Hay un tapete elegido? → id 't-…' o null
 export const tapeteElegido = asp => { const v = asp && asp.valores && asp.valores.tapete; return v && v.startsWith('t-') ? v : null; };
+
+// «Escenario» de Worms: solo los tapetes con ambientación de campo de batalla (el juego los pinta de fondo y colorea el terreno a juego).
+export const ESCENARIOS_WORMS = ['t-bosque', 't-ciudad', 't-deportivo', 't-desierto', 't-espacio', 't-infierno', 't-lago', 't-medieval'];
+export const grupoEscenario = (sel, titulo = 'Escenario') => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
+  opciones: [AZAR, ...BARAJAS.tapetes.filter(t => ESCENARIOS_WORMS.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });

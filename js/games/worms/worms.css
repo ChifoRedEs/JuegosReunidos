@@ -1,0 +1,73 @@
+/* Worms (Arcade) */
+.juego-worms .wmfondo{border-radius:14px;padding:8px;background:linear-gradient(180deg,#8ecbff,#e8f6ff)}
+.juego-worms .wmmenu{display:flex;flex-direction:column;gap:12px;padding:12px;color:#102;background-position:center;background-size:cover}
+.juego-worms .wmmenu::before{content:'';position:absolute;inset:0;border-radius:14px;background:rgba(255,255,255,.55);pointer-events:none}
+.juego-worms .wmmenu{position:relative;isolation:isolate}
+.juego-worms .wmmenu>*{position:relative}
+.juego-worms .wmtitulo{display:flex;gap:12px;align-items:center}
+.juego-worms .wmtitulo img{width:56px;height:56px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.juego-worms .wmtitulo b{display:block;font:800 28px 'Baloo 2',system-ui,sans-serif;line-height:1.05;color:#B01C58}
+.juego-worms .wmtitulo small{font-weight:700;color:#333}
+.juego-worms .wmop{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,.72);border-radius:12px;padding:8px 10px}
+.juego-worms .wmop .lbl{font-weight:800;font-size:13px;color:#333}
+.juego-worms .wmop .seg{display:flex;flex-wrap:wrap;gap:6px}
+.juego-worms .wmop .seg .btn{flex:1 1 auto;min-width:0}
+.juego-worms .wmop .note{margin:0}
+.juego-worms .wmjuego{display:flex;flex-direction:column;gap:6px;padding:6px;background-position:center;background-size:cover}
+/* HUD */
+.juego-worms .wmhud{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:stretch}
+.juego-worms .wmeq{background:rgba(255,255,255,.96);border:2px solid transparent;border-radius:10px;padding:4px 7px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.juego-worms .wmeq.act{border-color:var(--c);box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 30%,transparent)}
+.juego-worms .wmeq b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#222}
+.juego-worms .wmeq small{white-space:nowrap;font-size:11px;font-weight:700;color:#444}
+.juego-worms .wmbarra{height:8px;border-radius:5px;background:#0002;overflow:hidden}
+.juego-worms .wmbarra i{display:block;height:100%;background:var(--c);transition:width .4s}
+.juego-worms .wmcen{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.96);border-radius:10px;padding:2px 8px;min-width:78px}
+.juego-worms .wmtime{font:800 22px 'Baloo 2',system-ui,sans-serif;line-height:1;color:#222}
+.juego-worms .wmtime.ur{color:#D61F1F;animation:wmlat .5s infinite alternate}
+.juego-worms .wmv{font-size:11px;font-weight:800;color:#234;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.juego-worms .wmviento{display:none}
+.juego-worms .wmcen small{font-size:10px;font-weight:700;color:#555}
+@keyframes wmlat{to{transform:scale(1.18)}}
+/* zona de juego */
+.juego-worms .wmzona{position:relative;border-radius:12px;overflow:hidden;border:2px solid rgba(0,0,0,.35);background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.juego-worms #wmCv{display:block;width:100%}
+.juego-worms .wmban{position:absolute;left:50%;top:10px;transform:translate(-50%,-14px);background:rgba(0,0,0,.72);color:#fff;font-weight:800;padding:5px 14px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap;font-size:14px}
+.juego-worms .wmban.on{opacity:1;transform:translate(-50%,0)}
+.juego-worms .wmcpu{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;font-weight:800;padding:3px 10px;border-radius:14px;pointer-events:none}
+.juego-worms .wmpausa{position:absolute;inset:0;background:rgba(0,0,0,.62);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:22px;cursor:pointer}
+.juego-worms .wmpausa[hidden],.juego-worms .wmfin[hidden],.juego-worms .wmcpu[hidden]{display:none}
+.juego-worms .wmfin{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:10px}
+.juego-worms .wmfintarj{background:#fff;color:#222;border-radius:16px;padding:14px 18px;text-align:center;max-width:300px;width:100%}
+.juego-worms .wmfintarj h2{margin:0 0 4px;font:800 22px 'Baloo 2',system-ui,sans-serif}
+.juego-worms .wmfintarj p{margin:0 0 8px;font-size:13px;color:#555}
+.juego-worms .wmsup{list-style:none;margin:0 0 10px;padding:0;font-size:13px;font-weight:700;display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center}
+/* panel de mandos */
+.juego-worms .wmpanel{display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.85);border-radius:12px;padding:6px}
+.juego-worms .wmpanel.off .wmmandos,.juego-worms .wmpanel.off #wmArma,.juego-worms .wmpanel.off #wmTemp{opacity:.45;pointer-events:none}
+.juego-worms .wmfila{display:flex;gap:6px;align-items:stretch}
+.juego-worms .wmarma{flex:1;display:flex;align-items:center;gap:6px;justify-content:flex-start;min-width:0;padding:4px 8px}
+.juego-worms .wmarma img{width:32px;height:32px;object-fit:contain;flex:none}
+.juego-worms .wmarma span{font-size:13px;line-height:1.1;white-space:normal!important;font-weight:800;flex:1;text-align:left;overflow:hidden}
+.juego-worms .wmarma i{font-style:normal;font-weight:800;opacity:.75}
+.juego-worms .wmz{padding:0 10px;min-width:40px}
+.juego-worms .wmmandos{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.juego-worms .wmpad,.juego-worms .wmpad2{display:grid;grid-template-columns:repeat(2,56px);grid-auto-rows:50px;gap:6px}
+.juego-worms .wmpad2{grid-template-columns:repeat(2,56px)}
+.juego-worms .wmb{padding:0;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}
+.juego-worms .wmfuego{grid-column:1/3;position:relative;overflow:hidden;border:0;border-radius:14px;background:linear-gradient(180deg,#ff6b4a,#d62a2a);color:#fff;font:800 14px/1.1 'Baloo 2',system-ui,sans-serif;box-shadow:0 3px 0 #8f1717;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.juego-worms .wmfuego.lista{animation:wmlat .9s infinite alternate}
+.juego-worms .wmfuego i{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(0deg,#ffe14a,#7bff6b);opacity:.7;pointer-events:none}
+.juego-worms .wmfuego span{position:relative}
+.juego-worms .wmayuda{display:none;margin:0;font-size:11px}
+@media (hover:hover) and (pointer:fine){.juego-worms .wmayuda{display:block}}
+/* selector de armas */
+.juego-worms .wmarmas,.wmarmas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wmarmas .wmar{display:grid;grid-template-columns:36px 1fr auto;grid-template-areas:'i n c' 'i d d';gap:0 8px;align-items:center;text-align:left;padding:7px;border-radius:12px;border:2px solid var(--borde,#0003);background:var(--card,#fff);color:inherit;cursor:pointer;font:inherit}
+.wmarmas .wmar.on{border-color:#E0457B;box-shadow:0 0 0 2px #E0457B55}
+.wmarmas .wmar:disabled{opacity:.4;cursor:not-allowed}
+.wmarmas .wmar img{grid-area:i;width:36px;height:36px;object-fit:contain}
+.wmarmas .wmar b{grid-area:n;font-size:13px}
+.wmarmas .wmar i{grid-area:c;font-style:normal;font-weight:800;font-size:12px}
+.wmarmas .wmar small{grid-area:d;font-size:11px;line-height:1.2;opacity:.8}
+@media (max-width:360px){.wmarmas{grid-template-columns:1fr}}

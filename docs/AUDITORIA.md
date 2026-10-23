@@ -124,3 +124,6 @@ Física con 400 subpasos por segundo, rozamiento del césped y de la arena, rebo
 - **Contra la CPU** solo puntúa la mejor respuesta de cada ronda (si empatan, los dos), como en el concurso. La CPU busca entre todas las palabras posibles (más cortas cuanto más fácil) y en cifras usa como mucho 3, 4 o 6 números según el nivel.
 - **Reto del día:** 4 rondas con las mismas letras y cifras para todo el mundo.
 - **🎨 Apariencia:** Fondo de Tablero con los tapetes de imagen (🎲 aleatorio por defecto en este juego), paleta del tablero y 4 estilos de fichas (Concurso, Madera, Pizarra y Del tablero).
+
+## Worms (versión 3.5.0)
+`js/games/worms/` (motor.js · ia.js · index.js · worms.css), pruebas en `tests/worms.mjs`. El motor no toca el DOM; el terreno es una máscara de bits generada desde una semilla y la partida guardada solo lleva la semilla y la lista de cráteres. Comprobado: 3/6/9/12 gusanos en los 4 mapas sin gusanos enterrados ni flotando, CPU contra CPU termina partidas completas, cuerda que engancha y suelta sin dejar gusanos en el aire, tumbas que se destruyen y guardado/carga validado.

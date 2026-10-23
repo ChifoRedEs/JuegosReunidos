@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-97007184ee';
+const VERSION = 'jr-b882ef54f8';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -179,7 +179,11 @@ const ARCHIVOS = [
 './js/games/trivial/clasicas.js',
 './js/games/trivial/index.js',
 './js/games/trivial/motor.js',
-'./js/games/trivial/trivial.css'
+'./js/games/trivial/trivial.css',
+'./js/games/worms/ia.js',
+'./js/games/worms/index.js',
+'./js/games/worms/motor.js',
+'./js/games/worms/worms.css'
 /*ARCHIVOS-FIN*/
 ];
 // Tipografías de Google Fonts (Baloo 2 y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,

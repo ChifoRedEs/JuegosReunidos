@@ -39,6 +39,7 @@ export const JUEGOS = [
   { id: 'ladrillos', nombre: 'Rompe-Ladrillos', icono: '🏓', color: '#FF4757', categoria: 'arcade', descripcion: '12 niveles, premios y editor de niveles propios.', cargar: () => import('./games/ladrillos/index.js') },
   { id: 'airhockey', nombre: 'Air Hockey', icono: '🏒', color: '#1E9BD7', categoria: 'arcade', descripcion: 'Contra la CPU o 2 jugadores en el mismo móvil.', cargar: () => import('./games/airhockey/index.js') },
   { id: 'billar', nombre: 'Billar', icono: '🎱', color: '#1F8A4C', categoria: 'arcade', descripcion: 'Pool 8, Pool 9 y Snooker contra la CPU o entre dos.', cargar: () => import('./games/billar/index.js') },
+  { id: 'worms', nombre: 'Worms', icono: '🪱', color: '#E0457B', categoria: 'arcade', descripcion: 'Dos ejércitos de gusanos: bazukas, granadas, cuerda ninja y tumbas. De 3 a 12 por equipo.', cargar: () => import('./games/worms/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
   { id: 'magnate', nombre: 'Magnate Tecnológico', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas tecnológicas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
