@@ -1,16 +1,15 @@
 // Vista 2D (SVG) de Hotel: respaldo cuando no hay WebGL o si el jugador elige «2D clásica». Misma API que vista3d.js.
-import { MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
+import { INFO_TIPO, CAJA, MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
 
 const U = 40, W = MAPA.W, H = MAPA.H, NS = 'http://www.w3.org/2000/svg';
-const TILE = { C: ['#F7E8B8', '🏷️'], O: ['#BFD9F6', '📋'], E: ['#BFE8C8', '🚪'], F: ['#FAD0A2', '🏗️'], N: ['#DADCE2', ''], P: ['#3B6FD8', '🅿️'] };
 const el = (tag, at = {}, txt) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; return e; };
 
 export function crearHotel2D(cont) {
-  const V = { alTocar: null }, svg = el('svg', { viewBox: `-10 -10 ${W * U + 20} ${H * U + 20}`, class: 'ht2d', role: 'img', 'aria-label': 'Tablero de Hotel en 2D' });
+  const V = { alTocar: null }, svg = el('svg', { viewBox: `${CAJA.c0 * U - 14} ${CAJA.r0 * U - 14} ${(CAJA.c1 - CAJA.c0 + 1) * U + 28} ${(CAJA.r1 - CAJA.r0 + 1) * U + 28}`, class: 'ht2d', role: 'img', 'aria-label': 'Tablero de Hotel en 2D' });
   svg.style.cssText = 'width:100%;height:100%;display:block;touch-action:manipulation';
   cont.append(svg);
   const px = (r, c) => [c * U, r * U];
-  svg.append(el('rect', { x: -10, y: -10, width: W * U + 20, height: H * U + 20, rx: 14, class: 'h2-hierba', fill: '#8CCB6A' }));
+  svg.append(el('rect', { x: CAJA.c0 * U - 14, y: CAJA.r0 * U - 14, width: (CAJA.c1 - CAJA.c0 + 1) * U + 28, height: (CAJA.r1 - CAJA.r0 + 1) * U + 28, rx: 14, class: 'h2-hierba', fill: '#8CCB6A' }));
   const capaLote = el('g'), capaEdif = el('g'), capaCam = el('g'), capaEnt = el('g'), capaCoche = el('g'), capaRes = el('g'), capaTxt = el('g');
   svg.append(capaLote, capaCam, capaEdif, capaEnt, capaRes, capaCoche, capaTxt);
   // lago, banco y ayuntamiento
@@ -28,10 +27,11 @@ export function crearHotel2D(cont) {
   }
   // camino
   const tiles = CAMINO.map(([r, c], i) => {
-    const [x, y] = px(r, c), g = el('g', { 'data-sq': i }), [bg, em] = TILE[TIPO[i]];
-    g.append(el('rect', { x: x + 1.5, y: y + 1.5, width: U - 3, height: U - 3, rx: 6, fill: bg, stroke: '#00000030' }));
-    if (TIPO[i] === 'P') g.append(el('text', { x: x + U / 2, y: y + 27, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 900, fill: '#fff' }, 'P'));
-    else if (em) g.append(el('text', { x: x + U / 2, y: y + 26, 'text-anchor': 'middle', 'font-size': 18 }, em));
+    const [x, y] = px(r, c), g = el('g', { 'data-sq': i }), I = INFO_TIPO[TIPO[i]];
+    g.append(el('rect', { x: x + 1.5, y: y + 1.5, width: U - 3, height: U - 3, rx: 6, fill: I.color, stroke: '#fff', 'stroke-width': 2 }));
+    if (TIPO[i] === 'P') g.append(el('text', { x: x + U / 2, y: y + 22, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 900, fill: '#fff' }, 'P'));
+    else if (I.ico) g.append(el('text', { x: x + U / 2, y: y + 22, 'text-anchor': 'middle', 'font-size': 18 }, I.ico));
+    if (I.corto) g.append(el('text', { x: x + U / 2, y: y + 35, 'text-anchor': 'middle', 'font-size': 8, 'font-weight': 900, fill: '#fff', 'pointer-events': 'none' }, I.corto));
     capaCam.append(g); return g;
   });
   // líneas del Banco y del Ayuntamiento

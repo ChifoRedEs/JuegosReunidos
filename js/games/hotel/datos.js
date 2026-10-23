@@ -53,9 +53,19 @@ export const N = CAMINO.length;
 const TIPOS = 'PCOCCECCFCO' + 'CNCCOCCCOCE' + 'CCNCOFNOCNCCOEN' + 'CCOFCNCCOCC';
 export const TIPO = TIPOS.slice(0, N).split('');
 export const INFO_TIPO = {
-  P: { nombre: 'Aparcamiento', ico: '🅿️' }, C: { nombre: 'Compra de terreno', ico: '🏷️' }, O: { nombre: 'Permiso de obras', ico: '📋' },
-  E: { nombre: 'Entrada libre', ico: '🚪' }, F: { nombre: 'Construye una fase gratis', ico: '🏗️' }, N: { nombre: 'Camino', ico: '' },
+  P: { nombre: 'Aparcamiento', corto: 'SALIDA', ico: '🅿️', color: '#3B6FD8', desc: 'Casilla de salida: aquí empiezan los coches. No pasa nada al caer.' },
+  C: { nombre: 'Compra de terreno', corto: 'COMPRA', ico: '🏷️', color: '#E5A100', desc: 'Puedes comprar el terreno de un hotel pegado a esta casilla (solo uno por turno). Si el terreno de un rival sigue vacío, puedes quedártelo por la mitad del precio. No puedes construir en él hasta tu siguiente turno.' },
+  O: { nombre: 'Permiso de obras', corto: 'OBRAS', ico: '📋', color: '#2F7DE1', desc: 'Si tienes algún terreno, declaras qué construyes (edificio principal, luego ampliaciones) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, H gratis, ×2 doble precio.' },
+  E: { nombre: 'Entrada libre', corto: 'ENTRADA', ico: '🚪', color: '#1E9E63', desc: 'Pones gratis una entrada en un hotel tuyo que ya tenga edificio principal, en una casilla del camino junto a su terreno.' },
+  F: { nombre: 'Fase libre', corto: 'FASE', ico: '🏗️', color: '#E8690F', desc: 'Construyes gratis una fase: el edificio principal de un terreno vacío tuyo, o la siguiente ampliación de un hotel en obras.' },
+  N: { nombre: 'Camino', corto: '', ico: '', color: '#C3C9D6', desc: 'Casilla normal. Si tiene una entrada de un hotel rival, pagas las noches (dado × tarifa por noche del hotel).' },
 };
+export const EXTRA_LEYENDA = [
+  { ico: '🏦', nombre: 'Línea del Banco', color: '#F2B600', desc: 'Cada vez que cruzas la línea dorada cobras 2.000 € (con 3-4 jugadores, deja de pagar cuando quedan dos).' },
+  { ico: '🏛️', nombre: 'Línea del Ayuntamiento', color: '#2F9BFF', desc: 'Al cruzar la línea azul puedes comprar una entrada por cada hotel tuyo con edificio principal (máximo 8 por hotel, una por casilla).' },
+  { ico: '⛩️', nombre: 'Entrada de un hotel', color: '#888', desc: 'Pórtico del color del hotel en el borde del camino. Si un rival cae en esa casilla, tira el dado y te paga noches × tarifa del hotel.' },
+  { ico: '🚩', nombre: 'Bandera del dueño', color: '#E0243A', desc: 'Marca de qué jugador es el propietario del hotel.' },
+];
 // Líneas que se cruzan entre dos casillas consecutivas: el Banco (cobras 2000) y el Ayuntamiento (compras entradas)
 export const LINEA_BANCO = 41;          // entre la casilla 41 y la 42
 export const LINEA_AYTO = 27;           // entre la 27 y la 28
@@ -103,3 +113,7 @@ export const ANCLAS = {
   taj: [[11, 7, 12, 8], [9, 7, 10, 7], [11, 9, 11, 9], [12, 9, 12, 9]],
   safari: [[11, 2, 12, 3], [11, 4, 11, 4], [12, 4, 12, 4], [11, 5, 12, 6]],
 };
+
+// Zona realmente usada del mapa (celdas, límites incluidos), para recortar el tablero y que no sobre margen
+export const CAJA = (() => { let r0 = 99, c0 = 99, r1 = -1, c1 = -1; const m = ([r, c]) => { r0 = Math.min(r0, r); c0 = Math.min(c0, c); r1 = Math.max(r1, r); c1 = Math.max(c1, c); };
+  CAMINO.forEach(m); Object.values(TERRENOS).forEach(l => l.forEach(m)); return { r0, c0, r1, c1 }; })();

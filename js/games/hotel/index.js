@@ -2,7 +2,7 @@
 // abre entradas en el Ayuntamiento y cobra las noches de los rivales. Gana el último jugador en pie. Tablero 3D (Three.js) con respaldo SVG.
 import { $, esc, esperar } from '../../core/dom.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
-import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, TIPO, LADOS } from './datos.js';
+import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, EXTRA_LEYENDA, TIPO, LADOS } from './datos.js';
 import * as M from './motor.js';
 
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 170, bot: 750, dado: 900 }, rapida: { nombre: 'Rápida', paso: 60, bot: 280, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
@@ -81,7 +81,7 @@ function armar() {
     <div class="htpanel"><div class="htturno" id="htTurno"></div><div class="htacc" id="htAcc"></div></div>
     <div class="msg htmsg" id="htMsg" role="status" aria-live="polite"></div>
     <ul class="htlog" id="htLog" aria-label="Historial de la partida"></ul>
-    <div class="bar"><button class="btn" data-ac="hoteles">🏨 Hoteles</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="leyenda">📖 Leyenda</button><button class="btn" data-ac="hoteles">🏨 Hoteles</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
   iniciarVista();
 }
 async function iniciarVista() {
@@ -114,7 +114,7 @@ function pintar() {
     <span class="htchips">${M.titulos(S, i).map(h => `<i style="background:${HOTELES[h].color}" title="${HOTELES[h].nombre}"></i>`).join('')}</span></div>`).join('');
   const p = S.jug[tj];
   $('#htTurno').innerHTML = S.fase === 'fin' ? `🏆 <b>${esc(S.jug[S.ganador].nombre)}</b> gana la partida<br><small>${esc(S.motivo)}</small>`
-    : `<span style="color:${p.color}">${p.coche} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small>`;
+    : `<span style="color:${p.color}">${p.coche} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
   $('#htAcc').innerHTML = accionesHTML(j);
   const L = S.log.slice(-60).reverse(); $('#htLog').innerHTML = L.map(t => `<li>${esc(t)}</li>`).join(''); const m = $('#htMsg'); if (m && S.log.length) m.textContent = S.log[S.log.length - 1];
   if (V) { V.pintar(S); V.resaltar(resaltados()); }
@@ -230,6 +230,7 @@ function clic(e) {
     case 'reglas': return reglas();
     case 'nueva': return nuevaSetup();
     case 'hoteles': return hoteles();
+    case 'leyenda': return leyenda();
     case 'tirar': return humano({ t: 'tirar' });
     case 'inst': return humano({ t: 'instalacion', h: arg });
     case 'saltar': return humano({ t: 'saltar' });
@@ -257,8 +258,7 @@ function alTocar(t) {
     if (!bloqueado && (S.fase === 'ayto' || S.fase === 'entLibre') && sel && sel.h && !S.jug[M.actor(S)].cpu) {
       const o = M.legales(S).entradas.find(x => x.h === sel.h && x.sq === t.id); if (o) return humano({ t: 'entrada', h: sel.h, sq: t.id });
     }
-    const h = S.entDe[t.id];
-    return api.aviso(`${NOMBRE_CASILLA(t.id)}${h ? ` · Entrada de ${HOTELES[h].nombre}${S.hot[h].dueno >= 0 ? ' (de ' + S.jug[S.hot[h].dueno].nombre + ')' : ''}` : ''}`);
+    return leyenda(TIPO[t.id], t.id);
   }
   if (t.tipo === 'lote') modal(`${HOTELES[t.id].nombre}`, fichaHotel(t.id));
 }
@@ -274,6 +274,15 @@ function fichaHotel(h) {
       ${fila('Instalación de ocio', D.inst.c, D.inst.r, H.inst)}
     </tbody></table></div>
     <p class="note">Entrada: ${eur(D.entrada)} (máximo ${MAX_ENTRADAS}). Entradas abiertas: <b>${H.ents.length}</b>. Si un rival cae en una, paga noches × tarifa actual: <b>${eur(M.tarifaDe(S, h))}</b>/noche.${H.dueno >= 0 && H.etapa === 0 ? ' El terreno vacío puede comprarse a mitad de precio por otro jugador que caiga en una casilla de compra junto a él.' : ''}</p>`;
+}
+function leyenda(resalta, sq) {
+  const aqui = S && S.fase !== 'fin' ? TIPO[S.jug[S.turno].pos] : null, tipo = resalta || aqui, cont = document.createElement('div');
+  const fila = (ico, corto, nombre, desc, color, marca) => `<div class="htley ${marca ? 'on' : ''}"><span class="htlsw" style="background:${color}"><b>${ico}</b><small>${corto}</small></span><div><b>${nombre}</b>${marca ? `<em> ${marca}</em>` : ''}<p>${desc}</p></div></div>`;
+  let extra = '';
+  if (sq != null) { const h = S && S.entDe[sq]; extra = `<p class="note">Casilla tocada: <b>${esc(NOMBRE_CASILLA(sq))}</b>${h ? ` · Entrada de <b>${HOTELES[h].nombre}</b>${S.hot[h].dueno >= 0 ? ' (de ' + esc(S.jug[S.hot[h].dueno].nombre) + ')' : ''}` : ''}.</p>`; }
+  cont.innerHTML = extra + Object.entries(INFO_TIPO).map(([k, I]) => fila(k === 'P' ? 'P' : I.ico || '·', I.corto || 'CAMINO', I.nombre, I.desc, I.color, k === tipo ? (resalta && sq != null ? '← la que has tocado' : '📍 estás aquí') : '')).join('')
+    + '<h3 class="htlh">Otras marcas del tablero</h3>' + EXTRA_LEYENDA.map(e => fila(e.ico, '', e.nombre, e.desc, e.color, '')).join('');
+  modal('📖 Leyenda de casillas', cont);
 }
 function hoteles() {
   if (!S) return;

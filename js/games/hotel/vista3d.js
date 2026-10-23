@@ -2,15 +2,14 @@
 //   const V = await crearHotel3D(contenedor)
 //   V.pintar(S) · V.mover(j, camino, ms) · V.dado(v, ms) · V.resaltar({ casillas:[], lotes:[] }) · V.alTocar = ({tipo:'casilla'|'lote', id}) => … · V.recolor() · V.camara(modo) · V.destruir()
 import { T, crearEscena, lienzo, textura, emojiTextura, EMOJI_FUENTE } from '../../core/escena3d.js';
-import { MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
+import { INFO_TIPO, CAJA, MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
 
 const W = MAPA.W, H = MAPA.H, cx = c => c - W / 2, cz = r => r - H / 2;
 const centro = ([r0, c0, r1, c1]) => ({ x: cx((c0 + c1 + 1) / 2), z: cz((r0 + r1 + 1) / 2), w: c1 - c0 + 1, d: r1 - r0 + 1 });
-const TILE = { C: ['#F7E8B8', '🏷️'], O: ['#BFD9F6', '📋'], E: ['#BFE8C8', '🚪'], F: ['#FAD0A2', '🏗️'], N: ['#DADCE2', ''], P: ['#3B6FD8', '🅿️'] };
 const tono = (hex, f) => { const c = new T.Color(hex); return f >= 0 ? c.lerp(new T.Color('#ffffff'), f) : c.multiplyScalar(1 + f); };
 
 export async function crearHotel3D(cont) {
-  const E = crearEscena(cont, { fov: 34, az: 0, pol: .86, polMin: .2, polMax: 1.3, radio: 8.6, margen: 0.6, distMin: 7, distMax: 40, sombraRadio: 13, sombraTam: 2048, sol: { pos: [-7, 15, 10], int: 2.3 }, hemi: { int: 1.8 }, sueloY: -.3,
+  const E = crearEscena(cont, { fov: 34, az: 0, pol: .7, polMin: .2, polMax: 1.3, radio: 8.3, margen: 0.2, distMin: 6, objetivo: [(CAJA.c0 + CAJA.c1 + 1) / 2 - W / 2, 0, (CAJA.r0 + CAJA.r1 + 1) / 2 - H / 2], distMax: 40, sombraRadio: 13, sombraTam: 2048, sol: { pos: [-7, 15, 10], int: 2.3 }, hemi: { int: 1.8 }, sueloY: -.3,
     etiqueta: 'Tablero de Hotel en 3D: arrastra para girar la vista' });
   const V = { E, alTocar: null }, S3 = E.escena;
   const mats = new Map();
@@ -23,8 +22,9 @@ export async function crearHotel3D(cont) {
   };
 
   // ----- base del tablero -----
-  const marco = new T.Mesh(new T.BoxGeometry(W + 1.3, .34, H + 1.3), new T.MeshStandardMaterial({ color: '#8A5A3B', roughness: .7 })); marco.position.y = -.18; marco.receiveShadow = true; S3.add(marco);
-  const hierba = new T.Mesh(new T.BoxGeometry(W, .06, H), new T.MeshStandardMaterial({ color: '#8CCB6A', roughness: .9 })); hierba.position.y = -.03; hierba.receiveShadow = true; S3.add(hierba);
+  const bw = CAJA.c1 - CAJA.c0 + 1, bh = CAJA.r1 - CAJA.r0 + 1, bx = (CAJA.c0 + CAJA.c1 + 1) / 2 - W / 2, bz = (CAJA.r0 + CAJA.r1 + 1) / 2 - H / 2;
+  const marco = new T.Mesh(new T.BoxGeometry(bw + 1.1, .34, bh + 1.1), new T.MeshStandardMaterial({ color: '#8A5A3B', roughness: .7 })); marco.position.set(bx, -.18, bz); marco.receiveShadow = true; S3.add(marco);
+  const hierba = new T.Mesh(new T.BoxGeometry(bw + .5, .06, bh + .5), new T.MeshStandardMaterial({ color: '#8CCB6A', roughness: .9 })); hierba.position.set(bx, -.03, bz); hierba.receiveShadow = true; S3.add(hierba);
   const ocupado = new Set(CAMINO.map(([r, c]) => r + ',' + c));
   const marca = ([r0, c0, r1, c1]) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) ocupado.add(r + ',' + c); };
   for (const id of IDS_HOTEL) TERRENOS[id].forEach(([r, c]) => ocupado.add(r + ',' + c));
@@ -33,10 +33,14 @@ export async function crearHotel3D(cont) {
   // ----- casillas del camino -----
   const tocables = E.tocables, tiles = [], texTile = {};
   const tilTex = t => {
-    if (texTile[t]) return texTile[t]; const [bg, em] = TILE[t], c = lienzo(128, 128), x = c.getContext('2d');
-    x.fillStyle = bg; x.fillRect(0, 0, 128, 128); x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 6; x.strokeRect(3, 3, 122, 122);
-    if (t === 'P') { x.fillStyle = '#fff'; x.font = '800 78px Nunito, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('P', 64, 70); }
-    else if (em) { x.font = `70px ${EMOJI_FUENTE}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(em, 64, 72); }
+    if (texTile[t]) return texTile[t]; const I = INFO_TIPO[t], c = lienzo(128, 128), x = c.getContext('2d');
+    x.fillStyle = I.color; x.fillRect(0, 0, 128, 128); x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 7; x.strokeRect(6, 6, 116, 116);
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    if (t === 'N') { x.fillStyle = 'rgba(255,255,255,.7)'; for (let k = 0; k < 3; k++) { x.beginPath(); x.arc(34 + k * 30, 64, 6, 0, 6.3); x.fill(); } }
+    else {
+      if (t === 'P') { x.fillStyle = '#fff'; x.font = '900 70px Nunito, sans-serif'; x.fillText('P', 64, 52); } else { x.font = `62px ${EMOJI_FUENTE}`; x.fillText(I.ico, 64, 54); }
+      x.fillStyle = '#fff'; x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 4; x.font = '900 23px Nunito, sans-serif'; x.fillText(I.corto, 64, 104);
+    }
     return (texTile[t] = textura(c));
   };
   const asfalto = mat('#5E6370');
@@ -116,8 +120,8 @@ export async function crearHotel3D(cont) {
   edifPublico([BANCO.f0, BANCO.c0, BANCO.f1, BANCO.c1], 'banco'); edifPublico([AYUNTAMIENTO.f0, AYUNTAMIENTO.c0, AYUNTAMIENTO.f1, AYUNTAMIENTO.c1], 'ayto');
   { const a = centro([LAGO.f0, LAGO.c0, LAGO.f1, LAGO.c1]); const l = new T.Mesh(new T.CylinderGeometry(.5, .5, .05, 24), new T.MeshStandardMaterial({ color: '#4DB7E8', roughness: .15, metalness: .1 })); l.scale.set(a.w * .98, 1, a.d * .98); l.position.set(a.x, .03, a.z); l.receiveShadow = true; S3.add(l); }
   const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
-  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
-    if (ocupado.has(r + ',' + c)) continue; const q = hash(r, c); if (q > .62) continue;
+  for (let r = CAJA.r0; r <= CAJA.r1; r++) for (let c = CAJA.c0; c <= CAJA.c1; c++) {
+    if (ocupado.has(r + ',' + c)) continue; const q = hash(r, c); if (q > .45) continue;
     const g = new T.Group(), s = .7 + hash(c, r) * .6; const tr = new T.Mesh(new T.CylinderGeometry(.05, .07, .3 * s, 6), mat('#7B5230')); tr.position.y = .15 * s; tr.castShadow = true; g.add(tr);
     const co = new T.Mesh(new T.IcosahedronGeometry(.26 * s, 0), mat(q > .3 ? '#3FA45B' : '#58B96B')); co.position.y = .42 * s; co.castShadow = true; g.add(co);
     g.position.set(cx(c + .5) + (hash(r + 3, c) - .5) * .4, 0, cz(r + .5) + (hash(r, c + 7) - .5) * .4); S3.add(g);

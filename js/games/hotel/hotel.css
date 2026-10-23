@@ -22,7 +22,7 @@
 @keyframes htflash{to{transform:translateY(-16px);opacity:0}}
 
 /* vista: el lienzo 3D es transparente, así se ve el «Fondo de Tablero» elegido detrás */
-.juego-hotel .e3d.htvista{aspect-ratio:18/14.6;width:min(calc(100vw - 28px),760px)}
+.juego-hotel .e3d.htvista{aspect-ratio:16/12.4;width:min(calc(100vw - 28px),760px)}
 .juego-hotel .e3d.ht2{background:var(--ht-hierba)}
 .juego-hotel .ht2d .h2-pulso{animation:htpulso 1s ease-in-out infinite alternate}
 @keyframes htpulso{to{opacity:.35}}
@@ -58,3 +58,14 @@
 .htmodal .htdet{border-bottom:1px solid var(--line);padding:6px 0}
 .htmodal .htdet summary{cursor:pointer;display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:4px 0}
 .htmodal .htdet summary span{color:var(--mut);font-size:12.5px}
+
+.juego-hotel .htcas{min-height:34px;padding:4px 10px;font-size:12.5px;margin-top:4px}
+.juego-hotel .htcas i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.htmodal .htley{display:flex;gap:10px;align-items:flex-start;padding:8px;border:2px solid var(--line);border-radius:var(--r-m);margin-bottom:6px}
+.htmodal .htley.on{border-color:var(--yel);box-shadow:0 0 0 3px color-mix(in srgb,var(--yel) 35%,transparent)}
+.htmodal .htley p{margin:2px 0 0;font-size:13px;color:var(--mut);line-height:1.35}
+.htmodal .htley em{font-style:normal;font-weight:800;color:var(--orange,#E8690F);font-size:12.5px}
+.htmodal .htlsw{flex:none;width:58px;height:58px;border-radius:10px;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.htmodal .htlsw b{font-size:24px;line-height:1.1}
+.htmodal .htlsw small{font:900 9.5px var(--f-texto);letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.htmodal .htlh{font-size:15px;margin:12px 0 6px}
