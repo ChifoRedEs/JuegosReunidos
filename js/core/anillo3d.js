@@ -226,8 +226,7 @@ export async function crearVista(cont, opciones = {}) {
   function crearFicha(p, i) {
     const g = new T.Group();
     const disco = new T.Mesh(geoDisco, new T.MeshLambertMaterial({ color: p.color })); disco.position.y = .035; disco.castShadow = true; g.add(disco);
-    const pie = new T.Mesh(geoPie, new T.MeshLambertMaterial({ color: p.color })); pie.position.y = .07; pie.castShadow = true; g.add(pie);
-    const sp = new T.Sprite(new T.SpriteMaterial({ map: texEmoji(p.ficha), transparent: true, depthWrite: false })); sp.scale.set(.52, .52, 1); sp.position.y = .6; g.add(sp);
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: texEmoji(p.ficha), transparent: true, depthWrite: false })); sp.scale.set(.62, .62, 1); sp.position.y = .4; g.add(sp);
     escena.add(g); fichas[i] = { g, sp, pos: p.pos, x: 0, z: 0, ficha: p.ficha };
   }
   // posición de una ficha dentro de su casilla (varias fichas en la misma casilla se reparten)

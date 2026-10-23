@@ -73,17 +73,18 @@ export async function crearMesa3D(cont, o) {
       if (p.t === 'N') g.rotation.y = p.col === 0 ? Math.PI / 2 : -Math.PI / 2;       // el caballo mira hacia el rival
     } else {
       const forma = o.forma || 'disco', apilar = p.t === 'rey' ? 2 : 1;
-      for (let k = 0; k < apilar; k++) {
+      for (let k = 0; k < (p.emoji ? 0 : apilar); k++) {
         let geo;
         if (forma === 'gema') geo = new T.CylinderGeometry(.36, .4, .17, 8); else if (forma === 'cuadrada') geo = new T.BoxGeometry(.72, .17, .72); else geo = new T.CylinderGeometry(.37, .4, .17, 36);
         const m = new T.Mesh(geo, mats[p.col]); m.position.y = .085 + k * .17; m.castShadow = true; g.add(m);
         const ar = new T.Mesh(forma === 'cuadrada' ? new T.BoxGeometry(.52, .02, .52) : new T.TorusGeometry(forma === 'anillo' ? .27 : .25, forma === 'anillo' ? .045 : .02, 8, 32), mats[p.col === 0 ? 1 : 0]);
         if (forma !== 'cuadrada') ar.rotation.x = Math.PI / 2; ar.position.y = .17 + k * .17 + (forma === 'cuadrada' ? 0 : 0); ar.material = new T.MeshStandardMaterial({ color: p.col === 0 ? '#00000022' : '#ffffff', roughness: .5, transparent: true, opacity: forma === 'anillo' ? .5 : .28 }); g.add(ar);
       }
-      if (p.t === 'rey') { const co = new T.Mesh(new T.TorusGeometry(.2, .05, 10, 24), matOro); co.rotation.x = Math.PI / 2; co.position.y = .17 * 2 + .05; g.add(co); const es = new T.Mesh(new T.OctahedronGeometry(.1), matOro); es.position.y = .17 * 2 + .15; es.scale.y = 1.2; g.add(es); }
-      if (p.emoji) {
-        const pl = new T.Mesh(new T.PlaneGeometry(.5, .5), new T.MeshBasicMaterial({ map: emojiTextura(p.emoji), transparent: true, depthWrite: false })); pl.rotation.x = -Math.PI / 2; pl.position.y = .175 * apilar + (p.t === 'rey' ? .0 : .012); g.add(pl);
-        g.userData.emojiPl = pl;
+      if (p.t === 'rey' && !p.emoji) { const co = new T.Mesh(new T.TorusGeometry(.2, .05, 10, 24), matOro); co.rotation.x = Math.PI / 2; co.position.y = .17 * 2 + .05; g.add(co); const es = new T.Mesh(new T.OctahedronGeometry(.1), matOro); es.position.y = .17 * 2 + .15; es.scale.y = 1.2; g.add(es); }
+      if (p.emoji) {                                                       // solo el avatar elegido, sobre una peana fina del color de la pieza
+        const pe = new T.Mesh(forma === 'cuadrada' ? new T.BoxGeometry(.72, .06, .72) : new T.CylinderGeometry(.37, .4, .06, 36), mats[p.col]); pe.position.y = .03; pe.castShadow = true; g.add(pe);
+        const sp = new T.Sprite(new T.SpriteMaterial({ map: emojiTextura(p.emoji, 128), transparent: true, depthWrite: false })); sp.scale.set(.85, .85, .85); sp.position.y = .5; g.add(sp);
+        if (p.t === 'rey') { const co = new T.Mesh(new T.TorusGeometry(.3, .05, 10, 28), matOro); co.rotation.x = Math.PI / 2; co.position.y = .09; g.add(co); }
       }
     }
     return g;

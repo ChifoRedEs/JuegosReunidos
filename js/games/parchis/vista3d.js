@@ -102,12 +102,13 @@ export async function crearParchis3D(cont, o = {}) {
   }
   const gAroMov = new T.RingGeometry(.46, .6, 32), gAroDest = new T.RingGeometry(.4, .52, 32), gDisco = new T.CircleGeometry(.42, 28), gToque = new T.CircleGeometry(.75, 12);
   const mToque = new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+  const gPeana = new T.CylinderGeometry(.36, .4, .06, 28).translate(0, .03, 0);   // con avatar solo se ve una peana fina del color
   function crearFicha(p) {
-    const g = new T.Group(), cuerpo = new T.Mesh(geoFicha(forma), mFicha[p.c]); cuerpo.castShadow = true; g.add(cuerpo);
-    if (forma === 'canica') { const br = new T.Mesh(new T.SphereGeometry(.09, 10, 8), new T.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .65 })); br.position.set(-.13, .54, .16); g.add(br); }
+    const g = new T.Group(), cuerpo = new T.Mesh(p.emoji ? gPeana : geoFicha(forma), mFicha[p.c]); cuerpo.castShadow = true; g.add(cuerpo);
+    if (forma === 'canica' && !p.emoji) { const br = new T.Mesh(new T.SphereGeometry(.09, 10, 8), new T.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .65 })); br.position.set(-.13, .54, .16); g.add(br); }
     const aro = new T.Mesh(gAroMov, new T.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .95, side: T.DoubleSide, depthWrite: false })); aro.rotation.x = -Math.PI / 2; aro.position.y = .02; aro.visible = false; aro.name = 'aro'; g.add(aro);
     const tq = new T.Mesh(gToque, mToque); tq.rotation.x = -Math.PI / 2; tq.position.y = .05; tq.name = 'toque'; g.add(tq);
-    if (p.emoji) { const sp = new T.Sprite(new T.SpriteMaterial({ map: emojiTextura(p.emoji, 96), transparent: true, depthWrite: false })); sp.scale.set(.62, .62, .62); sp.position.y = forma === 'peon' ? .9 : .95; sp.name = 'emoji'; g.add(sp); }
+    if (p.emoji) { const sp = new T.Sprite(new T.SpriteMaterial({ map: emojiTextura(p.emoji, 96), transparent: true, depthWrite: false })); sp.scale.set(.95, .95, .95); sp.position.y = .56; sp.name = 'emoji'; g.add(sp); }
     g.userData = { pc: [p.c, p.i], emoji: p.emoji || '', mov: false };
     return g;
   }
