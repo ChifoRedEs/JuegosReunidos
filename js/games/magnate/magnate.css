@@ -1,7 +1,5 @@
 /* Magnate Tecnológico · tablero 11×11 con los colores de la app (variables --tb-* de base.css según 🎨 Apariencia) */
 .juego-magnate{--mt-l:min(calc(100vw - 28px),500px)}             /* ancho real del tablero (main tiene 14px de margen a cada lado) */
-.juego-magnate .mtrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0;padding-left:8px;border-left:6px solid var(--c);border-radius:4px}
-.juego-magnate .mtrow .nom{flex:1;min-width:110px;font:800 15px Nunito,sans-serif;padding:9px 11px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
 .juego-magnate .mtfichab{width:44px;height:44px;border-radius:50%;border:3px solid var(--c);background:var(--card);font-size:24px;line-height:1;flex:none}
 
 /* jugadores */

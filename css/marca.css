@@ -1,0 +1,91 @@
+/* ===== Juegos Reunidos · Marca =====
+   Capa de identidad visual común. Se carga justo después de base.css y fija:
+   · tokens de marca (radios, sombras, degradado, tipografías, tamaños),
+   · botones (.btn, .btn.on, .btn.grande, .btn.danger) y segmentos (.seg),
+   · el MENÚ DE PARTIDA que comparten todos los juegos: filas «etiqueta + opciones» (.bar > .lbl),
+     opciones en tarjeta (.chk, .ops) y barra de acciones (.bar con botón 🎨 Apariencia),
+   · tarjetas, marcadores y ventanas emergentes.
+   Guía de uso: docs/MARCA.md */
+
+:root{
+  --f-titulo:'Baloo 2',system-ui,sans-serif;
+  --f-texto:Nunito,system-ui,sans-serif;
+  --r-s:10px;--r-m:14px;--r-l:20px;--r-xl:24px;--r-pill:99px;
+  --grad-marca:linear-gradient(135deg,var(--purple),var(--blue));
+  --sombra-s:0 2px 6px rgba(60,40,200,.10);
+  --sombra-m:0 4px 14px rgba(60,40,200,.14);
+  --sombra-marca:0 3px 9px rgba(80,60,230,.35);
+  --alto-btn:44px;--alto-btn-grande:54px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sombra-s:0 2px 6px rgba(0,0,0,.35);--sombra-m:0 4px 14px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--sombra-s:0 2px 6px rgba(0,0,0,.35);--sombra-m:0 4px 14px rgba(0,0,0,.4)}
+
+/* ---------- botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--alto-btn);padding:8px 14px;border:2px solid var(--line);border-radius:var(--r-m);
+  background:var(--card);color:var(--ink);font-family:var(--f-texto);font-weight:800;font-size:14px;line-height:1.15;text-align:center;box-shadow:var(--sombra-s);
+  transition:transform .08s,box-shadow .15s,background .15s,border-color .15s}
+.btn:hover:not(:disabled):not(.on){border-color:color-mix(in srgb,var(--purple) 45%,var(--line))}
+.btn.on{background:var(--grad-marca);border-color:transparent;color:#fff;box-shadow:var(--sombra-marca)}
+.btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 45%,var(--line))}
+.btn.grande{min-height:var(--alto-btn-grande);font-size:17px;font-family:var(--f-titulo);letter-spacing:.2px;border-radius:var(--r-l)}
+
+/* ---------- menú de partida (filas de opciones) ---------- */
+.bar:has(> .lbl){flex-wrap:wrap;align-items:center;gap:6px;margin:14px 0}
+.bar:has(> .lbl) > .lbl{flex:0 0 100%;min-width:0;font-size:12.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.bar:has(> .lbl) > .seg{flex:1 1 100%}
+.bar:has(> .lbl) > .btn,.seg > .btn{flex:1 1 auto}
+.seg{gap:6px}
+.seg > .btn{min-width:0}
+.bar:has(> .lbl) > .note{flex:1 1 100%;margin:0}
+
+/* fila de jugador del menú (Parchís, Oca, Ruleta, Trivial, Magnate…): color + nombre + Persona / CPU / Nadie */
+.jugfila{--c:var(--purple);display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:8px 0;padding:10px 12px;background:var(--card);border:2px solid var(--line);
+  border-left:7px solid var(--c);border-radius:var(--r-l);box-shadow:var(--sombra-s)}
+.jf-dot{flex:none;width:18px;height:18px;border-radius:50%;background:var(--c);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.jugfila .nom{flex:1 1 110px;min-width:0;font:800 16px var(--f-texto);color:var(--ink);padding:9px 11px;border:2px solid var(--line);border-radius:var(--r-m);background:var(--bg)}
+.jugfila .nom:focus{outline:none;border-color:var(--purple)}
+.jugfila .seg{flex:1 1 100%}
+
+/* introducción y notas del menú */
+.juego > .note:first-child{font-size:14px;line-height:1.4;margin:2px 0 6px}
+
+/* opciones sí/no y ajustes plegables, en tarjeta */
+.chk{border-radius:var(--r-m);box-shadow:var(--sombra-s)}
+.chk input{accent-color:var(--purple)}
+.ops{border-radius:var(--r-m);box-shadow:var(--sombra-s)}
+.ops > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;color:var(--ink);min-height:40px}
+.ops > summary::-webkit-details-marker{display:none}
+.ops > summary::after{content:"›";font-size:22px;line-height:1;color:var(--mut);transition:transform .2s}
+.ops[open] > summary::after{transform:rotate(90deg);color:var(--purple)}
+
+/* barra de acciones de un menú: botón principal grande + Apariencia / Reglas… */
+.bar:has(> .btn[data-ac="aspecto"]){display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 10px}
+.bar:has(> .btn[data-ac="aspecto"]) > .btn{flex:1 1 124px}
+.bar:has(> .btn[data-ac="aspecto"]) > .btn.on:first-child{flex:1 1 100%;min-height:var(--alto-btn-grande);font-size:17px;font-family:var(--f-titulo);border-radius:var(--r-l)}
+
+/* ---------- tarjetas y marcadores ---------- */
+.panel,.ops,.chk,.reto,.duM>div,.bihud>span,.bicesto{border-radius:var(--r-l)}
+.panel{box-shadow:var(--sombra-m)}
+.duM>div,.bihud>span{box-shadow:var(--sombra-s)}
+.msg{font-family:var(--f-texto)}
+
+/* ---------- ventanas emergentes ---------- */
+.hoja{border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:0 -10px 40px rgba(20,10,80,.3)}
+.hoja h2{font-family:var(--f-titulo)}
+
+/* ventana «elige a qué jugar» de las fichas de grupo (Parchís y Oca, Ajedrez y Damas…) */
+.ficha{font:inherit;text-align:left;border:0;cursor:pointer;width:100%}
+button.ficha{display:flex}
+.elegir{display:grid;gap:10px;margin:10px 0 4px}
+.eleg{--c:var(--purple);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-l);color:#fff;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 70%,#000));box-shadow:var(--sombra-m);position:relative;overflow:hidden}
+.eleg:active{transform:scale(.98)}
+.eleg .ico{font-size:38px;line-height:1;filter:drop-shadow(0 3px 3px rgba(0,0,0,.28))}
+.eleg-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.eleg-t b{font-family:var(--f-titulo);font-size:21px;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.eleg-t small{font-size:12.5px;font-weight:700;line-height:1.25;color:rgba(255,255,255,.95)}
+.eleg > i{font-style:normal;font-size:28px;font-weight:800;opacity:.85}
+
+/* marca en la cabecera de Inicio */
+.top h1 .logo{width:30px;height:30px;border-radius:9px;vertical-align:-8px;margin-right:6px;box-shadow:0 2px 6px rgba(0,0,0,.3)}

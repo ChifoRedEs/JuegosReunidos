@@ -45,5 +45,27 @@ export const JUEGOS = [
   { id: 'magnate', nombre: 'Magnate Tecnológico', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas tecnológicas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
 ];
 
+// Juegos agrupados: en Inicio salen como UNA ficha y, al pulsarla, una ventana pregunta a cuál se quiere jugar.
+// Cada juego conserva su propio id, su partida guardada y sus estadísticas (no se mezclan).
+export const GRUPOS = [
+  { id: 'parchis-oca', nombre: 'Parchís y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Parchís y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
+  { id: 'ajedrez-damas', nombre: 'Ajedrez y Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
+  { id: 'poker', nombre: 'Póker', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em o Póker cubierto contra bots.", juegos: ['holdem', 'pokercub'] },
+  { id: 'sopa-crucigramas', nombre: 'Sopa y Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopa', 'crucigrama'] },
+];
+export const grupoDe = id => GRUPOS.find(g => g.juegos.includes(id)) || null;
+// Entradas de Inicio de una categoría: fichas sueltas y fichas de grupo (el grupo ocupa el sitio de su primer juego)
+export function entradas(cat) {
+  const out = [], vistos = new Set();
+  for (const j of JUEGOS) {
+    if (j.categoria !== cat) continue;
+    const g = grupoDe(j.id);
+    if (!g) { out.push({ tipo: 'juego', j }); continue; }
+    if (vistos.has(g.id)) continue; vistos.add(g.id);
+    out.push({ tipo: 'grupo', g, js: g.juegos.map(id => JUEGOS.find(x => x.id === id)) });
+  }
+  return out;
+}
+
 // Juegos planificados (solo se muestran como aviso en Inicio hasta que existan).
 export const PROXIMAMENTE = [];

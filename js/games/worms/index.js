@@ -88,16 +88,16 @@ function ajustes() {
   cancelAnimationFrame(raf); raf = 0; cv = null; zona = null; S = null; piloto = null; cargando = false; Object.keys(teclas).forEach(k => teclas[k] = false);
   const hay = api.cargar(), sigue = hay && hay.s.ganador === null;
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  root.innerHTML = `<div class="wmmenu">
-    <div class="wmtitulo"><img src="${urlIcono('lanzamisiles')}" alt=""><div><b>Worms</b><small>Dos ejércitos de gusanos, un solo campo de batalla</small></div></div>
-    <div class="wmop"><span class="lbl">Modo</span>${seg('modo', [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']])}</div>
-    ${cfg.modo === 'cpu' ? `<div class="wmop"><span class="lbl">Nivel</span>${seg('nivel', M.NIVELES.map((n, i) => [i, n]))}</div>` : ''}
-    <div class="wmop"><span class="lbl">Gusanos por equipo</span>${seg('n', M.TAMANOS.map(n => [n, String(n)]))}<small class="note">${cfg.n} contra ${cfg.n}: ${cfg.n * 2} gusanos en el campo</small></div>
-    <div class="wmop"><span class="lbl">Mapa</span>${seg('mapa', [...Object.entries(M.MAPAS), ['azar', '🎲 Al azar']])}</div>
-    <div class="wmop"><span class="lbl">Tiempo por turno</span>${seg('tiempo', M.TIEMPOS.map(t => [t, t + ' s']))}</div>
-    <div class="wmop"><span class="lbl">Cajas de suministros</span>${seg('cajas', [[true, '📦 Sí'], [false, 'No']])}</div>
-    <div class="bar">${sigue ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${sigue ? '' : 'on'}" data-ac="nueva">🪱 Nueva partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">❓ Cómo se juega</button></div>
-  </div>`;
+  const fila = (t, k, ops) => `<div class="bar"><span class="lbl">${t}</span>${seg(k, ops)}</div>`;
+  root.innerHTML = `<p class="note">Worms: dos ejércitos de gusanos se turnan para disparar, balancearse con la cuerda ninja y volar el terreno por los aires. Gana el último equipo en pie.</p>
+    ${fila('Modo', 'modo', [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']])}
+    ${cfg.modo === 'cpu' ? fila('Nivel', 'nivel', M.NIVELES.map((n, i) => [i, n])) : ''}
+    ${fila('Gusanos por equipo', 'n', M.TAMANOS.map(n => [n, String(n)]))}
+    <p class="note" style="margin:-6px 0 0">${cfg.n} contra ${cfg.n}: ${cfg.n * 2} gusanos en el campo</p>
+    ${fila('Mapa', 'mapa', [...Object.entries(M.MAPAS), ['azar', '🎲 Al azar']])}
+    ${fila('Tiempo por turno', 'tiempo', M.TIEMPOS.map(t => [t, t + ' s']))}
+    ${fila('Cajas de suministros', 'cajas', [[true, '📦 Sí'], [false, 'No']])}
+    <div class="bar">${sigue ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${sigue ? '' : 'on'}" data-ac="nueva">🪱 Nueva partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
 }
 
 function nuevaPartida() {

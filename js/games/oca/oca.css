@@ -2,8 +2,6 @@
 .juego-oca{--o-c1:#FFF3D6;--o-c2:#FFE7B0;--o-bd:#C9A35B;--o-ink:#5A3B12;--o-oca:#7CC36B;--o-esp:#F6B6A8;--o-fin:#F2B600;--o-mesa:#8A5A2B}
 .juego-oca[data-tablero="alegre"]{--o-c1:#FFE9F4;--o-c2:#E9E2FF;--o-bd:#B79CFF;--o-ink:#46307A;--o-oca:#8BE0B4;--o-esp:#FFB4C8;--o-fin:#8B5CF6;--o-mesa:#6A3DF0}
 .juego-oca[data-tablero="noche"]{--o-c1:#2A3460;--o-c2:#323E70;--o-bd:#4C5A96;--o-ink:#E8ECFF;--o-oca:#2F8F5B;--o-esp:#8A3550;--o-fin:#F2B600;--o-mesa:#141A38}
-.ocrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
-.ocrow .nom{flex:1;min-width:110px;font:800 15px Nunito,sans-serif;padding:9px 11px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
 .ocdot{width:18px;height:18px;border-radius:50%;background:var(--c);flex:none;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
 .ocjug{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:6px 0}
 .ocj{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px 8px;font-size:12px}

@@ -48,3 +48,12 @@ Si el juego usa `core/cartas.js`, añade a su `api.aspecto([...])` `grupoBarajaE
 - Bucles de animación: no leas `api.record()` ni reescribas el HTML del marcador en cada fotograma (léelo una vez y escribe solo si cambia).
 - `core/diccionario.js`: diccionario español para juegos de palabras (~590.000 formas sin tildes). `await cargar()` una vez (descarga ~1,5 MB la primera vez y queda guardado sin conexión); después `existe(palabra)`, `formables(letras, { min, max })`, `palabras(n)` y `normalizar(palabra)`. Se regenera con `python tools/generar_diccionario.py`; las palabras que falten se añaden en `tools/diccionario/extra.txt`.
 - Palabras base (sin conjugar, con tildes): `await cargarLemas()` y después `lemas('n' | 'v' | 'todos', { min, max })`. Sirven para juegos que muestran palabras (no están ordenadas por frecuencia, así que hay muchas poco corrientes).
+
+
+## Estilo de marca y menú de partida
+Los juegos nuevos deben seguir `docs/MARCA.md`: pantalla de partida con `<p class="note">` + filas `.bar > .lbl + .seg` + barra de acciones (botón principal `.btn.on` seguido de `data-ac="aspecto"` y «Reglas»). No uses colores, radios ni sombras propios para los botones: ya los pone `css/marca.css`.
+
+## Agrupar juegos
+Para que dos juegos salgan como una sola ficha en Inicio, añade un grupo a `GRUPOS` en `js/registry.js`:
+`{ id: 'parchis-oca', nombre: 'Parchís y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
+Cada juego conserva su id, su partida guardada y sus estadísticas.

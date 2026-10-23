@@ -14,7 +14,6 @@
 .juego-scrabble[data-fichas="oro"]{--sc-f:#F4C542;--sc-fb:#B8860B;--sc-ft:#3A2A00}
 
 .scmesa{background:linear-gradient(160deg,var(--card),color-mix(in srgb,var(--sc-cel) 30%,var(--card)));border:2px solid var(--line);border-radius:20px;padding:10px;margin:6px 0;display:flex;flex-direction:column;gap:8px}
-.scinicio .bar{margin:4px 0}
 .msg.mal{color:var(--red)}
 /* marcador */
 .schud{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px}

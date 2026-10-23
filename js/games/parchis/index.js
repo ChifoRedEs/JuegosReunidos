@@ -153,7 +153,7 @@ function rSetup() {
   const n = PC.filter(c => cfgSetup[c]).length;
   rootEl.innerHTML = `
     <p class="note">Elige quién juega con cada color y, si quieres, escribe un nombre. Hacen falta al menos 2 jugadores; varias personas pueden jugar en el mismo dispositivo por turnos.</p>
-    ${PC.map(c => `<div class="prow"><span class="dot" style="background:var(--pz-${c})"></span>
+    ${PC.map(c => `<div class="jugfila" style="--c:var(--pz-${c})"><span class="jf-dot"></span>
       <input class="nom" data-name="${c}" maxlength="14" placeholder="${PNAME[c]}" value="${esc(nombres[c] || '')}" aria-label="Nombre del jugador ${PNAME[c]}">
       <div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([t, l]) => `<button class="btn ${(cfgSetup[c] || 'n') === t ? 'on' : ''}" data-cfg="${c},${t}">${l}</button>`).join('')}</div></div>`).join('')}
     <label class="chk"><input type="checkbox" id="pzParejas" ${parejas && n === 4 ? 'checked' : ''} ${n === 4 ? '' : 'disabled'}><span><b>Por parejas</b> (con 4 jugadores): <b>Amarillo y Rojo</b> contra <b>Azul y Verde</b>. No se come al compañero y, cuando uno mete sus 4 fichas, sigue tirando para mover las de su pareja. Gana la pareja que mete las 8.</span></label>

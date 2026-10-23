@@ -1,5 +1,5 @@
 // Shell de la aplicación: rutas por hash, menú, estadísticas, ajustes y copia de seguridad.
-import { JUEGOS, CATEGORIAS, PROXIMAMENTE } from './registry.js';
+import { JUEGOS, CATEGORIAS, PROXIMAMENTE, GRUPOS, entradas } from './registry.js';
 import { $, el, esc, fmtTiempo } from './core/dom.js';
 import * as store from './core/storage.js';
 import * as aj from './core/ajustes.js';
@@ -268,26 +268,41 @@ async function abrirJuego(id, t) {
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', render);
+app.addEventListener('click', e => { const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); });
 
 /* ---------- inicio ---------- */
+function enCursoDe(j) { const e = store.getResumen(j.id); return e && !e.fin && e.resumen ? e : null; }
 function ficha(j) {
   const e = store.getResumen(j.id);
   const curso = e && !e.fin && e.resumen;
   const sub = curso ? 'Continuar · ' + esc(e.resumen) : e && e.fin && e.resumen ? esc(e.resumen) : esc(j.descripcion);
   return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${sub}</small></a>`;
 }
+// Ficha de un grupo de juegos: al pulsarla se abre la ventana para elegir uno
+function fichaGrupo(g, js) {
+  const cur = js.filter(enCursoDe), sub = cur.length ? 'Continuar · ' + esc(cur.map(j => j.nombre).join(' · ')) : esc(js.map(j => j.nombre).join(' · '));
+  return `<button type="button" class="ficha ${cur.length ? 'curso' : ''}" data-grupo="${g.id}" style="--c:${g.color}" aria-haspopup="dialog"><span class="ico" aria-hidden="true">${g.icono}</span><b>${esc(g.nombre)}</b><small>${sub}</small></button>`;
+}
+function elegirJuego(gid) {
+  const g = GRUPOS.find(x => x.id === gid); if (!g) return;
+  const js = g.juegos.map(id => JUEGOS.find(x => x.id === id));
+  const opciones = js.map(j => { const e = store.getResumen(j.id), cur = e && !e.fin && e.resumen;
+    return `<a class="eleg" href="#/juego/${j.id}" data-cerrar style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><span class="eleg-t"><b>${esc(j.nombre)}</b><small>${cur ? 'Continuar · ' + esc(e.resumen) : esc(j.descripcion)}</small></span><i aria-hidden="true">›</i></a>`; }).join('');
+  const cerrar = hoja([el('h2', {}, `${g.icono} ${g.nombre}`), el('p', { class: 'note' }, '¿A qué quieres jugar?'), (() => { const d = el('div', { class: 'elegir' }); d.innerHTML = opciones; d.addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrar(); }); return d; })(),
+    el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'))]);
+}
 // Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio(filtro = null) {
   const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
-  tit.textContent = nombreFiltro || 'Juegos Reunidos';
+  if (nombreFiltro) tit.textContent = nombreFiltro; else tit.innerHTML = '<img class="logo" src="icons/icon-192.png" alt="" width="30" height="30"> Juegos Reunidos';
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
   const grupos = cats.map(([k, n]) => {
-    const js = JUEGOS.filter(j => j.categoria === k);
+    const es = entradas(k), js = JUEGOS.filter(j => j.categoria === k);
     const enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
     return `<section class="cat-seccion" data-cat="${k}">
-      <h2 class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}<span class="cnum">${js.length}</span></h2>
-      <div class="rejilla">${js.map(ficha).join('')}</div></section>`;
+      <h2 class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}<span class="cnum">${es.length}</span></h2>
+      <div class="rejilla">${es.map(x => x.tipo === 'grupo' ? fichaGrupo(x.g, x.js) : ficha(x.j)).join('')}</div></section>`;
   }).join('');
   app.innerHTML = grupos + (!filtro && PROXIMAMENTE.length ? `<div class="soon">Próximamente: ${PROXIMAMENTE.map(esc).join(' · ')}.</div>` : '');
 }

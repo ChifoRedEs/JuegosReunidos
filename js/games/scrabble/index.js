@@ -86,7 +86,7 @@ function guardar() { if (!S || !api) return; const d = { s: S, reg }; const r = 
 function setup() {
   serie++; temp = []; cambio = null; cursor = null;
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  root.innerHTML = `<div class="scmesa scinicio">
+  root.innerHTML = `<div class="scinicio">
     <p class="note">Forma palabras cruzadas con tus 7 fichas y suma puntos con las casillas de premio. En español <b>CH</b>, <b>LL</b> y <b>RR</b> son una sola ficha y no hay K ni W.</p>
     <div class="bar"><span class="lbl">Jugadores</span>${seg('jug', [[2, '2'], [3, '3'], [4, '4']])}</div>
     <div class="bar"><span class="lbl">Rivales</span>${seg('rival', [['cpu', '🤖 CPU'], ['personas', '👥 Personas']])}</div>
