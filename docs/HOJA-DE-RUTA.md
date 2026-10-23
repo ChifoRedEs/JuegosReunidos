@@ -9,5 +9,7 @@ Ideas para seguir (cada una = una carpeta nueva en `js/games/` + una línea en `
 4. **Palabras:** Wordle en español, Boggle, Colmena. (Scrabble ya está hecho; falta Worms en Arcade para llegar a los 40.)
 5. **Arcade:** Invasores espaciales, Comecocos, Asteroides, Cruza la carretera, Pong.
 
+**Vista 3D (Three.js)** ya disponible en Hotel, Ajedrez, Damas, Parchís, Oca, Magnate, Hundir la Flota, Billar y Ruleta (ver `ANADIR-JUEGO.md`). Siguientes candidatos («mejora media»): fichas y cartas con relieve en Rummy, Dominó y Mahjong; mesa de cartas en Póker; Sokoban con cajas 3D; efectos de explosión en Worms.
+
 Pendiente técnico: alojar las fuentes (Baloo 2 y Nunito) en el propio repositorio para no depender de Google Fonts.
 El multijugador online no es posible con GitHub Pages (solo archivos estáticos).

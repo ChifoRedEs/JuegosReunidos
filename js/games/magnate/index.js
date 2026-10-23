@@ -13,7 +13,13 @@ const EDIFICIOS = {
   obreros: { nombre: '👷 + 🏗️ Obreros y grúa', of: '👷', sede: '🏗️' }, tecnicos: { nombre: '👨‍🔧 + 🏭 Técnicos y fábrica', of: '👨‍🔧', sede: '🏭' },
   astronautas: { nombre: '👨‍🚀 + 🚀 Astronautas y cohete', of: '👨‍🚀', sede: '🚀' }, cajas: { nombre: '📦 + 🏬 Cajas y almacén', of: '📦', sede: '🏬' },
 };
-const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550 }, rapida: { nombre: 'Rápida', paso: 45, bot: 200 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0 } };
+const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550, dado: 900 }, rapida: { nombre: 'Rápida', paso: 45, bot: 200, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
+// Vista 3D opcional (Three.js): tablero en anillo compartido con Hotel (js/core/anillo3d.js). Los edificios son las oficinas (pisos) y la sede (5.º piso con corona).
+let vista = null, mod3d = null, botones3d = null, hay3d = false, tok3 = 0, forzar2d = false, modo3d = false;
+const TIPO3 = { empresa: 'destino', nube: 'aero', red: 'serv', noticias: 'suerte', tendencias: 'imprevisto' };
+const estado3D = () => ({ jug: G.jug, c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
+const quiere3D = () => hay3d && !forzar2d && asp && (asp.valores.vista || '3d') === '3d';
+function cerrar3D() { tok3++; if (vista) { vista.destruir(); vista = null; } }
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0;
 // sesion: cambia al salir del juego o empezar otra partida; los turnos que estuvieran a medias se cancelan (ABORTO)
 let cfg = { jug: [['Tú', 'h', 0], ['CPU 1', 'c', 1], ['CPU 2', 'c', 2], ['CPU 3', 'n', 3]], bote: true, subasta: true, dinero: 1600, rondas: 0, vel: 'normal' };
@@ -30,11 +36,19 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; vivo = true; jugando = false; pendiente = null;
-  asp = api.aspecto([grupoFondo('#mtTab'), grupoTablero(),
+  api = a; root = r; vivo = true; jugando = false; pendiente = null; vista = null; forzar2d = false; hay3d = false;
+  try { const b = await import('../../core/escena3d.js'); if (b.hayWebGL()) { mod3d = await import('../../core/anillo3d.js'); botones3d = b.botonesCamara; hay3d = true; } } catch (e) { console.error(e); }
+  if (!vivo) return;
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#mtTab'), grupoTablero(),
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
-    { clave: 'edif', titulo: 'Iconos de oficinas y sede', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) }],
-  () => { if (G && $('#mtTab')) { aplicarPersonaje(); pintar(); } });
+    { clave: 'edif', titulo: 'Iconos de oficinas y sede (vista 2D)', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) },
+    { clave: 'estilo', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) }],
+  () => {
+    if (G && root.querySelector('#mtJug')) {
+      if (modo3d !== quiere3D()) { armar(); pintar(); return; }
+      aplicarPersonaje(); if (vista) { vista.estiloHotel(asp.valores.estilo || 'rascacielos'); vista.tema(); } pintar();
+    }
+  });
   await api.css(new URL('./magnate.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', jug: c0.jug.map(([n, t, f], i) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n', Number.isInteger(f) && FICHAS[f] ? f : i]) };
@@ -53,7 +67,7 @@ export function unmount() {
   if (pendiente) { pendiente(ABORTO); pendiente = null; }
   document.removeEventListener('keydown', onKey);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); }
-  G = null; asp = null;
+  cerrar3D(); G = null; asp = null;
 }
 function guardar() { if (!G) return; const d = { g: G.toJSON(), reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 const vel = () => VELOCIDAD[cfg.vel] || VELOCIDAD.normal;
@@ -62,7 +76,7 @@ const pausa = ms => (ms ? esperar(ms) : Promise.resolve());
 
 /* ---------- pantalla de inicio ---------- */
 function setup() {
-  G = null; jugando = false;
+  G = null; jugando = false; cerrar3D();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra empresas tecnológicas, completa sectores, abre oficinas y cobra alquiler a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
     ${cfg.jug.map(([nom, t, f], i) => `<div class="jugfila" style="--c:${COLORES_JUGADOR[i]}"><button class="mtfichab" data-ficha="${i}" aria-label="Cambiar ficha del jugador ${i + 1}">${FICHAS[f]}</button><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
@@ -103,27 +117,48 @@ function empezar() {
 const celda = i => (i <= 10 ? [11, 11 - i] : i < 20 ? [21 - i, 1] : i <= 30 ? [1, i - 19] : [i - 29, 11]);
 const lado = i => (i % 10 === 0 ? 'esq' : i < 10 ? 'ab' : i < 20 ? 'iz' : i < 30 ? 'ar' : 'de');
 function armar() {
+  cerrar3D(); modo3d = quiere3D();
+  const centro = `<b class="mttit">Magnate<br>Tecnológico</b>
+        <div class="mtturno" id="mtTurno"></div>
+        ${modo3d ? '' : `<div class="mtdados" id="mtDados" aria-hidden="true">${dadoHTML(1)}${dadoHTML(6)}</div>`}
+        <button class="btn on mttirar" data-ac="tirar" id="mtTirar">🎲 Tirar</button>
+        <div class="mtacc"><button class="btn" data-ac="gestionar" id="mtGes">🏢 Empresas</button><button class="btn" data-ac="trato" id="mtTrato">🤝 Trato</button></div>
+        <small class="mtbote" id="mtBote"></small>`;
+  const pie = `<div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
+    <ul class="mtlog" id="mtLog" aria-label="Historial de la partida"></ul>
+    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+  if (modo3d) {
+    root.innerHTML = `<div class="mtjug" id="mtJug"></div>
+      <div class="e3d" id="mtTab"><div class="e3d-carga" id="mtCarga">Preparando el tablero…</div></div>
+      <div class="mtpanel">${centro.replace('<b class="mttit">Magnate<br>Tecnológico</b>', '')}</div>
+      ${pie}`;
+    iniciar3D(++tok3);
+    return;
+  }
   root.innerHTML = `<div class="mtjug" id="mtJug"></div>
     <div class="mttab" id="mtTab">
       ${G.c.map((s, i) => { const [f, c] = celda(i); return `<button type="button" class="mtc ${lado(i)} ${s.tipo}" data-c="${i}" style="grid-row:${f};grid-column:${c}" aria-label="${esc(s.nombre)}">
         ${s.g ? `<span class="mtbanda" style="--g:${GRUPOS[s.g].color}"></span>` : ''}<span class="mtnom ${s.nombre.length > 8 && s.tipo === 'empresa' ? 'largo' : ''}">${s.tipo === 'esquina' ? `<i>${s.ico}</i>${esc(s.corto)}` : `${s.ico || ICONO[s.tipo] ? `<i>${s.ico || ICONO[s.tipo]}</i>` : ''}${esc(s.nombre)}`}</span><span class="mttk"></span></button>`; }).join('')}
       <div class="mtcentro">
-        <b class="mttit">Magnate<br>Tecnológico</b>
-        <div class="mtturno" id="mtTurno"></div>
-        <div class="mtdados" id="mtDados" aria-hidden="true">${dadoHTML(1)}${dadoHTML(6)}</div>
-        <button class="btn on mttirar" data-ac="tirar" id="mtTirar">🎲 Tirar</button>
-        <div class="mtacc"><button class="btn" data-ac="gestionar" id="mtGes">🏢 Empresas</button><button class="btn" data-ac="trato" id="mtTrato">🤝 Trato</button></div>
-        <small class="mtbote" id="mtBote"></small>
+        ${centro}
       </div>
     </div>
-    <div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
-    <ul class="mtlog" id="mtLog" aria-label="Historial de la partida"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    ${pie}`;
   G.jug.forEach((p, i) => { if (!p.fuera) colocar(i); });
+}
+async function iniciar3D(t) {
+  const host = $('#mtTab');
+  try {
+    const v = await mod3d.crearVista(host, { estilo: asp.valores.estilo || 'rascacielos', grupos: GRUPOS, titulo: 'MAGNATE', subtitulo: 'TECNOLÓGICO', iconos: { suerte: '📰', imprevisto: '📈' } });
+    if (!vivo || t !== tok3 || !G) { v.destruir(); return; }
+    v.alTocar = i => { if (!G) return; const s = G.c[i]; if (s.precio && !jugando) dialogo(esc(s.nombre), fichaEmpresa(s), ['Cerrar'], { cancelable: true }).catch(() => {}); else if (!s.precio) api.aviso(textoCasilla(s)); };
+    vista = v; v.construir(estado3D()); botones3d(host, v); const c = $('#mtCarga'); if (c) c.remove(); pintar();
+  } catch (e) { console.error(e); if (t === tok3 && vivo && G) { forzar2d = true; armar(); pintar(); } }
 }
 const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
 const dadoHTML = v => `<span class="mtdado">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
 function colocar(i) {
+  if (modo3d) return;
   const p = G.jug[i], cel = root.querySelector(`.mtc[data-c="${p.pos}"] .mttk`); if (!cel) return;
   let t = root.querySelector(`.mtficha[data-j="${i}"]`);
   if (!t) { t = document.createElement('span'); t.className = 'mtficha'; t.dataset.j = i; t.style.setProperty('--c', p.color); t.textContent = p.ficha; }
@@ -131,7 +166,7 @@ function colocar(i) {
 }
 function pintar() {
   if (!G || !$('#mtTab')) return;
-  G.c.forEach((s, i) => {
+  if (!modo3d) G.c.forEach((s, i) => {
     const d = root.querySelector(`.mtc[data-c="${i}"]`), o = s.dueno === null ? null : G.jug[s.dueno];
     d.style.setProperty('--dueno', o ? o.color : 'transparent'); d.classList.toggle('propia', !!o); d.classList.toggle('hip', s.hip);
     const b = d.querySelector('.mtbanda'), ed = EDIFICIOS[asp.valores.edif] || EDIFICIOS.casas;
@@ -151,6 +186,7 @@ function pintar() {
   $('#mtTirar').disabled = !libre; $('#mtGes').disabled = !libre; $('#mtTrato').disabled = !libre || G.jug.filter(q => !q.fuera).length < 2;
   $('#mtTirar').style.setProperty('--c', p.color);
   $('#mtTirar').hidden = G.terminada;
+  if (vista) { vista.actualizar(estado3D()); vista.resaltar(G.terminada ? -1 : p.pos, p.color); }
 }
 function log(html, clase = '') {
   const L = $('#mtLog'); if (!L) return;
@@ -195,9 +231,16 @@ const vigila = v => { if (!vivo || sid !== sesion || v === ABORTO) throw ABORTO;
 return {
   render: () => { if (vivo && sid === sesion) pintar(); },
   log: (m, c) => { if (vivo && sid === sesion) log(m, c); },
-  paso: async p => { vigila(); colocar(G.idx(p)); if (vel().paso) { api.sonido('click'); await pausa(vel().paso); } vigila(); },
+  paso: async p => {
+    vigila();
+    if (modo3d) { if (vista) await vista.mover(G.idx(p), p.pos, vel().paso); if (vel().paso) api.sonido('click'); }
+    else { colocar(G.idx(p)); if (vel().paso) { api.sonido('click'); await pausa(vel().paso); } }
+    vigila();
+  },
   dados: async (a, b) => {
-    vigila(); const D = $('#mtDados'); D.classList.add('rodando'); api.sonido('dado');
+    vigila(); api.sonido('dado');
+    if (modo3d) { if (vista) await vista.dados(a, b, vel().dado); await pausa(vel().paso ? 200 : 0); vigila(); return; }
+    const D = $('#mtDados'); D.classList.add('rodando');
     if (vel().paso) for (let k = 0; k < 6; k++) { D.innerHTML = dadoHTML(1 + (Math.random() * 6 | 0)) + dadoHTML(1 + (Math.random() * 6 | 0)); await pausa(70); vigila(); }
     D.innerHTML = dadoHTML(a) + dadoHTML(b); D.classList.remove('rodando'); await pausa(vel().paso ? 260 : 0); vigila();
   },

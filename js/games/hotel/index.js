@@ -27,7 +27,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; vivo = true; jugando = false; pendiente = null; vista = null;
   r.innerHTML = '<p class="note">Cargando el tablero 3D…</p>';
-  try { modulo3d = await import('./vista3d.js'); } catch (e) { console.error(e); r.innerHTML = '<p class="note">No se ha podido cargar el motor 3D. Comprueba la conexión y vuelve a entrar.</p>'; return; }
+  try { modulo3d = await import('../../core/anillo3d.js'); } catch (e) { console.error(e); r.innerHTML = '<p class="note">No se ha podido cargar el motor 3D. Comprueba la conexión y vuelve a entrar.</p>'; return; }
   if (!vivo) return;
   const { ESTILOS } = modulo3d;
   asp = api.aspecto([grupoFondo('#htVista'), grupoTablero(),
@@ -122,7 +122,7 @@ async function armar() {
     <ul class="htlog" id="htLog" aria-label="Historial de la partida"></ul>
     <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
   try {
-    const v = await modulo3d.crearVista($('#htVista'), { estilo: asp.valores.estilo });
+    const v = await modulo3d.crearVista($('#htVista'), { estilo: asp.valores.estilo, grupos: GRUPOS, titulo: 'HOTEL', subtitulo: 'DESTINOS DEL MUNDO' });
     if (!vivo || sid !== sesion) { v.destruir(); return; }
     v.alTocar = i => { if (G) alTocarCasilla(i); };
     vista = v; v.construir(G); aplicarPersonaje();

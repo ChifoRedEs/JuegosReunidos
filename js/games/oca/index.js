@@ -3,6 +3,10 @@ import * as O from './motor.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 let animJ = -1;
+// Vista 3D (Three.js): opcional, con vuelta automática al tablero HTML si no hay WebGL
+let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } }
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, anim = false, vis = {}, dadosVis = null, msgEvento = '';
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'n'], ['CPU 3', 'n']], dados: 1, pozo: 'rescate' };
 
@@ -18,8 +22,9 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; anim = false; vis = {}; dadosVis = null; msgEvento = '';
-  asp = api.aspecto([grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (S) pintar(); });
+  api = a; root = r; anim = false; vis = {}; dadosVis = null; msgEvento = ''; forzar2d = false; modo3d = false;
+  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
   await api.css(new URL('./oca.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4 && [1, 2].includes(c0.dados)) cfg = { ...cfg, ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
@@ -28,12 +33,12 @@ export async function mount(r, a) {
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); } S = null; asp = null; anim = false; }
+export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); } S = null; asp = null; anim = false; }
 function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantalla de inicio ---------- */
 function setup() {
-  S = null; clearTimeout(timer);
+  S = null; clearTimeout(timer); cerrar3D(); modo3d = false;
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">El clásico de toda la vida: tira el dado, salta de oca a oca, cruza puentes y evita la posada, el pozo, el laberinto, la cárcel y la muerte. Gana quien llegue <b>justo</b> a la casilla 63.</p>
     ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${O.COLORES[i]}"><span class="jf-dot"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
@@ -43,15 +48,37 @@ function setup() {
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos.`}${cfg.dados === 2 ? ' Con 2 dados, si en la primera tirada sacas 6 y 3 vas a la 26; con 5 y 4, a la 53.' : ''}</p>`;
 }
 function armar() {
+  cerrar3D(); modo3d = quiere3D();
   root.innerHTML = `<div class="ocjug" id="ocJug"></div>
-    <div class="octab" id="ocTab">${O.ESPIRAL.map(([f, c], n) => {
+    ${modo3d ? '<div class="e3d" id="ocTab"></div>' : `<div class="octab" id="ocTab">${O.ESPIRAL.map(([f, c], n) => {
       const k = O.CASILLAS[n]; return `<div class="occ ${n === 0 ? 'salida' : k ? k.tipo : ''} ${n % 2 ? 'imp' : ''}" style="grid-row:${f + 1};grid-column:${c + 1}" title="${n === 0 ? 'Salida' : k ? `${n} · ${k.nombre}` : n}"><span class="num">${n === 0 ? '' : n}</span>${n === 0 ? '<span class="ico">🚩</span>' : k ? `<span class="ico">${k.ico}</span>` : ''}</div>`;
-    }).join('')}<div class="ocfichas" id="ocFichas"></div></div>
+    }).join('')}<div class="ocfichas" id="ocFichas"></div></div>`}
     <div class="ocmsg" id="ocMsg" role="status" aria-live="polite"></div>
     <div class="ocacc"><div class="ocdados" id="ocDados" aria-hidden="true"></div><button class="btn on octirar" data-ac="tirar" id="ocTirar">🎲 Tirar</button></div>
     <div id="ocFin"></div>
     <ul class="oclog" id="ocLog"></ul>
     <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+  if (modo3d) iniciar3D();
+}
+async function iniciar3D() {
+  const t = ++tok3;
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearOca3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
+    const host = $('#ocTab'); if (!host) return;
+    const v = await crearOca3D(host, { espiral: O.ESPIRAL, casillas: O.CASILLAS });
+    if (t !== tok3 || !root) { v.destruir(); return; }
+    b3.botonesCamara(host, v.E); V3 = v; if (S) pintar();
+  } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); pintar(); } }
+}
+function pintar3D() {
+  if (!V3 || !S) return;
+  const porCasilla = {}; S.jug.forEach((_, j) => { const p = posDe(j); (porCasilla[p] = porCasilla[p] || []).push(j); });
+  const emo = emojiPersonaje(asp);
+  V3.pintar({ fichas: S.jug.map((J, j) => {
+    const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
+    return { j, color: O.COLORES[J.color], f, c, dx: m > 1 ? (k % 2 ? .22 : -.22) : 0, dz: m > 2 ? (k < 2 ? -.2 : .2) : 0, emoji: emo && !J.cpu ? emo : '',
+      turno: j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim), mueve: vis[j] != null };
+  }) });
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; api.borrar(); setup(); }
 function empezar() {
@@ -66,6 +93,7 @@ const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7,
 const dadoHTML = v => `<span class="dado">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
 const posDe = j => (vis[j] != null ? vis[j] : S.jug[j].pos);
 function colocarFichas() {
+  if (modo3d) return pintar3D();
   const el = $('#ocFichas'); if (!el) return;
   const porCasilla = {}; S.jug.forEach((_, j) => { const p = posDe(j); (porCasilla[p] = porCasilla[p] || []).push(j); });
   if (!el.children.length) el.innerHTML = S.jug.map((J, j) => `<span class="ocf" data-f="${j}" style="--c:${O.COLORES[J.color]}"></span>`).join('');

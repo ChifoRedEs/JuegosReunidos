@@ -34,3 +34,6 @@ Estructura que deben seguir las pantallas de «nueva partida»:
 ## Ventanas y fichas de Inicio
 - `.hoja` (ventana inferior) con título `h2` y botón «Cerrar» o «Cancelar».
 - Juegos agrupados (`GRUPOS` en `registry.js`): una sola ficha en Inicio y, al pulsarla, una ventana `.elegir` con una tarjeta `.eleg` por juego.
+
+## Vistas 3D
+Los juegos con Three.js usan el contenedor `.e3d` (cuadrado, con fondo degradado que sigue los colores de tablero y el modo oscuro) y los botones flotantes `.e3d-cam` (⟳ ⤒ ⌖), definidos en `css/marca.css`. El grupo de Apariencia «Vista del tablero» (3D / 2D) va siempre el primero. Detalles técnicos en `ANADIR-JUEGO.md` («Juegos en 3D»).

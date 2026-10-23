@@ -52,3 +52,8 @@
 
 .rllog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .rllog li:first-child{color:var(--ink);font-weight:800}
+/* vista 3D de la rueda */
+.rlwheel.r3{width:min(100%,380px);aspect-ratio:auto}
+.rlwheel .rl3d{width:100%;aspect-ratio:1/.86;margin:0;box-shadow:none;background:radial-gradient(circle at 50% 40%,var(--tb-soft,#E4EDFF),transparent 75%)}
+.rlwheel.r3 .rlval{bottom:6px;z-index:3}
+.rlresbar[hidden]{display:none}

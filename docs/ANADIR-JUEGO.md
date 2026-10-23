@@ -59,10 +59,21 @@ Para que dos juegos salgan como una sola ficha en Inicio, añade un grupo a `GRU
 Cada juego conserva su id, su partida guardada y sus estadísticas.
 
 ## Juegos en 3D (Three.js)
-`js/vendor/three.module.min.js` (Three.js r160, licencia MIT en `js/vendor/three.LICENSE`) es un único archivo sin dependencias. Impórtalo **solo desde el juego que lo necesite** y de forma dinámica (`await import('./vista3d.js')`, que a su vez importa Three), para que el resto de la app no lo descargue. Modelo a seguir: `js/games/hotel/`:
-- `motor.js` y `datos.js`: reglas sin DOM, con tests en Node (`tests/hotel.mjs`).
-- `vista3d.js`: `crearVista(contenedor, opciones)` devuelve un objeto con `construir(G)`, `actualizar(G)`, `mover`, `dados`, `camara`, `tema`, `destruir`. No conoce las reglas.
-- El canvas es transparente (`alpha: true`) y el «Fondo de Tablero» se aplica al contenedor (`grupoFondo('#htVista')`), así que se ve detrás.
-- Los colores de las casillas se leen de las variables `--tb-*` del contenedor; llama a `vista.tema()` cuando cambien (Apariencia o tema claro/oscuro).
-- Renderiza solo cuando algo cambia (bandera «sucio») y destruye geometrías, texturas y contexto WebGL en `destruir()` al salir.
-- Las animaciones usan promesas con temporizador de respaldo, para que el motor nunca se quede esperando si el navegador pausa `requestAnimationFrame`.
+`js/vendor/three.module.min.js` (Three.js r160, licencia MIT en `js/vendor/three.LICENSE`) es un único archivo sin dependencias. Impórtalo **solo desde el juego que lo necesite** y de forma dinámica (`await import('...')`), para que el resto de la app no lo descargue; el service worker lo guarda al primer uso.
+
+**Módulos comunes (`js/core/`)**
+- `escena3d.js`: `crearEscena(contenedor, opciones)` (renderer transparente, luz, sombras, cámara orbital con arrastre/pellizco/rueda, toques con `E.alTocar(ev)` y `E.raycast`, `E.alArrastrar` para que el juego se quede con el arrastre, `E.alFrame`, `E.tween`, `E.camara(modo)`), `botonesCamara(host, E)` (⟳ girar, ⤒ cenital, ⌖ reencuadrar), `hayWebGL()`, `emojiTextura`, `textura`, `lienzo`.
+- `mesa3d.js`: tableros cuadrados (Ajedrez y Damas): `crearMesa3D(cont, { n, juego, alTocar(r, c) })` → `pintar({ piezas, ult, sel, dest, jaque, pista, flip })`.
+- `anillo3d.js`: tableros de 40 casillas en anillo (Hotel y Magnate): `crearVista(cont, { estilo, grupos, titulo, ... })`.
+
+**Vistas propias** (junto al juego): `parchis/vista3d.js`, `oca/vista3d.js`, `flota/vista3d.js`, `billar/vista3d.js`, `ruleta/vista3d.js`. Todas siguen el mismo patrón: la vista **solo dibuja** (recibe el estado y devuelve toques) y el juego conserva sus reglas.
+
+**Cómo se integra en un juego existente (patrón usado en los 9 juegos)**
+1. Grupo de Apariencia `{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }`.
+2. En `mount`: `hay3d = (await import('../../core/escena3d.js')).hayWebGL()` y `quiere3D = () => hay3d && !forzar2d && asp.valores.vista === '3d'`.
+3. Un contenedor `<div class="e3d" id="…">` (estilos en `css/marca.css`) con el canvas dentro; el «Fondo de Tablero» (`grupoFondo('#id')`) se ve detrás porque el canvas es transparente.
+4. `activar3D()/iniciar3D()` asíncrono con un `token` para ignorar respuestas tardías; si falla (sin WebGL, error), `forzar2d = true` y se vuelve a montar la vista 2D de siempre.
+5. Al cambiar «Vista» en Apariencia se vuelve a montar la pantalla; al cambiar colores solo se recolorea.
+6. `unmount()` y cualquier pantalla que sustituya el contenedor llaman a `destruir()` (libera geometrías, texturas y el contexto WebGL).
+
+**Buenas prácticas**: renderizar solo cuando algo cambia (bandera «sucio»); animaciones con promesas y temporizador de respaldo; `hidden` necesita CSS explícito si el elemento tiene `display:grid/flex` (`.xxx[hidden]{display:none}`); los colores se leen de variables CSS con `getComputedStyle` **con el elemento ya dentro del DOM**; ejecutar `python3 tools/generar_sw.py` tras añadir ficheros.

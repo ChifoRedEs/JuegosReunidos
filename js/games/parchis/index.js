@@ -9,6 +9,11 @@ let cfgSetup = { am: 'h', az: 'c', ro: 'c', ve: 'c' }, nombres = {}, libre = fal
 const velMult = () => VEL[api.pref('vel', 'normal')] || 1;
 const zoom = () => +(asp && asp.valores.zoom) || 1.4;
 const forma = () => (asp && asp.valores.fichas) || 'canica';
+// Vista 3D (Three.js): opcional, con vuelta automática al tablero SVG si no hay WebGL
+let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const mundo = v => v / 10 - 9.5;
+function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } }
 
 /* ---------- validación / migración ---------- */
 export function validar(x) {
@@ -46,16 +51,20 @@ function guardar() {
 
 /* ---------- ciclo de vida ---------- */
 const DEFS_ASPECTO = [
+  { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] },
   grupoFondo('#pzView'), grupoPersonaje('Personajes (tus fichas)'),
   { clave: 'tablero', titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
   { clave: 'colores', titulo: 'Colores de los jugadores', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicos', sw: ['#FFC21A', '#2F6BFF', '#FF4757', '#0FB56A'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#FFD76A', '#7FA8FF', '#FF8FA0', '#7FDDA8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FFE600', '#00C8FF', '#FF2E88', '#39E614'] }, { id: 'accesible', nombre: 'Daltonismo', sw: ['#F0E442', '#0072B2', '#D55E00', '#009E73'] }] },
   { clave: 'fichas', titulo: 'Forma de las fichas', def: 'canica', opciones: [{ id: 'canica', nombre: '● Canica' }, { id: 'peon', nombre: '♟ Peón' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }] },
-  { clave: 'zoom', titulo: 'Tamaño del tablero (se desplaza solo)', def: '1.4', opciones: [{ id: '1', nombre: 'Todo' }, { id: '1.4', nombre: 'Grande' }, { id: '1.8', nombre: 'Muy grande' }] },
+  { clave: 'zoom', titulo: 'Tamaño del tablero (vista 2D, se desplaza solo)', def: '1.4', opciones: [{ id: '1', nombre: 'Todo' }, { id: '1.4', nombre: 'Grande' }, { id: '1.8', nombre: 'Muy grande' }] },
 ];
 export async function mount(root, a) {
-  api = a; rootEl = root; rodando = false; ultFoco = '';
+  api = a; rootEl = root; rodando = false; ultFoco = ''; forzar2d = false; modo3d = false;
+  try { const b3 = await import('../../core/escena3d.js'); hay3d = b3.hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto(DEFS_ASPECTO, () => {
     if (modo === 'setup' || !P) { if (rootEl) rSetup(); return; }
+    if (modo3d !== quiere3D()) { rJuego(); ultFoco = ''; pintarJuego(); return; }
+    if (modo3d) { if (V3) V3.recolor(); ultFoco = ''; pintarJuego(); return; }
     const t = $('#pzTab'); if (t) t.style.width = zoom() * 100 + '%';
     ultFoco = ''; pintarJuego();
   });
@@ -71,19 +80,21 @@ export async function mount(root, a) {
   else { P = null; modo = 'setup'; rSetup(); }
 }
 export function unmount() {
-  clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); timer = ivDado = ivAnim = null; rodando = false;
+  clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); timer = ivDado = ivAnim = null; rodando = false; cerrar3D(); modo3d = false;
   if (rootEl) { rootEl.removeEventListener('click', clic); rootEl.removeEventListener('input', alEscribir); rootEl.removeEventListener('change', alCambiar); }
   P = null; asp = null;
 }
 
 /* ---------- cámara: con zoom el tablero se desplaza solo hacia donde ocurre la acción ---------- */
 function enfocar(pts, suave = true) {
+  if (modo3d) return;
   const v = $('#pzView'), t = $('#pzTab'); if (!v || !t || zoom() <= 1 || !pts.length) return;
   const k = t.clientWidth / 190, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
   const cx = (Math.min(...xs) + Math.max(...xs)) / 2 * k, cy = (Math.min(...ys) + Math.max(...ys)) / 2 * k;
   v.scrollTo({ left: Math.max(0, cx - v.clientWidth / 2), top: Math.max(0, cy - v.clientHeight / 2), behavior: suave ? 'smooth' : 'auto' });
 }
 function seguir(x, y) {
+  if (modo3d) return;
   const v = $('#pzView'), t = $('#pzTab'); if (!v || !t || zoom() <= 1) return;
   const k = t.clientWidth / 190, px = x * k - v.scrollLeft, py = y * k - v.scrollTop, mx = v.clientWidth * .22, my = v.clientHeight * .22;
   if (px < mx || px > v.clientWidth - mx || py < my || py > v.clientHeight - my) enfocar([[x, y]], false);
@@ -139,7 +150,7 @@ function animar(info, fin) {
   clearInterval(ivAnim);
   ivAnim = setInterval(() => {
     if (!P) { clearInterval(ivAnim); return; }
-    P.ov[k0] = pasos[k]; if (tab) tab.innerHTML = pBoard(); seguir(...pXY(info.c, pasos[k], info.i)); k++;
+    P.ov[k0] = pasos[k]; if (modo3d) pintar3D(); else if (tab) tab.innerHTML = pBoard(); seguir(...pXY(info.c, pasos[k], info.i)); k++;
     if (k >= pasos.length) { clearInterval(ivAnim); ivAnim = null; setTimeout(() => { if (!P) return; P.anim = false; P.ov = null; fin(); }, 120 * velMult()); }
   }, Math.max(45, Math.round(110 * velMult())));
 }
@@ -150,6 +161,7 @@ function nuevaSetup() {
   clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false; P = null; api.borrar(); modo = 'setup'; rSetup();
 }
 function rSetup() {
+  cerrar3D(); modo3d = false;
   const n = PC.filter(c => cfgSetup[c]).length;
   rootEl.innerHTML = `
     <p class="note">Elige quién juega con cada color y, si quieres, escribe un nombre. Hacen falta al menos 2 jugadores; varias personas pueden jugar en el mismo dispositivo por turnos.</p>
@@ -178,22 +190,57 @@ function listaReglas() {
     <li>En 🎨 Apariencia eliges tablero, colores, forma de las fichas y tamaño; con zoom el tablero se desplaza solo hacia la acción.</li></ul>`;
 }
 function rJuego() {
+  cerrar3D(); modo3d = quiere3D();
   rootEl.innerHTML = `
-    <div class="pzv" id="pzView"><div class="pzb" id="pzTab" style="width:${zoom() * 100}%"></div></div>
+    ${modo3d ? '<div class="e3d" id="pzView"></div><div id="pzTab" hidden></div>' : `<div class="pzv" id="pzView"><div class="pzb" id="pzTab" style="width:${zoom() * 100}%"></div></div>`}
     <div class="pbar"><button type="button" class="die" id="pzDie" data-ac="roll" aria-label="Dado"></button><div><div class="msg" id="pzMsg" role="status" aria-live="polite"></div><div class="note" id="pzSub"></div></div></div>
     <div class="bar"><button class="btn on" id="pzRoll" data-ac="roll">Tirar dado</button><button class="btn" data-ac="setup">Nueva partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
     <div class="bar"><span class="lbl">Velocidad CPU</span><span id="pzVel">${velBotones()}</span></div>
     <ul class="plog" id="pzLog"></ul>`;
+  if (modo3d) iniciar3D();
+}
+async function iniciar3D() {
+  const t = ++tok3, volver = () => { if (t === tok3 && rootEl && modo === 'juego') { forzar2d = true; rJuego(); pintarJuego(); } };
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearParchis3D } = await import('./vista3d.js'); if (t !== tok3 || !rootEl) return;
+    const host = $('#pzView'); if (!host) return;
+    const v = await crearParchis3D(host, { alPieza: tocarPieza, alDestino: tocarDest, alDado: () => { if (P && P.phase === 'roll' && !esCPU(P, actual(P))) iniciarTirada(); } });
+    if (t !== tok3 || !rootEl) { v.destruir(); return; }
+    b3.botonesCamara(host, v.E); V3 = v; pintarJuego(); if (P && !P.anim) pintarDado(P.die, P.phase === 'over' ? P.winner : actual(P), false);
+  } catch (e) { console.error(e); volver(); }
+}
+const humanoMueve = () => !!P && P.phase === 'move' && !esCPU(P, actual(P)) && !P.anim;
+function tocarPieza(c, i) { if (!humanoMueve()) return; const m = P.moves.find(m => m.c === c && m.i === +i); if (m) jugarMov(m); }
+function tocarDest(to) { if (!humanoMueve()) return; const m = P.moves.find(m => m.to === +to); if (m) jugarMov(m); }
+function pintar3D() {
+  if (!V3 || !P) return;
+  const cur = P.phase !== 'over' ? actual(P) : null, human = !!cur && humanoMueve(), emo = emojiPersonaje(asp);
+  ptsMov = [];
+  const mv = new Set(human ? P.moves.map(m => m.c + m.i) : []), dest = [], vistos = new Set();
+  if (human) for (const m of P.moves) {
+    const key = m.c + m.to; ptsMov.push(pXY(m.c, m.from, m.i), pXY(m.c, m.to, m.i)); if (vistos.has(key)) continue; vistos.add(key);
+    const [x, y] = pXY(m.c, m.to, m.i); dest.push({ x: mundo(x), z: mundo(y), c: m.c, to: m.to, cap: !!m.cap });
+  }
+  const grp = {}, list = [];
+  for (const c of P.order) P.pieces[c].forEach((_, i) => { const p = posVis(c, i); const k = p >= 0 && p < 71 ? pKey(c, p) : null; if (k) grp[k] = (grp[k] || 0) + 1; list.push({ c, i, p, k }); });
+  const idx = {};
+  const piezas = list.map(o => {
+    const [x, y] = pXY(o.c, o.p, o.i), dos = o.k && grp[o.k] === 2, n = o.k ? (idx[o.k] = (idx[o.k] || 0) + 1) - 1 : 0;
+    return { c: o.c, i: o.i, x: mundo(x) + (dos ? (n ? .33 : -.33) : 0), z: mundo(y), esc: (o.p === 71 ? 3 : o.p === -1 ? 5.1 : dos ? 3.3 : 4.6) / 4.6, mov: mv.has(o.c + o.i), emoji: emo && !esCPU(P, o.c) ? emo : '' };
+  });
+  const casas = {}; for (const c of PC) { const cf = P.cfg[c]; casas[c] = { on: !!cf, etq: cf ? (P.names[c] || (cf === 'c' ? 'CPU' : 'Persona')) : '' }; }
+  V3.pintar({ piezas, dest, turno: cur, casas, forma: forma() });
 }
 function pintarDado(v, c, roda) {
   const d = $('#pzDie'); if (!d) return;
+  if (modo3d && V3) V3.dado(v, !!roda, getComputedStyle(rootEl).getPropertyValue('--pz-' + c).trim());
   d.style.setProperty('--pc', `var(--pz-${c})`);
   if (v) { d.className = 'die' + (roda ? ' roda' : ''); d.innerHTML = [...Array(9).keys()].map(k => `<i class="${PIPS[v].includes(k) ? 'on' : ''}"></i>`).join(''); }
   else { d.className = 'die q'; d.textContent = '?'; }
 }
 function pintarJuego() {
   if (modo !== 'juego' || !P || !$('#pzTab')) return;
-  if (!P.anim) $('#pzTab').innerHTML = pBoard();
+  if (!P.anim) { if (modo3d) pintar3D(); else $('#pzTab').innerHTML = pBoard(); }
   const over = P.phase === 'over', c = over ? P.winner : actual(P), who = nombre(P, c) + (esCPU(P, c) ? ' (CPU)' : '');
   const humano = !over && !esCPU(P, c);
   const msg = over ? (P.parejas ? `¡Ganan ${nombreEquipo(P, P.winner)}!` : `¡Gana ${nombre(P, P.winner)}!`) : rodando ? `${who} tira…` : P.phase === 'pass' ? P.note : P.phase === 'roll' ? (esCPU(P, c) ? `${who} va a tirar…` : `${who}: tira el dado.`) : (esCPU(P, c) ? `${who} está pensando…` : `${who}: toca una ficha resaltada.`);

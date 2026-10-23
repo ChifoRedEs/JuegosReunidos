@@ -3,6 +3,23 @@ import { REGLAS, tableroInicial, jugadas, aplicar, contar, clavePos, esRey, duen
 import { elegirPorRegla } from './ia.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+// Vista 3D (Three.js, opcional en 🎨 Apariencia): solo dibuja; los toques vuelven a `tocar`
+let m3 = null, tok3 = 0, forma3 = '', tn3 = 0;
+const TABLEROS = { madera: ['#8A5A34', '#F3DDB6'], esmeralda: ['#1F9D68', '#E7F6E2'], hielo: ['#4F8DF0', '#EAF4FF'], caramelo: ['#E0409B', '#FFE9F4'], noche: ['#141A3D', '#39447A'] };
+const FICHAS_COL = { clasico: ['#FFFDF6', '#C21F2A'], oceano: ['#52C7F0', '#E26A00'], bosque: ['#56C94A', '#6B2FD1'], oro: ['#E0A800', '#161B33'] };
+const oscurecer = (hex, f) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * f).toString(16).padStart(2, '0')).join('');
+function cerrar3D() { tok3++; if (m3) { m3.destruir(); m3 = null; } }
+async function activar3D() {
+  const t = ++tok3; if (!rootEl || !asp || (asp.valores.vista || '3d') !== '3d') return;
+  try {
+    const base = await import('../../core/escena3d.js'); if (!base.hayWebGL()) return;
+    const { crearMesa3D } = await import('../../core/mesa3d.js'); if (t !== tok3 || !rootEl || !C) return;
+    const host = $('#dm3d'); if (!host) return; host.hidden = false; forma3 = asp.valores.fichas || 'disco'; tn3 = R().n;
+    const m = await crearMesa3D(host, { n: tn3, juego: 'damas', forma: forma3, alTocar: (r, c) => tocar(r, c) });
+    if (t !== tok3 || !rootEl) { m.destruir(); return; }
+    base.botonesCamara(host, m.E); m3 = m; $('#dmTab').hidden = true; pintar();
+  } catch (e) { console.error(e); const h = $('#dm3d'); if (h) { h.hidden = true; h.innerHTML = ''; } const tb = $('#dmTab'); if (tb) tb.hidden = false; }
+}
 const IA_URL = new URL('./ia.js', import.meta.url).href;
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -36,17 +53,18 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
   api = a; rootEl = root; pensando = false; anim = null;
-  asp = api.aspecto([grupoFondo('#dmTab'), grupoPersonaje('Personajes (tus fichas)'), 
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#dmTab'), grupoPersonaje('Personajes (tus fichas)'), 
     { clave: 'tablero', titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
     { clave: 'colores', titulo: 'Colores de las fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Marfil / Rojo', sw: ['#FFFDF6', '#C21F2A'] }, { id: 'oceano', nombre: 'Celeste / Naranja', sw: ['#52C7F0', '#E26A00'] }, { id: 'bosque', nombre: 'Verde / Morado', sw: ['#56C94A', '#6B2FD1'] }, { id: 'oro', nombre: 'Oro / Negro', sw: ['#E0A800', '#161B33'] }] },
     { clave: 'fichas', titulo: 'Forma de las fichas', def: 'disco', opciones: [{ id: 'disco', nombre: '● Disco' }, { id: 'anillo', nombre: '◎ Anillo' }, { id: 'gema', nombre: '⬢ Gema' }, { id: 'cuadrada', nombre: '▢ Cuadrada' }] },
-  ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; pintar(); });
+  ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '3d') !== '3d') || (m3 && forma3 !== (asp.valores.fichas || 'disco')))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
   await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
   root.innerHTML = `
     <div class="bar"><span class="lbl">Reglas</span>${Object.entries(REGLAS).map(([k, r]) => `<button class="btn" data-reg="${k}">${r.corto || r.nombre}</button>`).join('')}</div>
     <div class="bar"><span class="lbl">Nivel CPU</span>${Object.entries(NIVEL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div>
     <div class="msg" id="dmMsg" role="status" aria-live="polite"></div>
+    <div class="e3d" id="dm3d" hidden></div>
     <div class="ck" id="dmTab" role="group" aria-label="Tablero de damas"></div>
     <div class="cnt" id="dmCnt"></div>
     <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
@@ -60,8 +78,8 @@ export async function mount(root, a) {
     { texto: 'Reglamento', accion: reglamento },
   ]);
   if (g) { C = { ...g, ruta: null }; construirTablero(); C.jug = jugadas(C.b, C.turn, R()); if (!C.over) comprobarFin(); }
-  else { C = null; nueva(api.pref('regla', 'espanola'), api.pref('nivel', 'medio'), true); return; }
-  pintar();
+  else { C = null; nueva(api.pref('regla', 'espanola'), api.pref('nivel', 'medio'), true); activar3D(); return; }
+  pintar(); activar3D();
   if (!C.over && C.turn === 'b') programarCPU();
 }
 // Casillas del tablero (8×8 o 10×10). Se reutilizan entre jugadas para no perder el foco.
@@ -72,7 +90,7 @@ function construirTablero() {
   sq = [...tab.children];
 }
 export function unmount() {
-  clearTimeout(timer); timer = null; pensando = false; turnoIA++;
+  cerrar3D(); clearTimeout(timer); timer = null; pensando = false; turnoIA++;
   if (rootEl) rootEl.removeEventListener('click', clic);
   C = null; sq = []; anim = null;
 }
@@ -83,7 +101,7 @@ function nueva(regla, nivel, forzar = false) {
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   clearTimeout(timer); pensando = false; anim = null; turnoIA++;
   C = { b: tableroInicial(REGLAS[regla]), turn: 'w', regla, nivel, over: false, res: null, ultimo: null, sp: 0, reps: {}, hist: [], ruta: null, reg: false };
-  construirTablero(); C.reps[clavePos(C.b, 'w')] = 1; C.jug = jugadas(C.b, 'w', R());
+  construirTablero(); if (m3 && tn3 !== R().n) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } C.reps[clavePos(C.b, 'w')] = 1; C.jug = jugadas(C.b, 'w', R());
   api.setPref('regla', regla); api.setPref('nivel', nivel);
   pintar(); guardar();
 }
@@ -200,6 +218,13 @@ function pintar() {
     const d = sq[anim.de[0] * n + anim.de[1]].getBoundingClientRect(), a = sq[anim.a[0] * n + anim.a[1]], pc = a.firstElementChild;
     if (pc && pc.animate) { const ar = a.getBoundingClientRect(); pc.animate([{ transform: `translate(${d.left - ar.left}px,${d.top - ar.top}px)` }, { transform: 'none' }], { duration: 240, easing: 'ease-out' }); }
     anim = null;
+  }
+  if (m3) {
+    const piezas = [];
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) { const p = C.b[r][c]; if (p) piezas.push({ r, c, t: esRey(p) ? 'rey' : 'man', col: dueno(p) === 'w' ? 0 : 1, emoji: emo && dueno(p) === 'w' ? emo : '' }); }
+    const tb = TABLEROS[asp.valores.tablero] || TABLEROS.madera, fc = FICHAS_COL[asp.valores.colores] || FICHAS_COL.clasico;
+    m3.colores({ oscuro: tb[0], claro: tb[1], marco: oscurecer(tb[0], .55), p0: fc[0], p1: fc[1] });
+    m3.pintar({ piezas, ult: C.ultimo ? C.ultimo.path : [], sel: C.ruta ? [C.ruta[0]] : [], ruta: C.ruta ? C.ruta.slice(1) : [], dest: [...sig].map(k => k.split(',').map(Number)), marcas: true });
   }
   const cn = contar(C.b), ini = fichasIniciales(R());
   $('#dmCnt').innerHTML = `<b><i class="pdot w"></i>Tú ${cn.w}</b><span>te han comido ${ini - cn.w}</span><b><i class="pdot b"></i>CPU ${cn.b}</b><span>has comido ${ini - cn.b}</span>`;

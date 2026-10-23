@@ -11,6 +11,10 @@ const RUEDAS = {
   neon: { nombre: 'Neón', c: ['#FF2E88', '#00C2E0', '#7FD400', '#FF9100', '#7C4DFF', '#00C853'] },
 };
 let S = null, api = null, asp = null, root = null, tk = null, timer = null, girando = false, reg = false, onKey = null, res = null, recien = new Set(), cv = null, dpr = 1;
+// Vista 3D (Three.js) de la rueda: opcional, con vuelta automática a la rueda 2D si no hay WebGL
+let V3 = null, modo3d = false, hay3d = false, forzar2d = false, tok3 = 0, claveRueda = '';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } modo3d = false; claveRueda = ''; }
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c']], rondas: 4, nivel: 'medio' };
 
 /* ---------- validación / resumen ---------- */
@@ -23,8 +27,9 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; girando = false; res = null; recien = new Set();
-  asp = api.aspecto([grupoFondo('#rlJuego'), grupoTablero('Colores del panel'), { clave: 'ruleta', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { dibujar(); pintar(); } });
+  api = a; root = r; girando = false; res = null; recien = new Set(); forzar2d = false; modo3d = false;
+  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista de la ruleta', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#rlJuego'), grupoTablero('Colores del panel'), { clave: 'ruleta', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { if (cv && modo3d !== quiere3D()) armar(); else { claveRueda = ''; dibujar(); } pintar(); } });
   await api.css(new URL('./ruleta.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && R.RONDAS.includes(c0.rondas) && R.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 3) cfg = { ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
@@ -40,13 +45,13 @@ export function unmount() {
   document.removeEventListener('keydown', onKey);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); root.removeEventListener('keydown', teclaPanel); }
   if (tk) { tk.destruir(); tk = null; }
-  S = null; asp = null; cv = null; girando = false;
+  cerrar3D(); S = null; asp = null; cv = null; girando = false;
 }
 function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantalla de nueva partida ---------- */
 function setup() {
-  S = null; res = null; clearTimeout(timer); if (tk) tk.cerrar(); cv = null;
+  S = null; res = null; clearTimeout(timer); if (tk) tk.cerrar(); cv = null; cerrar3D();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Gira la ruleta, di consonantes para ganar dinero, compra vocales y resuelve el panel antes que nadie. Gana quien más dinero acumule al final de las rondas.</p>
     ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${COL[i]}"><span class="jf-dot"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
@@ -66,6 +71,7 @@ function empezar() {
 
 /* ---------- pantalla de juego ---------- */
 function armar() {
+  cerrar3D(); modo3d = quiere3D();
   root.innerHTML = `<div class="rlj" id="rlJ"></div>
     <div class="rlpanel" id="rlPanel" data-ac="teclado" tabindex="0" role="button" aria-label="Panel">
       <div class="rlboard" id="rlBoard"></div><div class="rlcat" id="rlCat"></div></div>
@@ -74,21 +80,40 @@ function armar() {
     <div class="bar rlresbar" id="rlResBar" hidden><button class="btn" data-ac="rescancel">Cancelar</button><button class="btn on" data-ac="rescomp" id="rlResOk">✔ Comprobar solución</button></div>
     <div class="rlfin" id="rlFin" hidden></div>
     <div class="rljuego" id="rlJuego">
-      <div class="rlwheel"><div class="rlptr" aria-hidden="true"></div><canvas id="rlCanvas" width="400" height="400" aria-label="Ruleta de premios"></canvas><div class="rlval" id="rlVal" aria-live="polite"></div></div>
+      <div class="rlwheel ${modo3d ? 'r3' : ''}">${modo3d ? '<div class="e3d rl3d" id="rl3d"></div>' : '<div class="rlptr" aria-hidden="true"></div>'}<canvas id="rlCanvas" width="400" height="400" aria-label="Ruleta de premios"${modo3d ? ' style="display:none"' : ''}></canvas><div class="rlval" id="rlVal" aria-live="polite"></div></div>
       <div class="bar rlacc"><button class="btn on rlgirar" data-ac="girar" id="rlGirar">🎡 Girar</button><button class="btn" data-ac="vocal" id="rlVocal">Comprar vocal · ${R.dinero(R.PRECIO_VOCAL)}</button><button class="btn" data-ac="resolver" id="rlResolver">🧩 Resolver</button><button class="btn tkabrir" data-ac="teclado" id="rlTk" aria-label="Abrir teclado">⌨️</button></div>
     </div>
     <ul class="rllog" id="rlLog"></ul>
     <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
   cv = $('#rlCanvas'); dpr = Math.min(window.devicePixelRatio || 1, 3); cv.width = 400 * dpr; cv.height = 400 * dpr;
-  dibujar(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (cv) dibujar(); });
+  if (modo3d) iniciar3D(); else dibujar();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (cv) { claveRueda = ''; dibujar(); } });
+}
+async function iniciar3D() {
+  const t = ++tok3;
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearRuleta3D } = await import('./vista3d.js'); if (t !== tok3 || !cv) return;
+    const host = $('#rl3d'); if (!host) return;
+    const v = await crearRuleta3D(host, { n: R.SEGS.length, alTocar: () => { if (S && S.fase === 'girar' && humano() && !girando && !res) girar(); } });
+    if (t !== tok3 || !cv) { v.destruir(); return; }
+    b3.botonesCamara(host, v.E); V3 = v; claveRueda = ''; dibujar();
+  } catch (e) { console.error(e); if (t === tok3 && cv) { forzar2d = true; armar(); pintar(); } }
 }
 
 /* ---------- ruleta ---------- */
 const luz = hex => { const n = parseInt(hex.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
 function dibujar() {
   if (!cv || !S) return;
-  const ctx = cv.getContext('2d'), cols = RUEDAS[asp.valores.ruleta].c, n = R.SEGS.length, a = 2 * Math.PI / n, Rr = 188, rot = S.rot;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, 400, 400); ctx.save(); ctx.translate(200, 200);
+  if (modo3d) {
+    if (!V3) return;
+    if (claveRueda !== asp.valores.ruleta) { claveRueda = asp.valores.ruleta; const c = document.createElement('canvas'); c.width = c.height = 800; pintarRueda(c.getContext('2d'), 0, 2); V3.rueda(c); }
+    V3.girar(S.rot); return;
+  }
+  pintarRueda(cv.getContext('2d'), S.rot, dpr);
+}
+function pintarRueda(ctx, rot, esc) {
+  const cols = RUEDAS[asp.valores.ruleta].c, n = R.SEGS.length, a = 2 * Math.PI / n, Rr = 188;
+  ctx.setTransform(esc, 0, 0, esc, 0, 0); ctx.clearRect(0, 0, 400, 400); ctx.save(); ctx.translate(200, 200);
   ctx.beginPath(); ctx.arc(0, 0, Rr + 8, 0, 2 * Math.PI); ctx.fillStyle = '#FFC21A'; ctx.fill();
   for (let i = 0; i < n; i++) {
     const v = R.SEGS[i], s = rot + i * a, fondo = v === 'Q' ? '#17214A' : v === 'P' ? '#FFFFFF' : cols[i % cols.length];

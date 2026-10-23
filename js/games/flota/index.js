@@ -3,6 +3,11 @@ import * as F from './motor.js';
 import { grupoFondo } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, onKey = null;
+// Vista 3D (Three.js) del tablero grande; el contenedor se conserva entre pintados y se recoloca en el DOM
+let V3 = null, hostEl = null, hay3d = false, forzar2d = false, tok3 = 0;
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const usa3D = () => !!V3 && quiere3D();
+function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } if (hostEl) { hostEl.remove(); hostEl = null; } }
 let sel = 0, vertical = false, pista = -1, efecto = null, marcador = { g: 0, p: 0 };
 let cfg = { modo: 'cpu', nivel: 'medio', flota: 'espanola', tocar: false, repetir: true };
 
@@ -22,11 +27,12 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
-  api = a; root = r; sel = 0; vertical = false; pista = -1; efecto = null;
-  asp = api.aspecto([grupoFondo('#flCuerpo'), 
+  api = a; root = r; sel = 0; vertical = false; pista = -1; efecto = null; forzar2d = false;
+  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#flCuerpo'), 
     { clave: 'mar', titulo: 'Color del mar', def: 'oceano', opciones: [{ id: 'oceano', nombre: 'Océano', sw: ['#2F80ED', '#1B4FA8'] }, { id: 'tropical', nombre: 'Tropical', sw: ['#16C1C8', '#0B8A9A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3A78', '#141C40'] }, { id: 'papel', nombre: 'Papel', sw: ['#EEF2FB', '#9DB0D8'] }] },
     { clave: 'barcos', titulo: 'Color de los barcos', def: 'gris', opciones: [{ id: 'gris', nombre: 'Gris naval', sw: ['#6B7A90'] }, { id: 'verde', nombre: 'Verde militar', sw: ['#5F7A3A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#F07B22'] }] },
-  ], () => { if (S) pintar(); });
+  ], () => { if (!S) return; if (quiere3D() && !V3) iniciar3D(); else if (V3 && !quiere3D()) cerrar3D(); else if (V3) V3.recolor(); pintar(); });
   await api.css(new URL('./flota.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && ['cpu', 'dos'].includes(c0.modo) && F.NIVEL[c0.nivel] && F.FLOTAS[c0.flota]) cfg = { ...cfg, ...c0, tocar: !!c0.tocar, repetir: c0.repetir !== false };
@@ -36,12 +42,12 @@ export async function mount(r, a) {
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { clearTimeout(timer); document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
+export function unmount() { cerrar3D(); clearTimeout(timer); document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
 function guardar() { if (!S) return; const d = { s: S, marcador, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantalla de inicio ---------- */
 function setup() {
-  S = null; clearTimeout(timer);
+  S = null; clearTimeout(timer); cerrar3D();
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   root.innerHTML = `<p class="note">Coloca tu flota en secreto y dispara por coordenadas al mar enemigo. Gana quien hunda antes todos los barcos del rival.</p>
     <div class="bar"><span class="lbl">Modo</span>${seg('modo', [['cpu', 'Contra CPU'], ['dos', '2 jugadores']])}</div>
@@ -54,9 +60,31 @@ function setup() {
     <div class="bar"><button class="btn on" data-ac="start">Colocar la flota</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
 }
 function armar() {
+  cerrar3D(); if (quiere3D()) iniciar3D();
   root.innerHTML = `<div class="flmsg" id="flMsg" role="status" aria-live="polite"></div>
     <div id="flCuerpo"></div><ul class="fllog" id="flLog"></ul>
     <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+}
+async function iniciar3D() {
+  const t = ++tok3;
+  try {
+    const b3 = await import('../../core/escena3d.js'), { crearFlota3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
+    const h = document.createElement('div'); h.className = 'e3d'; h.id = 'flHost'; const ph = $('#fl3dph'); if (ph) ph.replaceWith(h);
+    const v = await crearFlota3D(h, { alCelda: i => { if (!S) return; if (S.fase === 'colocar') tocarPropio(i); else if (S.fase === 'jugar') disparar(i); } });
+    if (t !== tok3 || !root) { v.destruir(); h.remove(); return; }
+    b3.botonesCamara(h, v.E); hostEl = h; V3 = v; pintar();
+  } catch (e) { console.error(e); if (t === tok3) { forzar2d = true; if (hostEl) { hostEl.remove(); hostEl = null; } if (S && root) pintar(); } }
+}
+function datos3D(tipo, p, opts = {}) {
+  const n = S.n, rival = 1 - p, owner = tipo === 'propio' ? p : rival;
+  const lista = tipo === 'propio' ? S.barcos[p] : S.barcos[rival].filter(b => b.celdas && (opts.revelar || F.hundido(S, rival, b)));
+  const barcos = lista.filter(b => b.celdas).map(b => ({ k: S.barcos[owner].indexOf(b), celdas: b.celdas, len: b.len, v: b.len > 1 && b.celdas[1] - b.celdas[0] === n, hundido: S.fase !== 'colocar' && F.hundido(S, owner, b), marcado: opts.marcado === S.barcos[owner].indexOf(b) }));
+  const ult = S.ultimo && (tipo === 'propio' ? S.ultimo.p === rival : S.ultimo.p === p) ? S.ultimo.i : -1;
+  return { n, barcos, tiros: tipo === 'propio' ? S.tiros[rival] : S.tiros[p], ult, pista: tipo === 'rival' ? pista : -1 };
+}
+function adoptar3D(tipo, p, opts) {
+  const ph = $('#fl3dph'); if (!ph || !hostEl) return;
+  ph.replaceWith(hostEl); V3.recolor(); V3.pintar(datos3D(tipo, p, opts)); V3.E.redimensionar(); V3.E.marcar();
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
@@ -98,7 +126,7 @@ function pintar() {
     const p = S.colocando, B = S.barcos[p];
     if (B[sel] && B[sel].celdas && B.some(b => !b.celdas)) sel = B.findIndex(b => !b.celdas);
     msg.innerHTML = `<b>${S.modo === 'dos' ? esc(nom[p]) + ': c' : 'C'}oloca tu flota.</b> Elige un barco y toca la casilla de su proa. Toca un barco ya colocado para moverlo.`;
-    cuerpo.innerHTML = `${tablero('flPropio', p, 'propio', { clase: 'grande colocando', marcado: sel })}
+    cuerpo.innerHTML = `${usa3D() ? '<div id="fl3dph"></div>' : tablero('flPropio', p, 'propio', { clase: 'grande colocando', marcado: sel })}
       <div class="flpaleta">${B.map((b, k) => `<button type="button" class="flb ${k === sel ? 'sel' : ''} ${b.celdas ? 'puesto' : ''}" data-barco="${k}" aria-label="${b.nombre} de ${b.len}${b.celdas ? ', colocado' : ''}"><span>${'<i></i>'.repeat(b.len)}</span><small>${b.nombre}</small></button>`).join('')}</div>
       <div class="bar flacc"><button class="btn" data-ac="girar">${vertical ? '↕️ Vertical' : '↔️ Horizontal'}</button><button class="btn" data-ac="azar">🎲 Al azar</button><button class="btn" data-ac="limpiar">🧹 Quitar</button><button class="btn on" data-ac="listo" ${F.completa(S, p) ? '' : 'disabled'}>✔ ¡Listo!</button></div>`;
   } else if (S.fase === 'pasar') {
@@ -114,12 +142,13 @@ function pintar() {
     else if (!miTurno) msg.innerHTML = '🎯 La CPU está apuntando…';
     else msg.innerHTML = `${S.modo === 'dos' ? `<b>${esc(nom[yo])}</b>: toca` : 'Toca'} una casilla del <b>mar enemigo</b> para disparar.`;
     cuerpo.innerHTML = `<div class="flcab"><b>🎯 Mar enemigo</b><span>Disparos ${c.t} · aciertos ${pct} %</span></div>
-      ${tablero('flRival', yo, 'rival', { clase: `grande ${miTurno ? 'activo' : ''}`, revelar: fin })}
+      ${usa3D() ? '<div id="fl3dph"></div>' : tablero('flRival', yo, 'rival', { clase: `grande ${miTurno ? 'activo' : ''}`, revelar: fin })}
       <div class="flcab"><span>Barcos de ${S.modo === 'cpu' ? 'la CPU' : esc(nom[rival])}:</span>${listaBarcos(yo, rival)}</div>
       ${fin ? `<div class="bar" style="justify-content:center"><button class="btn on" data-ac="revancha">🔁 Revancha</button><button class="btn" data-ac="setup">Cambiar opciones</button></div>` : `<div class="bar flacc"><button class="btn" data-ac="pista" ${miTurno ? '' : 'disabled'}>💡 Pista</button></div>`}
       <div class="flcab"><b>⚓ ${S.modo === 'cpu' ? 'Tu flota' : `Flota de ${esc(nom[yo])}`}</b>${listaBarcos(rival, yo)}</div>
       ${tablero('flPropio', yo, 'propio', { clase: 'peque' })}`;
   }
+  if (usa3D()) { if (S.fase === 'colocar') adoptar3D('propio', S.colocando, { marcado: sel }); else if (S.fase !== 'pasar') adoptar3D('rival', S.modo === 'cpu' ? 0 : S.turno, { revelar: S.fase === 'fin' }); }
   $('#flLog').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
   efecto = null;
 }

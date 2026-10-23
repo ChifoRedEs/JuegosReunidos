@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-45ec28732a';
+const VERSION = 'jr-f3265d8b07';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -22,6 +22,7 @@ const ARCHIVOS = [
 './js/registry.js',
 './js/version.js',
 './js/core/ajustes.js',
+'./js/core/anillo3d.js',
 './js/core/arrastrar.js',
 './js/core/aspectos.js',
 './js/core/cartas.js',
@@ -30,8 +31,10 @@ const ARCHIVOS = [
 './js/core/diccionario.js',
 './js/core/dom.js',
 './js/core/duelo.js',
+'./js/core/escena3d.js',
 './js/core/historial.js',
 './js/core/logros.js',
+'./js/core/mesa3d.js',
 './js/core/personajes.js',
 './js/core/semilla.js',
 './js/core/sonido.js',
@@ -55,6 +58,7 @@ const ARCHIVOS = [
 './js/games/billar/billar.css',
 './js/games/billar/index.js',
 './js/games/billar/motor.js',
+'./js/games/billar/vista3d.js',
 './js/games/blackjack/blackjack.css',
 './js/games/blackjack/index.js',
 './js/games/blackjack/motor.js',
@@ -102,6 +106,7 @@ const ARCHIVOS = [
 './js/games/flota/flota.css',
 './js/games/flota/index.js',
 './js/games/flota/motor.js',
+'./js/games/flota/vista3d.js',
 './js/games/holdem/holdem.css',
 './js/games/holdem/index.js',
 './js/games/holdem/motor.js',
@@ -141,10 +146,12 @@ const ARCHIVOS = [
 './js/games/oca/index.js',
 './js/games/oca/motor.js',
 './js/games/oca/oca.css',
+'./js/games/oca/vista3d.js',
 './js/games/parchis/index.js',
 './js/games/parchis/parchis.css',
 './js/games/parchis/reglas.js',
 './js/games/parchis/tablero.js',
+'./js/games/parchis/vista3d.js',
 './js/games/pokercub/index.js',
 './js/games/pokercub/motor.js',
 './js/games/pokercub/pokercub.css',
@@ -156,6 +163,7 @@ const ARCHIVOS = [
 './js/games/ruleta/motor.js',
 './js/games/ruleta/paneles.js',
 './js/games/ruleta/ruleta.css',
+'./js/games/ruleta/vista3d.js',
 './js/games/rummy/index.js',
 './js/games/rummy/motor.js',
 './js/games/rummy/rummy.css',

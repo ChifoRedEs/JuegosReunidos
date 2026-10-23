@@ -8,6 +8,23 @@ const INICIALES = [0, 8, 2, 2, 2, 1, 0], VALOR = [0, 1, 3, 3, 5, 9, 0];
 let cont = null, celdas = [], ctxR = null, eAct = null, sel = null, legal = [], flip = false, prom = null, arr = null, cuentaAnt = -1;
 // Reloj (minutos + segundos de incremento por jugada), revisión de la partida y caché de posiciones para revisar
 const RELOJES = { no: { nombre: 'Sin reloj' }, '3+2': { base: 3, inc: 2 }, '5+3': { base: 5, inc: 3 }, '10+5': { base: 10, inc: 5 }, '15+10': { base: 15, inc: 10 } };
+// Vista 3D (Three.js, opcional en 🎨 Apariencia): solo dibuja; los toques vuelven a `tocar`
+let m3 = null, tok3 = 0;
+const TABLEROS = { madera: ['#F0D9B5', '#B58863'], torneo: ['#EEEED2', '#769656'], oceano: ['#E4EDFF', '#5B7FD6'], uva: ['#F3E8FF', '#8B5CF6'], noche: ['#4A5486', '#232A55'] };
+const PIEZAS = { clasicas: ['#FFFFFF', '#1E1E24'], marfil: ['#FFF4DC', '#4A2E17'], colores: ['#FFD43B', '#5B2DD4'] };
+const MARCOS = { madera: '#5A3A22', torneo: '#3D5230', oceano: '#2F4A94', uva: '#4B2A9A', noche: '#12163A' };
+function cerrar3D() { tok3++; if (m3) { m3.destruir(); m3 = null; } }
+async function activar3D() {
+  const t = ++tok3; if (!cont || !ctxR || (ctxR.valores().vista || '3d') !== '3d') return;
+  try {
+    const base = await import('../../core/escena3d.js'); if (!base.hayWebGL()) return;
+    const { crearMesa3D } = await import('../../core/mesa3d.js'); if (t !== tok3 || !cont) return;
+    const host = cont.querySelector('#ax3d'); if (!host) return; host.hidden = false;
+    const m = await crearMesa3D(host, { n: 8, juego: 'ajedrez', alTocar: (r, c) => tocar(r * 8 + c) });
+    if (t !== tok3 || !cont) { m.destruir(); return; }
+    base.botonesCamara(host, m.E); m3 = m; cont.querySelector('#axTab').hidden = true; repintar();
+  } catch (e) { console.error(e); const h = cont && cont.querySelector('#ax3d'); if (h) { h.hidden = true; h.innerHTML = ''; } const tb = cont && cont.querySelector('#axTab'); if (tb) tb.hidden = false; }
+}
 let apiRef = null, relojCfg = 'no', tic = null, tAnt = 0, ultGuardado = 0, rev = null, posRev = [];
 const relojActual = () => { const r = RELOJES[relojCfg]; return r && r.base ? { base: r.base * 60000, inc: r.inc * 1000 } : null; };
 const fmtReloj = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return s < 20 && ms > 0 ? (Math.max(0, ms) / 1000).toFixed(1) : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
@@ -17,13 +34,13 @@ const color = p => (p >> 3) + 1;                    // 1 blancas · 2 negras
 const piezaHTML = p => `<span class="pz ${p >> 3 ? 'n' : 'b'}">${GLIFO[p & 7]}</span>`;
 
 function montar(c, ctx) {
-  cont = c; ctxR = ctx; eAct = null; sel = null; prom = null; arr = null; cuentaAnt = -1; rev = null; posRev = [];
+  cerrar3D(); cont = c; ctxR = ctx; eAct = null; sel = null; prom = null; arr = null; cuentaAnt = -1; rev = null; posRev = [];
   apiRef = ctx.api ? ctx.api() : null;
   relojCfg = apiRef ? apiRef.pref('reloj', 'no') : 'no'; if (!RELOJES[relojCfg]) relojCfg = 'no';
   c.innerHTML = `<div class="axw">
     <div class="axrel" id="axRelA" hidden></div>
     <div class="axcap" id="axCapA"></div>
-    <div class="axtw"><div class="axtab" id="axTab" role="grid" aria-label="Tablero de ajedrez">${Array.from({ length: 64 }, (_, d) => `<button type="button" class="sq" data-d="${d}"><span class="cr"></span><span class="cf"></span><span class="pc"></span></button>`).join('')}</div>
+    <div class="axtw"><div class="e3d" id="ax3d" hidden></div><div class="axtab" id="axTab" role="grid" aria-label="Tablero de ajedrez">${Array.from({ length: 64 }, (_, d) => `<button type="button" class="sq" data-d="${d}"><span class="cr"></span><span class="cf"></span><span class="pc"></span></button>`).join('')}</div>
       <div class="axprom" id="axProm" hidden></div></div>
     <div class="axcap" id="axCapB"></div>
     <div class="axrel" id="axRelB" hidden></div>
@@ -39,6 +56,7 @@ function montar(c, ctx) {
   tab.addEventListener('click', e => { if (e.detail === 0) { const b = e.target.closest('.sq'); if (b) tocar(casillaDe(+b.dataset.d)); } });   // teclado (Intro)
   c.addEventListener('click', clicExtra);
   clearInterval(tic); tAnt = performance.now(); tic = setInterval(correReloj, 200);
+  activar3D();
   c.querySelector('#axProm').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     const m = b.dataset.m; ocultarProm(); if (m) ctxR.jugar(+m); else repintar();
@@ -213,6 +231,13 @@ function pintar(eReal, ctx) {
     c.setAttribute('aria-label', `${'abcdefgh'[f]}${8 - r}${p ? ', ' + NOMBRE_PIEZA[p & 7] + (p >> 3 ? ' negro' : ' blanco') : ''}${sq === jq ? ', en jaque' : ''}`);
   });
   cont.querySelector('#axTab').classList.toggle('on', puede);
+  if (m3) {
+    const xy = q => [q >> 3, q & 7], tp = ctx.valores().tablero || 'madera', pz = PIEZAS[ctx.valores().piezas] || PIEZAS.clasicas, tb = TABLEROS[tp] || TABLEROS.madera;
+    m3.colores({ claro: tb[0], oscuro: tb[1], marco: MARCOS[tp] || '#5A3A22', p0: pz[0], p1: pz[1] });
+    m3.pintar({ piezas: e.b.map((p, q) => (p ? { r: q >> 3, c: q & 7, t: 'PNBRQK'[(p & 7) - 1], col: p >> 3 } : null)).filter(Boolean),
+      ult: ult.map(xy), sel: sel != null ? [xy(sel)] : [], dest: [...destinos.keys()].map(q => [...xy(q), !!e.b[q] || (e.ep === q && (e.b[sel] & 7) === 1)]),
+      jaque: jq >= 0 ? xy(jq) : null, pista: pd >= 0 ? [xy(pd), xy(pa)] : [], marcas, flip });
+  }
   // piezas capturadas y ventaja de material
   const cuenta = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]], mat = [0, 0];
   e.b.forEach(p => { if (p) { cuenta[p >> 3][p & 7]++; mat[p >> 3] += VALOR[p & 7]; } });
@@ -247,7 +272,7 @@ function pintar(eReal, ctx) {
 const duelo = crearDuelo({
   id: 'ajedrez', css: new URL('./ajedrez.css', import.meta.url), iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Blancas', 'Negras'],
   chip: n => `<i class="ch axch${n}">${GLIFO[6]}</i>`,
-  aspecto: [grupoFondo('#duTab'), 
+  aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#duTab'), 
     { clave: 'tablero', titulo: 'Colores del tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#F0D9B5', '#B58863'] }, { id: 'torneo', nombre: 'Torneo', sw: ['#EEEED2', '#769656'] }, { id: 'oceano', nombre: 'Océano', sw: ['#E4EDFF', '#5B7FD6'] }, { id: 'uva', nombre: 'Uva', sw: ['#F3E8FF', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#4A5486', '#232A55'] }] },
     { clave: 'piezas', titulo: 'Colores de las piezas', def: 'clasicas', opciones: [{ id: 'clasicas', nombre: 'Blancas y negras', sw: ['#FFFFFF', '#1E1E24'] }, { id: 'marfil', nombre: 'Marfil y ébano', sw: ['#FFF4DC', '#4A2E17'] }, { id: 'colores', nombre: 'Oro y morado', sw: ['#FFD43B', '#5B2DD4'] }] },
     { clave: 'marcas', titulo: 'Marcar las casillas posibles', def: 'si', opciones: [{ id: 'si', nombre: 'Sí' }, { id: 'no', nombre: 'No' }] },
@@ -255,5 +280,5 @@ const duelo = crearDuelo({
   estadoInicial: () => estadoInicial(relojActual()), jugadas, aplicar, validarEstado, ia, reglasHTML, rendirse, vista: { montar, pintar },
 });
 export const { mount, validar, resumen } = duelo;
-export function unmount() { pCancel(); clearInterval(tic); tic = null; if (ctxR && eAct && eAct.reloj) ctxR.guardar(); cont = null; celdas = []; eAct = null; ctxR = null; rev = null; posRev = []; return duelo.unmount(); }
+export function unmount() { cerrar3D(); pCancel(); clearInterval(tic); tic = null; if (ctxR && eAct && eAct.reloj) ctxR.guardar(); cont = null; celdas = []; eAct = null; ctxR = null; rev = null; posRev = []; return duelo.unmount(); }
 export const migrarV1 = d => d;

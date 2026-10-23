@@ -31,3 +31,6 @@
 .pdot.b{background:radial-gradient(circle at 35% 30%,var(--pb1),var(--pb2))}
 
 .ck.n10 .pc{font-size:clamp(11px,3.8vw,18px);border-width:2px}
+
+.ck[hidden]{display:none}
+#dm3d{width:min(100%,440px)}

@@ -88,3 +88,6 @@
 .axrev .btn{min-height:38px;padding:6px 12px}
 .axlista [data-k]{cursor:pointer;border-radius:6px;padding:0 3px}
 .axlista [data-k]:hover{background:var(--sel)}
+
+.axw .e3d{width:100%;margin:0}
+.axtab[hidden]{display:none}

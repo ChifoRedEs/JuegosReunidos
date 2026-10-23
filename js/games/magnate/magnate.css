@@ -93,3 +93,10 @@
 .juego-magnate .mtc.ab.tendencias .mtnom,.juego-magnate .mtc.ar.tendencias .mtnom,.juego-magnate .mtc.ab.noticias .mtnom,.juego-magnate .mtc.ar.noticias .mtnom{font-size:.7em;overflow-wrap:normal}
 .juego-magnate .mtc.ab .mtnom.largo,.juego-magnate .mtc.ar .mtnom.largo{font-size:.68em;overflow-wrap:normal}   /* nombres largos (SoundCloud…) en una sola línea */
 .juego-magnate .mtc.con.iz .mtnom,.juego-magnate .mtc.con.de .mtnom{font-size:.78em}   /* con la banda ampliada queda menos sitio para el nombre */
+
+/* vista 3D: panel de turno bajo el tablero (en 2D estos mandos van en el centro del tablero) */
+.juego-magnate .mtpanel{display:flex;flex-direction:column;align-items:center;gap:8px;margin:8px 0;padding:10px;background:var(--card);border:2px solid var(--line);border-radius:var(--r-l);box-shadow:var(--sombra-s)}
+.juego-magnate .mtpanel > .btn.on{width:100%;max-width:340px}
+.juego-magnate .mtpanel .mtacc{width:100%}
+.juego-magnate .mtpanel .mtacc .btn{flex:1 1 130px;max-width:200px;min-height:var(--alto-btn);font-size:14px}
+.juego-magnate .mtpanel .mtturno{font-size:15px}

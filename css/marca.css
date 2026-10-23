@@ -89,3 +89,13 @@ button.ficha{display:flex}
 
 /* marca en la cabecera de Inicio */
 .top h1 .logo{width:30px;height:30px;border-radius:9px;vertical-align:-8px;margin-right:6px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+
+/* ---------- vistas 3D (Three.js): contenedor y botones de cámara comunes ---------- */
+.e3d{position:relative;width:min(calc(100vw - 28px),620px);aspect-ratio:1/1;margin:6px auto;border-radius:var(--r-l);overflow:hidden;box-shadow:var(--sombra-m);
+  background:radial-gradient(circle at 50% 38%,var(--tb-soft,#E4EDFF),var(--tb-alt,#D6E4FF) 70%,var(--tb-line,#9DB8F5))}
+.e3d[hidden]{display:none}
+.e3d-cam{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.e3d-cam .btn{min-height:38px;width:38px;padding:0;font-size:18px;border-radius:50%;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(4px)}
+.e3d-carga{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut);font-weight:800}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .e3d{background:radial-gradient(circle at 50% 38%,#2C3770,#1E2756 70%,#141A3C)}}
+:root[data-theme="dark"] .e3d{background:radial-gradient(circle at 50% 38%,#2C3770,#1E2756 70%,#141A3C)}
