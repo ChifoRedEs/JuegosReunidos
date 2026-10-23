@@ -57,3 +57,12 @@ Los juegos nuevos deben seguir `docs/MARCA.md`: pantalla de partida con `<p clas
 Para que dos juegos salgan como una sola ficha en Inicio, añade un grupo a `GRUPOS` en `js/registry.js`:
 `{ id: 'parchis-oca', nombre: 'Parchís y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
 Cada juego conserva su id, su partida guardada y sus estadísticas.
+
+## Juegos en 3D (Three.js)
+`js/vendor/three.module.min.js` (Three.js r160, licencia MIT en `js/vendor/three.LICENSE`) es un único archivo sin dependencias. Impórtalo **solo desde el juego que lo necesite** y de forma dinámica (`await import('./vista3d.js')`, que a su vez importa Three), para que el resto de la app no lo descargue. Modelo a seguir: `js/games/hotel/`:
+- `motor.js` y `datos.js`: reglas sin DOM, con tests en Node (`tests/hotel.mjs`).
+- `vista3d.js`: `crearVista(contenedor, opciones)` devuelve un objeto con `construir(G)`, `actualizar(G)`, `mover`, `dados`, `camara`, `tema`, `destruir`. No conoce las reglas.
+- El canvas es transparente (`alpha: true`) y el «Fondo de Tablero» se aplica al contenedor (`grupoFondo('#htVista')`), así que se ve detrás.
+- Los colores de las casillas se leen de las variables `--tb-*` del contenedor; llama a `vista.tema()` cuando cambien (Apariencia o tema claro/oscuro).
+- Renderiza solo cuando algo cambia (bandera «sucio») y destruye geometrías, texturas y contexto WebGL en `destruir()` al salir.
+- Las animaciones usan promesas con temporizador de respaldo, para que el motor nunca se quede esperando si el navegador pausa `requestAnimationFrame`.

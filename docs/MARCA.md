@@ -1,6 +1,6 @@
 # Marca · Juegos Reunidos
 
-Una sola identidad visual para los 40 juegos. Vive en `css/marca.css` (se carga después de `css/base.css`).
+Una sola identidad visual para los 41 juegos. Vive en `css/marca.css` (se carga después de `css/base.css`).
 
 ## Identidad
 - **Colores:** degradado de marca morado → azul (`--grad-marca`), acento amarillo para el foco, rojo para peligro, verde para éxito. Los colores de cada juego (`color` en `registry.js`) solo se usan en su ficha de Inicio.

@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-240517e9c6';
+const VERSION = 'jr-45ec28732a';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -105,6 +105,11 @@ const ARCHIVOS = [
 './js/games/holdem/holdem.css',
 './js/games/holdem/index.js',
 './js/games/holdem/motor.js',
+'./js/games/hotel/datos.js',
+'./js/games/hotel/hotel.css',
+'./js/games/hotel/index.js',
+'./js/games/hotel/motor.js',
+'./js/games/hotel/vista3d.js',
 './js/games/kakuro/generador.js',
 './js/games/kakuro/index.js',
 './js/games/kakuro/kakuro.css',
@@ -184,7 +189,8 @@ const ARCHIVOS = [
 './js/games/worms/ia.js',
 './js/games/worms/index.js',
 './js/games/worms/motor.js',
-'./js/games/worms/worms.css'
+'./js/games/worms/worms.css',
+'./js/vendor/three.module.min.js'
 /*ARCHIVOS-FIN*/
 ];
 // Tipografías de Google Fonts (Baloo 2 y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
