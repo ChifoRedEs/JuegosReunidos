@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-f3265d8b07';
+const VERSION = 'jr-a9510b999f';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -114,6 +114,7 @@ const ARCHIVOS = [
 './js/games/hotel/hotel.css',
 './js/games/hotel/index.js',
 './js/games/hotel/motor.js',
+'./js/games/hotel/vista2d.js',
 './js/games/hotel/vista3d.js',
 './js/games/kakuro/generador.js',
 './js/games/kakuro/index.js',

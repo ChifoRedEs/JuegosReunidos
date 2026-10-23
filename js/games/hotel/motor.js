@@ -1,323 +1,397 @@
-// Hotel · reglas. No toca el DOM: habla con la interfaz mediante `h` (hooks, todos asíncronos).
-// Hooks: render, log(html, clase), paso(jugador), dados(a, b), flash(jugador, importe), pregunta(titulo, html, botones) → botón,
-// carta(mazo, texto, auto), comprar(casilla, jugador) → bool, puja(casilla, jugador, actual) → importe, aceptar(a, b, oferta) → bool,
-// gestionar(partida, jugador), fin(ganador, motivo).
-import { GRUPOS, CASILLAS, SUERTES, IMPREVISTOS, SALARIO, FIANZA, MAX_NIVEL, AERO, SERV, CUARENTENA, VACACIONES, CONTROL } from './datos.js';
+// Hotel · motor de reglas (puro, sin DOM). Estado serializable en JSON.
+// Reglas basadas en el «Hotel» de Milton Bradley (1986): compra de terrenos, permisos de obras, edificios por fases,
+// instalaciones de ocio, entradas (Ayuntamiento), estancias por noches, subastas por deudas y quiebra.
+import {
+  HOTELES, IDS_HOTEL, nEdif, tarifa, DINERO_INICIAL, SALARIO, PRECIO_MIN_PUJA, MAX_ENTRADAS, DADO_PERMISO,
+  COLORES_JUGADOR, COCHES, N, TIPO, LINEA_BANCO, LINEA_AYTO, CASILLAS_DE, ADYACENTES,
+} from './datos.js';
 
-export const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const d6 = () => 1 + Math.floor(Math.random() * 6);
-const barajar = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-export const REGLAS = { bote: true, subasta: true, dinero: 1600, rondas: 0, cpu: 1 };   // rondas: 0 = sin límite · cpu: 0 fácil, 1 normal, 2 difícil
-export const MAZOS = { suerte: SUERTES, imprevisto: IMPREVISTOS };
-export const COMPRABLE = ['destino', 'aero', 'serv'];
-export const NIVELES_CPU = ['Fácil', 'Normal', 'Difícil'];
-// Carácter de cada nivel de CPU: reserva de efectivo al comprar y al construir, tope de las pujas y si negocia
-const PERFIL = [{ comp: 350, obra: 500, puja: .7, negocia: .4, ruido: .25 }, { comp: 150, obra: 250, puja: .9, negocia: 1, ruido: 0 }, { comp: 60, obra: 130, puja: 1.1, negocia: 1, ruido: 0 }];
+// ---------- utilidades ----------
+export function rnd(S) {
+  S.sem = (S.sem + 0x6D2B79F5) >>> 0; let t = S.sem;
+  t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const d6 = S => 1 + Math.floor(rnd(S) * 6);
+const lg = (S, s) => { S.log.push(s); if (S.log.length > 120) S.log.splice(0, S.log.length - 120); };
+const eur = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' €';
+export const fmt = eur;
+export const vivos = S => S.jug.filter(p => p.vivo).length;
+export const titulos = (S, j) => IDS_HOTEL.filter(h => S.hot[h].dueno === j);
+export const actor = S => (S.fase === 'subasta' && S.sub ? S.sub.pend[S.sub.cur] : S.turno);
+// Dinero invertido en un hotel (terreno + edificios + instalación)
+export function invertido(S, h) {
+  const H = S.hot[h], D = HOTELES[h]; if (H.dueno < 0) return 0;
+  let v = D.tierra; for (let i = 0; i < H.etapa; i++) v += D.edif[i].c; if (H.inst) v += D.inst.c; return v;
+}
+export const tarifaDe = (S, h) => tarifa(h, S.hot[h].etapa, S.hot[h].inst);
+export const completo = (S, h) => S.hot[h].etapa >= nEdif(h);
+export function patrimonio(S, j) {
+  let v = S.jug[j].dinero; for (const h of titulos(S, j)) v += Math.round(invertido(S, h) * 0.5) + S.hot[h].ents.length * 50; return v;
+}
 
-// ---------- IA de los bots ----------
-class IA {
-  constructor(g) { this.g = g; this.vetos = {}; }
-  get f() { return PERFIL[this.g.reglas.cpu] || PERFIL[1]; }
-  completa(s, p) { const g = this.g; return s.tipo === 'destino' && g.grupo(s).every(x => x === s || x.dueno === g.idx(p)); }
-  comprar(s, p) {
-    if (this.f.ruido && Math.random() < this.f.ruido && !this.completa(s, p)) return false;
-    return p.dinero - s.precio >= (this.completa(s, p) ? 0 : this.f.comp);
+// ---------- creación ----------
+export function crear(o = {}) {
+  const n = Math.max(2, Math.min(4, o.n || 4));
+  const jug = Array.from({ length: n }, (_, i) => ({
+    nombre: o.nombres?.[i] || `Jugador ${i + 1}`, cpu: !!o.cpu?.[i], nivel: o.niveles?.[i] ?? o.nivel ?? 2,
+    color: COLORES_JUGADOR[i], coche: COCHES[i], pos: 0, dinero: DINERO_INICIAL, vivo: true, turnos: 0,
+  }));
+  const hot = {}; for (const id of IDS_HOTEL) hot[id] = { dueno: -1, etapa: 0, inst: false, desde: 0, ents: [] };
+  const S = {
+    v: 2, n, inicial: n, sem: (o.semilla ?? Date.now()) >>> 0, jug, hot, entDe: Array(N).fill(null),
+    turno: 0, ronda: 1, limite: o.limite || 0, fase: 'tirar', dado: 0, seis: false, compro: false,
+    pasos: [], ayto: {}, deuda: null, sub: null, ganador: -1, motivo: '', log: [],
+  };
+  jug[0].turnos = 1;
+  lg(S, `Empieza ${jug[0].nombre}. Cada jugador tiene ${eur(DINERO_INICIAL)}.`);
+  return S;
+}
+
+// ---------- opciones legales ----------
+function opcionesEntrada(S, j, gratis) {
+  const p = S.jug[j], out = [];
+  for (const h of IDS_HOTEL) {
+    const H = S.hot[h];
+    if (H.dueno !== j || H.etapa < 1 || H.ents.length >= MAX_ENTRADAS) continue;
+    if (!gratis && S.ayto[h]) continue;
+    const precio = gratis ? 0 : HOTELES[h].entrada; if (precio > p.dinero) continue;
+    for (const sq of CASILLAS_DE[h]) if (S.entDe[sq] == null && TIPO[sq] !== 'P') out.push({ h, sq, precio });
   }
-  pujar(s, p, actual) { const max = Math.min(s.precio * (this.completa(s, p) ? this.f.puja + .6 : this.f.puja), p.dinero - 100); return actual + 10 <= max ? actual + 10 : 0; }
-  elegir(p, op) {
-    if (op.includes('Usar pase')) return 'Usar pase';
-    if (op.includes(`Pagar ${FIANZA}M`)) return p.dinero > 420 ? `Pagar ${FIANZA}M` : 'Intentar dobles';
-    return op[0];
+  return out;
+}
+function opcionesLote(S, j) {
+  const p = S.jug[j], pos = p.pos, out = [];
+  if (S.compro) return out;
+  for (const h of ADYACENTES[pos]) {
+    const H = S.hot[h], t = HOTELES[h].tierra;
+    if (H.dueno === -1 && t <= p.dinero) out.push({ h, precio: t, forzosa: false });
+    else if (H.dueno >= 0 && H.dueno !== j && H.etapa === 0 && Math.round(t / 2) <= p.dinero) out.push({ h, precio: Math.round(t / 2), forzosa: true, a: H.dueno });
   }
-  gestionar(p) {
-    const g = this.g, i = g.idx(p);
-    for (let n = 0; n < 60; n++) {
-      const o = g.propias(i), u = o.find(s => s.hip && p.dinero > s.precio + 200 && g.puedeDeshipotecar(s));
-      if (u) { g.deshipotecar(u); continue; }
-      const b = o.filter(s => g.puedeConstruir(s) && p.dinero - GRUPOS[s.g].piso >= this.f.obra).sort((a, c) => a.nivel - c.nivel)[0];
-      if (!b) break; g.construir(b);
+  return out;
+}
+function opcionesObra(S, j) {
+  const p = S.jug[j], out = [];
+  for (const h of IDS_HOTEL) {
+    const H = S.hot[h]; if (H.dueno !== j || H.etapa >= nEdif(h) || p.turnos <= H.desde) continue;
+    out.push({ h, coste: HOTELES[h].edif[H.etapa].c, etapa: H.etapa });
+  }
+  return out;
+}
+function opcionesFase(S, j) {
+  const out = [];
+  for (const h of IDS_HOTEL) { const H = S.hot[h]; if (H.dueno === j && H.etapa < nEdif(h)) out.push({ h, etapa: H.etapa }); }
+  return out;
+}
+function opcionesInst(S, j) {
+  const out = [];
+  for (const h of IDS_HOTEL) { const H = S.hot[h]; if (H.dueno === j && H.etapa >= nEdif(h) && !H.inst && HOTELES[h].inst.c <= S.jug[j].dinero) out.push({ h, coste: HOTELES[h].inst.c }); }
+  return out;
+}
+// Valida y calcula el coste base de un plan de obras [h, h, ...] (cada aparición = una fase más)
+export function costePlan(S, j, plan) {
+  const cnt = {}, p = S.jug[j]; let coste = 0;
+  if (!Array.isArray(plan) || !plan.length) return -1;
+  for (const h of plan) {
+    const H = S.hot[h]; if (!H || H.dueno !== j || p.turnos <= H.desde) return -1;
+    const e = H.etapa + (cnt[h] || 0); if (e >= nEdif(h)) return -1;
+    coste += HOTELES[h].edif[e].c; cnt[h] = (cnt[h] || 0) + 1;
+  }
+  return coste;
+}
+
+export function legales(S) {
+  const f = S.fase, j = actor(S), L = { fase: f, actor: j };
+  if (f === 'tirar') { L.tirar = true; L.inst = opcionesInst(S, j); }
+  else if (f === 'ayto') L.entradas = opcionesEntrada(S, j, false);
+  else if (f === 'entLibre') L.entradas = opcionesEntrada(S, j, true);
+  else if (f === 'compra') L.lotes = opcionesLote(S, j);
+  else if (f === 'obras') L.obras = opcionesObra(S, j);
+  else if (f === 'faseLibre') L.obras = opcionesFase(S, j);
+  else if (f === 'deuda') L.vender = titulos(S, j);
+  else if (f === 'subasta') { const B = S.sub; L.min = B.mejor ? B.mejor.cant + PRECIO_MIN_PUJA : PRECIO_MIN_PUJA; L.max = S.jug[j].dinero; L.mejor = B.mejor; L.h = B.h; }
+  return L;
+}
+
+// ---------- flujo ----------
+function nuevoTurnoFlags(S) { S.compro = false; S.ayto = {}; S.pasos = []; S.dado = 0; }
+function fin(S, ev, g, motivo) {
+  S.fase = 'fin'; S.ganador = g; S.motivo = motivo || ''; ev.push({ t: 'fin', g });
+  lg(S, `🏆 ¡Gana ${S.jug[g].nombre}! ${motivo || ''}`);
+}
+function demoler(S, h) {
+  const H = S.hot[h]; for (const sq of H.ents) S.entDe[sq] = null;
+  S.hot[h] = { dueno: -1, etapa: 0, inst: false, desde: 0, ents: [] };
+}
+function quiebra(S, ev, j) {
+  const p = S.jug[j]; p.vivo = false; p.dinero = 0;
+  for (const h of titulos(S, j)) demoler(S, h);
+  ev.push({ t: 'quiebra', j }); lg(S, `💥 ${p.nombre} se arruina y queda eliminado.`);
+  S.pasos = []; S.seis = false;
+  if (vivos(S) === 1) fin(S, ev, S.jug.findIndex(q => q.vivo), 'Último jugador en pie.');
+}
+function finTurno(S, ev) {
+  if (S.fase === 'fin') return;
+  const j = S.turno;
+  if (vivos(S) <= 1) return fin(S, ev, S.jug.findIndex(q => q.vivo), 'Último jugador en pie.');
+  nuevoTurnoFlags(S);
+  if (S.seis && S.jug[j].vivo) {
+    S.seis = false; S.jug[j].turnos++; S.fase = 'tirar'; ev.push({ t: 'extra', j }); lg(S, `${S.jug[j].nombre} sacó un 6 y vuelve a tirar.`); return;
+  }
+  S.seis = false;
+  let k = j;
+  do { k = (k + 1) % S.n; if (k <= j && S.jug[k].vivo) S.ronda++; } while (!S.jug[k].vivo);
+  if (S.limite && S.ronda > S.limite) {
+    let g = 0, mejor = -1; S.jug.forEach((q, i) => { if (q.vivo) { const v = patrimonio(S, i); if (v > mejor) { mejor = v; g = i; } } });
+    return fin(S, ev, g, `Fin de las ${S.limite} rondas: mayor patrimonio (${eur(mejor)}).`);
+  }
+  S.turno = k; S.jug[k].turnos++; S.fase = 'tirar'; ev.push({ t: 'turno', j: k });
+}
+// Cobro: devuelve 'ok' | 'espera' (hay que vender hoteles) | 'quiebra'
+function pagar(S, ev, j, cant, a, motivo) {
+  if (cant <= 0) return 'ok';
+  S.deuda = { j, cant, a, motivo: motivo || '' };
+  return liquidar(S, ev);
+}
+function liquidar(S, ev) {
+  const D = S.deuda, p = S.jug[D.j], pago = Math.min(p.dinero, D.cant);
+  if (pago > 0) { p.dinero -= pago; D.cant -= pago; if (D.a >= 0) S.jug[D.a].dinero += pago; ev.push({ t: 'paga', j: D.j, a: D.a, cant: pago }); }
+  if (D.cant <= 0) { S.deuda = null; return 'ok'; }
+  if (!titulos(S, D.j).length) { S.deuda = null; quiebra(S, ev, D.j); return 'quiebra'; }
+  lg(S, `${p.nombre} debe ${eur(D.cant)} y tiene que vender hoteles en subasta.`);
+  S.fase = 'deuda'; return 'espera';
+}
+function seguir(S, ev, r) { if (r === 'ok') avanzar(S, ev); else if (r === 'quiebra') finTurno(S, ev); }
+
+function avanzar(S, ev) {
+  for (;;) {
+    if (S.fase === 'fin') return;
+    const paso = S.pasos.shift(); const j = S.turno, p = S.jug[j];
+    if (!paso) { finTurno(S, ev); return; }
+    if (paso === 'ayto') { if (opcionesEntrada(S, j, false).length) { S.fase = 'ayto'; return; } continue; }
+    if (paso === 'estancia') {
+      const h = S.entDe[p.pos]; if (h == null) continue;
+      const H = S.hot[h]; if (H.dueno < 0 || H.dueno === j || H.etapa < 1) continue;
+      const noches = d6(S), coste = noches * tarifaDe(S, h);
+      ev.push({ t: 'estancia', j, h, noches, coste });
+      lg(S, `${p.nombre} se aloja ${noches} noche${noches > 1 ? 's' : ''} en ${HOTELES[h].nombre} (${eur(tarifaDe(S, h))}/noche): paga ${eur(coste)} a ${S.jug[H.dueno].nombre}.`);
+      const r = pagar(S, ev, j, coste, H.dueno, 'estancia');
+      if (r !== 'ok') { if (r === 'quiebra') finTurno(S, ev); return; }
+      continue;
     }
-  }
-  reunir(p, importe) {      // vende pisos e hipoteca hasta reunir el importe
-    const g = this.g, i = g.idx(p);
-    while (p.dinero < importe) {
-      const o = g.propias(i), s = o.find(x => g.puedeVender(x));
-      if (s) { g.vender(s); continue; }
-      const m = o.filter(x => g.puedeHipotecar(x)).sort((a, b) => a.precio - b.precio)[0];
-      if (!m) break; g.hipotecar(m);
-    }
-    return p.dinero >= importe;
-  }
-  // ¿Acepta el bot b la oferta? Valora más lo que le acerca a una zona completa y pide más por lo que completaría la del otro
-  aceptar(b, o, a) {
-    const g = this.g, bi = g.idx(b), ai = g.idx(a), v = s => s.precio * (s.hip ? .5 : 1);
-    const recibe = o.da.reduce((t, i) => { const s = g.c[i]; return t + v(s) * (s.tipo === 'destino' && g.grupo(s).every(x => x.dueno === bi || o.da.includes(x.id)) ? 1.6 : 1); }, o.daM);
-    const entrega = o.pide.reduce((t, i) => {
-      const s = g.c[i], grupo = g.grupo(s);
-      let m = s.tipo !== 'destino' ? 1.3 : g.tieneGrupo(bi, s.g) ? 2.5 : grupo.some(x => x !== s && x.dueno === bi) ? 1.8 : 1.3;
-      if (s.tipo === 'destino' && grupo.every(x => x === s || x.dueno === ai || o.pide.includes(x.id))) m += .3;   // le completaría la zona al otro
-      return t + v(s) * m;
-    }, o.pideM);
-    return recibe >= entrega * 1.05 && b.dinero + o.daM - o.pideM >= 50;
-  }
-  // Al empezar su turno, el bot intenta comprar el destino que le falta para completar una zona (como mucho una oferta por turno)
-  async negociar(p) {
-    if (Math.random() >= this.f.negocia) return;
-    const g = this.g, i = g.idx(p);
-    for (const k of Object.keys(GRUPOS)) {
-      const grupo = g.c.filter(x => x.g === k), faltan = grupo.filter(x => x.dueno !== i);
-      if (faltan.length !== 1 || grupo.some(x => x.nivel)) continue;
-      const s = faltan[0]; if (s.dueno === null) continue;
-      const b = g.jug[s.dueno], clave = `${i}>${s.id}`;
-      if (b.fuera || (this.vetos[clave] || 0) >= g.ronda) continue;
-      const oferta = Math.min(Math.round(s.precio * (1.5 + Math.random() * .6) / 10) * 10, p.dinero - 150);
-      if (oferta < s.precio * 1.2) continue;
-      const ok = await g.proponer(p, b, { da: [], daM: oferta, pide: [s.id], pideM: 0 });
-      if (!ok) this.vetos[clave] = g.ronda + (b.bot ? 2 : 6);            // a las personas no se les vuelve a preguntar en 6 rondas
-      return;
+    if (paso === 'casilla') {
+      const t = TIPO[p.pos];
+      if (t === 'C' && opcionesLote(S, j).length) { S.fase = 'compra'; return; }
+      if (t === 'O' && titulos(S, j).length && opcionesObra(S, j).length) { S.fase = 'obras'; return; }
+      if (t === 'E' && opcionesEntrada(S, j, true).length) { S.fase = 'entLibre'; return; }
+      if (t === 'F' && opcionesFase(S, j).length) { S.fase = 'faseLibre'; return; }
+      continue;
     }
   }
 }
 
-// ---------- partida ----------
-export class Partida {
-  constructor(jugadores, h, reglas = {}) {
-    this.h = h; this.reglas = { ...REGLAS, ...reglas };
-    this.jug = jugadores.map(j => ({ nombre: j.nombre, ficha: j.ficha, color: j.color, bot: !!j.bot, dinero: this.reglas.dinero, pos: 0, espera: false, intentos: 0, pases: [], fuera: false }));
-    this.c = CASILLAS.map((s, i) => ({ ...s, id: i, dueno: null, nivel: 0, hip: false }));     // estado propio, sin tocar CASILLAS
-    this.mazos = { suerte: barajar(SUERTES.map((_, i) => i)), imprevisto: barajar(IMPREVISTOS.map((_, i) => i)) };
-    this.turno = 0; this.ronda = 1; this.terminada = false; this.ganador = -1; this.motivo = '';
-    this.bote = 0; this.ia = new IA(this);
-  }
-  toJSON() {
-    return { v: 1, jug: this.jug.map(p => ({ ...p, pases: p.pases.slice() })), c: this.c.map(s => [s.dueno, s.nivel, s.hip]), reglas: this.reglas, mazos: this.mazos,
-      turno: this.turno, ronda: this.ronda, terminada: this.terminada, ganador: this.ganador, motivo: this.motivo, bote: this.bote };
-  }
-  static desde(d, h) {
-    const g = new Partida(d.jug, h, d.reglas);
-    g.jug.forEach((p, i) => Object.assign(p, d.jug[i], { pases: d.jug[i].pases.slice() }));
-    d.c.forEach(([dueno, nivel, hip], i) => Object.assign(g.c[i], { dueno, nivel, hip }));
-    Object.assign(g, { mazos: { suerte: d.mazos.suerte.slice(), imprevisto: d.mazos.imprevisto.slice() }, turno: d.turno, ronda: d.ronda, terminada: d.terminada,
-      ganador: d.ganador, motivo: d.motivo, bote: d.bote });
-    return g;
-  }
-  p() { return this.jug[this.turno]; }
-  idx(p) { return this.jug.indexOf(p); }
-  n(p) { return `<b style="color:${p.color}">${esc(p.ficha)} ${esc(p.nombre)}</b>`; }
-  log(m, c) { this.h.log(m, c); }
-  propias(i) { return this.c.filter(s => s.dueno === i); }
-  grupo(s) { return s.tipo === 'destino' ? this.c.filter(x => x.g === s.g) : [s]; }
-  tieneGrupo(i, g) { return this.c.filter(x => x.g === g).every(x => x.dueno === i); }
-  patrimonio(p) { return p.dinero + this.propias(this.idx(p)).reduce((t, s) => t + (s.hip ? s.precio / 2 : s.precio) + (s.nivel ? s.nivel * GRUPOS[s.g].piso : 0), 0); }
-  elegir(p, t, x, op) { return p.bot ? Promise.resolve(this.ia.elegir(p, op)) : this.h.pregunta(t, x, op); }
-
-  alquiler(s, tirada) {
-    const suyas = this.propias(s.dueno);
-    if (s.tipo === 'aero') return AERO.alquiler[suyas.filter(x => x.tipo === 'aero').length - 1];
-    if (s.tipo === 'serv') return tirada * SERV.veces[suyas.filter(x => x.tipo === 'serv').length > 1 ? 1 : 0];
-    if (s.nivel) return Math.round(s.alquiler * GRUPOS[s.g].mult[s.nivel - 1]);
-    return this.tieneGrupo(s.dueno, s.g) ? s.alquiler * 2 : s.alquiler;
-  }
-
-  // ---------- pisos (construcción pareja) e hipotecas ----------
-  puedeConstruir(s) {
-    return s.tipo === 'destino' && s.dueno !== null && s.nivel < MAX_NIVEL && this.tieneGrupo(s.dueno, s.g)
-      && this.grupo(s).every(x => !x.hip && x.nivel >= s.nivel) && this.jug[s.dueno].dinero >= GRUPOS[s.g].piso;
-  }
-  construir(s) { this.jug[s.dueno].dinero -= GRUPOS[s.g].piso; s.nivel++; }
-  puedeVender(s) { return s.nivel > 0 && this.grupo(s).every(x => x.nivel <= s.nivel); }
-  vender(s) { this.jug[s.dueno].dinero += GRUPOS[s.g].piso / 2; s.nivel--; }
-  puedeHipotecar(s) { return s.dueno !== null && !s.hip && this.grupo(s).every(x => !x.nivel); }
-  hipotecar(s) { this.jug[s.dueno].dinero += s.precio / 2; s.hip = true; }
-  costeDeshipotecar(s) { return Math.ceil(s.precio * .55); }
-  puedeDeshipotecar(s) { return s.hip && this.jug[s.dueno].dinero >= this.costeDeshipotecar(s); }
-  deshipotecar(s) { this.jug[s.dueno].dinero -= this.costeDeshipotecar(s); s.hip = false; }
-
-  // ---------- dinero ----------
-  async pagar(p, importe, a) {
-    while (p.dinero < importe && !p.fuera) {
-      if (p.bot) { if (!this.ia.reunir(p, importe)) await this.quiebra(p, a); this.h.render(); continue; }
-      const c = await this.h.pregunta('Fondos insuficientes', `${this.n(p)} debe ${importe}M y solo tiene ${p.dinero}M. Vende pisos o hipoteca destinos para reunirlo.`, ['Gestionar hoteles', 'Declarar bancarrota']);
-      if (c === 'Gestionar hoteles') await this.h.gestionar(this, p); else await this.quiebra(p, a);
-    }
-    if (p.fuera) return false;
-    p.dinero -= importe; this.h.flash(p, -importe);
-    if (a) { a.dinero += importe; this.h.flash(a, importe); }
-    this.h.render(); return true;
-  }
-  async multa(p, importe) { if (await this.pagar(p, importe, null) && this.reglas.bote) this.bote += importe; this.h.render(); }
-  cobrar(p, importe) { p.dinero += importe; this.h.flash(p, importe); this.h.render(); }
-
-  async quiebra(p, a) {
-    this.log(`${this.n(p)} se declara en bancarrota.`, 'neg');
-    const i = this.idx(p);
-    this.propias(i).forEach(s => { s.nivel = 0; if (a) s.dueno = this.idx(a); else { s.dueno = null; s.hip = false; } });
-    if (a) { a.dinero += p.dinero; a.pases.push(...p.pases); }
-    else for (const m of p.pases) this.mazos[m].push(MAZOS[m].findIndex(c => c.libre));       // los pases vuelven a su mazo
-    p.dinero = 0; p.pases = []; p.fuera = true;
-    await this.comprobarFin();
-  }
-  // La partida termina con un solo jugador en pie, si ya no queda ninguna persona o al llegar al límite de rondas
-  async comprobarFin(porRondas = false) {
-    if (this.terminada) return true;
-    const vivos = this.jug.filter(q => !q.fuera), humanos = this.jug.some(q => !q.bot);
-    let g = null;
-    if (vivos.length === 1) { g = vivos[0]; this.motivo = 'Único jugador que sigue en pie'; }
-    else if (porRondas) { g = vivos.reduce((a, b) => (this.patrimonio(b) > this.patrimonio(a) ? b : a)); this.motivo = `Mayor patrimonio tras ${this.reglas.rondas} rondas`; }
-    else if (humanos && !vivos.some(q => !q.bot)) { g = vivos.reduce((a, b) => (this.patrimonio(b) > this.patrimonio(a) ? b : a)); this.motivo = 'Ya no quedan personas en la partida: gana la CPU con más patrimonio'; }
-    if (!g) return false;
-    this.terminada = true; this.ganador = this.idx(g); this.h.render(); await this.h.fin(g, this.motivo); return true;
-  }
-
-  // ---------- subastas e intercambios ----------
-  async subasta(s, desde) {
-    const k = this.idx(desde) + 1, orden = [...this.jug.slice(k), ...this.jug.slice(0, k)].filter(q => !q.fuera);
-    this.log(`Subasta de <b>${esc(s.nombre)}</b>.`);
-    let puja = 0, gana = null; const fuera = new Set();
-    for (;;) {
-      let mov = false;
-      for (const q of orden) {
-        if (fuera.has(q) || q === gana) continue;
-        if (q.dinero <= puja) { fuera.add(q); continue; }
-        const b = q.bot ? this.ia.pujar(s, q, puja) : await this.h.puja(s, q, puja);
-        if (Number.isInteger(b) && b > puja && b <= q.dinero) { puja = b; gana = q; mov = true; this.log(`${this.n(q)} puja ${b}M.`); } else fuera.add(q);
-      }
-      if (!mov || orden.every(q => fuera.has(q) || q === gana)) break;
-    }
-    if (gana) { gana.dinero -= puja; s.dueno = this.idx(gana); this.h.flash(gana, -puja); this.log(`${this.n(gana)} gana <b>${esc(s.nombre)}</b> por ${puja}M.`, 'compra'); this.h.render(); }
-    else this.log('Nadie puja: el destino sigue libre.');
-  }
-  // oferta: { da: [ids que entrega a], daM: dinero que entrega a, pide: [ids que pide a b], pideM }
-  ofertaValida(a, b, o) {
-    const ent = v => Number.isInteger(v) && v >= 0;
-    const libres = (ids, j) => Array.isArray(ids) && ids.every(i => this.c[i] && this.c[i].dueno === this.idx(j) && !this.grupo(this.c[i]).some(x => x.nivel));
-    return ent(o.daM) && ent(o.pideM) && o.daM <= a.dinero && o.pideM <= b.dinero && libres(o.da, a) && libres(o.pide, b) && (o.da.length + o.pide.length + o.daM + o.pideM) > 0;
-  }
-  async proponer(a, b, o) {
-    if (!this.ofertaValida(a, b, o)) { if (a.bot) return false; await this.h.pregunta('Oferta no válida', 'Revisa los importes: nadie puede dar más dinero del que tiene, y la oferta no puede estar vacía.', ['Entendido']); return false; }
-    const ok = b.bot ? this.ia.aceptar(b, o, a) : await this.h.aceptar(a, b, o);
-    if (!ok) { this.log(`${this.n(b)} rechaza el intercambio de ${this.n(a)}.`); return false; }
-    o.da.forEach(i => { this.c[i].dueno = this.idx(b); }); o.pide.forEach(i => { this.c[i].dueno = this.idx(a); });
-    a.dinero += o.pideM - o.daM; b.dinero += o.daM - o.pideM;
-    this.log(`${this.n(a)} y ${this.n(b)} cierran un intercambio.`, 'compra'); this.h.render(); return true;
-  }
-
-  // ---------- movimiento ----------
-  async tirar() { const a = d6(), b = d6(); await this.h.dados(a, b); this.log(`${this.n(this.p())} saca ${a} + ${b} = ${a + b}.`); return [a, b]; }
-  async avanzar(p, n) {
-    for (let i = 0; i < n; i++) {
-      p.pos = (p.pos + 1) % 40;
-      if (!p.pos) { this.log(`${this.n(p)} cobra ${SALARIO}M al pasar por la Salida.`, 'pos'); this.cobrar(p, SALARIO); }
-      await this.h.paso(p);
-    }
-  }
-  async aCuarentena(p) {
-    p.pos = CUARENTENA; p.espera = true; p.intentos = 0;
-    this.log(`${this.n(p)} va a la Cuarentena.`, 'neg'); await this.h.paso(p); this.h.render();
-  }
-
-  async jugarTurno() {
-    const p = this.p();
-    if (p.bot) { await this.ia.negociar(p); if (p.fuera || this.terminada) return; this.ia.gestionar(p); this.h.render(); }
-    if (p.espera) {
-      const op = [`Pagar ${FIANZA}M`]; if (p.pases.length) op.push('Usar pase'); op.push('Intentar dobles');
-      const c = await this.elegir(p, 'Cuarentena', `${this.n(p)} está en cuarentena. ¿Cómo quiere salir?`, op);
-      if (c === `Pagar ${FIANZA}M`) { await this.multa(p, FIANZA); if (!p.fuera) { p.espera = false; this.log(`${this.n(p)} paga ${FIANZA}M y sale.`); } }
-      else if (c === 'Usar pase') { const m = p.pases.shift(); this.mazos[m].push(MAZOS[m].findIndex(x => x.libre)); p.espera = false; this.log(`${this.n(p)} usa su pase VIP y sale.`); }
-      else {
-        const [a, b] = await this.tirar();
-        if (a === b) { p.espera = false; this.log('¡Dobles! Sale de la Cuarentena.'); await this.avanzar(p, a + b); await this.caer(p, a + b); }
-        else if (++p.intentos >= 3) { this.log(`Tercer intento fallido: paga ${FIANZA}M.`); await this.multa(p, FIANZA); if (!p.fuera) { p.espera = false; await this.avanzar(p, a + b); await this.caer(p, a + b); } }
-        else this.log('No saca dobles.');
-        await this.siguiente(); return;
-      }
-    }
-    let otra = true, n = 0;
-    while (otra && !p.fuera && !this.terminada && !p.espera) {
-      const [a, b] = await this.tirar(); otra = a === b;
-      if (otra && ++n === 3) { this.log('Tres dobles seguidos: ¡demasiada prisa por viajar!', 'neg'); await this.aCuarentena(p); break; }
-      await this.avanzar(p, a + b); await this.caer(p, a + b);
-      if (otra && !p.fuera && !this.terminada && !p.espera) { if (!p.bot) await this.h.pregunta('¡Dobles!', `${this.n(p)} tira otra vez.`, ['Tirar de nuevo']); } else otra = false;
-    }
-    await this.siguiente();
-  }
-  async siguiente() {
-    if (this.terminada) return;
-    const antes = this.turno;
-    do { this.turno = (this.turno + 1) % this.jug.length; } while (this.p().fuera);
-    if (this.turno <= antes) {                                                   // ha dado la vuelta: nueva ronda
-      this.ronda++;
-      if (this.reglas.rondas && this.ronda > this.reglas.rondas) { this.ronda = this.reglas.rondas; await this.comprobarFin(true); return; }
-    }
-    this.h.render();
-  }
-
-  // ---------- casillas ----------
-  async caer(p, tirada) {
-    const s = this.c[p.pos];
-    this.log(`${this.n(p)} cae en <b>${esc(s.nombre)}</b>.`);
-    if (COMPRABLE.includes(s.tipo)) await this.caerDestino(p, s, tirada);
-    else if (s.tipo === 'impuesto') { this.log(`${this.n(p)} paga ${s.importe}M de ${esc(s.nombre)}.`, 'neg'); await this.multa(p, s.importe); }
-    else if (s.tipo === 'suerte' || s.tipo === 'imprevisto') await this.robar(p, s.tipo);
-    else if (s.id === CONTROL) await this.aCuarentena(p);
-    else if (s.id === VACACIONES && this.reglas.bote && this.bote) { this.log(`${this.n(p)} se lleva el bote de las Vacaciones: ${this.bote}M.`, 'pos'); const v = this.bote; this.bote = 0; this.cobrar(p, v); }
-  }
-  async caerDestino(p, s, tirada, doble = false) {
-    const yo = this.idx(p);
-    if (s.dueno === null) {
-      let compra = false;
-      if (p.dinero >= s.precio) compra = p.bot ? this.ia.comprar(s, p) : await this.h.comprar(s, p);
-      if (compra) { p.dinero -= s.precio; s.dueno = yo; this.log(`${this.n(p)} compra <b>${esc(s.nombre)}</b> por ${s.precio}M.`, 'compra'); this.h.flash(p, -s.precio); this.h.render(); }
-      else { this.log(`${this.n(p)} no compra ${esc(s.nombre)}.`); if (this.reglas.subasta) await this.subasta(s, p); }
-    } else if (s.dueno !== yo && !s.hip) {
-      const o = this.jug[s.dueno], r = this.alquiler(s, tirada || d6() + d6()) * (doble ? 2 : 1);
-      this.log(`${this.n(p)} paga ${r}M de alquiler a ${this.n(o)}.`, 'neg'); await this.pagar(p, r, o);
-    }
-  }
-  async robar(p, mazo) {
-    const lista = this.mazos[mazo], k = lista.shift(), c = MAZOS[mazo][k];
-    if (!c.libre) lista.push(k);                       // el pase se queda en la mano del jugador hasta que lo use
-    await this.h.carta(mazo, c.t, p.bot); this.log(`${this.n(p)} roba: ${esc(c.t)}`);
-    if (c.d > 0) this.cobrar(p, c.d);
-    else if (c.d < 0) await this.multa(p, -c.d);
-    else if (c.ir !== undefined) { await this.avanzar(p, (c.ir - p.pos + 40) % 40); await this.caer(p, 0); }
-    else if (c.atras) { p.pos = (p.pos + 40 - c.atras) % 40; await this.h.paso(p); await this.caer(p, 0); }
-    else if (c.cuarentena) await this.aCuarentena(p);
-    else if (c.libre) p.pases.push(mazo);
-    else if (c.aero) {
-      let n = 1; while (this.c[(p.pos + n) % 40].tipo !== 'aero') n++;
-      await this.avanzar(p, n); const s = this.c[p.pos]; this.log(`${this.n(p)} llega a <b>${esc(s.nombre)}</b>.`); await this.caerDestino(p, s, 0, true);
-    } else if (c.obras) {
-      const [po, ps] = c.obras, mias = this.propias(this.idx(p)), t = mias.reduce((a, s) => a + (s.nivel === 5 ? ps + 4 * po : s.nivel * po), 0);
-      if (t) { this.log(`${this.n(p)} paga ${t}M en reformas.`, 'neg'); await this.multa(p, t); } else this.log(`${this.n(p)} no tiene hoteles: no paga nada.`);
-    } else if (c.todos) for (const q of this.jug) { if (q === p || q.fuera || p.fuera || this.terminada) continue; if (c.todos > 0) await this.pagar(q, c.todos, p); else await this.pagar(p, -c.todos, q); }
-  }
+function mover(S, ev, j, d) {
+  const p = S.jug[j], de = p.pos, cam = [de]; let pos = de, cruzoAyto = false, cobro = 0;
+  const salario = !(S.inicial >= 3 && vivos(S) <= 2);
+  const paso = () => {
+    if (pos === LINEA_BANCO && salario) cobro += SALARIO;
+    if (pos === LINEA_AYTO) cruzoAyto = true;
+    pos = (pos + 1) % N; cam.push(pos);
+  };
+  for (let k = 0; k < d; k++) paso();
+  while (pos !== 0 && S.jug.some((q, i) => i !== j && q.vivo && q.pos === pos)) paso();
+  p.pos = pos;
+  ev.push({ t: 'mover', j, de, a: pos, camino: cam });
+  if (cobro) { p.dinero += cobro; ev.push({ t: 'cobra', j, cant: cobro }); lg(S, `${p.nombre} pasa por el Banco y cobra ${eur(cobro)}.`); }
+  S.pasos = [];
+  if (cruzoAyto) { S.pasos.push('ayto'); lg(S, `${p.nombre} pasa por el Ayuntamiento.`); }
+  S.pasos.push('estancia', 'casilla');
 }
 
-// ---------- validación de una partida guardada ----------
-export function validar(d) {
-  const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
-  if (!d || typeof d !== 'object' || d.v !== 1 || !Array.isArray(d.jug) || d.jug.length < 2 || d.jug.length > 4) return null;
-  const n = d.jug.length, r = d.reglas || {};
-  const reglas = { bote: !!r.bote, subasta: !!r.subasta, dinero: ent(r.dinero, 500, 5000) ? r.dinero : REGLAS.dinero, rondas: ent(r.rondas, 0, 500) ? r.rondas : 0, cpu: ent(r.cpu, 0, 2) ? r.cpu : 1 };
-  const jug = d.jug.map(p => p && typeof p === 'object' && typeof p.nombre === 'string' && typeof p.ficha === 'string' && /^#[0-9a-f]{6}$/i.test(p.color)
-    && ent(p.dinero, 0, 1e7) && ent(p.pos, 0, 39) && ent(p.intentos, 0, 3) && Array.isArray(p.pases) && p.pases.length <= 2 && p.pases.every(m => Object.hasOwn(MAZOS, m))
-    ? { nombre: p.nombre.slice(0, 14), ficha: p.ficha.slice(0, 16), color: p.color, bot: !!p.bot, dinero: p.dinero, pos: p.pos, espera: !!p.espera, intentos: p.intentos, pases: p.pases.slice(), fuera: !!p.fuera } : null);
-  if (jug.includes(null) || !Array.isArray(d.c) || d.c.length !== 40) return null;
-  const c = d.c.map((x, i) => {
-    if (!Array.isArray(x) || x.length !== 3) return null;
-    const [dueno, nivel, hip] = x, s = CASILLAS[i];
-    if (!COMPRABLE.includes(s.tipo)) return dueno === null && nivel === 0 && !hip ? x : null;
-    if (!(dueno === null || ent(dueno, 0, n - 1)) || !ent(nivel, 0, s.tipo === 'destino' ? MAX_NIVEL : 0) || (dueno === null && (nivel || hip)) || (hip && nivel)) return null;
-    return [dueno, nivel, !!hip];
-  });
-  if (c.includes(null)) return null;
-  const mazo = (l, m) => Array.isArray(l) && l.every(k => ent(k, 0, MAZOS[m].length - 1)) && new Set(l).size === l.length ? l.slice() : null;
-  const mazos = { suerte: mazo(d.mazos && d.mazos.suerte, 'suerte'), imprevisto: mazo(d.mazos && d.mazos.imprevisto, 'imprevisto') };
-  if (!mazos.suerte || !mazos.imprevisto) return null;
-  for (const m of Object.keys(MAZOS)) if (mazos[m].length + jug.reduce((t, p) => t + p.pases.filter(x => x === m).length, 0) !== MAZOS[m].length) return null;
-  if (!ent(d.turno, 0, n - 1) || jug[d.turno].fuera && !d.terminada || !ent(d.ronda, 1, 1e5) || !ent(d.bote, 0, 1e7)) return null;
-  if (jug.filter(p => !p.fuera).length < 1) return null;
-  return { v: 1, jug, c, reglas, mazos, turno: d.turno, ronda: d.ronda, terminada: !!d.terminada, ganador: ent(d.ganador, -1, n - 1) ? d.ganador : -1,
-    motivo: typeof d.motivo === 'string' ? d.motivo.slice(0, 120) : '', bote: d.bote };
+// ---------- decisiones ----------
+const err = msg => ({ ok: false, msg });
+function empezarSub(S, ev, h) {
+  const vend = S.deuda.j, pend = [];
+  for (let k = 1; k < S.n; k++) { const q = (vend + k) % S.n; if (S.jug[q].vivo && S.jug[q].dinero >= PRECIO_MIN_PUJA) pend.push(q); }
+  S.sub = { h, vend, pend, cur: 0, mejor: null };
+  ev.push({ t: 'subasta', h, vend }); lg(S, `Subasta de ${HOTELES[h].nombre} (de ${S.jug[vend].nombre}).`);
+  S.fase = 'subasta'; avanzarSub(S, ev);
+}
+function avanzarSub(S, ev) {
+  const B = S.sub;
+  for (;;) {
+    if (!B.pend.length) return cerrarSub(S, ev);
+    if (B.mejor && B.pend.length === 1 && B.pend[0] === B.mejor.j) return cerrarSub(S, ev);
+    B.cur %= B.pend.length;
+    const q = B.pend[B.cur];
+    if (B.mejor && q === B.mejor.j) { B.cur = (B.cur + 1) % B.pend.length; continue; }
+    const min = B.mejor ? B.mejor.cant + PRECIO_MIN_PUJA : PRECIO_MIN_PUJA;
+    if (S.jug[q].dinero < min) { B.pend.splice(B.cur, 1); continue; }
+    return;
+  }
+}
+function cerrarSub(S, ev) {
+  const B = S.sub, H = S.hot[B.h]; S.sub = null;
+  if (B.mejor) {
+    const b = S.jug[B.mejor.j], v = S.jug[B.vend];
+    b.dinero -= B.mejor.cant; v.dinero += B.mejor.cant; H.dueno = B.mejor.j; H.desde = b.turnos;
+    ev.push({ t: 'vendido', h: B.h, a: B.mejor.j, de: B.vend, cant: B.mejor.cant });
+    lg(S, `${HOTELES[B.h].nombre} se adjudica a ${b.nombre} por ${eur(B.mejor.cant)}.`);
+  } else {
+    demoler(S, B.h); ev.push({ t: 'demolido', h: B.h });
+    lg(S, `Nadie puja: ${HOTELES[B.h].nombre} se derriba y queda libre.`);
+  }
+  S.fase = 'deuda'; seguir(S, ev, liquidar(S, ev));
+}
+
+export function decidir(S, d) {
+  const ev = [], f = S.fase;
+  if (f === 'fin') return err('La partida ha terminado.');
+  const j = actor(S), p = S.jug[j], L = legales(S);
+  switch (d.t) {
+    case 'tirar': {
+      if (f !== 'tirar') return err('Ahora no toca tirar.');
+      const v = d6(S); S.dado = v; ev.push({ t: 'dado', j, v }); lg(S, `${p.nombre} saca un ${v}.`);
+      if (v === 6) S.seis = true;
+      mover(S, ev, j, v); avanzar(S, ev); break;
+    }
+    case 'instalacion': {
+      if (f !== 'tirar') return err('Las instalaciones se compran antes de tirar.');
+      const o = L.inst.find(x => x.h === d.h); if (!o) return err('No puedes construir esa instalación.');
+      p.dinero -= o.coste; S.hot[d.h].inst = true; ev.push({ t: 'inst', j, h: d.h, coste: o.coste });
+      lg(S, `${p.nombre} construye la instalación de ocio de ${HOTELES[d.h].nombre} (${eur(o.coste)}).`); break;
+    }
+    case 'entrada': {
+      if (f !== 'ayto' && f !== 'entLibre') return err('Ahora no puedes poner entradas.');
+      const o = L.entradas.find(x => x.h === d.h && x.sq === d.sq); if (!o) return err('Entrada no permitida ahí.');
+      p.dinero -= o.precio; S.hot[d.h].ents.push(o.sq); S.entDe[o.sq] = d.h;
+      if (f === 'ayto') S.ayto[d.h] = true;
+      ev.push({ t: 'entrada', j, h: d.h, sq: o.sq, precio: o.precio });
+      lg(S, `${p.nombre} abre una entrada de ${HOTELES[d.h].nombre}${o.precio ? ' por ' + eur(o.precio) : ' gratis'}.`);
+      if (f === 'entLibre' || !opcionesEntrada(S, j, false).length) avanzar(S, ev);
+      break;
+    }
+    case 'saltar': {
+      if (!['ayto', 'compra', 'obras', 'entLibre', 'faseLibre'].includes(f)) return err('No hay nada que saltar.');
+      avanzar(S, ev); break;
+    }
+    case 'comprar': {
+      if (f !== 'compra') return err('Ahora no puedes comprar.');
+      const o = L.lotes.find(x => x.h === d.h); if (!o) return err('No puedes comprar ese terreno.');
+      p.dinero -= o.precio; if (o.forzosa) S.jug[o.a].dinero += o.precio;
+      S.hot[d.h].dueno = j; S.hot[d.h].desde = p.turnos; S.compro = true;
+      ev.push({ t: 'compra', j, h: d.h, precio: o.precio, forzosa: o.forzosa, de: o.a });
+      lg(S, o.forzosa ? `${p.nombre} compra obligatoriamente el terreno de ${HOTELES[d.h].nombre} a ${S.jug[o.a].nombre} por ${eur(o.precio)}.` : `${p.nombre} compra el terreno de ${HOTELES[d.h].nombre} por ${eur(o.precio)}.`);
+      avanzar(S, ev); break;
+    }
+    case 'obras': {
+      if (f !== 'obras') return err('Ahora no puedes pedir permiso de obras.');
+      const coste = costePlan(S, j, d.plan); if (coste < 0) return err('Plan de obras no válido.');
+      if (coste > p.dinero) return err('No tienes dinero para ese plan.');
+      const cara = DADO_PERMISO[Math.floor(rnd(S) * 6)]; ev.push({ t: 'permiso', j, cara });
+      if (cara === 'rojo') { lg(S, `Permiso DENEGADO a ${p.nombre}.`); avanzar(S, ev); break; }
+      const pagoCoste = cara === 'H' ? 0 : cara === 'x2' ? coste * 2 : coste;
+      for (const h of d.plan) { S.hot[h].etapa++; ev.push({ t: 'obra', j, h, etapa: S.hot[h].etapa }); }
+      lg(S, `Permiso ${cara === 'H' ? 'GRATIS (H)' : cara === 'x2' ? 'a DOBLE precio' : 'concedido'}: ${p.nombre} construye ${d.plan.map(h => HOTELES[h].nombre).join(', ')} (${eur(pagoCoste)}).`);
+      seguir(S, ev, pagar(S, ev, j, pagoCoste, -1, 'obras')); break;
+    }
+    case 'fase': {
+      if (f !== 'faseLibre') return err('Ahora no hay fase libre.');
+      if (!L.obras.find(x => x.h === d.h)) return err('No puedes construir ahí.');
+      S.hot[d.h].etapa++; ev.push({ t: 'obra', j, h: d.h, etapa: S.hot[d.h].etapa });
+      lg(S, `${p.nombre} construye gratis una fase de ${HOTELES[d.h].nombre}.`); avanzar(S, ev); break;
+    }
+    case 'vender': {
+      if (f !== 'deuda') return err('No estás en deuda.');
+      if (!L.vender.includes(d.h)) return err('Ese hotel no es tuyo.');
+      empezarSub(S, ev, d.h); break;
+    }
+    case 'pujar': {
+      if (f !== 'subasta') return err('No hay subasta.');
+      const cant = Math.round(d.cant); if (!(cant >= L.min) || cant > L.max) return err('Puja no válida.');
+      const B = S.sub; B.mejor = { j, cant }; B.cur = (B.cur + 1) % B.pend.length;
+      ev.push({ t: 'puja', j, cant }); lg(S, `${p.nombre} puja ${eur(cant)}.`); avanzarSub(S, ev); break;
+    }
+    case 'retirar': {
+      if (f !== 'subasta') return err('No hay subasta.');
+      const B = S.sub; B.pend.splice(B.cur, 1); lg(S, `${p.nombre} se retira de la subasta.`); avanzarSub(S, ev); break;
+    }
+    default: return err('Decisión desconocida.');
+  }
+  return { ok: true, ev };
+}
+
+// ---------- CPU ----------
+const RESERVA = [0, 300, 1000, 1600];
+export function puntuaEntrada(S, j, sq) {
+  let s = 0;
+  for (let i = 0; i < S.n; i++) { if (i === j || !S.jug[i].vivo) continue; const dist = (sq - S.jug[i].pos + N) % N; if (dist >= 1 && dist <= 6) s += 1; else if (dist <= 12) s += 0.3; }
+  return s;
+}
+export function cpuDecide(S) {
+  const f = S.fase, j = actor(S), p = S.jug[j], L = legales(S), niv = p.nivel || 2, res = RESERVA[niv];
+  if (f === 'tirar') {
+    const o = L.inst.filter(x => p.dinero - x.coste >= res).sort((a, b) => tarifa(b.h, 1, true) / b.coste - tarifa(a.h, 1, true) / a.coste)[0];
+    return o ? { t: 'instalacion', h: o.h } : { t: 'tirar' };
+  }
+  if (f === 'ayto' || f === 'entLibre') {
+    const ops = L.entradas.filter(o => p.dinero - o.precio >= (f === 'entLibre' ? -1 : res * 0.6));
+    if (!ops.length) return { t: 'saltar' };
+    ops.sort((a, b) => (tarifaDe(S, b.h) - tarifaDe(S, a.h)) || (puntuaEntrada(S, j, b.sq) - puntuaEntrada(S, j, a.sq)));
+    const mejorH = ops[0].h, de = ops.filter(o => o.h === mejorH).sort((a, b) => puntuaEntrada(S, j, b.sq) - puntuaEntrada(S, j, a.sq))[0];
+    if (f === 'ayto' && niv === 1 && S.hot[de.h].ents.length >= 2) return { t: 'saltar' };
+    return { t: 'entrada', h: de.h, sq: de.sq };
+  }
+  if (f === 'compra') {
+    const ops = L.lotes.filter(o => p.dinero - o.precio >= res * 0.7);
+    if (!ops.length) return { t: 'saltar' };
+    const val = o => { const D = HOTELES[o.h]; const total = D.tierra + D.edif.reduce((a, e) => a + e.c, 0) + D.inst.c; return (D.inst.r / total) * (o.forzosa ? 1.4 : 1) + (S.hot[o.h].dueno >= 0 ? 0.02 : 0); };
+    ops.sort((a, b) => val(b) - val(a)); return { t: 'comprar', h: ops[0].h };
+  }
+  if (f === 'obras' || f === 'faseLibre') {
+    const ops = L.obras;
+    if (f === 'faseLibre') {
+      if (!ops.length) return { t: 'saltar' };
+      ops.sort((a, b) => HOTELES[b.h].edif[b.etapa].c - HOTELES[a.h].edif[a.etapa].c); return { t: 'fase', h: ops[0].h };
+    }
+    const sc = ops.map(o => ({ ...o, g: (HOTELES[o.h].edif[o.etapa].r - (o.etapa ? HOTELES[o.h].edif[o.etapa - 1].r : 0)) / o.coste + (o.etapa === 0 ? 0.0004 : 0) })).sort((a, b) => b.g - a.g);
+    const plan = []; let tot = 0; const cnt = {};
+    for (const o of sc) {
+      const h = o.h; let e = S.hot[h].etapa;
+      while (e + (cnt[h] || 0) < nEdif(h)) {
+        const c = HOTELES[h].edif[e + (cnt[h] || 0)].c;
+        if (p.dinero - (tot + c) * 2 >= res * 0.5 && (plan.length === 0 || niv >= 3)) { plan.push(h); cnt[h] = (cnt[h] || 0) + 1; tot += c; } else break;
+        if (niv < 3) break;
+      }
+      if (plan.length && niv < 3) break;
+    }
+    if (!plan.length) { const m = sc.find(o => o.coste <= p.dinero - res * 0.3 && niv === 1); if (m) return { t: 'obras', plan: [m.h] }; return { t: 'saltar' }; }
+    return { t: 'obras', plan };
+  }
+  if (f === 'deuda') {
+    const mine = L.vender.slice().sort((a, b) => invertido(S, a) - invertido(S, b));
+    const need = S.deuda.cant; const ok = mine.find(h => invertido(S, h) * 0.8 >= need);
+    return { t: 'vender', h: ok || mine[mine.length - 1] };
+  }
+  if (f === 'subasta') {
+    const h = S.sub.h, f2 = [0, 0.7, 0.9, 1.05][niv];
+    const valor = (invertido(S, h) || HOTELES[h].tierra) * f2 * (S.hot[h].etapa ? 0.75 : 0.9);
+    const paso = Math.max(100, Math.round((valor * 0.08) / 50) * 50);
+    const sig = Math.max(L.min, (S.sub.mejor ? S.sub.mejor.cant : 0) + paso);
+    if (sig <= valor && sig <= p.dinero - res * 0.2) return { t: 'pujar', cant: sig };
+    return { t: 'retirar' };
+  }
+  return { t: 'saltar' };
+}
+
+// ---------- persistencia ----------
+export function validar(S) {
+  return !!S && S.v === 2 && Array.isArray(S.jug) && S.jug.length >= 2 && S.hot && Array.isArray(S.entDe) && S.entDe.length === N
+    && IDS_HOTEL.every(h => S.hot[h] && Array.isArray(S.hot[h].ents));
+}
+export const migrarV1 = () => null;
+export function resumen(S) {
+  if (!validar(S)) return '';
+  if (S.fase === 'fin') return `Terminada · gana ${S.jug[S.ganador].nombre}`;
+  return `Ronda ${S.ronda} · ${vivos(S)} jugadores`;
 }

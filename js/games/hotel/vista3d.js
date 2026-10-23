@@ -1,387 +1,235 @@
-// Hotel · vista 3D del tablero con Three.js (js/vendor/three.module.min.js, cargado solo al abrir este juego).
-// No conoce las reglas: recibe el estado de la partida (`actualizar`) y anima fichas, dados y pisos.
-import * as T from '../../vendor/three.module.min.js';
-import { GRUPOS } from './datos.js';
+// Vista 3D de Hotel (Three.js): camino con casillas, terrenos con hoteles de 8 estilos, entradas, coches, dados, Banco y Ayuntamiento.
+//   const V = await crearHotel3D(contenedor)
+//   V.pintar(S) · V.mover(j, camino, ms) · V.dado(v, ms) · V.resaltar({ casillas:[], lotes:[] }) · V.alTocar = ({tipo:'casilla'|'lote', id}) => … · V.recolor() · V.camara(modo) · V.destruir()
+import { T, crearEscena, lienzo, textura, emojiTextura, EMOJI_FUENTE } from '../../core/escena3d.js';
+import { MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
 
-// ---------- geometría del tablero: 11×11 casillas, esquinas de 1,5 y 9 casillas de 1 por lado ----------
-const CE = 1.5, MITAD = 6;                       // tamaño de esquina y semilado del tablero (12 en total)
-const centro = k => (k === 1 ? -5.25 : k === 11 ? 5.25 : k - 6);
-const celda = i => (i <= 10 ? [11, 11 - i] : i < 20 ? [21 - i, 1] : i <= 30 ? [1, i - 19] : [i - 29, 11]);   // [fila, columna] como en Magnate
-const lado = i => (i % 10 === 0 ? 'esq' : i < 10 ? 'ab' : i < 20 ? 'iz' : i < 30 ? 'ar' : 'de');
-const ANG = { ab: 0, iz: -Math.PI / 2, ar: Math.PI, de: Math.PI / 2, esq: 0 };
-export function posCasilla(i) { const [f, c] = celda(i); return { x: centro(c), z: centro(f), lado: lado(i), ang: ANG[lado(i)] }; }
+const W = MAPA.W, H = MAPA.H, cx = c => c - W / 2, cz = r => r - H / 2;
+const centro = ([r0, c0, r1, c1]) => ({ x: cx((c0 + c1 + 1) / 2), z: cz((r0 + r1 + 1) / 2), w: c1 - c0 + 1, d: r1 - r0 + 1 });
+const TILE = { C: ['#F7E8B8', '🏷️'], O: ['#BFD9F6', '📋'], E: ['#BFE8C8', '🚪'], F: ['#FAD0A2', '🏗️'], N: ['#DADCE2', ''], P: ['#3B6FD8', '🅿️'] };
+const tono = (hex, f) => { const c = new T.Color(hex); return f >= 0 ? c.lerp(new T.Color('#ffffff'), f) : c.multiplyScalar(1 + f); };
 
-// Estilos de hotel (🎨 Apariencia): colores de muro, cristal y tejado, y forma de la cubierta
-export const ESTILOS = {
-  moderno: { nombre: '🏙️ Moderno', muro: '#EAF2FF', vidrio: '#4C9BFF', techo: '#A9BBDD', cubierta: 'plano' },
-  clasico: { nombre: '🏛️ Clásico', muro: '#F3E3C3', vidrio: '#8B5E3C', techo: '#B5523B', cubierta: 'tejado' },
-  resort: { nombre: '🌴 Resort', muro: '#FFFFFF', vidrio: '#2BC4D6', techo: '#F4B942', cubierta: 'tejado' },
-  rascacielos: { nombre: '🌃 Rascacielos', muro: '#39426B', vidrio: '#FFE27A', techo: '#6B77B0', cubierta: 'escalonado' },
-};
-const NIV_ALTO = .26;                              // alto de cada piso
+export async function crearHotel3D(cont) {
+  const E = crearEscena(cont, { fov: 34, az: 0, pol: .86, polMin: .2, polMax: 1.3, radio: 8.6, margen: 0.6, distMin: 7, distMax: 40, sombraRadio: 13, sombraTam: 2048, sol: { pos: [-7, 15, 10], int: 2.3 }, hemi: { int: 1.8 }, sueloY: -.3,
+    etiqueta: 'Tablero de Hotel en 3D: arrastra para girar la vista' });
+  const V = { E, alTocar: null }, S3 = E.escena;
+  const mats = new Map();
+  const mat = (color, o = {}) => { const k = color + JSON.stringify(o); let m = mats.get(k); if (!m) { m = new T.MeshStandardMaterial({ color, roughness: .62, ...o }); mats.set(k, m); } return m; };
+  const caja = (w, h, d, m, x, y, z, sombra = true) => { const o = new T.Mesh(new T.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = sombra; o.receiveShadow = true; return o; };
+  const etiqueta = (txt, bg, fg = '#fff', w = 1.7) => {
+    const c = lienzo(256, 64), x = c.getContext('2d'); x.fillStyle = bg; x.beginPath(); x.roundRect(4, 6, 248, 52, 18); x.fill(); x.lineWidth = 4; x.strokeStyle = 'rgba(255,255,255,.85)'; x.stroke();
+    x.fillStyle = fg; x.font = '800 30px Nunito, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(txt, 128, 34);
+    const s = new T.Sprite(new T.SpriteMaterial({ map: textura(c), transparent: true, depthTest: false })); s.scale.set(w, w / 4, 1); s.renderOrder = 20; return s;
+  };
 
-const lienzo = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
-const textura = (c, aniso = 4) => { const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = aniso; return t; };
-const suave = t => (t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  // ----- base del tablero -----
+  const marco = new T.Mesh(new T.BoxGeometry(W + 1.3, .34, H + 1.3), new T.MeshStandardMaterial({ color: '#8A5A3B', roughness: .7 })); marco.position.y = -.18; marco.receiveShadow = true; S3.add(marco);
+  const hierba = new T.Mesh(new T.BoxGeometry(W, .06, H), new T.MeshStandardMaterial({ color: '#8CCB6A', roughness: .9 })); hierba.position.y = -.03; hierba.receiveShadow = true; S3.add(hierba);
+  const ocupado = new Set(CAMINO.map(([r, c]) => r + ',' + c));
+  const marca = ([r0, c0, r1, c1]) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) ocupado.add(r + ',' + c); };
+  for (const id of IDS_HOTEL) TERRENOS[id].forEach(([r, c]) => ocupado.add(r + ',' + c));
+  marca([BANCO.f0, BANCO.c0, BANCO.f1, BANCO.c1]); marca([AYUNTAMIENTO.f0, AYUNTAMIENTO.c0, AYUNTAMIENTO.f1, AYUNTAMIENTO.c1]); marca([LAGO.f0, LAGO.c0, LAGO.f1, LAGO.c1]);
 
-// Ajusta el texto a un ancho máximo (parte en dos líneas si hace falta)
-function textoAjustado(x, txt, cx, cy, ancho, tam, peso = 800, fam = 'Nunito, system-ui, sans-serif', interl = 1.02) {
-  const cabe = (ls, t) => { x.font = `${peso} ${t}px ${fam}`; return ls.every(l => x.measureText(l).width <= ancho); };
-  let t1 = tam; while (t1 > 10 && !cabe([txt], t1)) t1--;
-  let lineas = [txt], t = t1;
-  const pal = txt.split(' ');
-  if (pal.length > 1 && t1 < tam * .8) {
-    const m = Math.ceil(pal.length / 2), dos = [pal.slice(0, m).join(' '), pal.slice(m).join(' ')];
-    let t2 = tam; while (t2 > 10 && !cabe(dos, t2)) t2--;
-    if (t2 > t1 * 1.2) { lineas = dos; t = t2; }
-  }
-  x.font = `${peso} ${t}px ${fam}`;
-  const h = t * interl, y0 = cy - (lineas.length - 1) * h / 2;
-  lineas.forEach((l, k) => x.fillText(l, cx, y0 + k * h));
-  return t;
-}
+  // ----- casillas del camino -----
+  const tocables = E.tocables, tiles = [], texTile = {};
+  const tilTex = t => {
+    if (texTile[t]) return texTile[t]; const [bg, em] = TILE[t], c = lienzo(128, 128), x = c.getContext('2d');
+    x.fillStyle = bg; x.fillRect(0, 0, 128, 128); x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 6; x.strokeRect(3, 3, 122, 122);
+    if (t === 'P') { x.fillStyle = '#fff'; x.font = '800 78px Nunito, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('P', 64, 70); }
+    else if (em) { x.font = `70px ${EMOJI_FUENTE}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(em, 64, 72); }
+    return (texTile[t] = textura(c));
+  };
+  const asfalto = mat('#5E6370');
+  CAMINO.forEach(([r, c]) => { const b = caja(1.04, .06, 1.04, mat('#3F4450'), cx(c + .5), .03, cz(r + .5), false); b.receiveShadow = true; S3.add(b); });
+  CAMINO.forEach(([r, c], i) => {
+    const t = TIPO[i], top = new T.MeshStandardMaterial({ map: tilTex(t), roughness: .5 });
+    const m = new T.Mesh(new T.BoxGeometry(.95, .1, .95), [asfalto, asfalto, top, asfalto, asfalto, asfalto]); m.position.set(cx(c + .5), .05, cz(r + .5)); m.receiveShadow = true;
+    m.userData.sq = i; S3.add(m); tocables.push(m); tiles.push(m);
+  });
+  const centroCasilla = i => ({ x: cx(CAMINO[i][1] + .5), z: cz(CAMINO[i][0] + .5) });
 
-export async function crearVista(cont, opciones = {}) {
-  const V = { estilo: opciones.estilo || 'moderno', pj: opciones.pj || {} };
-  // ---------- renderer, escena y cámara ----------
-  const renderer = new T.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'default' });
-  renderer.setClearColor(0x000000, 0);
-  renderer.outputColorSpace = T.SRGBColorSpace;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
-  const cv = renderer.domElement; cv.className = 'htcv'; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', 'Tablero de Hotel en 3D: arrastra para girar, pellizca para acercar, toca una casilla para ver su ficha');
-  cont.append(cv);
-  const escena = new T.Scene();
-  const cam = new T.PerspectiveCamera(38, 1, .1, 120);
-  const hemi = new T.HemisphereLight(0xffffff, 0x8a93b8, 1.9); escena.add(hemi);
-  const sol = new T.DirectionalLight(0xffffff, 2.2); sol.position.set(-5, 11, 7); sol.castShadow = true;
-  sol.shadow.mapSize.set(1536, 1536); Object.assign(sol.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 30 }); sol.shadow.bias = -.0004; sol.shadow.normalBias = .02;
-  escena.add(sol);
-
-  // cámara orbital propia: az (giro), pol (inclinación desde la vertical), dist
-  const CAM0 = { az: 0, pol: .88, dist: 17 };
-  const C = { ...CAM0, objAz: 0, objPol: .88, objDist: 17, tx: 0, tz: 0 };
-  let sucio = true, vivo = true, raf = 0, w = 0, h = 0;
-  const marcar = () => { sucio = true; };
-  const distBase = () => Math.min(26, Math.max(11, 6.6 / (Math.tan(cam.fov * Math.PI / 360) * Math.min(1, cam.aspect)) + 2.2));
-  function colocarCam() {
-    const sp = Math.sin(C.pol), x = C.tx + C.dist * sp * Math.sin(C.az), z = C.tz + C.dist * sp * Math.cos(C.az), y = C.dist * Math.cos(C.pol);
-    cam.position.set(x, y, z); cam.lookAt(C.tx, 0, C.tz);
-  }
-  function redimensionar() {
-    const r = cont.getBoundingClientRect(); const nw = Math.max(120, Math.round(r.width)), nh = Math.max(120, Math.round(r.height));
-    if (nw === w && nh === h) return; w = nw; h = nh;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(w, h, false);
-    cam.aspect = w / h; cam.updateProjectionMatrix();
-    const d0 = distBase(); const rel = C.objDist / (C.base || d0); C.base = d0; C.objDist = C.dist = Math.min(30, Math.max(8, d0 * rel)); colocarCam(); marcar();
+  // ----- terrenos -----
+  const placas = {}, grupos = {}, estado = {};
+  for (const id of IDS_HOTEL) {
+    const D = HOTELES[id]; placas[id] = [];
+    for (const [r, c] of TERRENOS[id]) {
+      const m = caja(1, .08, 1, new T.MeshStandardMaterial({ color: tono(D.color, .5), roughness: .8 }), cx(c + .5), .04, cz(r + .5), false); m.userData.lote = id; S3.add(m); tocables.push(m); placas[id].push(m);
+    }
+    const g = new T.Group(); g.userData.lote = id; S3.add(g); grupos[id] = g; tocables.push(g);
+    const a = centro([Math.min(...TERRENOS[id].map(t => t[0])), Math.min(...TERRENOS[id].map(t => t[1])), Math.max(...TERRENOS[id].map(t => t[0])), Math.max(...TERRENOS[id].map(t => t[1]))]);
+    const e = etiqueta(D.nombre, D.color, '#fff', 1.5); e.position.set(a.x, 1.7, a.z); e.userData.lote = id; S3.add(e); estado[id] = { stages: [], etiq: e, sig: '', bandera: null, ox: a.x, oz: a.z };
   }
 
-  // ---------- tema (colores del tablero tomados del CSS) ----------
-  const tema = {};
-  function leerTema() {
-    const cs = getComputedStyle(cont);
-    for (const k of ['line', 'cell', 'alt', 'acc', 'ink', 'soft', 'hi', 'strong']) tema[k] = cs.getPropertyValue('--tb-' + k).trim() || '#888';
+  // ----- construcción de edificios -----
+  function texVent(color, nx, ny) {
+    const c = lienzo(64, 64), x = c.getContext('2d'); x.fillStyle = color; x.fillRect(0, 0, 64, 64); x.fillStyle = 'rgba(255,255,255,.78)';
+    for (let i = 0; i < 2; i++) x.fillRect(8 + i * 30, 14, 20, 30); x.fillStyle = 'rgba(0,0,0,.14)'; x.fillRect(0, 54, 64, 10);
+    const t = textura(c, 2); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(nx, ny); return t;
   }
-  leerTema();
+  const cuerpo = (w, h, d, color, x = 0, y = 0, z = 0) => {
+    const lado = new T.MeshStandardMaterial({ map: texVent(color, Math.max(1, Math.round(w * 1.6)), Math.max(1, Math.round(h * 2.2))), roughness: .6 });
+    const lado2 = new T.MeshStandardMaterial({ map: texVent(color, Math.max(1, Math.round(d * 1.6)), Math.max(1, Math.round(h * 2.2))), roughness: .6 });
+    const top = mat(tono(color, -.18));
+    const m = new T.Mesh(new T.BoxGeometry(w, h, d), [lado2, lado2, top, top, lado, lado]); m.position.set(x, y + h / 2, z); m.castShadow = m.receiveShadow = true; return m;
+  };
+  const cono = (r, h, seg, color, y, rot = Math.PI / 4, sx = 1, sz = 1) => { const m = new T.Mesh(new T.ConeGeometry(r, h, seg), mat(color)); m.position.y = y + h / 2; m.rotation.y = rot; m.scale.set(sx, 1, sz); m.castShadow = true; return m; };
+  const palmera = (x, z, s = 1) => {
+    const g = new T.Group(); const tr = new T.Mesh(new T.CylinderGeometry(.03 * s, .045 * s, .5 * s, 6), mat('#8B5E34')); tr.position.y = .25 * s; tr.castShadow = true; g.add(tr);
+    for (let i = 0; i < 5; i++) { const h = new T.Mesh(new T.ConeGeometry(.12 * s, .34 * s, 4), mat('#2E9D4B')); h.position.set(Math.cos(i * 1.26) * .13 * s, .52 * s, Math.sin(i * 1.26) * .13 * s); h.rotation.set(Math.sin(i * 1.26) * 1.3, 0, -Math.cos(i * 1.26) * 1.3); h.castShadow = true; g.add(h); }
+    g.position.set(x, 0, z); return g;
+  };
+  function piscina(w, d) {
+    const g = new T.Group(); g.add(caja(w, .1, d, mat('#F4F4F4'), 0, .05, 0)); g.add(caja(w - .16, .11, d - .16, new T.MeshStandardMaterial({ color: '#3EC1EA', roughness: .15, metalness: .1 }), 0, .06, 0, false));
+    if (w > .8) { const p = new T.Mesh(new T.CylinderGeometry(.02, .02, .55, 6), mat('#999')); p.position.set(w / 2 - .12, .3, d / 2 - .12); g.add(p); g.add(cono(.2, .1, 10, '#E4573D', .55, 0)); g.children[g.children.length - 1].position.set(w / 2 - .12, .6, d / 2 - .12); }
+    g.add(palmera(-w / 2 + .14, -d / 2 + .14, .8)); return g;
+  }
+  function edificio(id, k) {
+    const D = HOTELES[id], n = nEdif(id), ancla = centro(ANCLAS[id][k]), g = new T.Group(); g.position.set(ancla.x, .08, ancla.z);
+    const w = Math.max(.45, ancla.w - .22), d = Math.max(.45, ancla.d - .22), col = D.color, main = k === 0, fac = k === n;
+    if (fac) { g.add(piscina(w, d)); return g; }
+    const alto = main ? 1 : .72, f = D.estilo;
+    if (f === 'pagoda') { const tiers = main ? 3 : 2; let y = 0; for (let i = 0; i < tiers; i++) { const s = 1 - i * .2; g.add(cuerpo(w * s * .92, .38, d * s * .92, col, 0, y, 0)); const ro = cono(Math.max(w, d) * s * .78, .24, 4, '#8C2B2B', y + .38); ro.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d)); g.add(ro); y += .5; } g.add(cono(.05, .3, 6, '#F2B600', y - .02)); }
+    else if (f === 'boomerang') { const L = Math.max(w, d) * .62; for (const s of [-1, 1]) { const b = cuerpo(L, 1.05, .46, '#1FA2A6', 0, 0, 0); b.position.set(Math.cos(.5) * L * .45 * s, .525, Math.sin(.5) * L * .45 * s * -1 * (d > w ? 1 : 1)); b.rotation.y = s * .5; g.add(b); } g.add(caja(.5, 1.05, .5, mat(tono(col, -.1)), 0, .525, 0)); g.add(cono(.18, .25, 10, '#F2B600', 1.05, 0)); }
+    else if (f === 'clasico') { g.add(cuerpo(w, alto + .1, d, col)); const r = cono(Math.max(w, d) * .74, .36, 4, '#44474F', alto + .1); r.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d)); g.add(r); }
+    else if (f === 'torre') { const h = main ? 2.1 : 1.1 + k * .18; g.add(cuerpo(w, h, d, '#4C86D6')); g.add(caja(w * .6, .14, d * .6, mat('#2A4F8F'), 0, h + .07, 0)); if (main) { const an = new T.Mesh(new T.CylinderGeometry(.02, .02, .5, 5), mat('#ddd')); an.position.y = h + .38; g.add(an); } }
+    else if (f === 'hexagono') { const r = Math.min(w, d) * .5, h = main ? 1.35 : .85; const cy = new T.Mesh(new T.CylinderGeometry(r, r, h, 6), new T.MeshStandardMaterial({ map: texVent(col, 6, Math.round(h * 2.2)), roughness: .55 })); cy.position.y = h / 2; cy.castShadow = true; g.add(cy); g.add(cono(r * 1.1, .38, 6, '#E0B84A', h, 0)); }
+    else if (f === 'playa') { g.add(cuerpo(w, .5, d, col)); g.add(cuerpo(w * .8, .46, d * .8, tono(col, .15).getStyle(), 0, .5, 0)); g.add(caja(w * .9, .05, d * .9, mat('#fff'), 0, .98, 0)); if (main) g.add(palmera(w / 2 - .1, d / 2 - .1, .9)); }
+    else if (f === 'cupula') { const r = Math.min(w, d) * (main ? .42 : .22); if (main) { g.add(cuerpo(w * .9, .55, d * .9, '#F1E6C8')); const cu = new T.Mesh(new T.SphereGeometry(r, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat('#FAF3DE')); cu.position.y = .55; cu.castShadow = true; g.add(cu); g.add(cono(.04, .3, 6, '#E0B84A', .55 + r - .02)); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const m = new T.Mesh(new T.CylinderGeometry(.06, .07, .9, 8), mat('#FAF3DE')); m.position.set(sx * w * .46, .45, sz * d * .46); m.castShadow = true; g.add(m); g.add(cono(.08, .16, 8, '#E0B84A', .9)); g.children[g.children.length - 1].position.set(sx * w * .46, .98, sz * d * .46); } } else { const m = new T.Mesh(new T.CylinderGeometry(.14, .18, 1.1, 10), mat('#FAF3DE')); m.position.y = .55; m.castShadow = true; g.add(m); g.add(cono(.17, .26, 10, '#E0B84A', 1.1, 0)); } }
+    else { const r = Math.min(w, d) * .5; const cy = new T.Mesh(new T.CylinderGeometry(r * .9, r, main ? .55 : .42, 14), mat('#D9B88A')); cy.position.y = (main ? .55 : .42) / 2; cy.castShadow = true; g.add(cy); g.add(cono(r * 1.25, main ? .7 : .5, 14, '#9A6B2F', main ? .55 : .42, 0)); if (w > 1.3 && main) { const h2 = cy.clone(); h2.scale.setScalar(.7); h2.position.set(w * .26, .2, d * .12); g.add(h2); } }
+    return g;
+  }
 
-  // ---------- tablero ----------
-  const tablero = new T.Group(); escena.add(tablero);
-  const geoLosa = new T.BoxGeometry(MITAD * 2 + .5, .22, MITAD * 2 + .5);
-  const losa = new T.Mesh(geoLosa, new T.MeshLambertMaterial({ color: tema.line })); losa.position.y = -.13; losa.receiveShadow = true; tablero.add(losa);
-  const suelo = new T.Mesh(new T.PlaneGeometry(60, 60), new T.ShadowMaterial({ opacity: .28 })); suelo.rotation.x = -Math.PI / 2; suelo.position.y = -.245; suelo.receiveShadow = true; escena.add(suelo);
-  const centroMat = new T.MeshLambertMaterial({ color: tema.alt });
-  const centroMesh = new T.Mesh(new T.PlaneGeometry(9, 9), centroMat); centroMesh.rotation.x = -Math.PI / 2; centroMesh.position.y = .002; centroMesh.receiveShadow = true; tablero.add(centroMesh);
+  // ----- Banco, Ayuntamiento, lago, árboles -----
+  const edifPublico = (rect, tipo) => {
+    const a = centro(rect), g = new T.Group(); g.position.set(a.x, .06, a.z);
+    if (tipo === 'banco') {
+      g.add(cuerpo(a.w * .9, .62, a.d * .86, '#F3EBD6')); for (let i = 0; i < 5; i++) { const col = new T.Mesh(new T.CylinderGeometry(.05, .05, .6, 8), mat('#fff')); col.position.set(-a.w * .38 + i * a.w * .19, .3, a.d * .46); col.castShadow = true; g.add(col); }
+      const sh = new T.Shape(); sh.moveTo(-a.w * .5, 0); sh.lineTo(a.w * .5, 0); sh.lineTo(0, .38); sh.closePath(); const fr = new T.Mesh(new T.ExtrudeGeometry(sh, { depth: a.d * .86, bevelEnabled: false }), mat('#C9A24A')); fr.position.set(0, .62, -a.d * .43); fr.rotation.y = 0; fr.castShadow = true; g.add(fr);
+      const e = etiqueta('🏦 BANCO', '#7A5A12', '#fff', 1.5); e.position.y = 1.35; g.add(e);
+    } else {
+      g.add(cuerpo(a.w * .86, .7, a.d * .8, '#C4694B')); g.add(cono(Math.max(a.w, a.d) * .6, .3, 4, '#5A3A2F', .7).clone()); g.children[g.children.length - 1].scale.set(a.w / Math.max(a.w, a.d) * 1.1, 1, a.d / Math.max(a.w, a.d) * 1.1);
+      const to = cuerpo(.34, .95, .34, '#C4694B', a.w * .22, .7, 0); g.add(to); g.add(cono(.26, .3, 4, '#5A3A2F', 1.65).clone()); g.children[g.children.length - 1].position.x = a.w * .22;
+      const e = etiqueta('🏛️ AYUNTAMIENTO', '#3A4F8F', '#fff', 1.9); e.position.y = 2.3; g.add(e);
+    }
+    S3.add(g); return g;
+  };
+  edifPublico([BANCO.f0, BANCO.c0, BANCO.f1, BANCO.c1], 'banco'); edifPublico([AYUNTAMIENTO.f0, AYUNTAMIENTO.c0, AYUNTAMIENTO.f1, AYUNTAMIENTO.c1], 'ayto');
+  { const a = centro([LAGO.f0, LAGO.c0, LAGO.f1, LAGO.c1]); const l = new T.Mesh(new T.CylinderGeometry(.5, .5, .05, 24), new T.MeshStandardMaterial({ color: '#4DB7E8', roughness: .15, metalness: .1 })); l.scale.set(a.w * .98, 1, a.d * .98); l.position.set(a.x, .03, a.z); l.receiveShadow = true; S3.add(l); }
+  const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    if (ocupado.has(r + ',' + c)) continue; const q = hash(r, c); if (q > .62) continue;
+    const g = new T.Group(), s = .7 + hash(c, r) * .6; const tr = new T.Mesh(new T.CylinderGeometry(.05, .07, .3 * s, 6), mat('#7B5230')); tr.position.y = .15 * s; tr.castShadow = true; g.add(tr);
+    const co = new T.Mesh(new T.IcosahedronGeometry(.26 * s, 0), mat(q > .3 ? '#3FA45B' : '#58B96B')); co.position.y = .42 * s; co.castShadow = true; g.add(co);
+    g.position.set(cx(c + .5) + (hash(r + 3, c) - .5) * .4, 0, cz(r + .5) + (hash(r, c + 7) - .5) * .4); S3.add(g);
+  }
+  // líneas del Banco y del Ayuntamiento cruzando el camino
+  const linea = (i, color, emoji) => {
+    const a = centroCasilla(i), b = centroCasilla((i + 1) % N), mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2, horiz = Math.abs(b.x - a.x) > .1;
+    const m = caja(horiz ? .12 : .98, .13, horiz ? .98 : .12, mat(color, { emissive: color, emissiveIntensity: .25 }), mx, .1, mz, false); S3.add(m);
+    const s = new T.Sprite(new T.SpriteMaterial({ map: emojiTextura(emoji, 96), transparent: true, depthTest: false })); s.scale.set(.5, .5, .5); s.position.set(mx, .65, mz); s.renderOrder = 15; S3.add(s);
+  };
+  linea(LINEA_BANCO, '#F2B600', '🏦'); linea(LINEA_AYTO, '#2F9BFF', '🏛️');
 
-  const casillas = [];          // { grupo, plano, barra, base, pos, hotel, firma, ... }
-  const planos = [];            // para el raycaster
-  const geoBase = {};           // cajas por tamaño
-  function textoCasilla(s) {
-    const es = s.tipo === 'esquina', W = es ? 288 : 192, H = es ? 288 : 288, c = lienzo(W, H), x = c.getContext('2d');
-    x.fillStyle = es ? tema.alt : (s.tipo === 'destino' ? tema.cell : (s.tipo === 'impuesto' || s.tipo === 'suerte' || s.tipo === 'imprevisto') ? tema.soft : tema.cell);
-    x.fillRect(0, 0, W, H); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = tema.ink;
-    const emoji = (e, tam, y) => { x.font = `${tam}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; x.fillText(e, W / 2, y); x.fillStyle = tema.ink; };
-    if (es) { emoji(s.ico, 120, H * .42); textoAjustado(x, s.corto, W / 2, H * .82, W - 24, 44, 900, '"Baloo 2", Nunito, sans-serif'); }
-    else {
-      const banda = s.tipo === 'destino' ? 96 : 0;
-      if (banda) { x.fillStyle = GRUPOS[s.g].color; x.fillRect(0, 0, W, banda); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, banda - 5, W, 5); x.fillStyle = tema.ink; }
-      const yc = banda ? banda + (H - banda) * .38 : H * .32;
-      if (s.tipo === 'destino') textoAjustado(x, s.nombre, W / 2, yc + 6, W - 14, 58, 900, '"Baloo 2", Nunito, sans-serif');
-      else {
-        const ico = s.ico || { impuesto: '💸', suerte: '🍀', imprevisto: '🧳' }[s.tipo];
-        emoji(ico, 84, H * .24); textoAjustado(x, s.nombre, W / 2, H * .56, W - 14, 46, 900, '"Baloo 2", Nunito, sans-serif');
+  // ----- coches -----
+  const coches = [];
+  function crearCoche(color) {
+    const g = new T.Group(), cm = mat(color, { roughness: .3, metalness: .2 });
+    g.add(caja(.56, .16, .3, cm, 0, .17, 0)); g.add(caja(.28, .15, .26, mat('#DDEEFF', { roughness: .15 }), -.04, .32, 0)); g.add(caja(.1, .06, .22, cm, -.04, .41, 0));
+    for (const [x, z] of [[-.18, -.16], [.18, -.16], [-.18, .16], [.18, .16]]) { const w = new T.Mesh(new T.CylinderGeometry(.07, .07, .06, 10), mat('#222')); w.rotation.x = Math.PI / 2; w.position.set(x, .08, z); g.add(w); }
+    g.scale.setScalar(.92); S3.add(g); return g;
+  }
+  const rumbo = (a, b) => Math.atan2(-(b.z - a.z), b.x - a.x);
+  function colocar(j, g, pos) {
+    const c = centroCasilla(pos), nx = centroCasilla((pos + 1) % N);
+    const off = pos === 0 ? (j - 1.5) * .21 : 0; g.position.set(c.x, .1, c.z + off); g.rotation.y = rumbo(c, nx);
+  }
+  V.mover = (j, camino, ms = 190) => {
+    const g = coches[j]; if (!g || camino.length < 2) return Promise.resolve(); g.userData.anim = true;
+    const pts = camino.map(centroCasilla), seg = pts.length - 1;
+    return E.tween(ms * seg, u => {
+      const t = u * seg, i = Math.min(seg - 1, Math.floor(t)), f = t - i, a = pts[i], b = pts[i + 1];
+      g.position.set(a.x + (b.x - a.x) * f, .1 + Math.sin(f * Math.PI) * .09, a.z + (b.z - a.z) * f); g.rotation.y = rumbo(a, b);
+      if (u >= 1) { const fin = camino[camino.length - 1]; colocar(j, g, fin); g.userData.anim = false; }
+    });
+  };
+
+  // ----- dado -----
+  const PIPS = { 1: [[2, 2]], 2: [[1, 1], [3, 3]], 3: [[1, 1], [2, 2], [3, 3]], 4: [[1, 1], [3, 1], [1, 3], [3, 3]], 5: [[1, 1], [3, 1], [2, 2], [1, 3], [3, 3]], 6: [[1, 1], [3, 1], [1, 2], [3, 2], [1, 3], [3, 3]] };
+  const texDado = {};
+  const cara = n => texDado[n] || (texDado[n] = (() => { const c = lienzo(96, 96), x = c.getContext('2d'); x.fillStyle = '#FBFBFB'; x.fillRect(0, 0, 96, 96); x.strokeStyle = '#ddd'; x.lineWidth = 6; x.strokeRect(2, 2, 92, 92); x.fillStyle = n === 1 ? '#D33' : '#222'; for (const [a, b] of PIPS[n]) { x.beginPath(); x.arc(a * 24, b * 24, n === 1 ? 11 : 8, 0, 6.3); x.fill(); } return textura(c, 2); })());
+  let dado = null;
+  V.dado = (v, ms = 900) => {
+    if (dado) { S3.remove(dado); dado = null; }
+    const otros = [1, 2, 3, 4, 5, 6].filter(n => n !== v && n !== 7 - v), a = otros[0], b = otros[1];
+    const ms2 = [a, 7 - a, v, 7 - v, b, 7 - b].map(n => new T.MeshStandardMaterial({ map: cara(n), roughness: .35 }));
+    const d = new T.Mesh(new T.BoxGeometry(.8, .8, .8), ms2); d.castShadow = true; dado = d; S3.add(d);
+    const x0 = (Math.random() - .5) * 2, z0 = 1.2 + Math.random(), sx = (Math.random() * 4 + 4) * (Math.random() < .5 ? -1 : 1), sz = (Math.random() * 4 + 4) * (Math.random() < .5 ? -1 : 1);
+    return E.tween(ms, u => {
+      const k = 1 - u; d.position.set(x0 * (1 - u * .3), .4 + Math.abs(Math.sin(u * Math.PI * 3)) * 1.7 * k, z0 + 5 * k * k); d.rotation.set(sx * k * k, 0, sz * k * k);
+    });
+  };
+  V.quitarDado = () => { if (dado) { S3.remove(dado); dado = null; E.marcar(); } };
+
+  // ----- pintar el estado -----
+  const ents = new Map(), flags = {};
+  const portico = (hid, sq) => {
+    const g = new T.Group(), D = HOTELES[hid], c = centroCasilla(sq), l = LADOS[sq].find(x => x.h === hid), dir = l ? l.d : [-1, 0], cm = mat(D.color);
+    const horiz = dir[0] !== 0; // dir = [df, dc] desde el camino hacia el terreno
+    g.add(caja(.07, .5, .07, cm, -.22, .3, 0)); g.add(caja(.07, .5, .07, cm, .22, .3, 0)); g.add(caja(.56, .1, .12, cm, 0, .58, 0)); g.add(caja(.4, .04, .1, mat('#fff'), 0, .66, 0));
+    g.position.set(c.x + dir[1] * .38, .1, c.z + dir[0] * .38); g.rotation.y = horiz ? 0 : Math.PI / 2; return g;
+  };
+  V.pintar = S => {
+    S.jug.forEach((p, j) => {
+      if (!coches[j]) { coches[j] = crearCoche(p.color); colocar(j, coches[j], p.pos); }
+      const g = coches[j]; g.visible = p.vivo; if (!g.userData.anim) colocar(j, g, p.pos);
+    });
+    for (const id of IDS_HOTEL) {
+      const Hh = S.hot[id], st = estado[id], D = HOTELES[id], n = nEdif(id), objetivo = Hh.etapa + (Hh.inst ? 1 : 0);
+      if (objetivo < st.stages.length) { for (const s of st.stages) grupos[id].remove(s); st.stages = []; }
+      while (st.stages.length < objetivo) { const k = st.stages.length < Hh.etapa ? st.stages.length : n; const e = edificio(id, k); e.userData.nace = performance.now(); e.scale.y = .001; grupos[id].add(e); st.stages.push(e); }
+      const sig = Hh.dueno + '|' + objetivo;
+      if (sig !== st.sig) {
+        st.sig = sig; const dueno = Hh.dueno >= 0 ? S.jug[Hh.dueno] : null;
+        if (st.bandera) { S3.remove(st.bandera); st.bandera = null; }
+        if (dueno) { const b = new T.Group(); const mastil = new T.Mesh(new T.CylinderGeometry(.025, .025, 1.0, 6), mat('#eee')); mastil.position.y = .5; b.add(mastil); b.add(caja(.42, .26, .03, mat(dueno.color, { emissive: dueno.color, emissiveIntensity: .25 }), .22, .88, 0)); const c0 = TERRENOS[id][0]; b.position.set(cx(c0[1] + .2), .08, cz(c0[0] + .2)); S3.add(b); st.bandera = b; }
+        S3.remove(st.etiq); st.etiq.material.map.dispose(); st.etiq.material.dispose();
+        const e = etiqueta(D.nombre + (objetivo ? ' ' + '★'.repeat(Math.min(5, Math.max(1, Hh.etapa))) : ''), dueno ? dueno.color : '#7B8190', '#fff', 1.7); e.position.set(st.ox, 1.75, st.oz); e.userData.lote = id; S3.add(e); st.etiq = e;
       }
-      const pie = s.precio ? `${s.precio}M` : s.importe ? `−${s.importe}M` : '';
-      if (pie) { x.fillStyle = tema.strong; x.font = '900 50px "Baloo 2", Nunito, sans-serif'; x.fillText(pie, W / 2, H - 32); }
     }
-    return c;
-  }
-  function construirTablero(G) {
-    G.c.forEach((s, i) => {
-      const P = posCasilla(i), es = s.tipo === 'esquina', ancho = es ? CE : 1, fondo = CE;
-      const g = new T.Group(); g.position.set(P.x, 0, P.z); g.rotation.y = P.ang; tablero.add(g);
-      const clave = ancho + 'x' + fondo; const geo = geoBase[clave] || (geoBase[clave] = new T.BoxGeometry(ancho - .04, .1, fondo - .04));
-      const base = new T.Mesh(geo, new T.MeshLambertMaterial({ color: tema.cell })); base.position.y = .03; base.receiveShadow = true; g.add(base);
-      const mat = new T.MeshLambertMaterial({ map: textura(textoCasilla(s)) });
-      const plano = new T.Mesh(new T.PlaneGeometry(ancho - .08, fondo - .08), mat); plano.rotation.x = -Math.PI / 2; plano.position.y = .0815; plano.receiveShadow = true; plano.userData.casilla = i; g.add(plano); planos.push(plano);
-      const barra = new T.Mesh(new T.BoxGeometry(ancho - .16, .06, .09), new T.MeshLambertMaterial({ color: 0xffffff })); barra.position.set(0, .11, fondo / 2 - .09); barra.visible = false; barra.castShadow = true; g.add(barra);
-      const solar = new T.Mesh(new T.BoxGeometry(.5, .05, .3), new T.MeshLambertMaterial({ color: 0xffffff })); solar.position.set(0, .11, -.5); solar.visible = false; solar.castShadow = true; g.add(solar);
-      casillas.push({ g, plano, mat, barra, solar, s, es, hotel: null, firma: '', niv: 0, hotelGrupo: new T.Group() });
-      casillas[i].hotelGrupo.position.set(0, .08, es ? 0 : -.5); g.add(casillas[i].hotelGrupo);
-    });
-  }
-
-  // ---------- centro del tablero: logotipo, piscina y palmeras ----------
-  let logoTex = null, logo = null;
-  function pintarCentro() {
-    centroMat.color.set(tema.alt); losa.material.color.set(tema.line);
-    const c = lienzo(512, 512), x = c.getContext('2d');
-    x.fillStyle = 'rgba(0,0,0,0)'; x.clearRect(0, 0, 512, 512); x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillStyle = tema.strong; x.font = '900 118px "Baloo 2", Nunito, sans-serif'; x.fillText('HOTEL', 256, 214);
-    x.fillStyle = tema.hi; x.font = '70px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText('★ ★ ★ ★ ★', 256, 316);
-    x.fillStyle = tema.ink; x.globalAlpha = .75; x.font = '800 36px Nunito, sans-serif'; x.fillText('DESTINOS DEL MUNDO', 256, 392); x.globalAlpha = 1;
-    if (logoTex) logoTex.dispose(); logoTex = textura(c);
-    if (!logo) { logo = new T.Mesh(new T.PlaneGeometry(6.4, 6.4), new T.MeshBasicMaterial({ transparent: true, depthWrite: false })); logo.rotation.x = -Math.PI / 2; logo.position.set(0, .01, -1.5); tablero.add(logo); }
-    logo.material.map = logoTex; logo.material.needsUpdate = true;
-  }
-  function decoracion() {
-    const agua = new T.Mesh(new T.CylinderGeometry(1.1, 1.1, .04, 40), new T.MeshLambertMaterial({ color: '#4CC9F0' })); agua.scale.set(1.5, 1, .8); agua.position.set(-2.4, .03, 3.1); agua.receiveShadow = true; tablero.add(agua);
-    const borde = new T.Mesh(new T.TorusGeometry(1.1, .06, 8, 40), new T.MeshLambertMaterial({ color: '#F4F1E8' })); borde.rotation.x = Math.PI / 2; borde.scale.set(1.5, .8, 1); borde.position.set(-2.4, .06, 3.1); tablero.add(borde);
-    const palma = (px, pz, s = 1) => {
-      const g = new T.Group(); g.position.set(px, 0, pz); g.scale.setScalar(s);
-      const tr = new T.Mesh(new T.CylinderGeometry(.05, .08, .9, 6), new T.MeshLambertMaterial({ color: '#8B5E3C' })); tr.position.y = .45; tr.rotation.z = .12; tr.castShadow = true; g.add(tr);
-      for (let k = 0; k < 6; k++) { const hoja = new T.Mesh(new T.ConeGeometry(.12, .7, 4), new T.MeshLambertMaterial({ color: '#2FAE60' })); hoja.position.set(Math.cos(k * 1.047) * .28 + .1, .95, Math.sin(k * 1.047) * .28); hoja.rotation.set(Math.sin(k * 1.047) * 1.1, 0, -Math.cos(k * 1.047) * 1.1); g.add(hoja); }
-      tablero.add(g);
-    };
-    palma(-3.6, 1.7, 1.1); palma(-1.0, 3.5, .9); palma(3.4, -3.4, 1); palma(3.0, 3.3, .85); palma(-3.5, -3.2, .95);
-    const sombrilla = (px, pz, col) => { const p = new T.Group(); p.position.set(px, 0, pz); const m = new T.Mesh(new T.CylinderGeometry(.02, .02, .55, 5), new T.MeshLambertMaterial({ color: '#d8d8d8' })); m.position.y = .28; p.add(m); const t = new T.Mesh(new T.ConeGeometry(.34, .2, 10), new T.MeshLambertMaterial({ color: col })); t.position.y = .6; t.castShadow = true; p.add(t); tablero.add(p); };
-    sombrilla(-0.9, 2.2, '#FF4FA3'); sombrilla(-3.6, 3.5, '#FFC21A'); sombrilla(3.8, 0.4, '#FF7A1A');
-  }
-
-  // ---------- hoteles ----------
-  const matCache = new Map();
-  const mat = (clave, mk) => { let m = matCache.get(clave); if (!m) { m = mk(); matCache.set(clave, m); } return m; };
-  function texVentanas(est, apagado) {
-    const c = lienzo(128, 64), x = c.getContext('2d'); x.fillStyle = est.muro; x.fillRect(0, 0, 128, 64);
-    x.fillStyle = est.vidrio; for (let k = 0; k < 4; k++) x.fillRect(10 + k * 30, 14, 20, 36);
-    x.fillStyle = 'rgba(255,255,255,.35)'; for (let k = 0; k < 4; k++) x.fillRect(10 + k * 30, 14, 20, 8);
-    if (apagado) { x.fillStyle = 'rgba(120,120,120,.55)'; x.fillRect(0, 0, 128, 64); }
-    return textura(c);
-  }
-  const matPiso = (est, hip) => mat(`piso|${V.estilo}|${hip}`, () => new T.MeshLambertMaterial({ map: texVentanas(est, hip) }));
-  const matTecho = (est, hip) => mat(`techo|${V.estilo}|${hip}`, () => new T.MeshLambertMaterial({ color: hip ? '#777' : est.techo }));
-  const matColor = (col, hip) => mat(`col|${col}|${hip}`, () => new T.MeshLambertMaterial({ color: hip ? '#8d8d8d' : col }));
-  const geoPiso = new T.BoxGeometry(.7, NIV_ALTO, .46).translate(0, NIV_ALTO / 2, 0);
-  const geoLobby = new T.BoxGeometry(.76, .3, .5).translate(0, .15, 0);
-  const geoToldo = new T.BoxGeometry(.82, .04, .22).translate(0, 0, .24);
-  const geoTejado = new T.ConeGeometry(.5, .3, 4).rotateY(Math.PI / 4).translate(0, .14, 0);
-  const geoAntena = new T.CylinderGeometry(.012, .012, .3, 4).translate(0, .15, 0);
-  const geoMastil = new T.CylinderGeometry(.012, .012, .34, 4).translate(0, .17, 0);
-  const geoBandera = new T.PlaneGeometry(.2, .12).translate(.1, 0, 0);
-  const geoCorona = new T.BoxGeometry(.5, .16, .34).translate(0, .08, 0);
-  const geoEstrella = new T.OctahedronGeometry(.07);
-
-  // Construye el edificio de un destino con `nivel` pisos (1-5) y devuelve la lista de pisos para animar el crecimiento
-  function construirHotel(ci, nivel, color, hip, desde) {
-    const C0 = casillas[ci], est = ESTILOS[V.estilo] || ESTILOS.moderno, gr = C0.hotelGrupo;
-    for (const ch of [...gr.children]) gr.remove(ch);
-    const pisos = [], ahora = performance.now();
-    for (let k = 0; k < nivel; k++) {
-      const m = new T.Mesh(k === 0 ? geoLobby : geoPiso, k === 0 ? matColor(est.muro, hip) : matPiso(est, hip)); m.castShadow = true; m.receiveShadow = true;
-      m.userData = { alto: k === 0 ? .3 : NIV_ALTO, nuevo: k >= desde ? ahora + (k - desde) * 220 : 0 };
-      if (k === 0) { const t = new T.Mesh(geoToldo, matColor(color, hip)); t.position.y = .22; t.castShadow = true; m.add(t); const pu = new T.Mesh(new T.BoxGeometry(.14, .18, .02), matTecho(est, hip)); pu.position.set(-.2, .09, .255); m.add(pu); }
-      gr.add(m); pisos.push(m);
+    for (let sq = 0; sq < N; sq++) {
+      const want = S.entDe[sq], cur = ents.get(sq);
+      if (cur && cur.h !== want) { S3.remove(cur.g); ents.delete(sq); }
+      if (want && !(cur && cur.h === want)) { const g = portico(want, sq); S3.add(g); ents.set(sq, { h: want, g }); }
     }
-    const coronaG = new T.Group(); gr.add(coronaG);
-    // cubierta según el estilo
-    const cub = est.cubierta;
-    const tope = new T.Group(); coronaG.add(tope);
-    if (nivel === 5) {
-      const co = new T.Mesh(geoCorona, matColor('#F5C02B', hip)); co.castShadow = true; tope.add(co);
-      const sp = new T.Mesh(geoAntena, matColor('#F5C02B', hip)); sp.position.y = .16; tope.add(sp);
-      const es = new T.Mesh(geoEstrella, matColor('#FFE066', hip)); es.position.y = .5; es.scale.set(1.2, 1.4, 1.2); tope.add(es);
-    } else if (cub === 'tejado') { const t = new T.Mesh(geoTejado, matTecho(est, hip)); t.scale.set(1.12, 1, .78); t.castShadow = true; tope.add(t); }
-    else if (cub === 'escalonado') { const t = new T.Mesh(new T.BoxGeometry(.42, .12, .28).translate(0, .06, 0), matTecho(est, hip)); t.castShadow = true; tope.add(t); const a = new T.Mesh(geoAntena, matTecho(est, hip)); a.position.y = .12; tope.add(a); }
-    else { const t = new T.Mesh(new T.BoxGeometry(.7, .04, .48).translate(0, .02, 0), matTecho(est, hip)); t.castShadow = true; tope.add(t); const a = new T.Mesh(geoAntena, matTecho(est, hip)); a.position.set(.2, .04, 0); tope.add(a); }
-    // bandera del dueño
-    const mas = new T.Mesh(geoMastil, matColor('#E8E8E8', hip)); mas.position.set(-.28, .0, .14); tope.add(mas);
-    const ban = new T.Mesh(geoBandera, new T.MeshLambertMaterial({ color: hip ? '#8d8d8d' : color, side: T.DoubleSide })); ban.position.set(-.28, .3, .14); tope.add(ban);
-    gr.userData = { pisos, tope, ini: ahora };
-    colocarPisos(gr); return gr;
-  }
-  // Apila los pisos según su altura visible (los nuevos van «naciendo» desde el suelo)
-  function colocarPisos(gr, ahora = performance.now()) {
-    let y = 0, anim = false;
-    for (const m of gr.userData.pisos) {
-      const n = m.userData.nuevo; let e = 1;
-      if (n) { e = Math.min(1, Math.max(0, (ahora - n) / 260)); if (e < 1) anim = true; e = suave(e); }
-      m.visible = !n || ahora >= n; m.scale.y = Math.max(.001, e); m.position.y = y; y += m.userData.alto * e;
-    }
-    gr.userData.tope.position.y = y; return anim;
-  }
-
-  // ---------- fichas ----------
-  const fichas = [];
-  const texEmoji = (e) => { const c = lienzo(128, 128), x = c.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(e, 64, 70); return textura(c); };
-  const geoDisco = new T.CylinderGeometry(.17, .2, .07, 20), geoPie = new T.CylinderGeometry(.045, .07, .3, 8).translate(0, .15, 0);
-  function crearFicha(p, i) {
-    const g = new T.Group();
-    const disco = new T.Mesh(geoDisco, new T.MeshLambertMaterial({ color: p.color })); disco.position.y = .035; disco.castShadow = true; g.add(disco);
-    const pie = new T.Mesh(geoPie, new T.MeshLambertMaterial({ color: p.color })); pie.position.y = .07; pie.castShadow = true; g.add(pie);
-    const sp = new T.Sprite(new T.SpriteMaterial({ map: texEmoji(p.ficha), transparent: true, depthWrite: false })); sp.scale.set(.52, .52, 1); sp.position.y = .6; g.add(sp);
-    escena.add(g); fichas[i] = { g, sp, pos: p.pos, x: 0, z: 0, ficha: p.ficha };
-  }
-  // posición de una ficha dentro de su casilla (varias fichas en la misma casilla se reparten)
-  function destinoFicha(i, pos, G) {
-    const P = posCasilla(pos), en = G.jug.map((q, k) => (!q.fuera && q.pos === pos ? k : -1)).filter(k => k >= 0), n = Math.max(1, en.length), k = Math.max(0, en.indexOf(i));
-    const R = n > 1 ? .26 : 0, a = (k / n) * Math.PI * 2 + .6, es = P.lado === 'esq';
-    const ox = Math.cos(a) * R, oz = Math.sin(a) * R + (es ? 0 : .22);
-    const c = Math.cos(P.ang), s = Math.sin(P.ang);                                  // gira el desplazamiento local al sistema del tablero
-    return { x: P.x + ox * c + oz * s, z: P.z - ox * s + oz * c };
-  }
-
-  // ---------- dados ----------
-  const dados = [];
-  const CARAS = [3, 4, 1, 6, 2, 5];                                   // +x, -x, +y, -y, +z, -z (opuestas suman 7)
-  function texDado(v) {
-    const c = lienzo(96, 96), x = c.getContext('2d'); x.fillStyle = '#FFFDF6'; x.fillRect(0, 0, 96, 96); x.strokeStyle = '#d9d2bf'; x.lineWidth = 6; x.strokeRect(3, 3, 90, 90);
-    const P = { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]], 5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]], 6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]] }[v];
-    x.fillStyle = v === 1 ? '#E63946' : '#1B1F3B'; for (const [a, b] of P) { x.beginPath(); x.arc(24 + a * 24, 24 + b * 24, v === 1 ? 11 : 8, 0, 7); x.fill(); }
-    return textura(c, 2);
-  }
-  function crearDados() {
-    const mats = CARAS.map(v => new T.MeshLambertMaterial({ map: texDado(v) }));
-    for (let k = 0; k < 2; k++) {
-      const m = new T.Mesh(new T.BoxGeometry(.52, .52, .52), mats); m.castShadow = true; m.position.set(k ? .6 : -.6, .31, k ? 1.3 : 1.7); m.rotation.y = k ? .5 : -.4; escena.add(m); dados.push(m);
-    }
-  }
-  const ORIENT = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0] };
-  const cuatro = (v, yaw) => { const q = new T.Quaternion().setFromEuler(new T.Euler(...ORIENT[v])); return new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), yaw).multiply(q); };
-
-  // ---------- animaciones (tweens con garantía de fin aunque el navegador pause requestAnimationFrame) ----------
-  const tweens = new Set();
-  function tween(ms, f) {
-    return new Promise(res => {
-      if (!ms || !vivo) { f(1); marcar(); return res(); }
-      const o = { t0: performance.now(), ms, f, res, fin: false };
-      o.guarda = setTimeout(() => { if (!o.fin) { o.fin = true; tweens.delete(o); f(1); marcar(); res(); } }, ms + 400);
-      tweens.add(o); marcar();
-    });
-  }
-  const animPisos = new Set();
-
-  // ---------- interacción ----------
-  const punteros = new Map(); let mov = 0, dist0 = 0, ult = null;
-  const ray = new T.Raycaster(), v2 = new T.Vector2();
-  function alBajar(e) { cv.setPointerCapture(e.pointerId); punteros.set(e.pointerId, { x: e.clientX, y: e.clientY }); mov = 0; if (punteros.size === 2) { const [a, b] = [...punteros.values()]; dist0 = Math.hypot(a.x - b.x, a.y - b.y); } }
-  function alMover(e) {
-    const p = punteros.get(e.pointerId); if (!p) return;
-    const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-    if (punteros.size === 1) { mov += Math.abs(dx) + Math.abs(dy); C.objAz -= dx * .0085; C.objPol = Math.min(1.38, Math.max(.2, C.objPol - dy * .006)); }
-    else if (punteros.size === 2) { const [a, b] = [...punteros.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (dist0) C.objDist = Math.min(30, Math.max(8, C.objDist * dist0 / d)); dist0 = d; mov += 20; }
-    marcar();
-  }
-  function alSoltar(e) {
-    const p = punteros.get(e.pointerId); punteros.delete(e.pointerId); dist0 = 0;
-    if (p && mov < 7 && e.type === 'pointerup' && !punteros.size) tocar(e);
-  }
-  function tocar(e) {
-    const r = cv.getBoundingClientRect(); v2.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-    ray.setFromCamera(v2, cam); const h = ray.intersectObjects(planos, false)[0];
-    if (h && V.alTocar) V.alTocar(h.object.userData.casilla);
-  }
-  function alRueda(e) { e.preventDefault(); C.objDist = Math.min(30, Math.max(8, C.objDist * Math.exp(e.deltaY * .0012))); marcar(); }
-  cv.addEventListener('pointerdown', alBajar); cv.addEventListener('pointermove', alMover); cv.addEventListener('pointerup', alSoltar); cv.addEventListener('pointercancel', alSoltar);
-  cv.addEventListener('wheel', alRueda, { passive: false });
-  cv.style.touchAction = 'none';
-  const ro = new ResizeObserver(redimensionar); ro.observe(cont);
-
-  // ---------- bucle ----------
-  const sel = new T.Mesh(new T.RingGeometry(.22, .3, 28), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9, side: T.DoubleSide, depthWrite: false })); sel.rotation.x = -Math.PI / 2; sel.visible = false; escena.add(sel);
-  function bucle() {
-    if (!vivo) return; raf = requestAnimationFrame(bucle);
-    const ahora = performance.now();
-    for (const o of [...tweens]) { const t = Math.min(1, (ahora - o.t0) / o.ms); o.f(t); if (t >= 1 && !o.fin) { o.fin = true; clearTimeout(o.guarda); tweens.delete(o); o.res(); } }
-    for (const gr of [...animPisos]) if (!colocarPisos(gr, ahora)) animPisos.delete(gr);
-    // la cámara se acerca a su objetivo con suavizado
-    const k = .22, dA = C.objAz - C.az, dP = C.objPol - C.pol, dD = C.objDist - C.dist;
-    if (Math.abs(dA) > 1e-4 || Math.abs(dP) > 1e-4 || Math.abs(dD) > 1e-3) { C.az += dA * k; C.pol += dP * k; C.dist += dD * k; colocarCam(); sucio = true; }
-    if (tweens.size || animPisos.size) sucio = true;
-    if (sucio) { sucio = false; renderer.render(escena, cam); }
-  }
-
-  // ---------- API ----------
-  let primera = true, GG = null;
-  V.construir = G => {
-    GG = G; construirTablero(G); pintarCentro(); decoracion(); crearDados();
-    G.jug.forEach((p, i) => crearFicha(p, i)); redimensionar(); C.az = C.objAz = 0; C.pol = C.objPol = .88; C.dist = C.objDist = C.base = distBase(); colocarCam();
-    V.actualizar(G, true); raf = requestAnimationFrame(bucle); marcar();
+    E.marcar();
   };
-  // Sincroniza edificios, dueños y fichas con el estado de la partida
-  V.actualizar = (G, forzar = false) => {
-    GG = G;
-    G.c.forEach((s, i) => {
-      const c = casillas[i]; if (!c || (s.tipo !== 'destino' && s.tipo !== 'aero' && s.tipo !== 'serv')) return;
-      const o = s.dueno === null ? null : G.jug[s.dueno], firma = `${s.dueno}|${s.nivel}|${s.hip}|${o ? o.color : ''}|${V.estilo}`;
-      if (firma === c.firma && !forzar) return;
-      const antes = c.niv; c.firma = firma;
-      c.barra.visible = !!o; c.solar.visible = !!o && !s.nivel;
-      if (o) { c.barra.material.color.set(s.hip ? '#8d8d8d' : o.color); c.solar.material.color.set(s.hip ? '#8d8d8d' : o.color); }
-      c.mat.color.set(s.hip ? '#8d8d8d' : '#ffffff');
-      c.solar.visible = !!o && !s.nivel && s.tipo === 'destino';
-      if (s.tipo === 'destino') {
-        if (s.nivel && o) { const crece = s.nivel > antes && !forzar, g = construirHotel(i, s.nivel, o.color, s.hip, crece ? antes : Infinity); if (crece) animPisos.add(g); }
-        else for (const ch of [...c.hotelGrupo.children]) c.hotelGrupo.remove(ch);
-      }
-      c.niv = s.nivel; marcar();
-    });
-    G.jug.forEach((p, i) => {
-      if (!fichas[i]) return; const f = fichas[i];
-      f.g.visible = !p.fuera;
-      if (f.ficha !== p.ficha) { f.ficha = p.ficha; f.sp.material.map.dispose(); f.sp.material.map = texEmoji(p.ficha); f.sp.material.needsUpdate = true; }
-      if (forzar || (f.pos !== p.pos && !f.anim)) { const d = destinoFicha(i, p.pos, G); f.g.position.set(d.x, .08, d.z); f.pos = p.pos; }
-    });
-    // si varias fichas comparten casilla, repártelas
-    if (!forzar) G.jug.forEach((p, i) => { const f = fichas[i]; if (f && !f.anim && !p.fuera) { const d = destinoFicha(i, p.pos, G); if (Math.abs(f.g.position.x - d.x) + Math.abs(f.g.position.z - d.z) > .02) f.g.position.set(d.x, .08, d.z); } });
-    marcar();
+  // ----- resaltado -----
+  const anillos = [], resLotes = new Set(); let tt = 0;
+  V.resaltar = (cfg = {}) => {
+    for (const a of anillos) S3.remove(a); anillos.length = 0;
+    for (const sq of cfg.casillas || []) { const c = centroCasilla(sq), m = new T.Mesh(new T.RingGeometry(.3, .47, 28), new T.MeshBasicMaterial({ color: '#FFC21A', side: T.DoubleSide, transparent: true, opacity: .95, depthTest: false })); m.rotation.x = -Math.PI / 2; m.position.set(c.x, .17, c.z); m.userData.sq = sq; m.renderOrder = 12; S3.add(m); anillos.push(m); }
+    resLotes.clear(); for (const h of cfg.lotes || []) resLotes.add(h);
+    for (const id of IDS_HOTEL) for (const m of placas[id]) { m.material.emissive.set(resLotes.has(id) ? '#FFC21A' : '#000000'); m.material.emissiveIntensity = resLotes.has(id) ? .5 : 0; }
+    E.marcar();
   };
-  // Salto de una ficha hasta una casilla (una sola casilla por llamada, o un tramo largo si `vuelo`)
-  V.mover = async (i, pos, ms) => {
-    const f = fichas[i]; if (!f || !GG) return; f.anim = true;
-    const a = f.g.position.clone(), d = destinoFicha(i, pos, GG); f.pos = pos;
-    const lejos = Math.hypot(d.x - a.x, d.z - a.z), alto = ms && lejos > 1.6 ? .9 : .28;
-    await tween(ms, t => f.g.position.set(a.x + (d.x - a.x) * t, .08 + Math.sin(t * Math.PI) * alto, a.z + (d.z - a.z) * t));
-    f.g.position.set(d.x, .08, d.z); f.anim = false; marcar();
-    // reajusta a las que compartían casilla
-    V.actualizar(GG);
+  let ult = 0;
+  E.alFrame = ahora => {
+    const dt = ult ? Math.min(.05, (ahora - ult) / 1000) : .016; ult = ahora; tt += dt; let sigue = false;
+    for (const id of IDS_HOTEL) for (const e of estado[id].stages) { if (e.userData.nace) { const u = Math.min(1, (ahora - e.userData.nace) / 650), s = 1 - Math.pow(1 - u, 3); e.scale.y = Math.max(.001, s * (1 + Math.sin(u * Math.PI) * .12)); if (u >= 1) { e.scale.y = 1; e.userData.nace = 0; } sigue = true; } }
+    if (anillos.length) { const s = 1 + Math.sin(tt * 6) * .14; for (const a of anillos) a.scale.setScalar(s); sigue = true; }
+    if (resLotes.size) { for (const h of resLotes) for (const m of placas[h]) m.material.emissiveIntensity = .35 + (Math.sin(tt * 5) + 1) * .22; sigue = true; }
+    return sigue;
   };
-  V.resaltar = (pos, color) => { if (pos == null || pos < 0) { sel.visible = false; marcar(); return; } const P = posCasilla(pos); sel.position.set(P.x, .12, P.z + 0); sel.material.color.set(color || '#ffffff'); sel.scale.setScalar(pos % 10 === 0 ? 2.2 : 1.9); sel.visible = true; marcar(); };
-  V.dados = async (a, b, ms) => {
-    const vals = [a, b], ini = dados.map(d => d.position.clone()), fin = dados.map((d, k) => cuatro(vals[k], Math.random() * 6.28));
-    const dest = [new T.Vector3(-.9 + Math.random() * .3, .27, 1.3 + Math.random() * .3), new T.Vector3(.5 + Math.random() * .3, .27, 1.6 + Math.random() * .3)];
-    await tween(ms, t => dados.forEach((d, k) => {
-      const e = suave(t); d.position.set(ini[k].x + (dest[k].x - ini[k].x) * e, .27 + Math.sin(Math.min(1, t * 1.15) * Math.PI) * 1.5 * (1 - t * .3), ini[k].z + (dest[k].z - ini[k].z) * e);
-      d.quaternion.copy(t < .7 ? new T.Quaternion().setFromEuler(new T.Euler(t * 14 + k, t * 11, t * 9 + k * 2)) : new T.Quaternion().slerpQuaternions(new T.Quaternion().setFromEuler(new T.Euler(.7 * 14 + k, .7 * 11, .7 * 9 + k * 2)), fin[k], (t - .7) / .3));
-    }));
-    dados.forEach((d, k) => { d.position.copy(dest[k]); d.quaternion.copy(fin[k]); }); marcar();
+  // ----- toques -----
+  E.alTocar = ev => {
+    const hit = E.raycast(ev, tocables.concat(anillos)); if (!hit.length || !V.alTocar) return;
+    for (const h of hit) { let o = h.object; while (o) { if (o.userData && o.userData.sq != null) return V.alTocar({ tipo: 'casilla', id: o.userData.sq }); if (o.userData && o.userData.lote) return V.alTocar({ tipo: 'lote', id: o.userData.lote }); o = o.parent; } }
   };
-  V.estiloHotel = id => { if (!ESTILOS[id] || id === V.estilo) return; V.estilo = id; if (GG) V.actualizar(GG, true); };
-  V.personaje = (i, e) => { if (GG && GG.jug[i]) { GG.jug[i].ficha = e; V.actualizar(GG); } };
-  V.tema = () => {
-    leerTema(); casillas.forEach(c => { c.mat.map.dispose(); c.mat.map = textura(textoCasilla(c.s)); c.mat.needsUpdate = true; c.g.children[0].material.color.set(tema.cell); }); pintarCentro(); marcar();
+  V.recolor = () => {
+    const s = getComputedStyle(cont), v = (n, d) => s.getPropertyValue(n).trim() || d;
+    hierba.material.color.set(v('--ht-hierba', '#8CCB6A')); marco.material.color.set(v('--ht-marco', '#8A5A3B')); E.marcar();
   };
-  V.camara = (modo) => {
-    if (modo === 'girar') C.objAz = Math.round(C.objAz / (Math.PI / 2) + 1) * (Math.PI / 2);
-    else if (modo === 'cenital') { C.objPol = C.objPol < .35 ? .88 : .12; }
-    else { C.objAz = Math.round(C.objAz / (Math.PI * 2)) * Math.PI * 2; C.objPol = .88; C.objDist = C.base || distBase(); }
-    marcar();
-  };
-  V.destruir = () => {
-    vivo = false; cancelAnimationFrame(raf); ro.disconnect();
-    for (const o of tweens) { clearTimeout(o.guarda); o.res(); } tweens.clear();
-    cv.removeEventListener('pointerdown', alBajar); cv.removeEventListener('pointermove', alMover); cv.removeEventListener('pointerup', alSoltar); cv.removeEventListener('pointercancel', alSoltar); cv.removeEventListener('wheel', alRueda);
-    escena.traverse(o => { if (o.geometry) o.geometry.dispose(); const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { if (m.map) m.map.dispose(); m.dispose(); } });
-    matCache.clear(); renderer.dispose(); try { renderer.forceContextLoss(); } catch (_) {} cv.remove();
-  };
-  V.renderizar = () => { sucio = true; }; V._C = C;
-  V.canvas = cv;
+  V.camara = E.camara; V.destruir = () => { for (const k of Object.keys(texDado)) texDado[k].dispose(); E.destruir(); };
+  V.recolor(); E.iniciar();
   return V;
 }

@@ -1,17 +1,18 @@
-/* Hotel · tablero 3D (Three.js) + paneles con los colores de la app (variables --tb-* de base.css según 🎨 Apariencia) */
-.juego-hotel{--ht-l:min(calc(100vw - 28px),620px)}
-.juego-hotel .htfichab{width:44px;height:44px;border-radius:50%;border:3px solid var(--c);background:var(--card);font-size:24px;line-height:1;flex:none}
+/* Hotel · tablero 3D (Three.js) o SVG + paneles con los colores de la app (variables --tb-* de base.css según 🎨 Apariencia) */
+.juego-hotel{--ht-hierba:#8CCB6A;--ht-marco:#8A5A3B}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .juego-hotel{--ht-hierba:#4C8B4A;--ht-marco:#5C3C27}}
+:root[data-theme="dark"] .juego-hotel{--ht-hierba:#4C8B4A;--ht-marco:#5C3C27}
+.juego-hotel .htfichab{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:3px solid var(--c);background:var(--card);font-size:24px;line-height:1;flex:none}
 
 /* jugadores */
 .juego-hotel .htjug{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin:6px 0}
-.juego-hotel .htj{position:relative;display:grid;grid-template-columns:auto 1fr auto;column-gap:6px;align-items:center;background:var(--card);border:2px solid var(--line);border-left:6px solid var(--c);border-radius:var(--r-m);padding:5px 8px}
+.juego-hotel .htj{position:relative;display:grid;grid-template-columns:auto 1fr auto;column-gap:6px;align-items:center;background:var(--card);border:2px solid var(--line);border-left:6px solid var(--c);border-radius:var(--r-m);padding:6px 8px;font-size:12.5px}
 .juego-hotel .htji{grid-row:span 2;font-size:22px}
 .juego-hotel .htj b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.juego-hotel .htdin{font:800 15px var(--f-titulo);font-variant-numeric:tabular-nums}
-.juego-hotel .htj small{grid-column:2/4;color:var(--mut);font-weight:700}
+.juego-hotel .htdin{font:800 14px var(--f-titulo);font-variant-numeric:tabular-nums}
+.juego-hotel .htj small{grid-column:2/4;color:var(--mut);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .juego-hotel .htchips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:2px;min-height:4px;margin-top:3px}
-.juego-hotel .htchips i{width:11px;height:8px;border-radius:2px}
-.juego-hotel .htchips i.h{opacity:.35}
+.juego-hotel .htchips i{width:14px;height:8px;border-radius:2px}
 .juego-hotel .htj.turno{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
 .juego-hotel .htj.fuera{opacity:.45}
 .juego-hotel .htj.fuera b{text-decoration:line-through}
@@ -20,50 +21,40 @@
 .juego-hotel .htflash.pos{color:var(--ok)}.juego-hotel .htflash.neg{color:var(--red)}
 @keyframes htflash{to{transform:translateY(-16px);opacity:0}}
 
-/* vista 3D: el canvas es transparente, así que el «Fondo de Tablero» elegido se ve detrás del tablero */
-.juego-hotel .htvista{position:relative;width:var(--ht-l);aspect-ratio:1/.9;margin:6px auto;border-radius:var(--r-l);overflow:hidden;box-shadow:var(--sombra-m);
-  background:radial-gradient(circle at 50% 38%,var(--tb-soft),var(--tb-alt) 70%,var(--tb-line))}
-.juego-hotel .htcv{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline:none}
-.juego-hotel .htcv:active{cursor:grabbing}
-.juego-hotel .htcam{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:2}
-.juego-hotel .htcam .btn{min-height:38px;width:38px;padding:0;font-size:18px;border-radius:50%;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(4px)}
-.juego-hotel .htcarga{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;color:var(--mut);font-weight:800}
+/* vista: el lienzo 3D es transparente, así se ve el «Fondo de Tablero» elegido detrás */
+.juego-hotel .e3d.htvista{aspect-ratio:18/14.6;width:min(calc(100vw - 28px),760px)}
+.juego-hotel .e3d.ht2{background:var(--ht-hierba)}
+.juego-hotel .ht2d .h2-pulso{animation:htpulso 1s ease-in-out infinite alternate}
+@keyframes htpulso{to{opacity:.35}}
 
-/* panel de turno */
+/* panel de turno y acciones */
 .juego-hotel .htpanel{display:flex;flex-direction:column;align-items:center;gap:8px;margin:8px 0;padding:10px;background:var(--card);border:2px solid var(--line);border-radius:var(--r-l);box-shadow:var(--sombra-s)}
-.juego-hotel .htturno{font-size:15px;line-height:1.25;text-align:center}
+.juego-hotel .htturno{font-size:15px;line-height:1.3;text-align:center}
 .juego-hotel .htturno small{color:var(--mut);font-size:12px}
-.juego-hotel .htpanel > .btn.on{width:100%;max-width:340px}
-.juego-hotel .htpanel > .btn[hidden]{display:none}
-.juego-hotel .htacc{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}
-.juego-hotel .htacc .btn{flex:1 1 130px;max-width:200px}
-.juego-hotel .htbote{color:var(--mut);font-weight:800;font-size:12px;text-align:center}
+.juego-hotel .htacc{display:flex;flex-direction:column;gap:7px;width:100%;max-width:460px;align-items:stretch}
+.juego-hotel .htacc .btn{width:100%;justify-content:center}
+.juego-hotel .htesp{text-align:center;color:var(--mut);font-weight:800}
+.juego-hotel .htex{font-size:13px;color:var(--mut);text-align:center;margin:0}
+.juego-hotel .htex.neg{color:var(--red)}
+.juego-hotel .htpt,.htmodal .htpt{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.juego-hotel .htplan{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border:2px solid var(--line);border-radius:var(--r-m);font-size:13px}
+.juego-hotel .htplan small{color:var(--mut);margin-left:4px}
+.juego-hotel .htcont{display:flex;align-items:center;gap:8px;flex:none}
+.juego-hotel .htcont .btn{width:34px;min-height:34px;padding:0}
 .juego-hotel .htmsg{text-align:center;font-size:14.5px;min-height:24px}
-.juego-hotel .htmsg.neg{color:var(--red)}.juego-hotel .htmsg.pos{color:var(--ok)}
 .juego-hotel .htlog{list-style:none;margin:6px 0;padding:8px 12px;max-height:200px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);font-size:13px}
 .juego-hotel .htlog li{padding:4px 0;border-bottom:1px solid var(--line)}
 .juego-hotel .htlog li:last-child{border-bottom:0}
-.juego-hotel .htlog li.neg{color:var(--red)}.juego-hotel .htlog li.pos{color:var(--ok)}.juego-hotel .htlog li.compra{color:var(--purple)}
 @media(prefers-reduced-motion:reduce){.juego-hotel *{animation:none!important}}
 
 /* diálogos (van en <body>, fuera de .juego-hotel) */
 .htmodal .htcarta{border:2px solid var(--line);border-radius:var(--r-m);overflow:hidden;margin-bottom:8px}
 .htmodal .htcab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px;background:var(--g);color:#fff;font:800 20px var(--f-titulo);text-shadow:0 1px 2px rgba(0,0,0,.35)}
 .htmodal .htcab small{font:800 11.5px var(--f-texto);opacity:.95}
-.htmodal .htcarta .tabla{margin:0}
+.htmodal .htcarta .tabla{margin:0;width:100%;border-collapse:collapse}
+.htmodal .htcarta .tabla th{font-size:11.5px;color:var(--mut);text-align:left;padding:4px 12px}
 .htmodal .htcarta .tabla td{padding:5px 12px;border-top:1px solid var(--line)}
-.htmodal .htcartatxt{font-size:17px;line-height:1.4;padding:14px;border-radius:var(--r-m);text-align:center}
-.htmodal .htcartatxt.htsuerte{background:color-mix(in srgb,var(--green) 16%,var(--card))}
-.htmodal .htcartatxt.htimprevisto{background:color-mix(in srgb,var(--orange) 16%,var(--card))}
-.htmodal .htges{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--line)}
-.htmodal .htges>i{width:12px;height:12px;border-radius:3px;flex:none}
-.htmodal .htges>span{flex:1;font-weight:800}
-.htmodal .htges small{color:var(--mut)}
-.htmodal .htges .btn{min-height:34px;padding:4px 9px;font-size:12.5px}
-.htmodal .httrato{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.htmodal .httrato>div{display:flex;flex-direction:column;gap:4px;max-height:44vh;overflow:auto}
-.htmodal .htop{display:flex;align-items:center;gap:6px;font-size:13px}
-.htmodal .htop input{width:20px;height:20px;accent-color:var(--purple)}
-.htmodal .htop i{width:10px;height:10px;border-radius:2px;flex:none}
-.htmodal .htdinero{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:800;margin-top:6px}
-.htmodal .htdinero .pedir{font-size:15px;padding:6px 8px}
+.htmodal .htcarta .tabla tr.hecho td{font-weight:800}
+.htmodal .htdet{border-bottom:1px solid var(--line);padding:6px 0}
+.htmodal .htdet summary{cursor:pointer;display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:4px 0}
+.htmodal .htdet summary span{color:var(--mut);font-size:12.5px}

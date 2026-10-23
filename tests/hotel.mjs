@@ -1,90 +1,129 @@
 // Pruebas del motor de Hotel (sin navegador):  node tests/hotel.mjs
 import assert from 'node:assert/strict';
-import { Partida, validar, MAZOS } from '../js/games/hotel/motor.js';
-import { CASILLAS, GRUPOS, COLORES_JUGADOR, FICHAS } from '../js/games/hotel/datos.js';
+import * as M from '../js/games/hotel/motor.js';
+import * as D from '../js/games/hotel/datos.js';
 
 let ok = 0; const t = async (n, f) => { try { await f(); ok++; console.log('✓', n); } catch (e) { console.error('✗', n, '\n', e); process.exitCode = 1; } };
-const ganchos = (o = {}) => ({ render() {}, log() {}, paso: async () => {}, dados: async () => {}, flash() {}, pregunta: async (t, x, b) => b[0], carta: async () => {},
-  comprar: async () => true, puja: async () => 0, aceptar: async () => false, gestionar: async () => {}, fin: async () => {}, ...o });
-const nueva = (n = 4, r = {}, bots = true) => new Partida(Array.from({ length: n }, (_, i) => ({ nombre: 'J' + i, ficha: FICHAS[i], color: COLORES_JUGADOR[i], bot: bots })), ganchos(), r);
-const dueno = (g, i, ids) => ids.forEach(k => { g.c[k].dueno = i; });
+const nueva = (n = 3, o = {}) => M.crear({ n, semilla: 7, cpu: [1, 1, 1, 1], ...o });
 
-await t('datos: 40 casillas, 22 destinos en 8 zonas, 4 aeropuertos y 2 servicios', () => {
-  assert.equal(CASILLAS.length, 40);
-  assert.equal(CASILLAS.filter(s => s.tipo === 'destino').length, 22);
-  assert.equal(CASILLAS.filter(s => s.tipo === 'aero').length, 4); assert.equal(CASILLAS.filter(s => s.tipo === 'serv').length, 2);
-  for (const k of Object.keys(GRUPOS)) assert.ok(CASILLAS.filter(s => s.g === k).length >= 2);
-  assert.ok(CASILLAS.every(s => s.tipo !== 'destino' || GRUPOS[s.g]));
+await t('datos: camino de 48 casillas cerrado, cada celda con 2 vecinos', () => {
+  assert.equal(D.N, 48); assert.equal(D.TIPO.length, 48);
+  const set = new Set(D.CAMINO.map(c => c.join(',')));
+  for (const [f, c] of D.CAMINO) assert.equal([[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([a, b]) => set.has((f + a) + ',' + (c + b))).length, 2);
+  assert.equal(D.TIPO[0], 'P'); assert.ok(D.TIPO.filter(x => x === 'C').length >= 14); assert.ok(D.TIPO.filter(x => x === 'O').length >= 6);
 });
-await t('alquiler: básico, zona completa y por estrellas', () => {
-  const g = nueva(2); const cusco = g.c[1], paz = g.c[3];
-  dueno(g, 0, [1]); assert.equal(g.alquiler(cusco), 2);
-  dueno(g, 0, [3]); assert.equal(g.alquiler(cusco), 4);
-  cusco.nivel = 1; assert.equal(g.alquiler(cusco), Math.round(2 * GRUPOS.and.mult[0])); cusco.nivel = 5; assert.equal(g.alquiler(cusco), 200);
-  dueno(g, 1, [5, 15]); assert.equal(g.alquiler(g.c[5]), 60); dueno(g, 1, [12, 28]); assert.equal(g.alquiler(g.c[12], 7), 84); dueno(g, 1, [12]); g.c[28].dueno = null; assert.equal(g.alquiler(g.c[12], 7), 35);
+await t('datos: 8 hoteles con tablas de la edición 1986 y todos con casillas de compra adyacentes', () => {
+  assert.equal(D.IDS_HOTEL.length, 8);
+  assert.equal(D.HOTELES.pres.edif.length, 4); assert.equal(D.HOTELES.boom.edif.length, 1); assert.equal(D.HOTELES.waik.edif.length, 5);
+  assert.equal(D.tarifa('etoile', 5, false), 450); assert.equal(D.tarifa('etoile', 5, true), 750); assert.equal(D.tarifa('fuji', 0, false), 0);
+  for (const h of D.IDS_HOTEL) { assert.ok(D.CASILLAS_DE[h].filter(i => D.TIPO[i] === 'C').length >= 1, 'compra junto a ' + h); assert.ok(D.CASILLAS_DE[h].length >= 4); }
+  for (let i = 0; i < D.N; i++) if (D.TIPO[i] === 'C') assert.ok(D.ADYACENTES[i].length > 0, 'C sin terreno ' + i);
 });
-await t('construcción pareja, coste, hipotecas y venta', () => {
-  const g = nueva(2); dueno(g, 0, [1, 3]); const a = g.c[1], b = g.c[3];
-  assert.ok(g.puedeConstruir(a)); g.construir(a); assert.equal(g.jug[0].dinero, 1600 - 50);
-  assert.ok(!g.puedeConstruir(a), 'no se puede seguir en la misma'); assert.ok(g.puedeConstruir(b)); g.construir(b); assert.ok(g.puedeConstruir(a));
-  assert.ok(!g.puedeHipotecar(a)); assert.ok(!g.puedeVender(b) === false); g.construir(a); assert.ok(!g.puedeVender(b)); assert.ok(g.puedeVender(a));
-  g.vender(a); assert.equal(a.nivel, 1);
-  g.vender(a); g.vender(b); assert.ok(g.puedeHipotecar(a)); g.hipotecar(a); assert.ok(a.hip && !g.puedeConstruir(b)); g.deshipotecar(a); assert.ok(!a.hip);
-  g.jug[0].dinero = 10; g.c[1].nivel = 0; g.c[3].nivel = 0; assert.ok(!g.puedeConstruir(a), 'sin dinero');
-  for (let n = 0; n < 5; n++) { g.jug[0].dinero = 999; g.construir(a); g.construir(b); } assert.equal(a.nivel, 5); g.jug[0].dinero = 999; assert.ok(!g.puedeConstruir(a), 'máximo 5 estrellas');
+await t('crear: dinero inicial y estado válido', () => {
+  const S = nueva(4); assert.equal(S.jug.length, 4); assert.ok(S.jug.every(p => p.dinero === 12000)); assert.ok(M.validar(S));
+  assert.ok(M.validar(JSON.parse(JSON.stringify(S))));
 });
-await t('Salida: cobra 200M, Control sanitario y Cuarentena', async () => {
-  const g = nueva(2); const p = g.jug[0]; p.pos = 38; await g.avanzar(p, 4); assert.equal(p.pos, 2); assert.equal(p.dinero, 1800);
-  p.pos = 30; await g.caer(p, 0); assert.equal(p.pos, 10); assert.ok(p.espera);
-});
-await t('bote de Vacaciones', async () => {
-  const g = nueva(2, { bote: true }); await g.multa(g.jug[0], 100); assert.equal(g.bote, 100);
-  g.jug[1].pos = 20; await g.caer(g.jug[1], 0); assert.equal(g.bote, 0); assert.equal(g.jug[1].dinero, 1700);
-  const h = nueva(2, { bote: false }); await h.multa(h.jug[0], 100); assert.equal(h.bote, 0);
-});
-await t('bancarrota: los destinos pasan al acreedor sin pisos', async () => {
-  const g = nueva(2); dueno(g, 0, [1, 3]); g.c[1].nivel = 2; g.c[3].nivel = 2; g.jug[0].dinero = 0;
-  dueno(g, 1, [37, 39]); g.c[37].nivel = 0;
-  await g.quiebra(g.jug[0], g.jug[1]); assert.ok(g.jug[0].fuera); assert.equal(g.c[1].dueno, 1); assert.equal(g.c[1].nivel, 0); assert.ok(g.terminada); assert.equal(g.ganador, 1);
-});
-await t('cartas: todas las ramas se ejecutan sin romper', async () => {
-  for (const m of Object.keys(MAZOS)) for (let k = 0; k < MAZOS[m].length; k++) {
-    const g = nueva(3); dueno(g, 1, [1, 3]); g.c[1].nivel = 2; g.mazos[m] = [k, ...g.mazos[m].filter(x => x !== k)];
-    g.jug[0].pos = 7; await g.robar(g.jug[0], m); assert.ok(g.jug.every(p => Number.isFinite(p.dinero) && p.pos >= 0 && p.pos < 40));
+await t('tirar: el coche avanza, nunca comparte casilla y el 6 repite turno', () => {
+  const S = nueva(3); S.jug[1].pos = 3; S.sem = 123;
+  let vistoSeis = false;
+  for (let i = 0; i < 400 && S.fase !== 'fin'; i++) {
+    const a = S.turno, antes = S.jug[a].pos;
+    if (S.fase === 'tirar') {
+      const r = M.decidir(S, { t: 'tirar' }); assert.ok(r.ok);
+      const pos = S.jug.filter(p => p.vivo && p.pos !== 0).map(p => p.pos); assert.equal(new Set(pos).size, pos.length, 'dos coches en la misma casilla');
+      if (S.dado === 6) { vistoSeis = true; assert.ok(S.seis || S.fase !== 'tirar'); }
+    } else { const r = M.decidir(S, M.cpuDecide(S)); assert.ok(r.ok, r.msg); }
   }
+  assert.ok(vistoSeis);
 });
-await t('subasta: gana la puja más alta', async () => {
-  const g = nueva(3, {}, false); g.h.puja = async (s, q, a) => (q === g.jug[1] && a < 100 ? a + 10 : q === g.jug[2] && a < 120 ? 120 : 0);
-  await g.subasta(g.c[6], g.jug[0]); assert.equal(g.c[6].dueno, 2); assert.equal(g.jug[2].dinero, 1480);
+await t('salario al cruzar el Banco y entradas en el Ayuntamiento', () => {
+  const S = nueva(2); S.jug[0].pos = 40; S.sem = 5;
+  // forzamos dado sacando una semilla que dé ≥2
+  let r; do { S.sem++; const c = JSON.parse(JSON.stringify(S)); M.decidir(c, { t: 'tirar' }); if (c.dado >= 2) break; } while (true);
+  const d0 = S.jug[0].dinero; r = M.decidir(S, { t: 'tirar' }); assert.ok(S.dado >= 2);
+  assert.ok(S.jug[0].dinero >= d0 + 2000 - 3000, 'cobro'); assert.ok(r.ev.some(e => e.t === 'cobra'));
 });
-await t('intercambio válido, inválido y con pisos', async () => {
-  const g = nueva(2, {}, false); dueno(g, 0, [1]); dueno(g, 1, [6]); g.h.aceptar = async () => true;
-  assert.ok(await g.proponer(g.jug[0], g.jug[1], { da: [1], daM: 10, pide: [6], pideM: 0 })); assert.equal(g.c[1].dueno, 1); assert.equal(g.c[6].dueno, 0);
-  assert.ok(!(await g.proponer(g.jug[0], g.jug[1], { da: [], daM: 99999, pide: [], pideM: 0 })));
-  dueno(g, 0, [11, 13, 14]); g.c[11].nivel = 1; assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [13], daM: 0, pide: [], pideM: 0 }), 'con pisos en la zona no se cede');
+await t('comprar terreno, no dos por turno, y compra obligatoria a mitad de precio', () => {
+  const S = nueva(2); const sq = D.CASILLAS_DE.fuji.find(i => D.TIPO[i] === 'C'); S.jug[0].pos = sq; S.fase = 'compra';
+  const L = M.legales(S); assert.ok(L.lotes.some(x => x.h === 'fuji' && x.precio === 1000));
+  assert.ok(M.decidir(S, { t: 'comprar', h: 'fuji' }).ok); assert.equal(S.hot.fuji.dueno, 0); assert.equal(S.jug[0].dinero, 11000);
+  // ahora un rival cae junto a un terreno vacío ajeno
+  S.fase = 'compra'; S.turno = 1; S.compro = false; S.jug[1].pos = sq;
+  const L2 = M.legales(S); const o = L2.lotes.find(x => x.h === 'fuji'); assert.ok(o && o.forzosa && o.precio === 500);
+  M.decidir(S, { t: 'comprar', h: 'fuji' }); assert.equal(S.hot.fuji.dueno, 1); assert.equal(S.jug[0].dinero, 11500); assert.equal(S.jug[1].dinero, 11500);
+  // con edificio principal ya no se puede
+  S.hot.fuji.etapa = 1; S.fase = 'compra'; S.turno = 0; S.jug[0].pos = sq; S.compro = false; assert.ok(!M.legales(S).lotes.some(x => x.h === 'fuji'));
 });
-await t('guardar y validar: ida y vuelta, y rechazo de datos corruptos', async () => {
-  const g = nueva(3); await g.jugarTurno(); await g.jugarTurno(); const d = JSON.parse(JSON.stringify(g.toJSON())); const v = validar(d); assert.ok(v);
-  const h = Partida.desde(v, ganchos()); assert.deepEqual(JSON.parse(JSON.stringify(h.toJSON())), d);
-  const malo = f => { const x = JSON.parse(JSON.stringify(d)); f(x); return validar(x); };
-  assert.equal(malo(x => { x.c.pop(); }), null); assert.equal(malo(x => { x.c[1][1] = 9; }), null); assert.equal(malo(x => { x.jug[0].pos = 77; }), null);
-  assert.equal(malo(x => { x.c[0] = [0, 0, false]; }), null); assert.equal(malo(x => { x.jug.length = 1; }), null); assert.equal(malo(x => { x.mazos.suerte.push(0); }), null);
-  assert.equal(validar(null), null); assert.equal(validar({ v: 2 }), null); assert.equal(malo(x => { x.reglas.cpu = 7; }).reglas.cpu, 1);
+await t('obras: no se construye el turno de compra, orden de fases y coste según dado', () => {
+  const S = nueva(2); S.hot.boom = { dueno: 0, etapa: 0, inst: false, desde: 1, ents: [] }; S.jug[0].turnos = 1; S.fase = 'obras';
+  assert.equal(M.legales(S).obras.length, 0);
+  S.jug[0].turnos = 2; assert.equal(M.legales(S).obras.length, 1);
+  assert.equal(M.costePlan(S, 0, ['boom']), 1800); assert.equal(M.costePlan(S, 0, ['boom', 'boom']), -1); assert.equal(M.costePlan(S, 0, ['fuji']), -1);
+  const d0 = S.jug[0].dinero; S.sem = 1; const r = M.decidir(S, { t: 'obras', plan: ['boom'] }); assert.ok(r.ok);
+  const cara = r.ev.find(e => e.t === 'permiso').cara;
+  const esperado = { verde: 1800, rojo: 0, H: 0, x2: 3600 }[cara]; assert.equal(d0 - S.jug[0].dinero, esperado);
+  assert.equal(S.hot.boom.etapa, cara === 'rojo' ? 0 : 1);
 });
-for (const cpu of [0, 1, 2]) await t(`partidas completas CPU contra CPU (nivel ${cpu}): terminan y conservan coherencia`, async () => {
-  for (let k = 0; k < 6; k++) {
-    const n = 2 + (k % 3), g = new Partida(Array.from({ length: n }, (_, i) => ({ nombre: 'B' + i, ficha: FICHAS[i], color: COLORES_JUGADOR[i], bot: true })), ganchos(), { cpu, rondas: k % 2 ? 40 : 0 });
-    let it = 0; while (!g.terminada && it++ < 3000) {
-      await g.jugarTurno();
-      for (const p of g.jug) assert.ok(Number.isFinite(p.dinero) && p.dinero >= 0 && p.pos >= 0 && p.pos < 40);
-      for (const s of g.c) assert.ok(s.nivel >= 0 && s.nivel <= 5 && !(s.hip && s.nivel) && (s.dueno === null || !g.jug[s.dueno].fuera));
-      if (it % 40 === 0) assert.ok(validar(JSON.parse(JSON.stringify(g.toJSON()))), 'guardado válido en mitad de la partida');
+await t('instalación solo con hotel completo y entradas con tope/una por casilla', () => {
+  const S = nueva(2); S.hot.boom = { dueno: 0, etapa: 1, inst: false, desde: 0, ents: [] };
+  assert.equal(M.legales(S).inst.length, 1); S.hot.fuji = { dueno: 0, etapa: 2, inst: false, desde: 0, ents: [] }; assert.equal(M.legales(S).inst.length, 1);
+  M.decidir(S, { t: 'instalacion', h: 'boom' }); assert.ok(S.hot.boom.inst); assert.equal(S.jug[0].dinero, 11750);
+  S.fase = 'ayto'; const ops = M.legales(S).entradas; assert.ok(ops.length > 0);
+  const e = ops.find(x => x.h === 'boom'); M.decidir(S, { t: 'entrada', h: 'boom', sq: e.sq });
+  assert.equal(S.entDe[e.sq], 'boom'); assert.equal(S.jug[0].dinero, 11650);
+});
+await t('estancia: el rival paga noches × tarifa al dueño', () => {
+  const S = nueva(2); S.hot.boom = { dueno: 0, etapa: 1, inst: false, desde: 0, ents: [11] }; S.entDe[11] = 'boom';
+  S.turno = 1; S.jug[1].pos = 11; S.pasos = ['estancia']; S.fase = 'tirar'; S.sem = 9;
+  const a0 = S.jug[0].dinero, b0 = S.jug[1].dinero;
+  // simulamos el paso con avanzar vía una decisión inocua: usamos 'saltar' en fase obras con pasos pendientes
+  S.fase = 'obras'; const r = M.decidir(S, { t: 'saltar' }); const e = r.ev.find(x => x.t === 'estancia');
+  assert.ok(e && e.coste === e.noches * 400); assert.equal(S.jug[0].dinero, a0 + e.coste); assert.equal(S.jug[1].dinero, b0 - e.coste);
+});
+await t('deuda: subasta, venta al mejor postor y demolición si nadie puja', () => {
+  const S = nueva(3); S.hot.pres = { dueno: 0, etapa: 2, inst: false, desde: 0, ents: [] }; S.jug[0].dinero = 500;
+  S.turno = 0; S.fase = 'obras'; S.jug[0].turnos = 3; S.hot.pres.desde = 0;
+  S.deuda = null; const ev = []; // provocamos deuda con una estancia simulada
+  S.hot.fuji = { dueno: 1, etapa: 3, inst: true, desde: 0, ents: [20] }; S.entDe[20] = 'fuji'; S.jug[0].pos = 20; S.pasos = ['estancia']; S.sem = 3;
+  const r = M.decidir(S, { t: 'saltar' }); assert.equal(S.fase, 'deuda', JSON.stringify(r.ev));
+  assert.ok(S.deuda.cant > 0);
+  M.decidir(S, { t: 'vender', h: 'pres' }); assert.equal(S.fase, 'subasta');
+  const q = S.sub.pend[S.sub.cur]; assert.notEqual(q, 0);
+  M.decidir(S, { t: 'pujar', cant: 1000 }); while (S.fase === 'subasta') M.decidir(S, { t: 'retirar' });
+  assert.notEqual(S.hot.pres.dueno, 0); assert.ok(S.jug[0].dinero >= 0);
+  // demolición
+  const T = nueva(2); T.hot.safari = { dueno: 0, etapa: 1, inst: false, desde: 0, ents: [46] }; T.entDe[46] = 'safari'; T.jug[0].dinero = 0;
+  T.deuda = { j: 0, cant: 300, a: 1, motivo: '' }; T.fase = 'deuda';
+  M.decidir(T, { t: 'vender', h: 'safari' }); while (T.fase === 'subasta') M.decidir(T, { t: 'retirar' });
+  assert.equal(T.hot.safari.dueno, -1); assert.equal(T.entDe[46], null);
+});
+await t('quiebra: sin hoteles ni dinero se queda eliminado y el otro gana', () => {
+  const S = nueva(2); S.hot.fuji = { dueno: 1, etapa: 3, inst: true, desde: 0, ents: [8] }; S.entDe[8] = 'fuji'; S.jug[0].pos = 8; S.jug[0].dinero = 100; S.pasos = ['estancia']; S.fase = 'obras';
+  M.decidir(S, { t: 'saltar' }); assert.equal(S.fase, 'fin'); assert.equal(S.ganador, 1); assert.ok(!S.jug[0].vivo);
+});
+await t('partidas completas de CPU (varios tamaños y niveles) terminan sin romper invariantes', () => {
+  let fin = 0;
+  for (let n = 2; n <= 4; n++) for (const niv of [1, 2, 3]) for (let semilla = 1; semilla <= 4; semilla++) {
+    const S = M.crear({ n, semilla: semilla * 977 + n, cpu: [1, 1, 1, 1], nivel: niv, limite: 60 });
+    let pasos = 0;
+    while (S.fase !== 'fin' && pasos++ < 20000) {
+      const d = M.cpuDecide(S), r = M.decidir(S, d); assert.ok(r.ok, `n=${n} niv=${niv} s=${semilla} fase=${S.fase} ${JSON.stringify(d)} ${r.msg}`);
+      for (const p of S.jug) { assert.ok(Number.isFinite(p.dinero) && p.dinero >= 0, 'dinero negativo ' + p.dinero); }
+      const pos = S.jug.filter(p => p.vivo && p.pos !== 0).map(p => p.pos); assert.equal(new Set(pos).size, pos.length);
+      for (const h of D.IDS_HOTEL) { const H = S.hot[h]; assert.ok(H.etapa >= 0 && H.etapa <= D.nEdif(h)); assert.ok(!H.inst || H.etapa === D.nEdif(h)); assert.ok(H.ents.length <= D.MAX_ENTRADAS); assert.ok(H.dueno === -1 ? H.etapa === 0 && !H.ents.length : S.jug[H.dueno].vivo, 'hotel de muerto'); for (const sq of H.ents) assert.equal(S.entDe[sq], h); }
     }
-    assert.ok(g.terminada, `partida ${k} sin terminar`); assert.ok(g.ganador >= 0);
+    assert.equal(S.fase, 'fin', `sin acabar n=${n} niv=${niv} s=${semilla}`); fin++;
+    assert.ok(S.ganador >= 0 && S.jug[S.ganador].vivo);
   }
+  assert.equal(fin, 36);
 });
-await t('CPU difícil construye más que la fácil (en media)', async () => {
-  const med = async cpu => { let t = 0; for (let k = 0; k < 8; k++) { const g = nueva(3, { cpu, rondas: 25 }); let i = 0; while (!g.terminada && i++ < 1500) await g.jugarTurno(); t += g.c.reduce((a, s) => a + s.nivel, 0); } return t; };
-  const f = await med(0), d = await med(2); console.log('  pisos fácil', f, 'difícil', d); assert.ok(d >= f * .8);
+await t('partidas sin límite: alguien acaba ganando por eliminación (n=2, nivel 3)', () => {
+  let porElim = 0;
+  for (let s = 1; s <= 6; s++) {
+    const S = M.crear({ n: 2, semilla: s * 31, cpu: [1, 1], nivel: 3 }); let k = 0;
+    while (S.fase !== 'fin' && k++ < 60000) assert.ok(M.decidir(S, M.cpuDecide(S)).ok);
+    if (S.fase === 'fin') porElim++;
+  }
+  assert.ok(porElim >= 4, 'terminaron ' + porElim);
 });
-console.log(`\n${ok} pruebas correctas`);
+console.log(`\n${ok} pruebas OK`);
