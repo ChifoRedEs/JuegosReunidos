@@ -5,7 +5,7 @@ import { anotarPartida, htmlPartidas } from '../../core/historial.js';
 import * as B from './motor.js';
 import { BARAJAS, cargarBarajas, urlTapete, imagenTapete, pintarTapete } from '../../core/cartas.js';
 
-const MOTOR = new URL('./motor.js', import.meta.url).href, M = 34;              // M: ancho de la banda de madera alrededor
+const MOTOR = new URL('./motor.js', import.meta.url).href, M = 26;              // M: ancho de la banda de madera alrededor
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 const GUIA = { larga: 'Larga', corta: 'Corta', no: 'Sin línea' };
 const TAPETES = { verde: ['Verde', '#1F8A4C'], azul: ['Azul', '#1E5FA8'], rojo: ['Rojo', '#A42A3A'], gris: ['Gris', '#5D6675'], morado: ['Morado', '#5B3A9B'], negro: ['Negro', '#22262E'] };
@@ -20,6 +20,7 @@ const SNC = { 7: '#F5C518', 8: '#15803D', 9: '#7A4A1E', 10: '#1D4ED8', 11: '#F48
 
 let S = null, api = null, asp = null, root = null, cv = null, ctx = null, dpr = 1, k = 1, raf = 0, tPrev = 0, reg = false;
 let ang = -Math.PI / 2, fuerza = .6, anim = null, arrastre = null, pensando = false, serie = 0, onKey = null, onVis = null, onRes = null, ultChoque = 0;
+let panel = null, posPanel = null, arrP = null, anchoPrev = 0, gruposVistos = '', popHasta = 0, hudPrev = '';     // panel flotante de tiro · ancho de pantalla con el que se midió la mesa
 let cfg = { modo: 'pool8', rival: 'cpu', nivel: 'medio', guia: 'larga' };
 
 /* ---------- validación / resumen ---------- */
@@ -50,7 +51,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic); root.addEventListener('input', alMover);
   onKey = tecla; document.addEventListener('keydown', onKey);
   onVis = () => { if (document.hidden) guardar(); }; document.addEventListener('visibilitychange', onVis);
-  onRes = () => { if (cv) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
+  onRes = () => { if (cv && ajustar()) dibujar(); limitarPanel(); }; addEventListener('resize', onRes);
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') armar(); else setup();
 }
@@ -60,13 +61,13 @@ export function unmount() {
   guardar();
   document.removeEventListener('keydown', onKey); document.removeEventListener('visibilitychange', onVis); removeEventListener('resize', onRes);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); }
-  S = null; cv = null; asp = null;
+  quitarPanel(); S = null; cv = null; asp = null;
 }
 function guardar() { if (!S || anim) return; const d = { s: S, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
 function setup() {
-  cancelAnimationFrame(raf); raf = 0; cv = null;
+  cancelAnimationFrame(raf); raf = 0; cv = null; quitarPanel();
   const seg = (k2, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k2] === v ? 'on' : ''}" data-cfg="${k2}" data-v="${v}">${l}</button>`).join('')}</div>`;
   root.innerHTML = `<p class="note">Apunta tocando o arrastrando sobre la mesa, ajusta la fuerza y pulsa <b>Tirar</b>. ${cfg.modo === 'pool8' ? 'Pool 8: mete tus bolas (lisas o rayadas) y después la 8.' : cfg.modo === 'pool9' ? 'Pool 9: toca siempre primero la bola más baja; gana quien mete la 9.' : 'Snooker: roja y color, roja y color… y al final los colores en orden. Gana quien más puntos sume.'}</p>
     <div class="bar"><span class="lbl">Juego</span>${seg('modo', Object.entries(B.MODOS))}</div>
@@ -83,27 +84,75 @@ function empezar() {
 }
 function armar() {
   root.innerHTML = `<div class="bihud" id="biHud"></div>
-    <div class="bizona" id="biZona"><canvas id="biCv" aria-label="Mesa de billar: toca o arrastra para apuntar"></canvas></div>
     <div class="msg bimsg" id="biMsg" role="status" aria-live="polite"></div>
-    <div class="bictl" id="biCtl">
+    <div class="bizona" id="biZona"><canvas id="biCv" aria-label="Mesa de billar: toca o arrastra para apuntar"></canvas></div>
+    <div class="bicesto" id="biCesto" aria-label="Bolas metidas"></div>
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="panel">📍 Recolocar controles</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+  cv = $('#biCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3);
+  cv.addEventListener('pointerdown', abajo); cv.addEventListener('pointermove', mueve);
+  for (const t of ['pointerup', 'pointercancel']) cv.addEventListener(t, () => { arrastre = null; });
+  gruposVistos = S.jug.map(j => j.grupo || '').join(); popHasta = 0; hudPrev = '';
+  ajustar(true); crearPanel(); pintarHud(); cancelAnimationFrame(raf); tPrev = performance.now(); raf = requestAnimationFrame(bucle);
+  turnoCPU();
+}
+// Tamaño fijo de la mesa: ocupa casi todo el ancho de la pantalla (sale del margen de la página) y NO depende del alto,
+// así no encoge al hacer scroll en el móvil (la barra del navegador cambia el alto) ni al abrir/cerrar nada.
+// Devuelve true si ha cambiado el tamaño.
+function ajustar(forzar = false) {
+  if (!cv) return false;
+  const vw = document.documentElement.clientWidth || innerWidth;
+  if (!forzar && vw === anchoPrev) return false;
+  anchoPrev = vw;
+  const W = B.ANCHO + 2 * M, H = B.ALTO + 2 * M;
+  let ancho = Math.min(vw - 8, 640);
+  if (vw >= 760 && matchMedia('(pointer: fine)').matches) ancho = Math.min(ancho, Math.max(460, (innerHeight - 30) * W / H));   // ordenador: que quepa de alto
+  ancho = Math.floor(ancho); const alto = Math.round(ancho * H / W);
+  const zona = $('#biZona'), cont = zona.parentElement.getBoundingClientRect().width;
+  zona.style.width = ancho + 'px'; zona.style.marginLeft = Math.min(0, (cont - ancho) / 2) + 'px';
+  if (ancho <= cont) zona.style.marginLeft = 'auto';
+  cv.width = ancho * dpr; cv.height = alto * dpr; cv.style.height = alto + 'px'; k = ancho / W;
+  return true;
+}
+
+/* ---------- panel de tiro flotante (se arrastra desde el asa a cualquier sitio de la pantalla) ---------- */
+function crearPanel() {
+  quitarPanel();
+  panel = document.createElement('div'); panel.className = 'bipanel'; panel.id = 'biCtl';
+  panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Controles de tiro');
+  panel.innerHTML = `<div class="biasa" title="Arrastra para mover los controles"><span aria-hidden="true"></span><small>Mover</small></div>
+    <div class="bictl" id="biCtlIn">
       <button class="btn" data-fino="-1" aria-label="Girar a la izquierda">↺</button>
       <label class="bifza"><span>Fuerza <b id="biFza"></b></span><input type="range" id="biRango" min="5" max="100" value="60" aria-label="Fuerza del golpe"></label>
       <button class="btn" data-fino="1" aria-label="Girar a la derecha">↻</button>
       <button class="btn on bitirar" data-ac="tirar">🎱 Tirar</button>
-    </div>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
-  cv = $('#biCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3);
-  cv.addEventListener('pointerdown', abajo); cv.addEventListener('pointermove', mueve);
-  for (const t of ['pointerup', 'pointercancel']) cv.addEventListener(t, () => { arrastre = null; });
-  ajustar(); pintarHud(); cancelAnimationFrame(raf); tPrev = performance.now(); raf = requestAnimationFrame(bucle);
-  turnoCPU();
+    </div>`;
+  document.body.append(panel);
+  panel.addEventListener('click', clic); panel.addEventListener('input', alMover);
+  const asa = panel.querySelector('.biasa');
+  asa.addEventListener('pointerdown', e => {
+    if (e.button > 0) return; e.preventDefault();
+    const r = panel.getBoundingClientRect(); arrP = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
+    try { asa.setPointerCapture(e.pointerId); } catch { /* */ }
+    panel.classList.add('mov');
+  });
+  asa.addEventListener('pointermove', e => { if (!arrP || e.pointerId !== arrP.id) return; posPanel = { x: e.clientX - arrP.dx, y: e.clientY - arrP.dy }; limitarPanel(); });
+  const suelta = e => { if (!arrP || e.pointerId !== arrP.id) return; arrP = null; panel.classList.remove('mov'); api.setPref('panel', posPanel); };
+  asa.addEventListener('pointerup', suelta); asa.addEventListener('pointercancel', suelta);
+  const p = api.pref('panel', null); posPanel = p && Number.isFinite(p.x) && Number.isFinite(p.y) ? { ...p } : null;
+  limitarPanel();
 }
-function ajustar() {
-  if (!cv) return;
-  const zona = $('#biZona'), w0 = zona.parentElement.getBoundingClientRect().width, hDisp = Math.max(400, innerHeight - zona.getBoundingClientRect().top - 150);
-  const W = B.ANCHO + 2 * M, H = B.ALTO + 2 * M, ancho = Math.floor(Math.min(w0, 440, hDisp * W / H)), alto = Math.round(ancho * H / W);
-  zona.style.width = ancho + 'px'; cv.width = ancho * dpr; cv.height = alto * dpr; cv.style.height = alto + 'px'; k = ancho / W;
+function limitarPanel() {
+  if (!panel) return;
+  const w = panel.offsetWidth, h = panel.offsetHeight, vw = document.documentElement.clientWidth || innerWidth, vh = innerHeight, mg = 6;
+  if (!posPanel) {                                                     // al principio: abajo y centrado (o a la derecha de la mesa si cabe)
+    const z = $('#biZona') && $('#biZona').getBoundingClientRect();
+    posPanel = z && z.right + w + 16 <= vw ? { x: z.right + 16, y: (vh - h) / 2 } : { x: (vw - w) / 2, y: vh - h - 14 };
+  }
+  const x = Math.min(Math.max(mg, posPanel.x), Math.max(mg, vw - w - mg)), y = Math.min(Math.max(mg, posPanel.y), Math.max(mg, vh - h - mg));
+  panel.style.left = x + 'px'; panel.style.top = y + 'px';
 }
+function recolocarPanel() { posPanel = null; api.setPref('panel', null); limitarPanel(); }
+function quitarPanel() { if (panel) { panel.remove(); panel = null; } arrP = null; }
 
 /* ---------- apuntar, bola en mano y tiro ---------- */
 const humanoJuega = () => S && S.fase === 'apuntar' && !anim && !S.jug[S.turno].cpu && !pensando;
@@ -185,7 +234,7 @@ function dibujar() {
   const pi = asp.valores.panoimg, imPano = pi && pi.startsWith('t-') ? imagenTapete(pi, () => dibujar()) : null;
   ctx.setTransform(k * dpr, 0, 0, k * dpr, M * k * dpr, M * k * dpr);
   // madera y tapete
-  ctx.fillStyle = mad[1]; redondo(-M, -M, W + 2 * M, H + 2 * M, 22); ctx.fill();
+  ctx.fillStyle = mad[1]; redondo(-M, -M, W + 2 * M, H + 2 * M, 18); ctx.fill();
   ctx.fillStyle = mad[2]; for (const [x, y] of [[0.25, 0], [.5, 0], [.75, 0], [0.25, 1], [.5, 1], [.75, 1]]) { ctx.beginPath(); ctx.arc(W * x, y ? H + M / 2 : -M / 2, 3, 0, 7); ctx.fill(); }
   for (const y of [.125, .25, .375, .625, .75, .875]) for (const x of [-M / 2, W + M / 2]) { ctx.beginPath(); ctx.arc(x, H * y, 3, 0, 7); ctx.fill(); }
   const g = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, H * .7); g.addColorStop(0, tap); g.addColorStop(1, sombra(tap, .78));
@@ -206,16 +255,22 @@ function dibujar() {
 }
 function bola(b, r) {
   const c = colorBola(b.id), raya = S.modo !== 'snooker' && b.id >= 9;
-  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.arc(b.x + 2, b.y + 3, r, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.32)'; ctx.beginPath(); ctx.arc(b.x + 2, b.y + 3, r, 0, 7); ctx.fill();
   ctx.save(); ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.clip();
-  ctx.fillStyle = raya ? '#F7F5EE' : c; ctx.fillRect(b.x - r, b.y - r, 2 * r, 2 * r);
-  if (raya) { ctx.fillStyle = c; ctx.fillRect(b.x - r, b.y - r * .55, 2 * r, r * 1.1); }
-  const g = ctx.createRadialGradient(b.x - r * .4, b.y - r * .45, r * .1, b.x, b.y, r * 1.1); g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(.35, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)');
+  ctx.fillStyle = raya ? '#FBFAF5' : c; ctx.fillRect(b.x - r, b.y - r, 2 * r, 2 * r);
+  if (raya) { ctx.fillStyle = c; ctx.fillRect(b.x - r, b.y - r * .5, 2 * r, r); }          // rayada: franja de color y casquetes blancos bien visibles
+  // sombreado del borde y un brillo pequeño (un brillo grande hacía que las lisas parecieran rayadas)
+  const g = ctx.createRadialGradient(b.x, b.y, r * .55, b.x, b.y, r * 1.05); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.3)');
   ctx.fillStyle = g; ctx.fillRect(b.x - r, b.y - r, 2 * r, 2 * r); ctx.restore();
+  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(b.x, b.y, r - .6, 0, 7); ctx.stroke();
   if (S.modo !== 'snooker' && b.id) {
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, r * .48, 0, 7); ctx.fill();
-    ctx.fillStyle = '#111'; ctx.font = `800 ${r * .72}px Nunito, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.id, b.x, b.y + .5);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, r * .54, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#111'; ctx.font = `900 ${r * (b.id > 9 ? .66 : .8)}px Nunito, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.id, b.x, b.y + r * .04);
   }
+  const s2 = ctx.createRadialGradient(b.x - r * .38, b.y - r * .42, 0, b.x - r * .38, b.y - r * .42, r * .32);
+  s2.addColorStop(0, 'rgba(255,255,255,.75)'); s2.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = s2; ctx.beginPath(); ctx.arc(b.x - r * .38, b.y - r * .42, r * .32, 0, 7); ctx.fill();
 }
 // Línea de ayuda: hasta la primera bola (con la «bola fantasma» y hacia dónde saldría) o hasta la banda
 function guia(bb, r) {
@@ -248,21 +303,55 @@ function taco(bb, r) {
 function redondo(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
 const sombra = (c, f) => { const n = parseInt(c.slice(1), 16); return `rgb(${(n >> 16) * f | 0},${(n >> 8 & 255) * f | 0},${(n & 255) * f | 0})`; };
 
-/* ---------- marcador ---------- */
+/* ---------- marcador, bolas metidas y panel ---------- */
+// Bola pequeña en HTML (marcador y caja de bolas metidas). vacia: hueco de una bola que sigue en la mesa
+function mini(id, { vacia = false, num = true } = {}) {
+  const raya = S.modo !== 'snooker' && id >= 9, n = S.modo !== 'snooker' && num ? `<b>${id}</b>` : '';
+  return `<span class="bimini${raya ? ' raya' : ''}${vacia ? ' vacia' : ''}" style="--c:${colorBola(id)}" title="${nombreBola(id)}${vacia ? ' (en la mesa)' : ' (metida)'}">${n}</span>`;
+}
+const nombreBola = id => (S.modo === 'snooker' ? (id <= 6 ? 'Roja' : B.SN[id].n[0].toUpperCase() + B.SN[id].n.slice(1)) : `Bola ${id}${id === 8 ? '' : id > 8 ? ' (rayada)' : ' (lisa)'}`);
+// Icono del grupo de cada jugador en Pool 8: una lisa o una rayada (la 1 y la 9 tienen el mismo color: solo cambia la raya)
+const iconoGrupo = g => `<span class="bigrupo ${g}">${mini(g === 'lisas' ? 1 : 9, { num: false })}<i>${g === 'lisas' ? 'Lisas' : 'Rayadas'}</i></span>`;
 function pintarHud() {
   if (!S || !$('#biHud')) return;
+  const ahora = S.jug.map(j => j.grupo || '').join();
+  if (S.modo === 'pool8' && ahora !== gruposVistos && S.jug.some(j => j.grupo)) popHasta = performance.now() + 1600;   // se acaban de repartir lisas/rayadas
+  gruposVistos = ahora; const nuevo = performance.now() < popHasta;
   const info = j => {
     if (S.modo === 'snooker') return `<b>${S.jug[j].puntos}</b> puntos`;
     if (S.modo === 'pool9') return j === S.turno ? `Toca la <b>${B.menor(S)}</b>` : '';
-    const gr = S.jug[j].grupo; return gr ? `${gr === 'lisas' ? '● Lisas' : '◐ Rayadas'} · quedan <b>${B.quedanDelGrupo(S, gr)}</b>` : 'Mesa abierta';
+    const gr = S.jug[j].grupo;
+    return gr ? `${iconoGrupo(gr)}<span class="biquedan">${B.quedanDelGrupo(S, gr) ? `quedan <b>${B.quedanDelGrupo(S, gr)}</b>` : 'a por la <b>8</b>'}</span>` : '<span class="biabierta">Mesa abierta</span>';
   };
-  $('#biHud').innerHTML = S.jug.map((p, j) => `<span class="${j === S.turno && S.fase !== 'fin' ? 'turno' : ''} ${S.ganador === j ? 'gana' : ''}"><small>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</small><em>${info(j)}</em></span>`).join('');
+  const hud = S.jug.map((p, j) => `<span class="${j === S.turno && S.fase !== 'fin' ? 'turno' : ''} ${S.ganador === j ? 'gana' : ''} ${nuevo ? 'nuevo' : ''}"><small>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</small><em>${info(j)}</em></span>`).join('');
+  if (hud !== hudPrev) { $('#biHud').innerHTML = hud; hudPrev = hud; }          // solo se repinta si cambia (no corta la animación del icono)
   const turnoHumano = humanoJuega();
   $('#biMsg').textContent = S.fase === 'fin' ? S.msg : anim ? '' : pensando ? 'La CPU está pensando…' : S.msg + (turnoHumano && S.enMano ? ' Arrastra la blanca para colocarla.' : '');
-  $('#biCtl').classList.toggle('apagado', !turnoHumano);
-  root.querySelectorAll('#biCtl button').forEach(b => { b.disabled = !turnoHumano; });
-  const rg = $('#biRango'); rg.disabled = !turnoHumano; rg.value = Math.round(fuerza * 100); $('#biFza').textContent = Math.round(fuerza * 100) + '%';
-  if (S.fase === 'fin') $('#biCtl').innerHTML = '<button class="btn on" data-ac="start">🔁 Otra partida</button><button class="btn" data-ac="opciones">Opciones</button>';
+  pintarCesto();
+  const ctl = $('#biCtlIn'); if (!ctl || !panel) return;
+  if (S.fase === 'fin') {                                             // fin: el panel ofrece otra partida (solo se pinta una vez)
+    panel.classList.remove('apagado');
+    if (!ctl.classList.contains('fin')) { ctl.classList.add('fin'); ctl.innerHTML = '<button class="btn on" data-ac="start">🔁 Otra partida</button><button class="btn" data-ac="opciones">Opciones</button>'; limitarPanel(); }
+    return;
+  }
+  panel.classList.toggle('apagado', !turnoHumano);
+  ctl.querySelectorAll('button').forEach(b => { b.disabled = !turnoHumano; });
+  const rg = $('#biRango'); if (rg) { rg.disabled = !turnoHumano; rg.value = Math.round(fuerza * 100); }
+  const fz = $('#biFza'); if (fz) fz.textContent = Math.round(fuerza * 100) + '%';
+}
+// Caja de bolas metidas, debajo de la mesa: cada grupo con sus huecos (llenos = metidas)
+function pintarCesto() {
+  const caja = $('#biCesto'); if (!caja || !S) return;
+  const fuera = id => S.bolas.some(b => b.id === id && b.fuera);
+  const fila = (titulo, ids, extra = '') => { const n = ids.filter(fuera).length;
+    return `<div class="bifila"><span class="bititulo">${titulo}${extra}</span><span class="bibolas">${ids.map(id => mini(id, { vacia: !fuera(id) })).join('')}</span><span class="binum"><b>${n}</b>/${ids.length}</span></div>`; };
+  const de = g => { const j = S.jug.findIndex(p => p.grupo === g); return j < 0 ? '' : ` <small>${esc(S.jug[j].nombre)}</small>`; };
+  const total = S.bolas.filter(b => b.id && b.fuera).length;
+  let html = `<div class="bicab">🧺 Bolas metidas <b>${total}</b></div>`;
+  if (S.modo === 'pool8') html += fila('Lisas', [1, 2, 3, 4, 5, 6, 7], de('lisas')) + fila('Rayadas', [9, 10, 11, 12, 13, 14, 15], de('rayadas')) + fila('Negra', [8]);
+  else if (S.modo === 'pool9') html += fila('Bolas', [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  else html += fila('Rojas', [1, 2, 3, 4, 5, 6]) + fila('Colores', [7, 8, 9, 10, 11, 12]);
+  caja.innerHTML = html;
 }
 
 /* ---------- entrada ---------- */
@@ -278,13 +367,13 @@ function clic(e) {
   if (d.fino) { ang += +d.fino * .006; return; }
   const a = d.ac;
   if (a === 'start') empezar(); else if (a === 'tirar') { if (humanoJuega()) tirar(); }
-  else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
+  else if (a === 'aspecto') asp.abrir(); else if (a === 'panel') recolocarPanel(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
   else if (a === 'opciones') { api.borrar(); S = null; setup(); }
 }
 function reglas() {
-  api.modal('Billar', `<ul><li><b>Cómo tirar</b>: toca o arrastra sobre la mesa para apuntar (la blanca irá hacia tu dedo), afina con ↺ ↻, elige la fuerza y pulsa 🎱 <b>Tirar</b>. Con teclado: flechas para apuntar (Mayús = fino), arriba/abajo para la fuerza y Espacio para tirar.</li>
+  api.modal('Billar', `<ul><li><b>Cómo tirar</b>: toca o arrastra sobre la mesa para apuntar (la blanca irá hacia tu dedo), afina con ↺ ↻, elige la fuerza y pulsa 🎱 <b>Tirar</b>. Los controles flotan: arrástralos desde su asa a una zona sin bolas (📍 <b>Recolocar controles</b> los devuelve abajo). Debajo de la mesa ves las bolas ya metidas. Con teclado: flechas para apuntar (Mayús = fino), arriba/abajo para la fuerza y Espacio para tirar.</li>
     <li>La <b>línea de ayuda</b> marca hasta dónde va la blanca, la «bola fantasma» donde tocará y hacia dónde saldrá la otra bola; una ✕ roja avisa si es una bola que no puedes tocar primero.</li>
-    <li><b>Pool 8</b>: el primero que mete una bola tras el saque se queda con ese grupo (lisas 1-7 o rayadas 9-15). Mete todas las tuyas y después la 8. Si metes la 8 antes de tiempo (o con falta), pierdes.</li>
+    <li><b>Pool 8</b>: el primero que mete una bola (también en el saque) se queda con ese grupo; arriba, junto a cada jugador, sale su icono de lisas o rayadas (lisas 1-7 o rayadas 9-15). Mete todas las tuyas y después la 8. Si metes la 8 antes de tiempo (o con falta), pierdes.</li>
     <li><b>Pool 9</b>: toca siempre primero la bola más baja que quede. Gana quien mete la 9, aunque sea de rebote.</li>
     <li><b>Snooker de 6 rojas</b>: mete una roja (1 punto) y después un color (amarilla 2, verde 3, marrón 4, azul 5, rosa 6, negra 7), que vuelve a su sitio. Sin rojas, los colores van en orden. Las faltas dan al rival al menos 4 puntos.</li>
     <li><b>Faltas</b>: meter la blanca, no tocar ninguna bola, tocar primero una que no toca o (en pool) que ninguna bola toque banda. Tras una falta, el rival tiene <b>bola en mano</b>: coloca la blanca donde quiera (en snooker, dentro de la D).</li>

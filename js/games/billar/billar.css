@@ -1,17 +1,54 @@
 /* Billar */
-.bihud{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px auto 8px;max-width:440px}
-.bihud span{display:flex;flex-direction:column;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:4px 10px;min-width:0}
-.bihud span.turno{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 25%,transparent)}
-.bihud span.gana{border-color:var(--ok)}
+.bihud{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px auto 6px;max-width:520px}
+.bihud>span{display:flex;flex-direction:column;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:4px 10px;min-width:0}
+.bihud>span.turno{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 25%,transparent)}
+.bihud>span.gana{border-color:var(--ok)}
 .bihud small{font-weight:800;font-size:13px;color:var(--mut)}
-.bihud em{font-style:normal;font-size:14px;font-weight:700}
+.bihud em{font-style:normal;font-size:14px;font-weight:700;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-height:28px}
 .bihud em b{font:800 18px 'Baloo 2',system-ui,sans-serif}
+.biabierta{color:var(--mut)}
+.biquedan{font-size:13px}
+/* icono del grupo (lisas / rayadas) junto a cada jugador */
+.bigrupo{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 3px;border-radius:99px;background:color-mix(in srgb,var(--ink) 8%,transparent);font-weight:800}
+.bigrupo .bimini{--d:24px}
+.bigrupo i{font-style:normal;font-size:13px;text-transform:uppercase;letter-spacing:.3px}
+.bihud>span.nuevo .bigrupo{animation:bipop .7s ease-out 2}
+@keyframes bipop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.bimsg{text-align:center;min-height:22px;font-size:14px;margin:0 0 6px}
+/* mesa: tamaño fijo, casi todo el ancho de la pantalla */
 .bizona{margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 12px 22px rgba(0,0,0,.3))}
-.bizona canvas{display:block;width:100%;cursor:crosshair}
-.bimsg{text-align:center;min-height:22px;font-size:14px}
-.bictl{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;max-width:440px;margin:6px auto}
-.bictl.apagado{opacity:.55}
-.bictl .btn{min-height:46px;padding:6px 12px;font-size:18px}
-.bictl .bitirar{font-size:16px}
-.bifza{display:flex;flex-direction:column;font-size:12px;font-weight:800;color:var(--mut)}
-.bifza input{width:100%;accent-color:var(--red);height:30px}
+.bizona canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
+/* bolas pequeñas en HTML */
+.bimini{--c:#999;--d:22px;flex:none;display:inline-grid;place-items:center;width:var(--d);height:var(--d);border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.7) 0 9%,transparent 24%),radial-gradient(circle,transparent 55%,rgba(0,0,0,.3) 100%),var(--c);
+  box-shadow:0 1px 2px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.35)}
+.bimini.raya{background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.7) 0 9%,transparent 24%),radial-gradient(circle,transparent 55%,rgba(0,0,0,.3) 100%),linear-gradient(#FBFAF5 0 25%,var(--c) 25% 75%,#FBFAF5 75%)}
+.bimini b{display:grid;place-items:center;width:56%;height:56%;border-radius:50%;background:#fff;color:#111;font:900 calc(var(--d) * .38)/1 Nunito,system-ui,sans-serif}
+.bimini.vacia{background:transparent;box-shadow:none;border:2px dashed color-mix(in srgb,var(--c) 70%,var(--mut));opacity:.75}
+.bimini.vacia b{background:transparent;color:var(--mut);opacity:.7}
+/* caja de bolas metidas */
+.bicesto{max-width:520px;margin:12px auto 6px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:8px 10px;display:grid;gap:6px}
+.bicab{font-weight:800;font-size:14px;color:var(--mut)}
+.bicab b{font:800 17px 'Baloo 2',system-ui,sans-serif;color:var(--ink)}
+.bifila{display:grid;grid-template-columns:76px 1fr auto;align-items:center;gap:8px}
+.bititulo{font-size:12px;font-weight:800;line-height:1.1;display:flex;flex-direction:column;min-width:0}
+.bititulo small{font-size:11px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bibolas{display:flex;flex-wrap:wrap;gap:4px}
+.binum{font-size:12px;color:var(--mut);font-weight:700}
+.binum b{font:800 15px 'Baloo 2',system-ui,sans-serif;color:var(--ink)}
+@media(max-width:380px){.bifila{grid-template-columns:62px 1fr auto}.bibolas .bimini{--d:20px}}
+/* panel de tiro flotante (está en <body>, encima de la mesa) */
+.bipanel{position:fixed;z-index:40;width:min(calc(100vw - 12px),380px);background:color-mix(in srgb,var(--card) 92%,transparent);border:2px solid var(--line);border-radius:18px;
+  box-shadow:0 12px 30px rgba(20,15,60,.35);padding:0 8px 8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);user-select:none;-webkit-user-select:none;transition:opacity .2s}
+.bipanel.mov{box-shadow:0 20px 44px rgba(20,15,60,.5);opacity:.9}
+.bipanel.apagado{opacity:.55}
+.biasa{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0 5px;cursor:grab;touch-action:none}
+.bipanel.mov .biasa{cursor:grabbing}
+.biasa span{width:40px;height:5px;border-radius:99px;background:var(--line)}
+.biasa small{font-size:11px;font-weight:800;color:var(--mut)}
+.bictl{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px;align-items:center}
+.bictl.fin{grid-template-columns:1fr 1fr}
+.bictl .btn{min-height:44px;padding:6px 11px;font-size:18px;margin:0}
+.bictl .bitirar,.bictl.fin .btn{font-size:15px}
+.bifza{display:flex;flex-direction:column;font-size:12px;font-weight:800;color:var(--mut);min-width:0}
+.bifza input{width:100%;accent-color:var(--red);height:30px;touch-action:pan-x}

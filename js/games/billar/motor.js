@@ -4,7 +4,7 @@
 export const ANCHO = 500, ALTO = 1000;
 export const MODOS = { pool8: 'Pool 8', pool9: 'Pool 9', snooker: 'Snooker (6 rojas)' };
 const V_MAX = 1900, ROCE = 140, REB_BANDA = .78, REB_BOLA = .96, V_PARADA = 4;
-export const radio = modo => (modo === 'snooker' ? 11 : 14.5);              // algo mayores que las reales: se ven y se tocan mejor en el móvil
+export const radio = modo => (modo === 'snooker' ? 13 : 17);                 // mayores que las reales: se ven (números, lisas y rayadas) y se tocan mejor en el móvil
 export const TRONERAS = [[0, 0], [ANCHO, 0], [0, ALTO / 2], [ANCHO, ALTO / 2], [0, ALTO], [ANCHO, ALTO]];
 const radioTronera = (k, r) => (k === 2 || k === 3 ? r * 2.05 : r * 2.45);
 // Snooker: valores y puntos de colocación
@@ -92,7 +92,7 @@ export function golpear(blanca, angulo, fuerza) { const v = Math.max(.05, Math.m
 export function crear({ modo = 'pool8', jugadores = [{ nombre: 'Tú', cpu: false }, { nombre: 'CPU', cpu: true }], nivel = 'medio' } = {}) {
   const S = { modo: MODOS[modo] ? modo : 'pool8', nivel, jug: jugadores.map(j => ({ nombre: j.nombre, cpu: !!j.cpu, grupo: null, puntos: 0 })), turno: 0,
     bolas: colocar(modo), fase: 'apuntar', enMano: true, rotura: true, abierta: true, objetivo: 'roja', ganador: -1, msg: '', tiros: 0, faltas: [0, 0] };
-  S.msg = S.modo === 'snooker' ? 'Saque: coloca la blanca en la D y tira a las rojas' : 'Saque: coloca la blanca detrás de la línea y rompe';
+  S.msg = S.modo === 'snooker' ? 'Saque: coloca la blanca en la D y tira a las rojas.' : 'Saque: coloca la blanca detrás de la línea y rompe.';
   return S;
 }
 export const enMesa = (S, id) => S.bolas.some(b => b.id === id && !b.fuera);
@@ -128,6 +128,8 @@ function reponer(S, id, [x, y]) {                                // vuelve a pon
   Object.assign(b, { x, y, fuera: false });
 }
 const otro = S => (S.turno + 1) % S.jug.length;
+// Mensajes en 2.ª persona cuando juegas tú: dice('Tú', 'Metes', 'mete') → «Metes»; dice('CPU', …) → «CPU mete»
+const dice = (n, tu, el, solo = false) => (n === 'Tú' ? tu : solo ? el : `${n} ${el}`);
 // Aplica las reglas al resultado de un tiro (info de simular). Devuelve un texto para mostrar.
 export function resolver(S, info) {
   const j = S.jug[S.turno], nombre = j.nombre, blancaDentro = info.metidas.includes(0), metidas = info.metidas.filter(id => id !== 0);
@@ -143,16 +145,16 @@ export function resolver(S, info) {
     if (metidas.includes(8)) {
       const g = j.grupo, limpio = g && quedanDelGrupo(S, g) === 0 && !falta;
       if (S.rotura && !blancaDentro) { reponer(S, 8, [250, 250]); txt = 'La 8 ha entrado en el saque: vuelve a su sitio. '; }
-      else { S.ganador = limpio ? S.turno : otro(S); S.fase = 'fin'; S.msg = limpio ? `🏆 ¡${nombre} mete la 8 y gana!` : `${nombre} mete la 8 antes de tiempo: ¡gana ${S.jug[otro(S)].nombre}!`; return S.msg; }
+      else { S.ganador = limpio ? S.turno : otro(S); S.fase = 'fin'; S.msg = limpio ? `🏆 ¡${dice(nombre, 'Metes la 8 y ganas', 'mete la 8 y gana')}!` : `${dice(nombre, 'Metes la 8 antes de tiempo', 'mete la 8 antes de tiempo')}: ¡${dice(S.jug[otro(S)].nombre, 'ganas tú', 'gana ' + S.jug[otro(S)].nombre, true)}!`; return S.msg; }
     }
-    if (!falta && S.abierta && !S.rotura) {
+    if (!falta && S.abierta) {                                    // la primera bola que entra (también en el saque) decide los grupos
       const primera = metidas.find(id => grupoDe(id));
-      if (primera) { const g = grupoDe(primera); j.grupo = g; S.jug[otro(S)].grupo = g === 'lisas' ? 'rayadas' : 'lisas'; S.abierta = false; txt += `${nombre} juega con las ${g}. `; }
+      if (primera) { const g = grupoDe(primera); j.grupo = g; S.jug[otro(S)].grupo = g === 'lisas' ? 'rayadas' : 'lisas'; S.abierta = false; txt += `${dice(nombre, 'Juegas', 'juega')} con las ${g}. `; }
     }
     if (!falta) sigue = j.grupo ? metidas.some(id => grupoDe(id) === j.grupo) : metidas.some(id => grupoDe(id));
   } else if (S.modo === 'pool9') {
     if (metidas.includes(9)) {
-      if (!falta) { S.ganador = S.turno; S.fase = 'fin'; S.msg = `🏆 ¡${nombre} mete la 9 y gana!`; return S.msg; }
+      if (!falta) { S.ganador = S.turno; S.fase = 'fin'; S.msg = `🏆 ¡${dice(nombre, 'Metes la 9 y ganas', 'mete la 9 y gana')}!`; return S.msg; }
       reponer(S, 9, [250, 250]); txt = 'La 9 vuelve a su sitio por la falta. ';
     }
     if (!falta) sigue = metidas.length > 0;
@@ -172,14 +174,14 @@ export function resolver(S, info) {
     } else {
       const pts = metidas.reduce((a, id) => a + valorSn(id), 0); j.puntos += pts; sigue = pts > 0;
       if (conRojas) for (const id of metidas) if (id >= 7) reponer(S, id, SN[id].p);
-      if (pts) txt += `${nombre} suma ${pts}. `;
+      if (pts) txt += `${dice(nombre, 'Sumas', 'suma')} ${pts}. `;
     }
     if (rojasEnMesa(S)) { S.objetivo = !falta && sigue && era === 'roja' ? 'color' : 'roja'; S.colorLibre = false; }
     else if (rojasAntes && era === 'roja' && !falta && sigue) { S.colorLibre = true; S.objetivo = 'color'; }   // acaba de entrar la última roja
     else { S.colorLibre = false; S.objetivo = 'color'; }
     if (!S.bolas.some(b => !b.fuera && b.id !== 0)) {                                            // ya no queda ninguna: fin del frame
       const [a, b] = S.jug.map(x => x.puntos); S.ganador = a === b ? -1 : a > b ? 0 : 1; S.fase = 'fin';
-      S.msg = S.ganador < 0 ? `Empate a ${a}` : `🏆 ¡${S.jug[S.ganador].nombre} gana el frame ${Math.max(a, b)}-${Math.min(a, b)}!`; return S.msg;
+      S.msg = S.ganador < 0 ? `Empate a ${a}` : `🏆 ¡${dice(S.jug[S.ganador].nombre, 'Ganas', 'gana')} el frame ${Math.max(a, b)}-${Math.min(a, b)}!`; return S.msg;
     }
   }
   S.rotura = false;

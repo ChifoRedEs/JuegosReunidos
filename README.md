@@ -1,4 +1,4 @@
-# Juegos Reunidos 3.2
+# Juegos Reunidos 3.3
 
 38 juegos en 5 categorías: Sudoku, Nonogram, Buscaminas, KenKen, Kakuro, Sokoban (Lógica) · Damas, Ajedrez, Hundir la Flota, Rummy de fichas, Juego de la Oca, Parchís, Magnate Tecnológico, 3 en raya, Conecta 4, Trivial (Tablero) · BlackJack, Klondike, Texas Hold'em, Póker cubierto, Corazones, Brisca, Chinchón, Mus, Cinquillo, Continental (Cartas) · Sopa de letras, Crucigramas, El Ahorcado, Ruleta de la Suerte, El Rosco, Encadenadas, Cifras y Letras (Palabras) · Serpiente, Bloques, Rompe-Ladrillos, Air Hockey y Billar (Arcade).
 
@@ -52,6 +52,8 @@ El comodín usa la imagen `00` de la baraja elegida (si existe en `img/cartas/..
 
 **🎨 Apariencia · Fondo de Tablero y Personajes:** todos los juegos que no son de cartas tienen «Fondo de Tablero» (los 12 tapetes de `img/cartas/tapetes/`, o 🎲 aleatorio; por defecto «Sin fondo»). Los juegos de canvas (Air Hockey, Ladrillos, Bloques, Serpiente) pintan el tapete con `imagenTapete` + `pintarTapete` (`js/core/cartas.js`); el resto lo pone una regla CSS detrás del tablero (`grupoFondo('selector')` en `js/core/aspectos.js`). «Personajes» (los de Sokoban, `js/core/personajes.js`) está en Serpiente (cabeza), Rompe-Ladrillos (bola), Air Hockey (tu mazo), Parchís, Oca, Damas, Conecta 4, 3 en raya y Trivial (tus fichas), Sokoban y Magnate.
 
+**Billar:** la mesa tiene tamaño fijo y ocupa casi todo el ancho; los controles de tiro (giro fino, fuerza y Tirar) flotan y se arrastran desde su asa a una zona sin bolas (la posición se recuerda); debajo de la mesa está la caja de bolas metidas y, en Pool 8, cada jugador lleva el icono de su grupo (lisas o rayadas) desde la primera bola que entra.
+
 **Billar · 🎨 Apariencia:** color del tapete, tapete de imagen (los de `img/cartas/tapetes/`, encima del color), bandas de madera, colores de las bolas (en Pool; en Snooker los colores son los del reglamento) y 4 tacos.
 
 ## Versión
@@ -61,7 +63,8 @@ Formato MAYOR.MENOR.PARCHE: MAYOR = cambios grandes en toda la app · MENOR = ju
 ## Historial de versiones
 | Versión | Fecha | Cambios |
 |---|---|---|
-| **3.2.0** | 22/10/2026 | 🔠 **Cifras y Letras** (Palabras): rondas de letras con el diccionario de LibreOffice y de cifras con solución calculada, contra la CPU (3 niveles) o en solitario, reto del día y tapetes de fondo (🎲 aleatorio por defecto). |
+| **3.3.0** | 23/10/2026 | 🎱 **Billar**: mesa más grande y de tamaño fijo (casi todo el ancho de la pantalla; ya no encoge al hacer scroll en el móvil), bolas más grandes con números y rayas más claros, controles de tiro flotantes que se arrastran a cualquier sitio (📍 Recolocar controles), caja de 🧺 bolas metidas bajo la mesa e icono de lisas/rayadas junto a cada jugador en cuanto entra la primera bola (también en el saque). Arreglo: al acabar la partida no se apuntaba en estadísticas y «Otra partida» salía desactivado. Limpieza: fuera la carpeta del antiguo Minigolf y las copias de la guía con «Ñ» mal codificada. |
+| 3.2.0 | 22/10/2026 | 🔠 **Cifras y Letras** (Palabras): rondas de letras con el diccionario de LibreOffice y de cifras con solución calculada, contra la CPU (3 niveles) o en solitario, reto del día y tapetes de fondo (🎲 aleatorio por defecto). |
 | 3.1.0 | 19/10/2026 | 🎱 **Billar** (Pool 8, Pool 9 y Snooker de 6 rojas, contra la CPU o 2 jugadores) sustituye al Minigolf. Número de versión al pie de Ajustes. Guía `docs/ANADIR-JUEGO.md` sin «Ñ» en el nombre. |
 | 3.0.0 | 10/2026 | Nueva 🎨 Apariencia: cada categoría en su propia ventana, tapetes de imagen, dorsos y barajas aleatorios, «Fondo de Tablero» y «Personajes» en todos los juegos; iconos de oficinas/sede elegibles en Magnate. |
 | 2.6.0 | 10/2026 | Corazones, Kakuro, Sokoban, Póker cubierto y Air Hockey. Diccionario español (LibreOffice). |
