@@ -1,6 +1,7 @@
 // Rummy · mesa en 3D (Three.js): las jugadas se ven sobre un tapete con fichas con relieve (bisel y grosor reales).
 // Las fichas se deslizan al reorganizar la mesa. El atril sigue siendo HTML (se arrastra para ordenarlo).
 import { crearEscena, T, lienzo, textura } from '../../core/escena3d.js';
+import { BARAJAS, urlTapete } from '../../core/cartas.js';
 
 const TW = .58, TH = .76, TD = .13, MESA_W = 8.4, MESA_H = 5.2, MAXW = 7.7;
 const css = (el, v, d) => getComputedStyle(el).getPropertyValue(v).trim() || d;
@@ -94,8 +95,14 @@ export function crearRummy3D(cont) {
     E.tocables = [...fichas.values()].filter(f => f.vivo).map(f => f.m).concat(placas, marcas);
     E.marcar();
   };
+  let texTapete = null;
   V.recolor = () => {
     leer(cont); matTapete.color.set(col.r1); centro.material.color.set(col.r2); matLado.color.set(col.fb);
+    if (texTapete) { texTapete.dispose(); texTapete = null; } matTapete.map = null; centro.visible = true;
+    const tp = BARAJAS.tapetes.find(t => t.id === (cont.closest('.juego') || cont).dataset.mesa);
+    if (tp) { const c = lienzo(512, 512), x = c.getContext('2d'); x.fillStyle = col.r1; x.fillRect(0, 0, 512, 512); texTapete = textura(c, 4); matTapete.map = texTapete; matTapete.color.set(0xffffff); centro.visible = false;
+      const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { x.drawImage(im, 0, 0, 512, 512); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, 0, 512, 512); texTapete.needsUpdate = true; E.marcar(); }; im.src = urlTapete(tp); }
+    matTapete.needsUpdate = true;
     for (const t of texCache.values()) t.dispose(); texCache = new Map();
     for (const f of fichas.values()) { f.k = ''; f.mat.map = null; f.mat.needsUpdate = true; }
     E.marcar();

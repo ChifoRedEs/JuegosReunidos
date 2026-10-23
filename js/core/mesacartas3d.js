@@ -2,7 +2,9 @@
 // cartas con relieve (grosor y sombra), fichas apiladas, botón del repartidor y carteles de jugador.
 // Se importa de forma dinámica; no guarda estado de juego: el juego llama a V.pintar(datos) tras cada cambio.
 import { crearEscena, T, lienzo, textura } from './escena3d.js';
-import { PALOS, RANGOS, paloDe, rangoDe } from './cartas.js';
+import { PALOS, RANGOS, paloDe, rangoDe, BARAJAS, urlCarta, urlDorso, urlTapete } from './cartas.js';
+
+const FRL = ['P', 'C', 'D', 'T'];
 
 const RX = 5, RZ = 3.3, CW = .64, CH = .9, CD = .03;
 const css = (el, v, d) => getComputedStyle(el).getPropertyValue(v).trim() || d;
@@ -13,13 +15,19 @@ export function crearMesaCartas3D(cont, o = {}) {
   const E = crearEscena(cont, { fov: 36, az: 0, pol: .78, polMin: .25, polMax: 1.3, radio: 4.5, margen: .4, objetivo: [0, 0, .25], distMin: 6, distMax: 24, sombraRadio: 8, sombraTam: 1536, sol: { pos: [-3, 11, 6], int: 2.1 }, hemi: { int: 1.7 }, sueloY: -.32, etiqueta: o.etiqueta || 'Mesa de póker en 3D' });
   const V = { alCarta: null };
   const esc = E.escena, cache = new Map();
-  let colores = {};
-  const leer = () => { colores = { f1: css(cont, '--mesa1', '#12A05C'), f2: css(cont, '--mesa2', '#0A6B3C'), d1: css(cont, '--d1', '#2F6BFF'), d2: css(cont, '--d2', '#1B3FA8') }; };
+  let colores = {}, sel = { b: null, d: null, t: null };
+  // Dibuja una imagen (baraja, dorso o tapete elegidos en Apariencia) sobre un lienzo/textura cuando termina de cargar
+  const cargar = (url, tex, dibujar) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { try { dibujar(im); tex.needsUpdate = true; E.marcar(); } catch { /* se queda el diseño por defecto */ } }; im.src = url; };
+  const leer = () => {
+    const ds = (cont.closest('.juego') || cont).dataset;
+    sel = { b: BARAJAS.francesa.find(b => b.id === ds.barajafr) || null, d: BARAJAS.dorsos.find(d => d.id === ds.dorso) || null, t: BARAJAS.tapetes.find(t => t.id === ds.mesa) || null };
+ colores = { f1: css(cont, '--mesa1', '#12A05C'), f2: css(cont, '--mesa2', '#0A6B3C'), d1: css(cont, '--d1', '#2F6BFF'), d2: css(cont, '--d2', '#1B3FA8') }; };
   leer();
 
   /* ---------- texturas ---------- */
   const cara = id => {
-    if (cache.has(id)) return cache.get(id);
+    const ck = (sel.b ? sel.b.id : 'css') + ':' + id;
+    if (cache.has(ck)) return cache.get(ck);
     const c = lienzo(256, 358), x = c.getContext('2d'), p = paloDe(id), R = RANGOS[rangoDe(id)], s = PALOS[p].s + '︎', col = p === 1 || p === 2 ? '#D92B3F' : '#1B2340', fig = 'JQK'.includes(R);
     x.fillStyle = '#fff'; rr(x, 3, 3, 250, 352, 24); x.fill(); x.strokeStyle = '#bcc3d2'; x.lineWidth = 5; x.stroke();
     x.fillStyle = col; x.textAlign = 'center'; x.textBaseline = 'middle';
@@ -27,7 +35,9 @@ export function crearMesaCartas3D(cont, o = {}) {
     esquina(); x.save(); x.translate(256, 358); x.rotate(Math.PI); esquina(); x.restore();
     if (fig) { x.font = '800 150px "Baloo 2",system-ui,sans-serif'; x.fillText(R, 128, 160); x.font = '84px system-ui,sans-serif'; x.fillText(s, 128, 252); }
     else { x.font = '150px system-ui,sans-serif'; x.fillText(s, 128, 186); }
-    const t = textura(c, 8); cache.set(id, t); return t;
+    const t = textura(c, 8); cache.set(ck, t);
+    if (sel.b) cargar(urlCarta(sel.b, FRL[p] + String(rangoDe(id) + 1).padStart(2, '0')), t, im => { x.clearRect(0, 0, 256, 358); x.save(); rr(x, 0, 0, 256, 358, 22); x.clip(); x.drawImage(im, 0, 0, 256, 358); x.restore(); });
+    return t;
   };
   const dorso = () => {
     const c = lienzo(256, 358), x = c.getContext('2d');
@@ -37,7 +47,9 @@ export function crearMesaCartas3D(cont, o = {}) {
     x.strokeStyle = 'rgba(255,255,255,.4)'; x.lineWidth = 3; x.save(); rr(x, 16, 16, 224, 326, 14); x.clip();
     for (let i = -360; i < 360; i += 36) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 358, 358); x.moveTo(i + 358, 0); x.lineTo(i, 358); x.stroke(); }
     x.restore(); x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 4; rr(x, 28, 28, 200, 302, 10); x.stroke();
-    return textura(c, 8);
+    const t = textura(c, 8);
+    if (sel.d) cargar(urlDorso(sel.d), t, im => { x.clearRect(0, 0, 256, 358); x.save(); rr(x, 0, 0, 256, 358, 22); x.clip(); const k = Math.max(256 / im.naturalWidth, 358 / im.naturalHeight); x.drawImage(im, (256 - im.naturalWidth * k) / 2, (358 - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k); x.restore(); });
+    return t;
   };
   let dorsoTex = dorso();
   const matDorso = new T.MeshStandardMaterial({ map: dorsoTex, roughness: .5 });
@@ -174,8 +186,16 @@ export function crearMesaCartas3D(cont, o = {}) {
     }
     E.marcar();
   };
+  let texTapete = null;
   V.recolor = () => {
     leer(); tapete.material.color.set(colores.f1); centro.material.color.set(colores.f2);
+    if (texTapete) { texTapete.dispose(); texTapete = null; }
+    tapete.material.map = null; centro.visible = true;
+    if (sel.t) { const c = lienzo(512, 512), x = c.getContext('2d'); x.fillStyle = colores.f1; x.fillRect(0, 0, 512, 512); texTapete = textura(c, 4); tapete.material.map = texTapete; tapete.material.color.set(0xffffff); centro.visible = false;
+      cargar(urlTapete(sel.t), texTapete, im => { x.drawImage(im, 0, 0, 512, 512); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, 0, 512, 512); }); }
+    tapete.material.needsUpdate = true;
+    for (const t of cache.values()) t.dispose(); cache.clear();
+    for (const sl of slots) if (sl.id != null) { sl.cara.map = cara(sl.id); sl.cara.needsUpdate = true; }
     dorsoTex.dispose(); dorsoTex = dorso(); matDorso.map = dorsoTex; matDorso.needsUpdate = true; E.marcar();
   };
 
