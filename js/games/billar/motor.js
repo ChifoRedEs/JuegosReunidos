@@ -4,6 +4,8 @@
 export const ANCHO = 500, ALTO = 1000;
 export const MODOS = { pool8: 'Pool 8', pool9: 'Pool 9', snooker: 'Snooker (6 rojas)' };
 const V_MAX = 1900, ROCE = 140, REB_BANDA = .78, REB_BOLA = .96, V_PARADA = 4;
+// Efectos de la blanca: sp = giro hacia delante (+, «alto») o hacia atrás (−, «bajo»); lat = efecto lateral (+ derecha, − izquierda, visto desde el tiro).
+const K_SEGUIR = .42, K_LAT = .42, SP_VIDA = 1.6;
 export const radio = modo => (modo === 'snooker' ? 13 : 17);                 // mayores que las reales: se ven (números, lisas y rayadas) y se tocan mejor en el móvil
 export const TRONERAS = [[0, 0], [ANCHO, 0], [0, ALTO / 2], [ANCHO, ALTO / 2], [0, ALTO], [ANCHO, ALTO]];
 const radioTronera = (k, r) => (k === 2 || k === 3 ? r * 2.05 : r * 2.45);
@@ -53,14 +55,15 @@ export function pasoFisica(bolas, r, h, info) {
     if (b.fuera || (!b.vx && !b.vy)) continue;
     const v = Math.hypot(b.vx, b.vy), f = Math.min(v, ROCE * h);
     b.vx -= b.vx / v * f; b.vy -= b.vy / v * f;
-    if (Math.hypot(b.vx, b.vy) < V_PARADA) { b.vx = b.vy = 0; continue; }
+    if (Math.hypot(b.vx, b.vy) < V_PARADA) { b.vx = b.vy = 0; b.sp = b.lat = 0; continue; }
+    if (b.sp) b.sp *= 1 - Math.min(1, h / SP_VIDA);
     b.x += b.vx * h; b.y += b.vy * h; mov = true;
     for (let k = 0; k < 6; k++) { const [px, py] = TRONERAS[k]; if (Math.hypot(b.x - px, b.y - py) < radioTronera(k, r)) { b.fuera = true; b.vx = b.vy = 0; info.metidas.push(b.id); break; } }
     if (b.fuera) continue;
-    if (b.x < r) { b.x = r; b.vx = Math.abs(b.vx) * REB_BANDA; tocaBanda(info); }
-    if (b.x > ANCHO - r) { b.x = ANCHO - r; b.vx = -Math.abs(b.vx) * REB_BANDA; tocaBanda(info); }
-    if (b.y < r) { b.y = r; b.vy = Math.abs(b.vy) * REB_BANDA; tocaBanda(info); }
-    if (b.y > ALTO - r) { b.y = ALTO - r; b.vy = -Math.abs(b.vy) * REB_BANDA; tocaBanda(info); }
+    if (b.x < r) { b.x = r; efectoBanda(b, 1, 0); b.vx = Math.abs(b.vx) * REB_BANDA; tocaBanda(info); }
+    if (b.x > ANCHO - r) { b.x = ANCHO - r; efectoBanda(b, -1, 0); b.vx = -Math.abs(b.vx) * REB_BANDA; tocaBanda(info); }
+    if (b.y < r) { b.y = r; efectoBanda(b, 0, 1); b.vy = Math.abs(b.vy) * REB_BANDA; tocaBanda(info); }
+    if (b.y > ALTO - r) { b.y = ALTO - r; efectoBanda(b, 0, -1); b.vy = -Math.abs(b.vy) * REB_BANDA; tocaBanda(info); }
   }
   for (let i = 0; i < bolas.length; i++) {
     const a = bolas[i]; if (a.fuera) continue;
@@ -70,8 +73,10 @@ export function pasoFisica(bolas, r, h, info) {
       const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, solape = 2 * r - d;
       a.x -= nx * solape / 2; a.y -= ny * solape / 2; b.x += nx * solape / 2; b.y += ny * solape / 2;
       const rv = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+      const bl = a.id === 0 ? a : b.id === 0 ? b : null, u0 = bl && bl.sp ? { x: bl.vx, y: bl.vy } : null;
       if (rv > 0) {
         const jj = rv * (1 + REB_BOLA) / 2; a.vx -= jj * nx; a.vy -= jj * ny; b.vx += jj * nx; b.vy += jj * ny; mov = true; info.choques++;
+        if (u0) { const m = Math.hypot(u0.x, u0.y) || 1; bl.vx += u0.x / m * bl.sp * rv * K_SEGUIR; bl.vy += u0.y / m * bl.sp * rv * K_SEGUIR; bl.sp = 0; }   // alto: la blanca sigue · bajo: retrocede
         if (info.primero === null && (a.id === 0 || b.id === 0)) info.primero = a.id === 0 ? b.id : a.id;
       }
     }
@@ -82,11 +87,17 @@ export function pasoFisica(bolas, r, h, info) {
 export function simular(bolas, r, { paso = 1 / 480, max = 14 } = {}) {
   const info = nuevaInfo();
   for (let t = 0; t < max; t += paso) if (!pasoFisica(bolas, r, paso, info)) break;
-  for (const b of bolas) { b.vx = 0; b.vy = 0; }
+  for (const b of bolas) { b.vx = 0; b.vy = 0; b.sp = b.lat = 0; }
   return info;
 }
+// Efecto lateral al tocar banda: (nx, ny) = normal de la banda hacia dentro de la mesa. La blanca sale «torcida» hacia la derecha o la izquierda de su camino.
+function efectoBanda(b, nx, ny) {
+  if (!b.lat) return;
+  const vn = Math.abs(b.vx * nx + b.vy * ny), k = b.lat * vn * K_LAT;
+  b.vx += ny * k; b.vy -= nx * k; b.lat *= .45;
+}
 function tocaBanda(info) { info.rebotes++; if (info.primero !== null) info.banda = true; }
-export function golpear(blanca, angulo, fuerza) { const v = Math.max(.05, Math.min(1, fuerza)) * V_MAX; blanca.vx = Math.cos(angulo) * v; blanca.vy = Math.sin(angulo) * v; }
+export function golpear(blanca, angulo, fuerza, ex = 0, ey = 0) { const m = Math.hypot(ex, ey) || 1, c = m > .9 ? .9 / m : 1; blanca.lat = Math.max(-1, Math.min(1, (+ex || 0) * c)); blanca.sp = Math.max(-1, Math.min(1, (+ey || 0) * c)); const v = Math.max(.05, Math.min(1, fuerza)) * V_MAX; blanca.vx = Math.cos(angulo) * v; blanca.vy = Math.sin(angulo) * v; }
 
 /* ---------- partida ---------- */
 export function crear({ modo = 'pool8', jugadores = [{ nombre: 'Tú', cpu: false }, { nombre: 'CPU', cpu: true }], nivel = 'medio' } = {}) {

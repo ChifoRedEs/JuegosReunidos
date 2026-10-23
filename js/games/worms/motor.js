@@ -288,11 +288,17 @@ export function caminar(S, dir, dt) {
   }
   recogerCajas(S, w); return movido;
 }
-export function saltar(S, tipo = 'adelante') {
+// Control en el aire tras un salto: ◀ ▶ empujan al gusano hacia un lado (sin pasar de cierta velocidad)
+export function impulsar(S, dir, dt) {
+  const w = activo(S), T = S.turno; if (!w || !w.vivo || !w.vuela || w.est !== 'salto' || (T.fase !== 'turno' && T.fase !== 'retirada') || !dir) return false;
+  dir = dir < 0 ? -1 : 1; w.dir = dir; if (dir * w.vx < 110) w.vx += dir * 340 * dt; return true;
+}
+export function saltar(S, tipo = 'adelante', dir = 0) {
   const w = activo(S), T = S.turno; if (!w || !w.vivo || (T.fase !== 'turno' && T.fase !== 'retirada')) return false;
   if (w.est === 'cuerda') { soltarCuerda(S, w); w.vy -= 120; return true; }
   if (w.vuela) return false;
-  if (tipo === 'alto') { w.vx = -w.dir * 28; w.vy = -430; } else { w.vx = w.dir * 138; w.vy = -300; }
+  if (dir) w.dir = dir < 0 ? -1 : 1;
+  if (tipo === 'alto') { w.vx = dir ? w.dir * 70 : 0; w.vy = -430; } else { w.vx = w.dir * 138; w.vy = -300; }   // alto: recto hacia arriba, o inclinado si se pulsa ◀ ▶
   w.vuela = true; w.est = 'salto'; w.rebote = 0; w.sinCaida = false; sonar(S, 'salto'); return true;
 }
 export function apuntar(S, delta) { const T = S.turno; T.ang = clamp(T.ang + delta, -80, 88); const w = activo(S); if (w) w.ang = T.ang; }

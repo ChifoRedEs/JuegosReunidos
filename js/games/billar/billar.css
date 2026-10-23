@@ -52,3 +52,20 @@
 .bictl .bitirar,.bictl.fin .btn{font-size:15px}
 .bifza{display:flex;flex-direction:column;font-size:12px;font-weight:800;color:var(--mut);min-width:0}
 .bifza input{width:100%;accent-color:var(--red);height:30px;touch-action:pan-x}
+
+/* bola de efecto: dónde das a la blanca */
+.bicuerpo{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center}
+.bicuerpo .bictl{grid-template-columns:auto 1fr auto;grid-template-rows:auto auto}
+.bicuerpo .bictl .bitirar{grid-column:1/4}
+.bicuerpo .bictl.fin{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+.bipanel.sinefecto .biefecto{display:none}
+.bipanel.sinefecto .bicuerpo{grid-template-columns:1fr}
+.biefecto{display:flex;flex-direction:column;align-items:center;gap:3px}
+.biesf{position:relative;width:66px;height:66px;border-radius:50%;touch-action:none;cursor:crosshair;
+  background:radial-gradient(circle at 34% 30%,#fff 0 12%,transparent 30%),radial-gradient(circle,#fbfaf5 55%,#d8d3c4 100%);box-shadow:0 2px 5px rgba(0,0,0,.35),inset 0 0 0 2px rgba(0,0,0,.25)}
+.biesf::before,.biesf::after{content:'';position:absolute;background:rgba(0,0,0,.22)}
+.biesf::before{left:50%;top:8%;bottom:8%;width:1px}
+.biesf::after{top:50%;left:8%;right:8%;height:1px}
+.biesf i{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#E5252A;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none}
+.biesf.off{opacity:.5;pointer-events:none}
+.biefl{font:800 11px Nunito,system-ui,sans-serif;color:var(--mut);background:none;border:0;padding:2px 4px;cursor:pointer;min-height:0;white-space:nowrap}

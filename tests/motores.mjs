@@ -614,6 +614,14 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   // reglas puntuales
   const S = BI.crear({ modo: 'pool9' }); assert.deepEqual(BI.legales(S), [1]);
   const Q = BI.crear({ modo: 'snooker' }); assert.ok(BI.legales(Q).every(id => id <= 6), 'en snooker se empieza por las rojas');
+// ---- Billar: efectos (alto, bajo y lateral) ----
+{ const r = BI.radio('pool8'), tiro = (ex, ey) => { const S = BI.crear({ modo: 'pool8' }), bl = BI.blanca(S); S.bolas.forEach(b => { if (b.id) b.fuera = true; });
+    const o = S.bolas.find(b => b.id === 1); o.fuera = false; bl.x = 250; bl.y = 800; o.x = 250; o.y = 500; BI.golpear(bl, -Math.PI / 2, .6, ex, ey); BI.simular(S.bolas, r); return bl; };
+  const c = tiro(0, 0), alto = tiro(0, .8), bajo = tiro(0, -.8);
+  assert.ok(alto.y < c.y - 100, 'alto: sigue'); assert.ok(bajo.y > c.y + 100, 'bajo: retrocede');
+  const lat = ex => { const S = BI.crear({ modo: 'pool8' }), bl = BI.blanca(S); S.bolas.forEach(b => { if (b.id) b.fuera = true; }); bl.x = 250; bl.y = 800; BI.golpear(bl, -Math.PI / 2, .7, ex, 0); BI.simular(S.bolas, r); return bl.x; };
+  assert.ok(lat(.8) > 300 && lat(-.8) < 200 && Math.abs(lat(0) - 250) < 1, 'efecto lateral en banda');
+  const sinEf = tiro(0, 0); assert.equal(sinEf.sp, 0); ok('Billar: efectos de la blanca (alto, bajo y lateral en banda)'); }
   ok('Billar: Pool 8, Pool 9 y Snooker entre CPU hasta el final, sin bolas fuera de la mesa y con guardado válido'); }
 
 // ---- Cifras y Letras ----

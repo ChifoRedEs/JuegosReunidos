@@ -30,6 +30,12 @@ t('caminar, subir cuestas y saltar', () => {
   let mov = 0; for (const d of [1, -1]) { const x1 = w.x; M.dirigir(S, d); M.saltar(S, 'adelante'); avanzar(S, 2); mov = Math.max(mov, Math.abs(w.x - x1)); }
   assert.ok(mov > 10, 'salto lateral');
 });
+t('salto alto dirigible: recto, inclinado y control en el aire', () => {
+  const S = M.crear(cfg({ modo: 'dos' })); hastaTurno(S); const w = M.activo(S);
+  const x0 = w.x; assert.ok(M.saltar(S, 'alto')); assert.equal(w.vx, 0); avanzar(S, 2.5); assert.ok(Math.abs(w.x - x0) < 3, 'recto');
+  let mejor = 0; for (const d of [1, -1]) { const x1 = w.x; M.saltar(S, 'alto', d); for (let i = 0; i < 150 && w.vuela; i++) { M.impulsar(S, d, 1 / 60); M.paso(S, 1 / 60); } mejor = Math.max(mejor, Math.abs(w.x - x1)); avanzar(S, 1); }
+  assert.ok(mejor > 15, 'inclinado: ' + mejor);
+});
 t('caída fuerte hace daño; el agua mata; muerte deja tumba destructible', () => {
   const S = M.crear(cfg({ modo: 'dos', cajas: false })); hastaTurno(S);
   const v = S.gus.find(g => g.eq !== S.turno.eq); v.x = 100; v.y = 20; v.vuela = true; v.vx = v.vy = 0; v.est = 'vuelo';

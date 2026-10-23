@@ -19,6 +19,7 @@ const TACOS = { clasico: ['Clásico', '#C8A16B', '#5A3A22'], oro: ['Negro y oro'
 const SNC = { 7: '#F5C518', 8: '#15803D', 9: '#7A4A1E', 10: '#1D4ED8', 11: '#F48FB1', 12: '#111' };
 
 let S = null, api = null, asp = null, root = null, cv = null, ctx = null, dpr = 1, k = 1, raf = 0, tPrev = 0, reg = false;
+let efx = 0, efy = 0;     // punto de la bola blanca donde se da con el taco (−1…1): x = izquierda/derecha, y = abajo(−)/arriba(+)
 let ang = -Math.PI / 2, fuerza = .6, anim = null, arrastre = null, pensando = false, serie = 0, onKey = null, onVis = null, onRes = null, ultChoque = 0;
 let panel = null, posPanel = null, arrP = null, anchoPrev = 0, gruposVistos = '', popHasta = 0, hudPrev = '';     // panel flotante de tiro · ancho de pantalla con el que se midió la mesa
 let cfg = { modo: 'pool8', rival: 'cpu', nivel: 'medio', guia: 'larga' };
@@ -128,14 +129,27 @@ function crearPanel() {
   panel = document.createElement('div'); panel.className = 'bipanel'; panel.id = 'biCtl';
   panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Controles de tiro');
   panel.innerHTML = `<div class="biasa" title="Arrastra para mover los controles"><span aria-hidden="true"></span><small>Mover</small></div>
-    <div class="bictl" id="biCtlIn">
-      <button class="btn" data-fino="-1" aria-label="Girar a la izquierda">↺</button>
-      <label class="bifza"><span>Fuerza <b id="biFza"></b></span><input type="range" id="biRango" min="5" max="100" value="60" aria-label="Fuerza del golpe"></label>
-      <button class="btn" data-fino="1" aria-label="Girar a la derecha">↻</button>
-      <button class="btn on bitirar" data-ac="tirar">🎱 Tirar</button>
+    <div class="bicuerpo">
+      <div class="biefecto" id="biEfecto"><div class="biesf" id="biEsf" role="slider" aria-label="Punto de la bola donde das con el taco (efecto)" tabindex="0"><i id="biPunto"></i></div><button type="button" class="biefl" id="biEfL" data-ac="efcentro" title="Volver al centro">Centro</button></div>
+      <div class="bictl" id="biCtlIn">
+        <button class="btn" data-fino="-1" aria-label="Girar a la izquierda">↺</button>
+        <label class="bifza"><span>Fuerza <b id="biFza"></b></span><input type="range" id="biRango" min="5" max="100" value="60" aria-label="Fuerza del golpe"></label>
+        <button class="btn" data-fino="1" aria-label="Girar a la derecha">↻</button>
+        <button class="btn on bitirar" data-ac="tirar">🎱 Tirar</button>
+      </div>
     </div>`;
   document.body.append(panel);
   panel.addEventListener('click', clic); panel.addEventListener('input', alMover);
+  const esf = panel.querySelector('#biEsf');
+  const ponEf = e => { const r = esf.getBoundingClientRect(), R = r.width / 2; let x = (e.clientX - r.left - R) / R, y = -(e.clientY - r.top - R) / R; const m = Math.hypot(x, y); if (m > .9) { x *= .9 / m; y *= .9 / m; } fijarEfecto(Math.abs(x) < .07 ? 0 : x, Math.abs(y) < .07 ? 0 : y); };
+  let efId = null;
+  esf.addEventListener('pointerdown', e => { if (!humanoJuega() || e.button > 0) return; e.preventDefault(); efId = e.pointerId; try { esf.setPointerCapture(e.pointerId); } catch { /* */ } ponEf(e); });
+  esf.addEventListener('pointermove', e => { if (efId === e.pointerId) ponEf(e); });
+  const finEf = e => { if (efId === e.pointerId) efId = null; };
+  esf.addEventListener('pointerup', finEf); esf.addEventListener('pointercancel', finEf);
+  esf.addEventListener('dblclick', () => fijarEfecto(0, 0));
+  esf.addEventListener('keydown', e => { const d = { ArrowLeft: [-.15, 0], ArrowRight: [.15, 0], ArrowUp: [0, .15], ArrowDown: [0, -.15] }[e.key]; if (!d) return; e.preventDefault(); e.stopPropagation(); fijarEfecto(Math.max(-.9, Math.min(.9, efx + d[0])), Math.max(-.9, Math.min(.9, efy + d[1]))); });
+  fijarEfecto(efx, efy);
   const asa = panel.querySelector('.biasa');
   asa.addEventListener('pointerdown', e => {
     if (e.button > 0) return; e.preventDefault();
@@ -178,10 +192,20 @@ function mueve(e) {
   if (arrastre.mover) { if (B.sitioValido(S, x, y)) { bb.x = x; bb.y = y; } return; }
   if (Math.hypot(x - bb.x, y - bb.y) > 6) ang = Math.atan2(y - bb.y, x - bb.x);
 }
-function tirar(a = ang, f = fuerza) {
+function tirar(a = ang, f = fuerza, ex = efx, ey = efy) {
   if (!S || anim || S.fase !== 'apuntar') return;
-  B.prepararTiro(S); S.enMano = false; B.golpear(B.blanca(S), a, f);
+  B.prepararTiro(S); S.enMano = false; B.golpear(B.blanca(S), a, f, ex, ey); fijarEfecto(0, 0);
   anim = { info: B.nuevaInfo() }; api.sonido('click'); api.vibrar(15); pintarHud();
+}
+function nombreEfecto() {
+  if (!efx && !efy) return 'Centro';
+  const v = efy > .15 ? 'Alto' : efy < -.15 ? 'Bajo' : '', l = efx > .15 ? 'der.' : efx < -.15 ? 'izq.' : '';
+  return [v, l].filter(Boolean).join(' · ') || 'Centro';
+}
+function fijarEfecto(x, y) {
+  efx = x; efy = y;
+  const pt = $('#biPunto'), lb = $('#biEfL'); if (pt) { pt.style.left = 50 + x * 50 + '%'; pt.style.top = 50 - y * 50 + '%'; }
+  if (lb) lb.textContent = nombreEfecto();
 }
 function alMover(e) { if (e.target.id === 'biRango') { fuerza = +e.target.value / 100; $('#biFza').textContent = Math.round(fuerza * 100) + '%'; } }
 
@@ -218,7 +242,7 @@ async function turnoCPU() {
   await new Promise(res => { const paso = () => { if (tok !== serie || !S) return res(); const p = Math.min(1, (performance.now() - t0) / 700); ang = a0 + d * (1 - (1 - p) ** 3); if (p < 1) requestAnimationFrame(paso); else res(); }; paso(); });
   if (tok !== serie || !S) return;
   await new Promise(r => setTimeout(r, 250));
-  pensando = false; if (tok === serie && S) tirar(tiro.ang, tiro.fuerza);
+  pensando = false; if (tok === serie && S) tirar(tiro.ang, tiro.fuerza, 0, 0);
 }
 function terminar() {
   pintarHud();
@@ -302,6 +326,7 @@ function guia(bb, r) {
 function taco(bb, r) {
   const T = TACOS[asp.valores.taco] || TACOS.clasico, dx = Math.cos(ang), dy = Math.sin(ang), sep = r + 6 + fuerza * 40, L = 330;
   const x0 = bb.x - dx * sep, y0 = bb.y - dy * sep, x1 = x0 - dx * L, y1 = y0 - dy * L;
+  if (efx || efy) { const px = bb.x + (-dy * efx + dx * efy) * r * .6, py = bb.y + (dx * efx + dy * efy) * r * .6; ctx.fillStyle = '#E5252A'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, r * .24, 0, 7); ctx.fill(); ctx.stroke(); }   // dónde das a la blanca (efecto)
   ctx.lineCap = 'round';
   ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(x0 + 4, y0 + 5); ctx.lineTo(x1 + 4, y1 + 5); ctx.stroke();
   const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#F1ECE1'); g.addColorStop(.03, '#F1ECE1'); g.addColorStop(.035, T[1]); g.addColorStop(.6, T[1]); g.addColorStop(.62, T[2]); g.addColorStop(1, T[2]);
@@ -337,6 +362,7 @@ function pintarHud() {
   $('#biMsg').textContent = S.fase === 'fin' ? S.msg : anim ? '' : pensando ? 'La CPU está pensando…' : S.msg + (turnoHumano && S.enMano ? ' Arrastra la blanca para colocarla.' : '');
   pintarCesto();
   const ctl = $('#biCtlIn'); if (!ctl || !panel) return;
+  panel.classList.toggle('sinefecto', S.fase === 'fin');
   if (S.fase === 'fin') {                                             // fin: el panel ofrece otra partida (solo se pinta una vez)
     panel.classList.remove('apagado');
     if (!ctl.classList.contains('fin')) { ctl.classList.add('fin'); ctl.innerHTML = '<button class="btn on" data-ac="start">🔁 Otra partida</button><button class="btn" data-ac="opciones">Opciones</button>'; limitarPanel(); }
@@ -344,6 +370,7 @@ function pintarHud() {
   }
   panel.classList.toggle('apagado', !turnoHumano);
   ctl.querySelectorAll('button').forEach(b => { b.disabled = !turnoHumano; });
+  const esf = $('#biEsf'); if (esf) esf.classList.toggle('off', !turnoHumano);
   const rg = $('#biRango'); if (rg) { rg.disabled = !turnoHumano; rg.value = Math.round(fuerza * 100); }
   const fz = $('#biFza'); if (fz) fz.textContent = Math.round(fuerza * 100) + '%';
 }
@@ -374,12 +401,12 @@ function clic(e) {
   if (d.cfg) { cfg[d.cfg] = d.v; api.setPref('cfg', cfg); return setup(); }
   if (d.fino) { ang += +d.fino * .006; return; }
   const a = d.ac;
-  if (a === 'start') empezar(); else if (a === 'tirar') { if (humanoJuega()) tirar(); }
+  if (a === 'efcentro') fijarEfecto(0, 0); else if (a === 'start') empezar(); else if (a === 'tirar') { if (humanoJuega()) tirar(); }
   else if (a === 'aspecto') asp.abrir(); else if (a === 'panel') recolocarPanel(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
   else if (a === 'opciones') { api.borrar(); S = null; setup(); }
 }
 function reglas() {
-  api.modal('Billar', `<ul><li><b>Cómo tirar</b>: toca o arrastra sobre la mesa para apuntar (la blanca irá hacia tu dedo), afina con ↺ ↻, elige la fuerza y pulsa 🎱 <b>Tirar</b>. Los controles flotan: arrástralos desde su asa a una zona sin bolas (📍 <b>Recolocar controles</b> los devuelve abajo). Debajo de la mesa ves las bolas ya metidas. Con teclado: flechas para apuntar (Mayús = fino), arriba/abajo para la fuerza y Espacio para tirar.</li>
+  api.modal('Billar', `<ul><li><b>Cómo tirar</b>: toca o arrastra sobre la mesa para apuntar (la blanca irá hacia tu dedo), afina con ↺ ↻, elige la fuerza y pulsa 🎱 <b>Tirar</b>. En la <b>bola de efecto</b> del panel toca o arrastra el punto donde das a la blanca: arriba = <i>alto</i> (la blanca sigue tras chocar), abajo = <i>bajo</i> (retrocede), izquierda/derecha = efecto lateral (cambia el rebote en banda). «Centro» (o doble toque) lo anula; tras cada tiro vuelve al centro. Los controles flotan: arrástralos desde su asa a una zona sin bolas (📍 <b>Recolocar controles</b> los devuelve abajo). Debajo de la mesa ves las bolas ya metidas. Con teclado: flechas para apuntar (Mayús = fino), arriba/abajo para la fuerza y Espacio para tirar.</li>
     <li>La <b>línea de ayuda</b> marca hasta dónde va la blanca, la «bola fantasma» donde tocará y hacia dónde saldrá la otra bola; una ✕ roja avisa si es una bola que no puedes tocar primero.</li>
     <li><b>Pool 8</b>: el primero que mete una bola (también en el saque) se queda con ese grupo; arriba, junto a cada jugador, sale su icono de lisas o rayadas (lisas 1-7 o rayadas 9-15). Mete todas las tuyas y después la 8. Si metes la 8 antes de tiempo (o con falta), pierdes.</li>
     <li><b>Pool 9</b>: toca siempre primero la bola más baja que quede. Gana quien mete la 9, aunque sea de rebote.</li>

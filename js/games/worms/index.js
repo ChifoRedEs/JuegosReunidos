@@ -139,7 +139,7 @@ function armar() {
         </div>
       </div>
       <div class="bar wmbajo"><button class="btn" data-ac="pasar">⏭️ Pasar turno</button><button class="btn" data-ac="nuevaJ">🪱 Nueva partida</button><button class="btn" data-ac="aspectoJ">🎨 Apariencia</button><button class="btn" data-ac="salir">🚪 Salir</button></div>
-      <p class="note wmayuda">Teclado: ← → andar · ↑ ↓ apuntar · Intro salto · Retroceso salto alto · Espacio (mantén) fuego · Tab armas · +/− zoom · 1–9 armas</p>
+      <p class="note wmayuda">Teclado: ← → andar · ↑ ↓ apuntar · Intro salto · Retroceso salto alto (con ← → sale inclinado) · Espacio (mantén) fuego · Tab armas · +/− zoom · 1–9 armas</p>
     </div></div>`;
   cv = $('#wmCv'); ctx = cv.getContext('2d'); zona = $('#wmZona'); ajustar();
   zona.addEventListener('pointerdown', ptrAbajo); zona.addEventListener('pointermove', ptrMueve); zona.addEventListener('pointerup', ptrArriba); zona.addEventListener('pointercancel', ptrArriba);
@@ -201,6 +201,7 @@ function entrada(dt) {
     if (teclas.izq !== teclas.der) M.dirigir(S, teclas.der ? 1 : -1);
   } else {
     M.balancear(S, 0); M.recoger(S, 0);
+    if (w.vuela && w.est === 'salto' && teclas.izq !== teclas.der) M.impulsar(S, teclas.der ? 1 : -1, dt);
     if (teclas.izq !== teclas.der) { M.caminar(S, teclas.der ? 1 : -1, dt); cam.libre = false; }
     else if (w.est === 'camina') w.est = 'quieto';
     if (teclas.arr !== teclas.aba) M.apuntar(S, ((teclas.arr ? 1 : 0) - (teclas.aba ? 1 : 0)) * 55 * dt);
@@ -214,7 +215,7 @@ function teclaAbajo(e) {
   if (MAPA_TECLAS[k]) { e.preventDefault(); teclas[MAPA_TECLAS[k]] = true; return; }
   if (k === ' ' || k === 'Spacebar') { e.preventDefault(); if (!e.repeat) hold('fuego', true); return; }
   if (k === 'Enter') { e.preventDefault(); if (humano()) M.saltar(S, 'adelante'); return; }
-  if (k === 'Backspace') { e.preventDefault(); if (humano()) M.saltar(S, 'alto'); return; }
+  if (k === 'Backspace') { e.preventDefault(); if (humano()) M.saltar(S, 'alto', (teclas.der ? 1 : 0) - (teclas.izq ? 1 : 0)); return; }
   if (k === 'Tab') { e.preventDefault(); armas(); return; }
   if (k === '+' || k === '=') { zoomPor(1 / 1.2); return; }
   if (k === '-') { zoomPor(1.2); return; }
@@ -260,7 +261,7 @@ function clic(e) {
   else if (ac === 'reglas') reglas();
   else if (ac === 'armas') armas();
   else if (ac === 'salto') { if (humano() && !M.saltar(S, 'adelante')) api.sonido('error'); }
-  else if (ac === 'alto') { if (humano() && !M.saltar(S, 'alto')) api.sonido('error'); }
+  else if (ac === 'alto') { if (humano() && !M.saltar(S, 'alto', (teclas.der ? 1 : 0) - (teclas.izq ? 1 : 0))) api.sonido('error'); }
   else if (ac === 'zmas') zoomPor(1 / 1.25);
   else if (ac === 'zmenos') zoomPor(1.25);
   else if (ac === 'centrar') cam.libre = false;
@@ -283,7 +284,7 @@ function armas() {
 }
 function reglas() {
   api.modal('Cómo se juega', `<p>Dos equipos de gusanos se turnan. En cada turno juega un gusano: muévelo, apunta y dispara. Gana el equipo que deje sin gusanos al otro.</p>
-  <p><b>Moverse:</b> ◀ ▶ andar (sube cuestas y baja pendientes), ⤴️ salto hacia delante y ⤒ salto alto. Caer de muy alto hace daño y el agua o el borde del mapa matan.</p>
+  <p><b>Moverse:</b> ◀ ▶ andar (sube cuestas y baja pendientes), ⤴️ salto hacia delante y ⤒ salto alto (recto hacia arriba; si mantienes ◀ o ▶ sale inclinado). En el aire, ◀ ▶ te empujan hacia un lado. Caer de muy alto hace daño y el agua o el borde del mapa matan.</p>
   <p><b>Disparar:</b> ▲ ▼ mueven la mira. En <i>Lanzamisiles</i> y las granadas mantén FUEGO para dar potencia y suéltalo. Las granadas rebotan y explotan a los segundos que elijas con ⏱. El viento (arriba) empuja los misiles.</p>
   <p><b>Armas:</b> Escopeta (2 disparos), Lanzamisiles, Granada Explosiva, de Racimo (5 bombitas) y Sagrada (enorme), Dinamita (5 s), Ataque Aéreo y Teletransporte (toca el mapa y pulsa ¡YA!; hay pocos).</p>
   <p><b>Cuerda Ninja:</b> lánzala hacia arriba para engancharte al terreno (las rocas flotantes sirven). ◀ ▶ te balancean, ▲ ▼ la acortan o alargan, ⤴️ te suelta y FUEGO la vuelve a lanzar.</p>
@@ -379,7 +380,8 @@ function dibujarGusano(w, t, esAct) {
   ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, -.5, 8.5, 3, 0, 0, 7); ctx.stroke();
   const rebote = w.est === 'camina' ? -Math.abs(Math.sin(t * 15)) * 1.6 : 0, inc = w.vuela || w.est === 'cuerda' ? Math.max(-.5, Math.min(.5, w.vx / 500)) : 0;
   ctx.translate(0, rebote); ctx.rotate(inc);
-  if (emo) { ctx.font = `24px ${FUENTE_EMOJI}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.save(); ctx.scale(w.dir, 1); if (muriendo) ctx.globalAlpha = .55; ctx.fillText(emo, 0, -10); ctx.restore(); }
+  if (emo) { ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -11, 12.5, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#000'; ctx.font = `20px ${FUENTE_EMOJI}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.scale(w.dir, 1); if (muriendo) ctx.globalAlpha = .7; ctx.fillText(emo, 0, -10.5); ctx.restore(); }
   else {
     ctx.scale(w.dir, 1);
     const g = ctx.createLinearGradient(-6, -18, 6, -1); g.addColorStop(0, muriendo ? '#c9c9c9' : '#FFB3C8'); g.addColorStop(1, muriendo ? '#8d8d8d' : '#F0789B');
