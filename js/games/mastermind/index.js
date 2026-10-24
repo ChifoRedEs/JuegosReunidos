@@ -18,6 +18,7 @@ const ESTILOS = {
   bola: { nombre: 'Bolas brillantes', sw: ['#ffffff', '#E53935'] }, plano: { nombre: 'Planas', sw: ['#E53935', '#E53935'] }, cristal: { nombre: 'Cristal', sw: ['#ffe0e0', '#E53935'] }, simbolos: { nombre: 'Con símbolos (daltonismo)', sw: ['#E53935', '#8a1c1a'] },
 };
 let S = null, api = null, asp = null, root = null, crono = null, serie = 0, sel = -1, onKey = null, V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0, tIA = 0, pop = -1;
+let panel = null, posPanel = null, arrP = null, onRes = null;
 let cfg = { modo: 'adivinar', preset: 'clasico', ...M.PRESETS.clasico };
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -49,6 +50,7 @@ export async function mount(r, a) {
   S = api.cargar();
   root.addEventListener('click', clic);
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
+  onRes = () => limitarPanel(); addEventListener('resize', onRes);
   api.barra({ nueva: () => jugar(),
     salir: () => { parar(); setup(); },
     crono: () => crono,
@@ -58,7 +60,7 @@ export async function mount(r, a) {
   if (S && !S.done) armar(); else setup();
 }
 export function unmount() {
-  cerrar3D(); modo3d = false; serie++; parar(); if (onKey) document.removeEventListener('keydown', onKey); onKey = null;
+  cerrar3D(); modo3d = false; serie++; parar(); quitarPanel(); if (onRes) removeEventListener('resize', onRes); onRes = null; if (onKey) document.removeEventListener('keydown', onKey); onKey = null;
   if (root) root.removeEventListener('click', clic); S = null; asp = null;
 }
 function parar() { if (crono) { crono.detener(); crono = null; } clearTimeout(tIA); tIA = 0; }
@@ -66,7 +68,7 @@ function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.text
 
 /* ---------- pantalla de inicio ---------- */
 function setup() {
-  cerrar3D(); modo3d = false; sel = -1; parar();
+  cerrar3D(); modo3d = false; sel = -1; parar(); quitarPanel();
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${String(cfg[k]) === String(v) ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   const rec = api.pref('mejores', {})[claveRec(cfg)];
   root.innerHTML = `<p class="note">${cfg.modo === 'adivinar'
@@ -92,8 +94,8 @@ function armar() {
   root.innerHTML = `<div class="mmcab"><b id="mmTit">${esc(M.MODOS[S.modo])}</b><span id="mmInfo"></span></div>
     <div id="mmTab" ${modo3d ? 'class="e3d mm3"' : 'class="mmtab"'} style="--p:${S.pos}" role="application" aria-label="Tablero de Mastermind"></div>
     <p class="mmmsg" id="mmMsg" role="status" aria-live="polite"></p>
-    <div class="mmpal" id="mmPal">${Array.from({ length: S.col }, (_, c) => `<button type="button" class="mmb" data-c="${c}" data-s="${SIMB[c]}" data-col="${c}" aria-label="Color ${c + 1}"></button>`).join('')}</div>
-    <div class="bar mmbar"><button class="btn on" data-ac="comprobar" id="mmOk">✔ Comprobar</button><button class="btn" data-ac="borrar">⌫ Borrar</button><button class="btn" data-ac="pista" id="mmPista">💡 Pista</button></div>${api.barraHtml()}`;
+${api.barraHtml()}`;
+  crearPanel();
   if (modo3d) iniciar3D();
   if (S.modo === 'adivinar' && !S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); }
   if (S.modo === 'codigo' && S.sec && !S.done) programarIA(700);
@@ -116,7 +118,6 @@ function pintar2D() {
     h += `<div class="mmfila ${act ? 'act' : ''}"><span class="mmn">${r + 1}</span><div class="mmslots">${fila.map((c, i) => slot(c, i, act)).join('')}</div><div class="mmfb" style="--fc:${fc}" ${f ? `aria-label="${f[0]} negras, ${f[1]} blancas"` : ''}>${Array.from({ length: S.pos }, (_, k) => `<i class="mmk ${f && k < f[0] ? 'n' : f && k < f[0] + f[1] ? 'b' : ''}"></i>`).join('')}</div></div>`;
   }
   tab.innerHTML = h + '</div>'; pop = -1;
-  const act = tab.querySelector('.mmfila.act') || tab.querySelector('.mmfila:nth-child(' + (S.jug.length + 2) + ')'); if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest' });
 }
 function pintar() {
   if (!S) return; info();
@@ -125,7 +126,7 @@ function pintar() {
   const ok = $('#mmOk'), pbtn = $('#mmPista');
   if (ok) { ok.hidden = S.done || (S.modo === 'codigo' && !!S.sec); ok.textContent = S.modo === 'codigo' && S.sec === null ? '🔒 Fijar código' : '✔ Comprobar'; ok.disabled = !M.llena(S); }
   if (pbtn) pbtn.hidden = S.modo !== 'adivinar' || S.done;
-  const pal = $('#mmPal'); if (pal) pal.hidden = S.done || (S.modo === 'codigo' && !!S.sec);
+  if (panel) { panel.hidden = S.done || (S.modo === 'codigo' && !!S.sec); sincronizarPanel(); limitarPanel(); }
   const m = $('#mmMsg'); if (!m) return;
   if (S.done) {
     const sec = '';
@@ -198,6 +199,38 @@ function fin() {
     if (S.gano) setTimeout(() => { if (S && S.done) api.aviso(`🎉 ¡Descifrado en ${S.jug.length} ${S.jug.length === 1 ? 'intento' : 'intentos'}!${record ? ' · 🏆 ¡Nuevo récord!' : ''}`); }, 300);
   } else { api.sonido(S.gano ? 'perder' : 'ganar'); pintar(); guardar(); }
 }
+
+/* ---------- panel flotante de colores (arrastrable, como el de Billar) ---------- */
+function crearPanel() {
+  quitarPanel();
+  panel = document.createElement('div'); panel.className = 'mmpanel juego-mastermind'; panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Colores y acciones');
+  panel.innerHTML = `<div class="mmasa" title="Arrastra para mover el panel"><span aria-hidden="true"></span><small>Mover</small></div>
+    <div class="mmpal" id="mmPal">${Array.from({ length: S.col }, (_, c) => `<button type="button" class="mmb" data-c="${c}" data-s="${SIMB[c]}" data-col="${c}" aria-label="Color ${c + 1}"></button>`).join('')}</div>
+    <div class="bar mmbar"><button class="btn on" data-ac="comprobar" id="mmOk">✔ Comprobar</button><button class="btn" data-ac="borrar">⌫ Borrar</button><button class="btn" data-ac="pista" id="mmPista">💡 Pista</button></div>`;
+  document.body.append(panel); panel.addEventListener('click', clic);
+  const asa = panel.querySelector('.mmasa');
+  asa.addEventListener('pointerdown', e => {
+    if (e.button > 0) return; e.preventDefault();
+    const r = panel.getBoundingClientRect(); arrP = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
+    try { asa.setPointerCapture(e.pointerId); } catch { /* */ }
+    panel.classList.add('mov');
+  });
+  asa.addEventListener('pointermove', e => { if (!arrP || e.pointerId !== arrP.id) return; posPanel = { x: e.clientX - arrP.dx, y: e.clientY - arrP.dy }; limitarPanel(); });
+  const suelta = e => { if (!arrP || e.pointerId !== arrP.id) return; arrP = null; panel.classList.remove('mov'); api.setPref('panel', posPanel); };
+  asa.addEventListener('pointerup', suelta); asa.addEventListener('pointercancel', suelta);
+  const p = api.pref('panel', null); posPanel = p && Number.isFinite(p.x) && Number.isFinite(p.y) ? { ...p } : null;
+  sincronizarPanel(); limitarPanel();
+}
+// El panel vive en <body>: copia la Apariencia elegida (paleta, estilo…) para que sus bolas se vean igual que las del tablero
+function sincronizarPanel() { if (!panel || !root) for (const k of Object.keys(panel.dataset)) delete panel.dataset[k]; if (panel && root) Object.assign(panel.dataset, root.dataset); }
+function limitarPanel() {
+  if (!panel || panel.hidden) return;
+  const w = panel.offsetWidth, h = panel.offsetHeight, vw = document.documentElement.clientWidth || innerWidth, vh = innerHeight, mg = 6;
+  if (!posPanel) posPanel = { x: (vw - w) / 2, y: vh - h - 14 };                 // al principio: abajo y centrado
+  const x = Math.min(Math.max(mg, posPanel.x), Math.max(mg, vw - w - mg)), y = Math.min(Math.max(mg, posPanel.y), Math.max(mg, vh - h - mg));
+  panel.style.left = x + 'px'; panel.style.top = y + 'px';
+}
+function quitarPanel() { if (panel) { panel.remove(); panel = null; } arrP = null; }
 
 /* ---------- entrada ---------- */
 function tecla(e) {
