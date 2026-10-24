@@ -70,6 +70,10 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   onKey = tecla; document.addEventListener('keydown', onKey);
   onVis = () => { if (document.hidden) guardar(); }; document.addEventListener('visibilitychange', onVis);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && S.hist.length && !api.confirmar('¿Abandonar la partida actual?')) return; empezar(); },
+    salir: () => { api.borrar(); S = null; serie++; setup(); },
+    etiqueta: 'Nueva partida',
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'jug', titulo: 'Jugadores', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'rival', titulo: 'Rivales', opciones: [['cpu', '🤖 CPU'], ['personas', '👥 Personas']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.rival === 'cpu', opciones: Object.entries(M.NIVELES) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (dicOk === null) pedir('cargar').then(() => { dicOk = true; if (S && root) { pintar(); revisarPrevia(); } }, () => { dicOk = false; if (root) pintar(); });
   if (S && S.fase !== 'fin') armar(); else setup();
@@ -117,7 +121,7 @@ function armar() {
       <div class="sctapa" id="scTapa" hidden></div>
     </div>
     <details class="schist"><summary>📜 Jugadas</summary><ol id="scHist"></ol></details>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="zoom" id="scZoom"></button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="zoom" id="scZoom"></button><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   const tab = $('#scTab'), atr = $('#scAtril');
   tab.addEventListener('pointerdown', abajoTablero); atr.addEventListener('pointerdown', abajoAtril);
   tapado = S.fase !== 'fin' && humanos() > 1 && !S.jug[S.turno].cpu;

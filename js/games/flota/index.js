@@ -39,6 +39,11 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra CPU'], ['dos', '2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(F.NIVEL) }, { clave: 'flota', titulo: 'Flota', opciones: Object.entries(F.FLOTAS).map(([k, f]) => [k, f.nombre]) }, { clave: 'tocar', titulo: 'Barcos juntos', opciones: [[false, 'No se tocan'], [true, 'Pueden tocarse']] }, { clave: 'repetir', titulo: 'Al acertar', opciones: [[true, 'Vuelves a disparar'], [false, 'Pasa el turno']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
@@ -63,7 +68,7 @@ function armar() {
   cerrar3D(); if (quiere3D()) iniciar3D();
   root.innerHTML = `<div class="flmsg" id="flMsg" role="status" aria-live="polite"></div>
     <div id="flCuerpo"></div><ul class="fllog" id="flLog"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
 }
 async function iniciar3D() {
   const t = ++tok3;

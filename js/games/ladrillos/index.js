@@ -1,11 +1,12 @@
 import { $, esc } from '../../core/dom.js';
 import * as L from './motor.js';
-import { grupoFondo, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, escala = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, gesto = null, teclas = { izq: false, der: false }, palaX = null, particulas = [], aviso = null, nuevoRecord = false;
 let hudAnt = '', capaLad = null, podioPos = -1, ed = null;           // ed = nivel en edición { i, nombre, filas, pincel, espejo }
+let eraJugando = false;
 let cfg = { modo: 'campana', nivel: 1 };
 const COLORES = ['', '#FF4757', '#FF9F1C', '#FFD43B', '#2ECC71', '#2F80ED', '#9B5DE5'];
 const CAP_COLOR = { ancha: '#2F80ED', multi: '#9B5DE5', lenta: '#2ECC71', laser: '#FF4757', fuego: '#FF9F1C', vida: '#FF5DA2' };
@@ -19,7 +20,7 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; particulas = []; aviso = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo('', true), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./ladrillos.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && L.MODOS[c0.modo] && Number.isInteger(c0.nivel)) cfg = { ...cfg, ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -27,6 +28,11 @@ export async function mount(r, a) {
   onKey = teclaAbajo; onKeyUp = teclaArriba; document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKeyUp);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
+  api.barra({ nueva: () => empezar(),
+    salir: () => { pausar(); setup(); },
+    pausar: () => { eraJugando = !!S && (S.fase === 'jugar' || S.fase === 'listo'); pausar(); },
+    reanudar: o => { if (o === 'salir' && eraJugando) tocar(); },
+    config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(L.MODOS) }, { clave: 'nivel', titulo: 'Empezar en el nivel', visible: v.modo === 'campana', opciones: Array.from({ length: nivelMax() }, (_, k) => [k + 1, String(k + 1)]) }], aplicar: v => { Object.assign(cfg, v); if (cfg.modo === 'propio') { api.setPref('cfg', cfg); pausar(); setup(); } else empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '✏️ Editor de niveles', accion: () => { pausar(); editar(-1); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin') { armar(); dibujar(); if (S.fase === 'listo') arrancar(); } else setup();
 }
@@ -110,7 +116,7 @@ function armar() {
   root.innerHTML = `<div class="ldhud" id="ldHud"></div>
     <div class="ldzona" id="ldZona"><canvas id="ldCv" aria-label="Campo del rompe-ladrillos"></canvas><div class="ldover" id="ldOver" data-ac="tocar"></div></div>
     <p class="note ldayuda">Arrastra el dedo (en cualquier parte del campo) para mover la pala · toca para lanzar la bola · ← → y espacio con teclado.</p>
-    <div class="bar"><button class="btn" data-ac="pausa">⏸️ Pausa</button><button class="btn" data-ac="opciones">⚙️ Opciones</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${api.barraHtml()}`;
   cv = $('#ldCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3); hudAnt = ''; capaLad = null;
   ajustar();
   const z = $('#ldZona');

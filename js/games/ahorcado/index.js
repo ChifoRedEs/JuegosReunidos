@@ -1,5 +1,5 @@
 import { $, esc } from '../../core/dom.js';
-import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo, grupoPantalla } from '../../core/aspectos.js';
 import { NIVELES, temasDe, elegir, base, mayus } from './palabras.js';
 import * as D from '../../core/diccionario.js';
 import { DISENOS, TOTAL } from './dibujos.js';
@@ -31,24 +31,24 @@ const acertada = d => letrasDe(d.palabra).every(l => d.usadas.includes(l));
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; recienRevelada = new Set();
-  asp = api.aspecto([grupoFondo('#ahFig'), grupoTablero(), { clave: 'dibujo', titulo: 'Dibujo', def: 'clasico', opciones: Object.entries(DISENOS).map(([id, d]) => ({ id, nombre: d.nombre })) }], () => pintar(false));
+  asp = api.aspecto([grupoFondo('#ahFig'), grupoPantalla('raiz'), grupoTablero(), { clave: 'dibujo', titulo: 'Dibujo', def: 'clasico', opciones: Object.entries(DISENOS).map(([id, d]) => ({ id, nombre: d.nombre })) }], () => pintar(false));
   await api.css(new URL('./ahorcado.css', import.meta.url));
   const g = api.cargar(); S = g ? { ...g } : null;
   root.innerHTML = `
-    <details class="ops" id="ahOps"><summary id="ahSum"></summary>
-      <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(NIVELES).map(([k, n]) => `<button class="btn" data-niv="${k}">${n.nombre}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Tema</span><div class="seg" id="ahTemas"></div></div><p class="note" id="ahAyuda"></p></details>
     <div class="ahinfo"><span class="ahvidas" id="ahVidas" aria-live="polite"></span><span id="ahMarc"></span></div>
     <div class="ahfig" id="ahFig"></div>
     <div class="ahword" id="ahWord" role="button" tabindex="0" data-ac="teclado"></div>
     <p class="ahtoca" id="ahToca">⌨️ Toca las casillas para escribir</p>
     <div class="ahpista" id="ahPista"></div>
     <div class="msg" id="ahMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Otra palabra</button><button class="btn" data-ac="dos">👥 2 jugadores</button><button class="btn" data-ac="letra" id="ahLetra">💡 Letra</button><button class="btn" data-ac="pista" id="ahBtnPista">🔎 Pista</button><button class="btn tkabrir" data-ac="teclado" id="ahTk" aria-label="Abrir teclado">⌨️</button><button class="btn" data-ac="aspecto">🎨</button></div>`;
+    <div class="bar"><button class="btn on" data-ac="nueva">Otra palabra</button><button class="btn" data-ac="dos">👥 2 jugadores</button><button class="btn" data-ac="letra" id="ahLetra">💡 Letra</button><button class="btn" data-ac="pista" id="ahBtnPista">🔎 Pista</button><button class="btn tkabrir" data-ac="teclado" id="ahTk" aria-label="Abrir teclado">⌨️</button><button class="btn" data-ac="aspecto">🎨</button></div>${api.barraHtml()}`;
   tk = crearTeclado({ filas: FILAS, alPulsar: adivinar, titulo: 'El Ahorcado · elige una letra' });
   root.addEventListener('click', clic); root.addEventListener('keydown', teclaPalabra); onKey = teclado; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => nueva(S.nivel, S.tema),
+    salir: () => { location.hash = '#/cat/palabras'; },
+    config: { valores: () => ({ nivel: S.nivel, tema: S.tema }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel', nota: (NIVELES[v.nivel] || {}).ayuda, opciones: Object.entries(NIVELES).map(([k, n]) => [k, n.nombre]) }, { clave: 'tema', titulo: 'Tema', opciones: temasDe(v.nivel).map(x => [x.id, `${x.icono} ${x.nombre}`]) }], alCambiar: (v, k) => { if (k === 'nivel' && !temasDe(v.nivel).some(x => x.id === v.tema)) v.tema = 'mezcla'; }, aplicar: v => nueva(v.nivel, v.tema, true) } });
   api.menu([{ texto: 'Otra palabra', accion: () => nueva(S.nivel, S.tema) }, { texto: '👥 2 jugadores: escribe tú la palabra', accion: dosJugadores }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
-  if (!S) { $('#ahOps').open = true; nueva(api.pref('nivel', 'facil'), 'mezcla', true); } else { faseAnterior = fase(); temas(); pintar(false); }
+  if (!S) { nueva(api.pref('nivel', 'facil'), 'mezcla', true); } else { faseAnterior = fase(); pintar(false); }
 }
 export function unmount() { document.removeEventListener('keydown', onKey); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', teclaPalabra); } if (tk) { tk.destruir(); tk = null; } S = null; asp = null; }
 function guardar() { if (!S) return; const d = { ...S }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
@@ -66,7 +66,7 @@ async function nueva(nivel, tema, forzar = false) {
   if (!temasDe(nivel).some(t => t.id === tema)) tema = 'mezcla';
   const prev = S ? S.ultimas.slice() : [], marc = S ? S.marcador : { g: 0, p: 0, racha: 0 }, w = elegir(nivel, tema, prev);
   S = { nivel, tema, palabra: w.palabra, pista: w.pista, usadas: '', fallos: 0, pistaVista: NIVELES[nivel].pista === 'visible', letraGratis: false, fin: null, reg: false, ultimas: [...prev, w.palabra].slice(-15), marcador: marc };
-  api.setPref('nivel', nivel); recienRevelada = new Set(); faseAnterior = 0; temas(); pintar(false); guardar();
+  api.setPref('nivel', nivel); recienRevelada = new Set(); faseAnterior = 0; pintar(false); guardar();
 }
 // Dos jugadores en el mismo móvil: uno escribe la palabra secreta (y una pista opcional) y el otro la adivina
 async function dosJugadores() {
@@ -78,7 +78,7 @@ async function dosJugadores() {
   const q = await api.pedirTexto('🔎 Pista (opcional)', { max: 120, nota: 'Una pista para ayudar. Déjalo vacío si no quieres darla.', placeholder: 'Por ejemplo: «Es un animal»' });
   const nivel = S ? S.nivel : 'facil', prev = S ? S.ultimas.slice() : [], marc = S ? S.marcador : { g: 0, p: 0, racha: 0 }, pista = (q || '').trim();
   S = { dos: true, nivel, tema: 'mezcla', palabra: mayus(palabra), pista: pista || '(Sin pista)', usadas: '', fallos: 0, pistaVista: true, letraGratis: true, fin: null, reg: false, ultimas: prev, marcador: marc };
-  recienRevelada = new Set(); faseAnterior = 0; temas(); pintar(false); guardar();
+  recienRevelada = new Set(); faseAnterior = 0; pintar(false); guardar();
   api.aviso('Jugador 2: ¡adivina la palabra!');
 }
 function terminar(res) {
@@ -110,7 +110,6 @@ function verPista() {
 }
 
 /* ---------- pintado ---------- */
-function temas() { const t = temasDe(S.nivel); $('#ahTemas').innerHTML = t.map(x => `<button class="btn ${S.tema === x.id ? 'on' : ''}" data-tema="${x.id}">${x.icono} ${x.nombre}</button>`).join(''); }
 function pintar(anima) {
   if (!S) return;
   const cfg = NIVELES[S.nivel], f = fase(), t = temasDe(S.nivel).find(x => x.id === S.tema) || temasDe(S.nivel)[0];
@@ -129,8 +128,6 @@ function pintar(anima) {
   $('#ahLetra').disabled = !!S.fin; $('#ahLetra').textContent = cfg.letra === 'gratis' && !S.letraGratis ? '💡 Letra gratis' : '💡 Letra (−1)';
   if (tk) { const ls = letrasDe(S.palabra); tk.actualizar((l, b) => { const usada = S.usadas.includes(l); b.disabled = usada || !!S.fin; b.className = 'tkk' + (usada ? (ls.includes(l) ? ' ok' : ' mal') : ''); }); if (S.fin) tk.cerrar(); }
   $('#ahWord').classList.toggle('activa', !S.fin); $('#ahToca').hidden = !!S.fin; $('#ahTk').disabled = !!S.fin;
-  root.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.nivel));
-  $('#ahSum').textContent = `⚙️ ${cfg.nombre} · ${t.icono} ${t.nombre}`; $('#ahAyuda').textContent = cfg.ayuda;
   const m = $('#ahMsg'); m.className = 'msg' + (S.fin === 'gana' ? ' win' : S.fin === 'pierde' ? ' err' : '');
   m.textContent = S.fin === 'gana' ? '🎉 ¡Palabra acertada!' : S.fin === 'pierde' ? `Era «${S.palabra}». ¡Inténtalo con otra!` : '';
 }

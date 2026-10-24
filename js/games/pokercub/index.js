@@ -59,6 +59,11 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null);
   if (c0 && c0.bots >= 1 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel, modo: c0.modo === 'libre' ? 'libre' : 'torneo', ante: P.ANTE_LIBRE[c0.ante] ? c0.ante : 'baja', apertura: P.APERTURA[c0.apertura] ? c0.apertura : 'libre' };
   root.addEventListener('click', clic); root.addEventListener('input', alMover);
+  api.barra({ nueva: () => { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); if (S && S.modo === 'libre' && S.fase !== 'terminado') levantarse(true); else { api.borrar(); setup(); } },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'terminado') bucle(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['torneo', '🏆 Torneo'], ['libre', '🃏 Partida libre']] }, { clave: 'ante', titulo: 'Entrada', visible: v.modo === 'libre', opciones: Object.entries(P.ANTE_LIBRE).map(([k, x]) => [k, x + ' fichas']) }, { clave: 'apertura', titulo: 'Apertura', opciones: Object.entries(P.APERTURA) }, { clave: 'bots', titulo: 'Rivales', opciones: [1, 2, 3, 4, 5].map(n => [n, String(n)]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📊 Mis estadísticas', accion: verEstad },
     { texto: 'Mostrar consejos y probabilidades', accion: () => { consejo = !consejo; api.setPref('consejo', consejo); pintar(); }, activo: consejo },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: 'Reglas', accion: reglas }]);
@@ -84,15 +89,15 @@ function armar() {
   root.innerHTML = `${modo3d ? '<div class="e3d pk3" id="pcVista"></div><div class="pccentro hc3"><div class="pcbote" id="pcBote"></div><div class="pcmsg" id="pcMsg" role="status" aria-live="polite"></div></div>' : `<div class="mesa pcm"><div class="pcbots" id="pcBots"></div>
     <div class="pccentro"><div class="pcbote" id="pcBote"></div><div class="pcmsg" id="pcMsg" role="status" aria-live="polite"></div></div>
     <div class="pcyo" id="pcYo"></div></div>`}<div class="pcpanel" id="pcPanel"></div><ul class="pclog" id="pcLog"></ul>
-    <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="rank">Ranking</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="rank">Ranking</button></div>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
 }
 function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
-function levantarse() {
+function levantarse(forzar) {
   if (!S || S.modo !== 'libre') return;
-  if (S.turno >= 0 && !api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
+  if (!forzar && S.turno >= 0 && !api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
   const n = P.neto(S);
-  if (!api.confirmar(`¿Levantarte de la mesa? Balance: ${n >= 0 ? '+' : ''}${n} fichas.`)) return;
+  if (!forzar && !api.confirmar(`¿Levantarte de la mesa? Balance: ${n >= 0 ? '+' : ''}${n} fichas.`)) return;
   clearTimeout(timer);
   if (S.mano > 0 && !S.reg) { S.reg = true; api.registrar({ res: n > 0 ? 'victoria' : n < 0 ? 'derrota' : 'tablas', variante: `Partida libre · ${NIVEL[S.nivel]}` }); }
   S.fase = 'terminado'; S.turno = -1; guardar();

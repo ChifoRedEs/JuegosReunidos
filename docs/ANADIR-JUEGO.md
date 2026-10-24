@@ -78,3 +78,25 @@ Cada juego conserva su id, su partida guardada y sus estadísticas.
 6. `unmount()` y cualquier pantalla que sustituya el contenedor llaman a `destruir()` (libera geometrías, texturas y el contexto WebGL).
 
 **Buenas prácticas**: renderizar solo cuando algo cambia (bandera «sucio»); animaciones con promesas y temporizador de respaldo; `hidden` necesita CSS explícito si el elemento tiene `display:grid/flex` (`.xxx[hidden]{display:none}`); los colores se leen de variables CSS con `getComputedStyle` **con el elemento ya dentro del DOM**; ejecutar `python3 tools/generar_sw.py` tras añadir ficheros.
+
+
+## Barra de partida (botones genéricos)
+
+Todo juego debe ofrecer, bajo el tablero y durante la partida, la barra unificada **Nuevo panel/Nueva partida · Configurar partida · Apariencia · Pausa/Salir**. No pongas esos botones a mano ni barras de nivel arriba: declara la barra en `mount` y añade `${api.barraHtml()}` al final de la plantilla de partida.
+
+```js
+api.barra({
+  nueva: () => empezar(),                    // botón 1 (la etiqueta es «Nuevo panel» en Lógica/Palabras y «Nueva partida» en el resto; `etiqueta` la cambia)
+  salir: () => { pausar(); setup(); },       // «Sí» al preguntar «¿Salir de la partida?»: pantalla de creación (o '#/cat/<cat>' si no la hay)
+  crono: () => crono,                        // opcional: Cronometro que la app pausa y reanuda sola
+  pausar: () => {}, reanudar: origen => {},  // opcional: para bucles propios (origen 'salir' = pulsó «No»)
+  config: {
+    valores: () => ({ nivel, tam }),                         // valores actuales
+    grupos: v => [{ clave: 'nivel', titulo: 'Nivel', opciones: [['facil', 'Fácil'], ['dificil', 'Difícil']], visible: true }],
+    alCambiar: (v, clave) => {},                             // opcional: dependencias entre grupos
+    aplicar: v => { /* guarda y crea una partida nueva */ },
+  },
+});
+```
+
+Los botones propios de cada juego (Pista, Deshacer, Reiniciar…) siguen en su fila habitual. La Apariencia se define con `api.aspecto(...)`: se muestra siempre como acordeón. Usa `grupoFondo` (**Tapete**) en todos los juegos y `grupoPantalla` (**Fondo de Pantalla**) solo en Arcade y Ahorcado.

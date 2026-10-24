@@ -36,6 +36,11 @@ export async function mount(r, a) {
   ord = { modo: modoPref, ids: [] }; arr = null;
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; hm = g.hm || historialVacio(); } else { S = null; hm = historialVacio(); }
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(C.NIVEL) }, { clave: 'limite', titulo: 'Límite', opciones: C.LIMITES.map(x => [x, `${x} puntos`]) }, { clave: 'cierre', titulo: 'Cerrar con', opciones: C.CIERRES.map(x => [x, `≤ ${x} sueltos`]) }, { clave: 'comodines', titulo: 'Comodines', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
@@ -71,7 +76,7 @@ function armar() {
     <div class="bar chacc" id="chAcc"><button class="btn" data-ac="tirar" id="chTirar">🗑️ Tirar carta</button><button class="btn on" data-ac="cerrar" id="chCerrar">🔒 Cerrar</button></div>
     <div id="chRec"></div>
     <ul class="chlog" id="chLog"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   montarArrastre();
 }
 function montarArrastre() {

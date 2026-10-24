@@ -37,6 +37,11 @@ export async function mount(r, a) {
   tk = crearTeclado({ filas: FILAS, borrar: true, alPulsar: tecla, titulo: 'Ruleta de la Suerte' });
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', teclaPanel);
   onKey = teclado; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin' && !girando) bucle(); },
+    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], rondas: cfg.rondas, nivel: cfg.nivel }), grupos: v => [...[0, 1, 2].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'rondas', titulo: 'Rondas', opciones: R.RONDAS.map(k => [k, String(k)]) }, { clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(R.NIVEL).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { if ([0, 1, 2].filter(i => v['j' + i] !== 'n').length < 1) { api.aviso('Elige al menos un jugador'); return; } [0, 1, 2].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.rondas = v.rondas; cfg.nivel = v.nivel; empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
@@ -84,7 +89,7 @@ function armar() {
       <div class="bar rlacc"><button class="btn on rlgirar" data-ac="girar" id="rlGirar">🎡 Girar</button><button class="btn" data-ac="vocal" id="rlVocal">Comprar vocal · ${R.dinero(R.PRECIO_VOCAL)}</button><button class="btn" data-ac="resolver" id="rlResolver">🧩 Resolver</button><button class="btn tkabrir" data-ac="teclado" id="rlTk" aria-label="Abrir teclado">⌨️</button></div>
     </div>
     <ul class="rllog" id="rlLog"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   cv = $('#rlCanvas'); dpr = Math.min(window.devicePixelRatio || 1, 3); cv.width = 400 * dpr; cv.height = 400 * dpr;
   if (modo3d) iniciar3D(); else dibujar();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (cv) { claveRueda = ''; dibujar(); } });

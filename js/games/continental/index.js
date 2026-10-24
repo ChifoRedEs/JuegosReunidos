@@ -35,6 +35,11 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; hm = g.hm || historialVacio(); } else { S = null; hm = historialVacio(); }
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVEL) }, { clave: 'comodines', titulo: 'Comodines', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
@@ -68,7 +73,7 @@ function armar() {
     <div class="bar cnacc" id="cnAcc"></div>
     <div id="cnRes"></div>
     <ul class="cnlog" id="cnLog"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#cnMano'), { sel: '.cnc', alSoltar: ids => { ord = { modo: 'libre', ids }; pintar(); guardar(); } });
 }

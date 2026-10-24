@@ -36,6 +36,11 @@ export async function mount(r, a) {
   ord = { modo: modoPref, ids: [] }; arr = null;
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; hm = g.hm || historialVacio(); } else { S = null; hm = historialVacio(); }
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(M.NIVEL) }, { clave: 'meta', titulo: 'Tantos', opciones: M.METAS.map(x => [x, `A ${x}`]) }, { clave: 'juegos', titulo: 'Partida', opciones: [[1, 'Un juego'], [2, 'Mejor de 3']] }, { clave: 'reyes', titulo: 'Reyes', opciones: [[8, '8 reyes'], [4, '4 reyes']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
@@ -68,7 +73,7 @@ function armar() {
     <div class="bar msacc" id="msAcc"></div>
     <div id="msRec"></div>
     <ul class="mslog" id="msLog"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#msMano'), { sel: '.msc', alSoltar: ids => { ord = { modo: 'libre', ids }; api.sonido('click'); pintar(); guardar(); } });
 }

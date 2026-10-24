@@ -46,15 +46,18 @@ export async function mount(root, a) {
   hist = new Pila(MAX_DESHACER, guardado ? guardado.hist : []);
   root.innerHTML = `
     <div id="sdReto"></div>
-    <div class="bar" id="sdNiv">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div>
     <div class="info"><span class="mut" id="sdInfo"></span><span id="sdCrono" aria-label="Tiempo">0:00</span></div>
     <div class="sd" id="sdTab" role="group" aria-label="Tablero de Sudoku">${Array.from({ length: 81 }, (_, i) => `<button type="button" data-i="${i}"></button>`).join('')}</div>
     <div class="msg" id="sdMsg" role="status" aria-live="polite"></div>
     <div class="pad" id="sdPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-n="${n}" aria-label="Poner ${n}">${n}<small></small></button>`).join('')}<button type="button" data-n="0" aria-label="Borrar">⌫</button></div>
-    <div class="pad" id="sdAcc"><button type="button" class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button type="button" class="acc" data-ac="undo">↶ Deshacer</button><button type="button" class="acc" data-ac="pista">💡 Pista</button><button type="button" class="acc" data-ac="nuevo">Nuevo</button><button type="button" class="acc" data-ac="aspecto" aria-label="Apariencia">🎨</button></div>`;
+    <div class="pad" id="sdAcc"><button type="button" class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button type="button" class="acc" data-ac="undo">↶ Deshacer</button><button type="button" class="acc" data-ac="pista">💡 Pista</button></div>${api.barraHtml()}`;
   cel = [...root.querySelectorAll('#sdTab button')];
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => nuevo(S ? S.level : 'medio'),
+    salir: () => { location.hash = '#/cat/logica'; },
+    crono: () => crono,
+    config: { valores: () => ({ nivel: S ? S.level : 'medio' }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(LVL) }], aplicar: v => nuevo(v.nivel, true) } });
   menuItems();
   crono = new Cronometro(() => { $('#sdCrono').textContent = fmtTiempo(crono.s); if (S) { S.t = crono.s; if (crono.s % 15 === 0) guardar(); } });
   if (!S) await nuevo('medio', true); else arrancar();
@@ -162,7 +165,6 @@ function pintar() {
   }
   const cuenta = new Array(10).fill(0); S.cur.forEach(v => { if (v) cuenta[v]++; });
   document.querySelectorAll('#sdPad [data-n]').forEach(b => { const n = +b.dataset.n; if (!n) return; const rest = Math.max(0, 9 - cuenta[n]); b.querySelector('small').textContent = rest; b.disabled = rest === 0 || S.done; });
-  document.querySelectorAll('#sdNiv [data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.level));
   const bn = document.querySelector('[data-ac="notas"]'); bn.classList.toggle('on', notasOn); bn.setAttribute('aria-pressed', String(notasOn));
   pintarReto();
   $('#sdInfo').textContent = `${S.reto ? '📅 ' : ''}${LVL[S.level]} · ${rellenas(S)}/81${S.pistas ? ` · ${S.pistas} pista${S.pistas > 1 ? 's' : ''}` : ''}`;

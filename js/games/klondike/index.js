@@ -48,21 +48,18 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; hist = g.hist; reg = g.reg; ac = g.ac; } else { S = K.nuevo(api.pref('robar', 1), api.pref('extra', true), api.pref('vegas', false)); hist = []; reg = false; ac = { b: 0, m: 0 }; }
   root.innerHTML = `
-    <details class="ops" id="klOps"><summary id="klSum"></summary>
-      <div class="bar"><span class="lbl">Robar</span><div class="seg"><button class="btn" data-robar="1">1 carta</button><button class="btn" data-robar="3">3 cartas</button></div></div>
-      <div class="bar"><span class="lbl">Casilla extra</span><div class="seg"><button class="btn" data-extra="1">Con casilla libre</button><button class="btn" data-extra="0">Sin ella</button></div></div>
-      <div class="bar"><span class="lbl">Reparto</span><div class="seg"><button class="btn" data-gar="1">✅ Siempre con solución</button><button class="btn" data-gar="0">🎲 Al azar</button></div></div>
-      <div class="bar"><span class="lbl">Puntuación</span><div class="seg"><button class="btn" data-vegas="0">Normal</button><button class="btn" data-vegas="1">💰 Vegas</button></div></div>
-      <p class="note" id="klVegasNota"></p>
-      <div class="bar"><span class="lbl">Auto-relleno</span><div class="seg"><button class="btn" data-autor="1">Automático</button><button class="btn" data-autor="0">Solo con botón</button></div></div>
-      <p class="note">Auto-relleno: cuando no quedan cartas boca abajo y el resto puede subir solo a las bases, las cartas se colocan solas y la partida termina.</p></details>
     <div class="info"><span class="mut" id="klInfo"></span><span id="klCrono" aria-label="Tiempo">0:00</span></div>
     <button type="button" class="klburb calc" id="klBurb" data-ac="analizador" aria-label="Abrir el analizador de la partida"></button>
     <div class="mesa kl" id="klBoard"></div>
     <div class="msg" id="klMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Nueva</button><button class="btn" data-ac="undo" id="klUndo">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="auto" id="klAuto" hidden>⚡ Auto-relleno</button><button class="btn" data-ac="aspecto">🎨</button></div>`;
+    <div class="bar"><button class="btn" data-ac="undo" id="klUndo">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="auto" id="klAuto" hidden>⚡ Auto-relleno</button></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
   const b = $('#klBoard'); b.addEventListener('pointerdown', pDown); b.addEventListener('pointermove', pMove); b.addEventListener('pointerup', pUp); b.addEventListener('pointercancel', pCancel);
+  api.barra({ nueva: () => nueva(S.robar, S.extra),
+    salir: () => { location.hash = '#/cat/cartas'; },
+    pausar: () => { if (crono) crono.pausar(); },
+    reanudar: () => { if (crono && S && !K.gana(S) && S.mov > 0) crono.iniciar(); },
+    config: { valores: () => ({ robar: S.robar, extra: S.extra, gar: api.pref('garantizada', true), vegas: !!S.vegas, autor: autoAuto() }), grupos: v => [{ clave: 'robar', titulo: 'Robar', opciones: [[1, '1 carta'], [3, '3 cartas']] }, { clave: 'extra', titulo: 'Casilla extra', opciones: [[true, 'Con casilla libre'], [false, 'Sin ella']] }, { clave: 'gar', titulo: 'Reparto', opciones: [[true, '✅ Siempre con solución'], [false, '🎲 Al azar']] }, { clave: 'vegas', titulo: 'Puntuación', opciones: [[false, 'Normal'], [true, '💰 Vegas']], nota: v.vegas ? `Vegas: cada partida cuesta 52 $ y cada carta que subes a las bases te da 5 $. Solo puedes pasar el mazo ${K.PASADAS_VEGAS[v.robar] === 1 ? 'una vez' : K.PASADAS_VEGAS[v.robar] + ' veces'}.` : null }, { clave: 'autor', titulo: 'Auto-relleno', opciones: [[true, 'Automático'], [false, 'Solo con botón']], nota: 'Cuando no quedan cartas boca abajo y el resto puede subir solo a las bases, las cartas se colocan solas.' }], aplicar: v => { api.setPref('garantizada', v.gar); api.setPref('autorrelleno', v.autor); nueva(v.robar, v.extra, true, v.vegas); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.robar, S.extra) }, { texto: '💰 Poner a cero la banca Vegas', accion: () => { if (api.confirmar('¿Poner la banca de Vegas a 0 $?')) { api.setPref('banca', 0); pintar(); } }, peligro: true }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🔍 Analizador', accion: abrirAnalizador }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { $('#klCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } }, g ? g.t : 0);
   if (S.mov > 0 && !K.gana(S)) crono.iniciar();
@@ -222,17 +219,10 @@ function pintar() {
   }
   $('#klBoard').innerHTML = h + '</div>' + (win ? '<div class="kwin">🎉 ¡Solitario completado!</div>' : '');
   const f = S.fund.reduce((n, x) => n + x.length, 0);
-  $('#klSum').textContent = `⚙️ Robar ${S.robar} carta${S.robar > 1 ? 's' : ''} · ${S.extra ? 'con' : 'sin'} casilla extra${S.vegas ? ' · Vegas' : ''}${api.pref('garantizada', true) ? ' · con solución' : ''}`;
   const banca = (api.pref('banca', 0) | 0) + (S.vegas && !S.cobrado && (S.mov || K.gana(S)) ? K.puntosVegas(S) : 0);
   $('#klInfo').textContent = S.vegas ? `💰 ${dolares(K.puntosVegas(S))} · banca ${dolares(banca)} · pasada ${S.pasada || 1}/${K.PASADAS_VEGAS[S.robar]}` : `${S.mov} movimientos · ${f}/52 en las bases`;
-  root.querySelectorAll('[data-vegas]').forEach(b => b.classList.toggle('on', (b.dataset.vegas === '1') === !!S.vegas));
-  root.querySelectorAll('[data-gar]').forEach(b => b.classList.toggle('on', (b.dataset.gar === '1') === api.pref('garantizada', true)));
-  $('#klVegasNota').textContent = `Vegas: cada partida cuesta 52 $ y cada carta que subes a las bases te da 5 $. Solo puedes pasar el mazo ${K.PASADAS_VEGAS[S.robar] === 1 ? 'una vez' : `${K.PASADAS_VEGAS[S.robar]} veces`} (${S.robar === 1 ? 'robando de 1 en 1' : 'robando de 3 en 3'}). Con solución: el reparto siempre se puede ganar (lo comprueba el analizador).`;
   $('#klCrono').textContent = fmtTiempo(crono.s);
-  root.querySelectorAll('[data-robar]').forEach(b => b.classList.toggle('on', +b.dataset.robar === S.robar));
-  root.querySelectorAll('[data-extra]').forEach(b => b.classList.toggle('on', (b.dataset.extra === '1') === S.extra));
   $('#klUndo').disabled = !hist.length || win; $('#klAuto').hidden = win || !!auto || !K.autoResoluble(S);
-  root.querySelectorAll('[data-autor]').forEach(b => b.classList.toggle('on', (b.dataset.autor === '1') === autoAuto()));
   $('#klMsg').className = 'msg' + (win ? ' win' : ''); $('#klMsg').textContent = win ? `¡Ganada en ${fmtTiempo(crono.s)} y ${S.mov} movimientos!` : '';
 }
 

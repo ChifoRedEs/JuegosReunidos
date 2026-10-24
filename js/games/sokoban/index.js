@@ -60,6 +60,10 @@ export async function mount(r, a) {
   S = api.cargar(); L = S ? K.leer(S.mapa) : null;
   root.addEventListener('click', clic);
   onKey = tecla; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => { if (S && S.modo === 'campana') nivelCampana(S.nivel); else generado(cfg.tam || 'mediano'); },
+    salir: () => elegirModo(cfg.modo),
+    etiqueta: 'Nuevo nivel',
+    config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(MODOS) }, { clave: 'tam', titulo: 'Tamaño del almacén', visible: v.modo !== 'campana', opciones: Object.entries(K.TAMANOS).map(([k, t]) => [k, `${t.nombre} · ${t.cajas} cajas`]) }], aplicar: v => { cfg.modo = v.modo; cfg.tam = v.tam; api.setPref('cfg', cfg); if (v.modo === 'campana') elegirModo('campana'); else generado(v.tam); } } });
   api.menu([{ texto: '🗺️ Campaña', accion: () => elegirModo('campana') }, { texto: '🎲 Nivel generado', accion: () => elegirModo('azar') }, { texto: '📅 Reto del día', accion: () => reto() },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (S) armar(); else elegirModo(cfg.modo);
@@ -126,7 +130,7 @@ function armar() {
     <div class="msg" id="skMsg" role="status" aria-live="polite"></div>
     <div class="skctl"><div class="skdpad"><button class="btn" data-dir="arriba" aria-label="Arriba">▲</button><button class="btn" data-dir="izquierda" aria-label="Izquierda">◀</button><button class="btn" data-dir="abajo" aria-label="Abajo">▼</button><button class="btn" data-dir="derecha" aria-label="Derecha">▶</button></div>
       <div class="skacc"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="reiniciar">⟲ Reiniciar</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="menu">☰ Niveles</button></div></div>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${api.barraHtml()}`;
   cerrar3D(); modo3d = quiere3D();
   const tab = $('#skTab');
   if (!modo3d) {

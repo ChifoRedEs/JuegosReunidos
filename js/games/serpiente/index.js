@@ -1,10 +1,11 @@
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
-import { grupoFondo, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, cv = null, ctx = null, dpr = 1, raf = 0, acc = 0, tPrev = 0, cola = [], reg = false;
 let onKey = null, onVis = null, onRes = null, toque = null, efecto = null, nuevoRecord = false, recordAct = 0, hudAnt = '', fondo = null, podioPos = -1;
+let eraJugando = false;
 let cfg = { modo: 'clasico', vel: 'normal', tam: 'normal', cruceta: true };
 const TEMAS = {
   jardin: { a: '#AAD751', b: '#A2D149', muro: '#5B7A2E', marco: '#4A752C', s1: '#4E7CF6', s2: '#2F55D4', ojo: '#FFFFFF', comida: '#E7471D', hoja: '#3E8E2F', txt: '#1B2340', brillo: 0 },
@@ -20,13 +21,18 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; cola = []; efecto = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo('', true), grupoPersonaje('Personajes (cabeza)'), { clave: 'tema', titulo: 'Estilo', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (cabeza)'), { clave: 'tema', titulo: 'Estilo', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./serpiente.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.MODOS[c0.modo] && M.VELOCIDADES[c0.vel] && M.TAMANOS[c0.tam]) cfg = { ...cfg, ...c0, cruceta: c0.cruceta !== false };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   onRes = () => { if (cv && S) { ajustarTamano(); dibujar(); } }; addEventListener('resize', onRes);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
+  api.barra({ nueva: () => empezar(),
+    salir: () => { pausar(); setup(); },
+    pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
+    reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
+    config: { valores: () => ({ modo: cfg.modo, vel: cfg.vel, tam: cfg.tam, cruceta: cfg.cruceta }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS) }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(M.VELOCIDADES).map(([k, x]) => [k, x.nombre]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(M.TAMANOS).map(([k, x]) => [k, x.nombre]) }, { clave: 'cruceta', titulo: 'Cruceta', opciones: [[true, 'Mostrar'], [false, 'Solo deslizar']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin') { armar(); dibujar(); } else setup();
 }
@@ -57,7 +63,7 @@ function armar() {
     <div class="snzona" id="snZona"><canvas id="snCv" aria-label="Tablero de la serpiente"></canvas><div class="snover" id="snOver" data-ac="tocar"></div></div>
     <div class="sncruz" id="snCruz" ${cfg.cruceta ? '' : 'hidden'}><button class="btn" data-dir="0" aria-label="Arriba">▲</button><button class="btn" data-dir="3" aria-label="Izquierda">◀</button><button class="btn" data-dir="2" aria-label="Abajo">▼</button><button class="btn" data-dir="1" aria-label="Derecha">▶</button></div>
     <p class="note snayuda">Desliza el dedo sobre el tablero (o usa la cruceta o las flechas del teclado). Espacio = pausa.</p>
-    <div class="bar"><button class="btn" data-ac="opciones">⚙️ Opciones</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${api.barraHtml()}`;
   cv = $('#snCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3); hudAnt = ''; fondo = null;
   recordAct = S ? api.record(M.variante(S)) : 0;                 // se lee una vez, no en cada fotograma
   const zona = $('#snZona');

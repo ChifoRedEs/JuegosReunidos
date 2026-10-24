@@ -47,8 +47,7 @@ function montar(c, ctx) {
     <div class="axest" id="axEst" aria-live="polite"></div>
     <div class="axrev" id="axRev" hidden><button type="button" class="btn" data-rv="ini" aria-label="Al principio">⏮</button><button type="button" class="btn" data-rv="ant" aria-label="Jugada anterior">◀</button><span id="axRevN"></span><button type="button" class="btn" data-rv="sig" aria-label="Jugada siguiente">▶</button><button type="button" class="btn" data-rv="fin" aria-label="Posición actual">⏭</button><button type="button" class="btn on" data-rv="salir">Volver</button></div>
     <details class="axjug" open><summary>📜 Jugadas</summary><ol class="axlista" id="axLista"></ol>
-      <div class="bar"><button type="button" class="btn" data-ax="revisar">🔍 Revisar</button><button type="button" class="btn" data-ax="pgn">📤 PGN</button><button type="button" class="btn" data-ax="importar">📥 Importar</button></div></details>
-    <div class="bar"><span class="lbl">⏱️ Reloj</span><div class="seg">${Object.entries(RELOJES).map(([k, r]) => `<button type="button" class="btn" data-rl="${k}">${r.nombre || k}</button>`).join('')}</div></div></div>`;
+      <div class="bar"><button type="button" class="btn" data-ax="revisar">🔍 Revisar</button><button type="button" class="btn" data-ax="pgn">📤 PGN</button><button type="button" class="btn" data-ax="importar">📥 Importar</button></div></details></div>`;
   celdas = [...c.querySelectorAll('.sq')];
   const tab = c.querySelector('#axTab');
   tab.addEventListener('pointerdown', pDown); tab.addEventListener('pointermove', pMove);
@@ -67,7 +66,7 @@ function montar(c, ctx) {
 // Corre el tiempo del bando que mueve (desde la primera jugada de las blancas; se para si la app no está visible)
 function correReloj() {
   const ahora = performance.now(), dt = Math.min(1000, ahora - tAnt); tAnt = ahora;
-  if (!ctxR || !eAct || !eAct.reloj || eAct.fin || eAct.n === 0 || rev != null || document.hidden || ctxR.estado() !== eAct) return;
+  if (!ctxR || !eAct || !eAct.reloj || eAct.fin || eAct.n === 0 || rev != null || document.hidden || ctxR.pausado() || ctxR.estado() !== eAct) return;
   const k = eAct.turn - 1; eAct.reloj.ms[k] = Math.max(0, eAct.reloj.ms[k] - dt);
   if (eAct.reloj.ms[k] <= 0) {
     ctxR.sonido('perder');
@@ -101,12 +100,6 @@ function posicion(k) {                            // posición tras k jugadas (s
 function clicExtra(ev) {
   const b = ev.target.closest('button,[data-k]'); if (!b || !eAct) return;
   const d = b.dataset, api = apiRef;
-  if (d.rl) {
-    relojCfg = d.rl; if (api) api.setPref('reloj', d.rl);
-    if (eAct.n === 0 && !eAct.fin) ctxR.ponerEstado(estadoInicial(relojActual()), { limpiar: true });       // aún no se ha movido: se aplica ya
-    else if (api) api.aviso('El reloj se aplicará en la próxima partida');
-    return repintar();
-  }
   if (d.ax === 'revisar') {
     if (!eAct.movs) { if (api) api.aviso('Esta partida es de una versión anterior y no se puede revisar'); return; }
     if (!eAct.n) { if (api) api.aviso('Todavía no hay jugadas'); return; }
@@ -265,7 +258,6 @@ function pintar(eReal, ctx) {
   if (rev != null) cont.querySelector('#axRevN').textContent = rev === 0 ? 'Inicio' : `Jugada ${rev} de ${E.n}`;
   if (revisando) { est.className = 'axest'; est.textContent = '🔍 Revisando la partida (no se puede mover)'; }
   cont.querySelector('[data-ax="revisar"]').disabled = !E.movs || !E.n;
-  cont.querySelectorAll('[data-rl]').forEach(b => b.classList.toggle('on', b.dataset.rl === relojCfg));
   pintarReloj();
 }
 
@@ -277,6 +269,11 @@ const duelo = crearDuelo({
     { clave: 'piezas', titulo: 'Colores de las piezas', def: 'clasicas', opciones: [{ id: 'clasicas', nombre: 'Blancas y negras', sw: ['#FFFFFF', '#1E1E24'] }, { id: 'marfil', nombre: 'Marfil y ébano', sw: ['#FFF4DC', '#4A2E17'] }, { id: 'colores', nombre: 'Oro y morado', sw: ['#FFD43B', '#5B2DD4'] }] },
     { clave: 'marcas', titulo: 'Marcar las casillas posibles', def: 'si', opciones: [{ id: 'si', nombre: 'Sí' }, { id: 'no', nombre: 'No' }] },
   ],
+  cfgExtra: {
+    valores: () => ({ reloj: relojCfg }),
+    grupos: () => [{ clave: 'reloj', titulo: '⏱️ Reloj', opciones: Object.entries(RELOJES).map(([k, r]) => [k, r.nombre || k]) }],
+    aplicar: v => { relojCfg = RELOJES[v.reloj] ? v.reloj : 'no'; if (apiRef) apiRef.setPref('reloj', relojCfg); },
+  },
   estadoInicial: () => estadoInicial(relojActual()), jugadas, aplicar, validarEstado, ia, reglasHTML, rendirse, vista: { montar, pintar },
 });
 export const { mount, validar, resumen } = duelo;

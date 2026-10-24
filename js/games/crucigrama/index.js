@@ -46,19 +46,19 @@ export async function mount(r, a) {
   const g = api.cargar();
   S = g ? { ...g, sel: null, done: completo(g) } : null;
   root.innerHTML = `<div id="cwReto"></div>
-    <details class="ops" id="cwOps"><summary id="cwSum"></summary>
-      <div class="bar"><span class="lbl">Tema</span><div class="seg">${[...Object.entries(BANCOS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }]].map(([k, t]) => `<button class="btn" data-tema="${k}">${t.icono} ${t.nombre}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l} ${NIVELES[k].n}×${NIVELES[k].n}</button>`).join('')}</div></div>
-    </details>
     <div class="info"><span class="mut" id="cwInfo"></span><span id="cwCrono" aria-label="Tiempo">0:00</span></div>
     <div class="cwban"><button data-ac="prev" aria-label="Pista anterior">‹</button><div class="tx" id="cwPista" aria-live="polite"></div><button data-ac="next" aria-label="Pista siguiente">›</button></div>
     <div class="cwv"><div class="cwg" id="cwGrid" role="group" aria-label="Crucigrama"></div></div>
     <div class="msg" id="cwMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Nuevo</button><button class="btn" data-ac="comprobar">✔ Comprobar</button><button class="btn" data-ac="letra">💡 Letra</button><button class="btn" data-ac="palabra">💡 Palabra</button><button class="btn tkabrir" data-ac="teclado" aria-label="Abrir teclado">⌨️</button><button class="btn" data-ac="aspecto">🎨</button></div>
-    <details><summary>Todas las pistas</summary><div class="cwl" id="cwLista"></div></details>`;
+    <div class="bar"><button class="btn" data-ac="comprobar">✔ Comprobar</button><button class="btn" data-ac="letra">💡 Letra</button><button class="btn" data-ac="palabra">💡 Palabra</button><button class="btn tkabrir" data-ac="teclado" aria-label="Abrir teclado">⌨️</button></div>
+    <details><summary>Todas las pistas</summary><div class="cwl" id="cwLista"></div></details>${api.barraHtml()}`;
   tk = crearTeclado({ filas: FILAS, borrar: true, alPulsar: escribir, titulo: 'Crucigrama · escribe en la casilla' });
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => nueva(S.tema, S.nivel),
+    salir: () => { location.hash = '#/cat/palabras'; },
+    crono: () => crono,
+    config: { valores: () => ({ tema: S.tema, nivel: S.nivel }), grupos: v => [{ clave: 'tema', titulo: 'Tema', opciones: [...Object.entries(BANCOS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }]].map(([k, t]) => [k, `${t.icono} ${t.nombre}`]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(LVL).map(([k, l]) => [k, `${l} ${NIVELES[k].n}×${NIVELES[k].n}`]) }], aplicar: v => nueva(v.tema, v.nivel, true) } });
   api.menu([
     { texto: 'Nuevo crucigrama', accion: () => nueva(S.tema, S.nivel) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.tema, RETO.nivel, false, true) }, { texto: 'Comprobar', accion: comprobar },
     { texto: 'Revelar letra', accion: () => revelar('letra') }, { texto: 'Revelar palabra', accion: () => revelar('palabra') },
@@ -66,7 +66,7 @@ export async function mount(r, a) {
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas },
   ]);
   crono = new Cronometro(() => { if (S) { S.t = crono.s; $('#cwCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
-  if (!S) { $('#cwOps').open = true; await nueva(api.pref('tema', 'animales'), api.pref('nivel', 'medio'), true); }
+  if (!S) { await nueva(api.pref('tema', 'animales'), api.pref('nivel', 'medio'), true); }
   else { prepararInfo(); construir(); seleccionInicial(); arrancar(); pintar(); }
 }
 function menuErrores() { api.menu([
@@ -99,7 +99,7 @@ async function nueva(tema, nivel, forzar = false, reto = false) {
   S.reto = reto ? api.reto.fecha() : null; malas = new Set(); ocupado = false;
   crono = new Cronometro(crono.alTick, 0);
   prepararInfo(); construir(); seleccionInicial(); arrancar(); pintar(); guardar();
-  $('#cwOps').open = false;
+  
 }
 function guardar() { if (!S) return; const d = { tema: S.tema, nivel: S.nivel, w: S.w, h: S.h, sol: S.sol, cur: S.cur, palabras: S.palabras, t: S.t, pistas: S.pistas , reto: S.reto || null }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 function prepararInfo() {
@@ -119,8 +119,6 @@ function construir() {
   g.innerHTML = S.sol.map((l, i) => l ? `<button type="button" class="c" data-i="${i}">${info.num.has(i) ? `<span class="n">${info.num.get(i)}</span>` : ''}<span class="l"></span></button>` : '<div class="b"></div>').join('');
   cel = [...g.children];
   $('#cwLista').innerHTML = ['H', 'V'].map(d => `<div><h3>${d === 'H' ? 'Horizontales' : 'Verticales'}</h3>${info.orden.filter(wi => S.palabras[wi].d === d).map(wi => `<button data-w="${wi}"><b>${info.num.get(S.palabras[wi].f)}</b>${S.palabras[wi].def}</button>`).join('')}</div>`).join('');
-  root.querySelectorAll('[data-tema]').forEach(b => b.classList.toggle('on', b.dataset.tema === S.tema));
-  root.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.nivel));
 }
 const RETO = { tema: 'mezcla', nivel: 'medio' };
 function pintarReto() {
@@ -151,7 +149,6 @@ function pintar() {
   $('#cwPista').innerHTML = `<small>${info.num.get(x.f)} · ${x.d === 'H' ? 'Horizontal' : 'Vertical'} · ${x.p.length} letras</small>${x.def}`;
   root.querySelectorAll('#cwLista button').forEach(b => { const k = +b.dataset.w; b.classList.toggle('on', k === wi); b.classList.toggle('ok', palCompleta(k)); });
   const tot = S.sol.filter(Boolean).length, lle = S.cur.filter(Boolean).length;
-  $('#cwSum').textContent = `⚙️ ${temaNombre(S.tema)} · ${LVL[S.nivel]}`;
   $('#cwInfo').textContent = `${lle}/${tot} letras${S.pistas ? ` · ${S.pistas} ayuda${S.pistas > 1 ? 's' : ''}` : ''}`;
   $('#cwCrono').textContent = fmtTiempo(S.t);
   const m = $('#cwMsg'); m.className = 'msg' + (S.done ? ' win' : ''); m.textContent = S.done ? `¡Crucigrama resuelto en ${fmtTiempo(S.t)}!` : '';

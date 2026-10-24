@@ -49,6 +49,10 @@ export async function mount(r, a) {
   S = api.cargar();
   root.addEventListener('click', clic);
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => jugar(),
+    salir: () => { parar(); setup(); },
+    crono: () => crono,
+    config: { valores: () => ({ modo: cfg.modo, preset: cfg.preset, pos: cfg.pos, col: cfg.col, rep: cfg.rep, max: cfg.max }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'adivinar' ? '🔍 ' : '🔒 ') + l]) }, { clave: 'preset', titulo: 'Nivel', opciones: [...Object.entries(M.PRESETS).map(([k, p]) => [k, p.nombre]), ['personal', '⚙️ A tu gusto']] }, { clave: 'pos', titulo: 'Bolas', visible: v.preset === 'personal', opciones: M.POS.map(n => [n, String(n)]) }, { clave: 'col', titulo: 'Colores', visible: v.preset === 'personal', opciones: M.COLS.map(n => [n, String(n)]) }, { clave: 'rep', titulo: 'Repetir colores', visible: v.preset === 'personal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'max', titulo: 'Intentos', visible: v.preset === 'personal', opciones: M.MAXS.map(n => [n, String(n)]) }], alCambiar: (v, c) => { if (c === 'preset' && M.PRESETS[v.preset]) Object.assign(v, { pos: M.PRESETS[v.preset].pos, col: M.PRESETS[v.preset].col, rep: M.PRESETS[v.preset].rep, max: M.PRESETS[v.preset].max }); else if (c !== 'modo' && c !== 'preset' && !v.rep && v.col < v.pos) v.col = M.COLS.find(x => x >= v.pos) || 8; }, aplicar: v => { Object.assign(cfg, v); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '⌫ Borrar', accion: borrar }, { texto: '💡 Pista', accion: pedirPista },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
@@ -89,7 +93,7 @@ function armar() {
     <div id="mmTab" ${modo3d ? 'class="e3d mm3"' : 'class="mmtab"'} style="--p:${S.pos}" role="application" aria-label="Tablero de Mastermind"></div>
     <p class="mmmsg" id="mmMsg" role="status" aria-live="polite"></p>
     <div class="mmpal" id="mmPal">${Array.from({ length: S.col }, (_, c) => `<button type="button" class="mmb" data-c="${c}" data-s="${SIMB[c]}" data-col="${c}" aria-label="Color ${c + 1}"></button>`).join('')}</div>
-    <div class="bar mmbar"><button class="btn on" data-ac="comprobar" id="mmOk">✔ Comprobar</button><button class="btn" data-ac="borrar">⌫ Borrar</button><button class="btn" data-ac="pista" id="mmPista">💡 Pista</button><button class="btn" data-ac="nueva">🔄 Nuevo</button></div>`;
+    <div class="bar mmbar"><button class="btn on" data-ac="comprobar" id="mmOk">✔ Comprobar</button><button class="btn" data-ac="borrar">⌫ Borrar</button><button class="btn" data-ac="pista" id="mmPista">💡 Pista</button></div>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
   if (S.modo === 'adivinar' && !S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); }
   if (S.modo === 'codigo' && S.sec && !S.done) programarIA(700);

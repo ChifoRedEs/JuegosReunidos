@@ -23,7 +23,7 @@ async function activar3D() {
 const IA_URL = new URL('./ia.js', import.meta.url).href;
 
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
-let asp = null, C = null, api = null, sq = [], timer = null, pensando = false, rootEl = null, anim = null, nTab = 0, turnoIA = 0;
+let asp = null, C = null, api = null, sq = [], timer = null, pensando = false, rootEl = null, anim = null, nTab = 0, turnoIA = 0, pausado = false;
 const R = () => REGLAS[C.regla];
 const pos = p => p.join();
 const igual = (a, b) => a[0] === b[0] && a[1] === b[1];
@@ -60,15 +60,24 @@ export async function mount(root, a) {
   ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '2d') !== '3d') || (m3 && forma3 !== (asp.valores.fichas || 'disco')))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
   await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
+  api.barra({
+    nueva: () => nueva(C.regla, C.nivel, true),
+    salir: () => { location.hash = '#/cat/tablero'; },
+    pausar: () => { pausado = true; },
+    reanudar: () => { pausado = false; if (C && !C.over && C.turn === 'b' && !pensando) programarCPU(); },
+    config: {
+      valores: () => ({ regla: C.regla, nivel: C.nivel }),
+      grupos: () => [{ clave: 'regla', titulo: 'Reglamento', opciones: Object.entries(REGLAS).map(([k, r]) => [k, r.corto || r.nombre]) }, { clave: 'nivel', titulo: 'Nivel de la CPU', opciones: Object.entries(NIVEL) }],
+      aplicar: v => nueva(v.regla, v.nivel, true),
+    },
+  });
   root.innerHTML = `
-    <div class="bar"><span class="lbl">Reglas</span>${Object.entries(REGLAS).map(([k, r]) => `<button class="btn" data-reg="${k}">${r.corto || r.nombre}</button>`).join('')}</div>
-    <div class="bar"><span class="lbl">Nivel CPU</span>${Object.entries(NIVEL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div>
     <div class="msg" id="dmMsg" role="status" aria-live="polite"></div>
     <div class="e3d" id="dm3d" hidden></div>
     <div class="ck" id="dmTab" role="group" aria-label="Tablero de damas"></div>
     <div class="cnt" id="dmCnt"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
-    <p class="note" id="dmReg"></p>`;
+    <div class="bar"><button class="btn" data-ac="undo">↶ Deshacer</button></div>
+    <p class="note" id="dmReg"></p>${api.barraHtml()}`;
   const tab = $('#dmTab'); nTab = 0;
   root.addEventListener('click', clic); tab.addEventListener('keydown', tecla);
   api.menu([
@@ -92,7 +101,7 @@ function construirTablero() {
 export function unmount() {
   cerrar3D(); clearTimeout(timer); timer = null; pensando = false; turnoIA++;
   if (rootEl) rootEl.removeEventListener('click', clic);
-  C = null; sq = []; anim = null;
+  C = null; sq = []; anim = null; pausado = false;
 }
 
 /* ---------- partida ---------- */
@@ -138,12 +147,14 @@ function programarCPU() {
   pensando = true; pintarMsg();
   clearTimeout(timer);
   timer = setTimeout(async () => {
+    if (pausado) { pensando = false; return; }
     if (!C || C.turn !== 'b' || C.over) { pensando = false; return; }
     const tok = ++turnoIA, b0 = C.b;
     // la IA corre en un Worker: la pantalla no se congela mientras piensa
     const m = await enSegundoPlano(IA_URL, 'elegirPorRegla', [C.b, 'b', C.regla, C.nivel], elegirPorRegla);
     if (!C || tok !== turnoIA || C.b !== b0) return;
     pensando = false;
+    if (pausado) return;
     if (m) { const real = C.jug.find(x => JSON.stringify(x.path) === JSON.stringify(m.path)); if (real) jugar(real); }
   }, 450);
 }
@@ -158,7 +169,7 @@ function deshacer() {
 /* ---------- entrada: selección paso a paso (muestra el recorrido de las capturas) ---------- */
 const candidatas = () => C.jug.filter(m => m.path.length >= C.ruta.length && C.ruta.every((p, k) => igual(p, m.path[k])));
 function tocar(r, c) {
-  if (!C || C.over || C.turn !== 'w' || pensando) return;
+  if (!C || C.over || C.turn !== 'w' || pensando || pausado) return;
   const p = C.b[r][c];
   if (C.ruta) {
     const cands = candidatas(), n = C.ruta.length;
@@ -181,9 +192,7 @@ function clic(e) {
   const s = e.target.closest('.sq');
   if (s) return tocar(+s.dataset.r, +s.dataset.c);
   const b = e.target.closest('button'); if (!b || !C) return;
-  if (b.dataset.reg) { if (b.dataset.reg !== C.regla) { if (!hayProgreso() || api.confirmar('Cambiar de reglas empieza una partida nueva. ¿Continuar?')) nueva(b.dataset.reg, C.nivel, true); } }
-  else if (b.dataset.niv) { C.nivel = b.dataset.niv; api.setPref('nivel', C.nivel); pintar(); guardar(); }
-  else if (b.dataset.ac === 'nueva') nueva(C.regla, C.nivel);
+  if (b.dataset.ac === 'nueva') nueva(C.regla, C.nivel);
   else if (b.dataset.ac === 'undo') deshacer();
   else if (b.dataset.ac === 'aspecto') asp.abrir();
 }
@@ -228,8 +237,6 @@ function pintar() {
   }
   const cn = contar(C.b), ini = fichasIniciales(R());
   $('#dmCnt').innerHTML = `<b><i class="pdot w"></i>Tú ${cn.w}</b><span>te han comido ${ini - cn.w}</span><b><i class="pdot b"></i>CPU ${cn.b}</b><span>has comido ${ini - cn.b}</span>`;
-  document.querySelectorAll('[data-reg]').forEach(b => b.classList.toggle('on', b.dataset.reg === C.regla));
-  document.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === C.nivel));
   $('#dmReg').innerHTML = `<b>${R().nombre}:</b> ${R().texto}`;
   pintarMsg();
 }

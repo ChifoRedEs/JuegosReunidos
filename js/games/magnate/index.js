@@ -57,13 +57,18 @@ export async function mount(r, a) {
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
   onKey = e => { if (e.code === 'Space' && !pendiente && G && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); jugar(); } };
   document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => { if (G && !G.terminada && !api.confirmar('¿Abandonar la partida actual?')) return; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } enPausa = false; empezar(); },
+    salir: () => { enPausa = false; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } api.borrar(); setup(); },
+    pausar: () => { enPausa = true; },
+    reanudar: () => { enPausa = false; },
+    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], dinero: cfg.dinero, rondas: cfg.rondas, vel: cfg.vel, bote: cfg.bote, subasta: cfg.subasta }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'dinero', titulo: 'Dinero', opciones: [1200, 1600, 2000].map(x => [x, x + 'M']) }, { clave: 'rondas', titulo: 'Duración', opciones: [[0, 'Hasta la quiebra'], [20, '20 rondas'], [40, '40 rondas']] }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) }, { clave: 'bote', titulo: 'Bote del Paraíso Fiscal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'subasta', titulo: 'Subastas', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.dinero = v.dinero; cfg.rondas = v.rondas; cfg.vel = v.vel; cfg.bote = v.bote; cfg.subasta = v.subasta; empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏢 Mis empresas', accion: () => gestionarDesdeBoton() }, { texto: '🤝 Intercambiar', accion: () => intercambioDesdeBoton() },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (G && !G.terminada) { armar(); pintar(); log(`Partida recuperada: ronda ${G.ronda}.`); if (G.p().bot) jugar(); }
   else setup();
 }
 export function unmount() {
-  vivo = false; jugando = false; sesion++;
+  vivo = false; enPausa = false; jugando = false; sesion++;
   if (pendiente) { pendiente(ABORTO); pendiente = null; }
   document.removeEventListener('keydown', onKey);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); }
@@ -71,7 +76,8 @@ export function unmount() {
 }
 function guardar() { if (!G) return; const d = { g: G.toJSON(), reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 const vel = () => VELOCIDAD[cfg.vel] || VELOCIDAD.normal;
-const pausa = ms => (ms ? esperar(ms) : Promise.resolve());
+let enPausa = false;
+const pausa = async ms => { if (ms) await esperar(ms); while (enPausa && vivo) await esperar(120); };   // «Pausa / Salir» congela los turnos de la CPU y las animaciones
 
 
 /* ---------- pantalla de inicio ---------- */
@@ -126,12 +132,12 @@ function armar() {
         <small class="mtbote" id="mtBote"></small>`;
   const pie = `<div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
     <ul class="mtlog" id="mtLog" aria-label="Historial de la partida"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>`;
   if (modo3d) {
     root.innerHTML = `<div class="mtjug" id="mtJug"></div>
       <div class="e3d" id="mtTab"><div class="e3d-carga" id="mtCarga">Preparando el tablero…</div></div>
       <div class="mtpanel">${centro.replace('<b class="mttit">Magnate<br>Tecnológico</b>', '')}</div>
-      ${pie}`;
+      ${pie}${api.barraHtml()}`;
     iniciar3D(++tok3);
     return;
   }
@@ -143,7 +149,7 @@ function armar() {
         ${centro}
       </div>
     </div>
-    ${pie}`;
+    ${pie}${api.barraHtml()}`;
   G.jug.forEach((p, i) => { if (!p.fuera) colocar(i); });
 }
 async function iniciar3D(t) {

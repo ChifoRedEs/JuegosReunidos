@@ -103,3 +103,23 @@ button.ficha{display:flex}
 /* botón flotante para cambiar entre vista 2D y 3D */
 .vista-flot{position:fixed;top:120px;left:10px;z-index:15;min-height:36px;padding:0 14px;font-size:13px;border-radius:99px;background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(4px);box-shadow:var(--sombra-m)}
 .juego.con-vista{padding-top:44px}
+
+/* ---------- Barra inferior común de los juegos (Nuevo panel · Configurar · Apariencia · Pausa/Salir) ---------- */
+.barra-gen{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin:14px 0 6px;padding-top:12px;border-top:2px dashed var(--line)}
+.barra-gen button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;padding:6px 4px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:800 12px/1.15 var(--f-titulo,system-ui);text-align:center;cursor:pointer;touch-action:manipulation}
+.barra-gen button span{font-size:20px;line-height:1}
+.barra-gen button:active{transform:scale(.96)}
+.barra-gen button[data-gen="nueva"]{border-color:var(--purple)}
+.barra-gen button[data-gen="salir"]{border-color:#E0553D}
+/* diálogo Configurar partida */
+.cfg-g{margin:10px 0}.cfg-g .lbl{display:block;font-size:13px;font-weight:800;color:var(--mut);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+/* Apariencia: secciones desplegables */
+.ap-acordeon{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.ap-det{margin:0;border:2px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+.ap-det[open]{border-color:var(--purple)}
+.ap-det>summary.ap-link{list-style:none;border:0;border-radius:0;margin:0;cursor:pointer}
+.ap-det>summary.ap-link::-webkit-details-marker{display:none}
+.ap-det>summary.ap-link::after{content:"›";margin-left:8px;font-size:24px;font-weight:800;color:var(--mut);transition:transform .2s}
+.ap-det[open]>summary.ap-link::after{transform:rotate(90deg);color:var(--purple)}
+.ap-cuerpo{padding:4px 12px 12px}
+.ap-cuerpo.ap-rej{margin:0}

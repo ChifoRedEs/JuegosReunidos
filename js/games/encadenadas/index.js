@@ -35,6 +35,9 @@ export async function mount(r, a) {
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   tk = crearTeclado({ filas: ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM', '✔'], borrar: true, alPulsar: tecla, titulo: 'Encadenadas · escribe tu palabra' });
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); onKey = teclado; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); empezar(); },
+    salir: () => { parar(); api.borrar(); setup(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra la CPU'], ['solo', 'Solo (récord)'], ['grupo', 'En grupo']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(E.NIVEL) }, { clave: 'n', titulo: 'Jugadores', visible: v.modo === 'grupo', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'enlace', titulo: 'Enlazar con', opciones: Object.entries(E.ENLACES) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: E.TIEMPOS.map(t => [t, t ? `${t} s` : 'Sin límite']) }], aplicar: v => { Object.assign(cfg, v); parar(); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (S) { armar(); empezarTurno(); } else setup();
 }
@@ -65,7 +68,7 @@ function armar() {
     <div class="bar enacc" id="enAcc"><button class="btn on" data-ac="jugar">✔ Jugar</button><button class="btn" data-ac="nose">🏳️ No sé</button><button class="btn tkabrir" data-ac="teclado" aria-label="Abrir teclado">⌨️</button></div>
     <div id="enFin"></div>
     <ul class="enlog" id="enLog"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); api.borrar(); setup(); }
 function empezar() {

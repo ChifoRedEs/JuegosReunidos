@@ -30,6 +30,11 @@ export async function mount(r, a) {
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4 && [1, 2].includes(c0.dados)) cfg = { ...cfg, ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; empezar(); },
+    salir: () => { clearTimeout(timer); anim = false; api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
+    config: { valores: () => ({ dados: cfg.dados, pozo: cfg.pozo, j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1] }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'dados', titulo: 'Dados', opciones: [[1, '1 dado'], [2, '2 dados']] }, { clave: 'pozo', titulo: 'Pozo', opciones: [['rescate', 'Hasta que te rescaten'], ['turnos', '2 turnos']] }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } cfg.dados = v.dados; cfg.pozo = v.pozo; [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
@@ -57,7 +62,7 @@ function armar() {
     <div class="ocacc"><div class="ocdados" id="ocDados" aria-hidden="true"></div><button class="btn on octirar" data-ac="tirar" id="ocTirar">🎲 Tirar</button></div>
     <div id="ocFin"></div>
     <ul class="oclog" id="ocLog"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
 }
 async function iniciar3D() {

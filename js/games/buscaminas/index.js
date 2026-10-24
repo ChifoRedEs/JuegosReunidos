@@ -48,19 +48,20 @@ export async function mount(r, a) {
   S = g ? { ...g } : { ...nuevo(nivel, dims()), nivel, t: 0, pistas: 0, reg: false, sa: api.pref('sa', true) };
   cache = crearCache();
   root.innerHTML = `<div id="bmReto"></div>
-    <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}${NIVELES[k] ? ` ${NIVELES[k].w}×${NIVELES[k].h}` : ''}</button>`).join('')}</div></div>
-    <div class="bar bmpers" id="bmPers" hidden>${['w', 'h', 'm'].map(k => `<label>${{ w: 'Ancho', h: 'Alto', m: 'Minas' }[k]}<input type="number" inputmode="numeric" data-dim="${k}"></label>`).join('')}<button class="btn" data-ac="pers">Crear</button></div>
-    <div class="bar"><span class="lbl">Tableros</span><div class="seg"><button class="btn" data-sa="1">🧠 Sin adivinar</button><button class="btn" data-sa="0">🎲 Clásicos</button></div></div>
     <div class="bar"><span class="lbl">Al tocar</span><div class="seg"><button class="btn" data-modo="abrir">👆 Abrir</button><button class="btn" data-modo="bandera">🚩 Bandera</button></div></div>
     <div class="bmtop"><div class="bmc" id="bmMinas" aria-label="Minas restantes">000</div><button class="bmf" id="bmCara" data-ac="nueva" aria-label="Nueva partida">😀</button><div class="bmc t" id="bmT" aria-label="Tiempo">000</div></div>
     <div class="bm" id="bmTab" role="group" aria-label="Campo de minas"></div>
     <div class="msg" id="bmMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    <div class="bar"><button class="btn" data-ac="pista">💡 Pista</button></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
   const tab = $('#bmTab');
   tab.addEventListener('pointerdown', pDown); tab.addEventListener('pointerup', pUp); tab.addEventListener('pointercancel', pCancel); tab.addEventListener('pointerleave', pCancel);
   tab.addEventListener('contextmenu', e => { e.preventDefault(); const b = e.target.closest('.bc'); if (b) accion(+b.dataset.i, 'bandera'); });
   onKey = teclado; tab.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => nueva(S.nivel),
+    salir: () => { location.hash = '#/cat/logica'; },
+    crono: () => crono,
+    config: { valores: () => { const dd = S.nivel === 'personal' ? { w: S.w, h: S.h, m: S.m } : dims(); const m = medidas('personal', dd); return { nivel: S.nivel, sa: !!api.pref('sa', true), w: m.w, h: m.h, dens: [10, 15, 20, 25, 30].reduce((a, p) => Math.abs(p - 100 * m.m / (m.w * m.h)) < Math.abs(a - 100 * m.m / (m.w * m.h)) ? p : a, 15) }; }, grupos: v => [{ clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(LVL).map(([k, l]) => [k, `${l}${NIVELES[k] ? ` ${NIVELES[k].w}×${NIVELES[k].h}` : ''}`]) }, { clave: 'w', titulo: 'Ancho', visible: v.nivel === 'personal', opciones: [5, 8, 10, 12, 14, 16, 18, 20].map(x => [x, String(x)]) }, { clave: 'h', titulo: 'Alto', visible: v.nivel === 'personal', opciones: [5, 8, 10, 12, 16, 20, 24].map(x => [x, String(x)]) }, { clave: 'dens', titulo: 'Minas', visible: v.nivel === 'personal', opciones: [[10, 'Pocas'], [15, 'Normal'], [20, 'Muchas'], [25, 'Muchísimas'], [30, 'Máximo']] }, { clave: 'sa', titulo: 'Tableros', opciones: [[true, '🧠 Sin adivinar'], [false, '🎲 Clásicos']] }], aplicar: v => { api.setPref('sa', v.sa); if (v.nivel === 'personal') api.setPref('dims', medidas('personal', { w: v.w, h: v.h, m: Math.max(1, Math.min(maxMinas(v.w, v.h), Math.round(v.w * v.h * v.dens / 100))) })); nueva(v.nivel, true); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.nivel) }, { texto: '📅 Reto del día', accion: () => nueva(RETO, false, true) }, { texto: '💡 Pista', accion: pista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { S.t = crono.s; pintarTiempo(); if (crono.s % 15 === 0) guardar(); } });
   construir(); arrancar(); pintar();
@@ -124,10 +125,6 @@ function construir() {
   const tab = $('#bmTab'); tab.style.setProperty('--w', S.w);
   tab.innerHTML = Array.from({ length: S.w * S.h }, (_, i) => `<button type="button" class="bc h" data-i="${i}" aria-label="Fila ${(i / S.w | 0) + 1}, columna ${i % S.w + 1}, oculta"></button>`).join('');
   cel = [...tab.children];
-  root.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.nivel));
-  const pers = $('#bmPers'); pers.hidden = S.nivel !== 'personal';
-  const dd = S.nivel === 'personal' ? { w: S.w, h: S.h, m: S.m } : dims();
-  pers.querySelectorAll('[data-dim]').forEach(i => { const k = i.dataset.dim; i.value = dd[k]; i.min = k === 'm' ? 1 : LIMITES[k][0]; i.max = k === 'm' ? maxMinas(dd.w, dd.h) : LIMITES[k][1]; });
 }
 const pad3 = n => String(Math.max(-99, Math.min(999, n))).padStart(3, '0');
 function pintarTiempo() { const t = $('#bmT'); if (t) t.textContent = pad3(Math.min(999, S.t)); }
@@ -150,7 +147,6 @@ function pintar() {
     if (b.dataset.k !== key) { b.dataset.k = key; b.className = cls; b.innerHTML = html; b.setAttribute('aria-label', `Fila ${(i / S.w | 0) + 1}, columna ${i % S.w + 1}, ${lab}`); }
   }
   $('#bmTab').classList.toggle('fin', !!fin);
-  root.querySelectorAll('[data-sa]').forEach(b => b.classList.toggle('on', (b.dataset.sa === '1') === !!api.pref('sa', true)));
   pintarReto();
   $('#bmMinas').textContent = pad3(S.m - banderas(S));
   pintarTiempo();

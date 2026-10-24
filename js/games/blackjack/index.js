@@ -31,8 +31,12 @@ export async function mount(r, a) {
       <div><div class="bjmanos" id="bjManos"></div></div></div>
     <div class="bjcuenta" id="bjCuenta" hidden></div>
     <div id="bjPanel"></div>
-    <div class="bar"><button class="btn" data-ac="contar" id="bjContar"></button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    <div class="bar"><button class="btn" data-ac="contar" id="bjContar"></button><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
+  api.barra({ nueva: () => reiniciar(),
+    salir: () => { location.hash = '#/cat/cartas'; },
+    etiqueta: 'Nueva partida',
+    config: { valores: () => ({ consejo: consejoOn, contar: contarOn }), grupos: v => [{ clave: 'consejo', titulo: 'Consejo de estrategia', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'contar', titulo: 'Contador de cartas (Hi-Lo)', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { consejoOn = v.consejo; contarOn = v.contar; api.setPref('consejo', consejoOn); api.setPref('contar', contarOn); reiniciar(true); } } });
   api.menu([{ texto: 'Consejo de estrategia', accion: () => alternarConsejo(), activo: consejoOn }, { texto: '🧮 Contador de cartas (Hi-Lo)', accion: () => alternarContar(), activo: contarOn }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Empezar de cero (1000 fichas)', accion: reiniciar, peligro: true }, { texto: 'Reglas', accion: reglas }]);
   pintar();
 }
@@ -50,7 +54,7 @@ function pintarCuenta() {
   el.innerHTML = `<div class="bjc"><span>Cuenta<b>${f(rc)}</b></span><span>Cuenta real<b>${f(t)}</b></span><span>Barajas por salir<b>${f(Math.round(mazos * 10) / 10)}</b></span></div><p class="note">${lectura}</p>`;
 }
 function alternarConsejo() { consejoOn = !consejoOn; api.setPref('consejo', consejoOn); pintar(); }
-function reiniciar() { if (!api.confirmar('¿Volver a 1000 fichas y barajar de nuevo?')) return; S = BJ.nuevoEstado(); regRonda = 0; prev = { banca: 0, manos: [] }; pintar(); guardar(); }
+function reiniciar(sinPreguntar) { if (sinPreguntar !== true && !api.confirmar('¿Volver a 1000 fichas y barajar de nuevo?')) return; S = BJ.nuevoEstado(); regRonda = 0; prev = { banca: 0, manos: [] }; pintar(); guardar(); }
 
 /* ---------- pintado ---------- */
 const totTxt = c => { const { t, suave } = BJ.total(c); return suave && t <= 21 ? `${t - 10}/${t}` : String(t); };

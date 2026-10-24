@@ -12,6 +12,7 @@ let onKey = null, onKeyUp = null, onVis = null, onRes = null, piloto = null, pau
 let cam = { x: 0, y: 0, libre: false }, vistaW = 430, anims = [], parts = [], shake = 0, ultExp = null, teclas = { izq: false, der: false, arr: false, aba: false }, cargando = false, bannerT = 0, ticAnt = new Map();
 const punteros = new Map();
 let pinch = null;
+let eraPausa = false;
 let cfg = { n: 3, mapa: 'colinas', modo: 'cpu', nivel: 1, tiempo: 30, cajas: true };
 const ZOOM_MIN = 280;
 
@@ -55,6 +56,11 @@ export async function mount(r, a) {
   onKey = teclaAbajo; onKeyUp = teclaArriba; document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKeyUp);
   onVis = () => { if (document.hidden) poner_pausa(true); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
+  api.barra({ nueva: () => nuevaPartida(),
+    salir: () => ajustes(),
+    pausar: () => { eraPausa = pausa; poner_pausa(true); },
+    reanudar: o => { if (o === 'salir' && !eraPausa) poner_pausa(false); },
+    config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, n: cfg.n, mapa: cfg.mapa, tiempo: cfg.tiempo, cajas: cfg.cajas }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.modo === 'cpu', opciones: M.NIVELES.map((n, i) => [i, n]) }, { clave: 'n', titulo: 'Gusanos por equipo', opciones: M.TAMANOS.map(n => [n, String(n)]) }, { clave: 'mapa', titulo: 'Mapa', opciones: [...Object.entries(M.MAPAS), ['azar', '🎲 Al azar']] }, { clave: 'tiempo', titulo: 'Tiempo por turno', opciones: M.TIEMPOS.map(t => [t, t + ' s']) }, { clave: 'cajas', titulo: 'Cajas de suministros', opciones: [[true, '📦 Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); nuevaPartida(); } } });
   api.menu([
     { texto: 'Nueva partida', accion: () => { if (!S || S.turno.fase === 'fin' || api.confirmar('¿Dejar la partida actual?')) ajustes(); } },
     { texto: '🎒 Armas', accion: () => armas() },
@@ -138,7 +144,7 @@ function armar() {
           <button class="wmfuego" id="wmFuego" data-hold="fuego" aria-label="Disparar"><i id="wmPot"></i><span id="wmFTxt">FUEGO</span></button>
         </div>
       </div>
-      <div class="bar wmbajo"><button class="btn" data-ac="pasar">⏭️ Pasar turno</button><button class="btn" data-ac="nuevaJ">🪱 Nueva partida</button><button class="btn" data-ac="aspectoJ">🎨 Apariencia</button><button class="btn" data-ac="salir">🚪 Salir</button></div>
+      <div class="bar wmbajo"><button class="btn" data-ac="pasar">⏭️ Pasar turno</button></div>${api.barraHtml()}
       <p class="note wmayuda">Teclado: ← → andar · ↑ ↓ apuntar · Intro salto · Retroceso salto alto (con ← → sale inclinado) · Espacio (mantén) fuego · Tab armas · +/− zoom · 1–9 armas</p>
     </div></div>`;
   cv = $('#wmCv'); ctx = cv.getContext('2d'); zona = $('#wmZona'); ajustar();

@@ -21,6 +21,11 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null); if (c0 && [6, 9].includes(c0.nCat) && ['opciones', 'escribir'].includes(c0.modo) && T.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...c0, banco: T.BANCOS[c0.banco] ? c0.banco : 'mix', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', alTecla);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
+    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], nCat: cfg.nCat, banco: cfg.banco, modo: cfg.modo, nivel: cfg.nivel }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'nCat', titulo: 'Quesitos', opciones: [[6, '6 categorías'], [9, '9 (completo)']] }, { clave: 'banco', titulo: 'Preguntas', opciones: Object.entries(T.BANCOS) }, { clave: 'modo', titulo: 'Respuestas', opciones: [['opciones', '4 opciones'], ['escribir', 'Escribir']] }, { clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(T.NIVEL).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.nCat = v.nCat; cfg.banco = v.banco; cfg.modo = v.modo; cfg.nivel = v.nivel; empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
@@ -41,7 +46,7 @@ function setup() {
 }
 function armar() {
   root.innerHTML = `<div class="tvj" id="tvJ"></div><svg class="tvb" id="tvB" viewBox="0 0 320 320" role="img" aria-label="Tablero circular del Trivial"></svg><div class="tvpanel" id="tvP"></div><ul class="tvlog" id="tvL"></ul>
-    <div class="bar"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {

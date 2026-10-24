@@ -11,7 +11,8 @@ let S = null, api = null, asp = null, root = null, vivo = false, V = null, hay3d
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'n']], nivel: 2, limite: 0, vel: 'normal' };
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 const vel = () => VELOCIDAD[cfg.vel] || VELOCIDAD.normal;
-const pausa = ms => (ms ? esperar(ms) : Promise.resolve());
+let enPausa = false;
+const pausa = async ms => { if (ms) await esperar(ms); while (enPausa && vivo) await esperar(120); };   // «Pausa / Salir» congela los turnos de la CPU y las animaciones
 const eur = n => M.fmt(n);
 const estrellas = h => { const e = S.hot[h].etapa; return e ? '★'.repeat(Math.min(5, e)) + (S.hot[h].inst ? '🏊' : '') : ''; };
 
@@ -38,11 +39,16 @@ export async function mount(r, a) {
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
   onKey = e => { if (e.code === 'Space' && S && !bloqueado && S.fase === 'tirar' && !S.jug[S.turno].cpu && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); humano({ t: 'tirar' }); } };
   document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; bloqueado = false; empezar(); },
+    salir: () => { enPausa = false; ses++; bloqueado = false; api.borrar(); setup(); },
+    pausar: () => { enPausa = true; },
+    reanudar: () => { enPausa = false; },
+    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], limite: cfg.limite, nivel: cfg.nivel, vel: cfg.vel }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'limite', titulo: 'Duración', opciones: [[0, 'Hasta la quiebra'], [40, '40 rondas'], [80, '80 rondas']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', opciones: [1, 2, 3].map(k => [k, NIVELES[k]]) }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.limite = v.limite; cfg.nivel = v.nivel; cfg.vel = v.vel; empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏨 Hoteles', accion: () => hoteles() }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') { armar(); pintar(); ciclo(); } else setup();
 }
 export function unmount() {
-  vivo = false; ses++; cerrarVista(); document.removeEventListener('keydown', onKey);
+  vivo = false; enPausa = false; ses++; cerrarVista(); document.removeEventListener('keydown', onKey);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); }
   document.querySelectorAll('.htmodal').forEach(m => m.remove());
   S = null; asp = null; bloqueado = false;
@@ -81,7 +87,7 @@ function armar() {
     <div class="htpanel"><div class="htturno" id="htTurno"></div><div class="htacc" id="htAcc"></div></div>
     <div class="msg htmsg" id="htMsg" role="status" aria-live="polite"></div>
     <ul class="htlog" id="htLog" aria-label="Historial de la partida"></ul>
-    <div class="bar"><button class="btn" data-ac="leyenda">📖 Leyenda</button><button class="btn" data-ac="hoteles">🏨 Hoteles</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar"><button class="btn" data-ac="leyenda">📖 Leyenda</button><button class="btn" data-ac="hoteles">🏨 Hoteles</button><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   iniciarVista();
 }
 async function iniciarVista() {

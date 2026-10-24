@@ -43,17 +43,18 @@ export async function mount(root, a) {
   N = g ? { ...g, rc: g.sol.map(runs), cc: colsOf(g.sol, g.n).map(runs), done: completo(g) } : null;
   hist = new Pila(MAX_DESHACER, g ? g.hist : []);
   root.innerHTML = `<div id="ngReto"></div>
-    <div class="bar"><span class="lbl">Tamaño</span>${SIZES.map(s => `<button class="btn" data-size="${s}">${s}×${s}</button>`).join('')}</div>
-    <div class="bar"><span class="lbl">Tipo</span><button class="btn" data-tipo="azar">Aleatorio</button><button class="btn" data-tipo="dibujo">Dibujo</button></div>
-    <div class="bar" id="ngDifBar"><span class="lbl">Dificultad</span>${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-diff="${k}">${l}</button>`).join('')}</div>
     <div class="bar"><button class="btn" data-m="f">■ Rellenar</button><button class="btn" data-m="x">✕ Marcar vacía</button><button class="btn" data-ac="undo">↶ Deshacer</button></div>
     <div class="info"><span class="mut">Arrastra para pintar · mantén pulsado para el otro modo</span><span id="ngCrono">0:00</span></div>
     <div class="ngwrap"><div class="ng" id="ngTab"></div></div>
     <div class="msg" id="ngMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn" data-ac="nuevo">Nuevo panel</button><button class="btn" data-ac="borrar">Borrar casillas</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    <div class="bar"><button class="btn" data-ac="borrar">Borrar casillas</button></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
   root.addEventListener('pointerdown', pDown); root.addEventListener('pointermove', pMove);
   root.addEventListener('pointerup', pUp); root.addEventListener('pointercancel', pUp);
+  api.barra({ nueva: () => nuevo(N.n, N.diff),
+    salir: () => { location.hash = '#/cat/logica'; },
+    crono: () => crono,
+    config: { valores: () => ({ n: N.n, diff: N.diff, tipo }), grupos: v => [{ clave: 'n', titulo: 'Tamaño', opciones: SIZES.map(x => [x, `${x}×${x}`]) }, { clave: 'tipo', titulo: 'Tipo', opciones: [['azar', 'Aleatorio'], ['dibujo', 'Dibujo']] }, { clave: 'diff', titulo: 'Dificultad', visible: v.tipo !== 'dibujo', opciones: Object.entries(LVL) }], aplicar: v => nuevo(v.n, v.diff, true, v.tipo) } });
   api.menu([
     { texto: 'Nuevo panel', accion: () => nuevo(N.n, N.diff) },
     { texto: '📅 Reto del día', accion: () => nuevo(RETO.n, RETO.diff, false, 'azar', true) },
@@ -132,8 +133,6 @@ function construir() {
   tab.innerHTML = h;
   ccEl = [...tab.querySelectorAll('.cc')]; rcEl = [...tab.querySelectorAll('.rc')];
   const bs = [...tab.querySelectorAll('.c')]; cel = Array.from({ length: n }, (_, i) => bs.slice(i * n, i * n + n));
-  document.querySelectorAll('[data-size]').forEach(b => b.classList.toggle('on', +b.dataset.size === n));
-  document.querySelectorAll('[data-diff]').forEach(b => b.classList.toggle('on', b.dataset.diff === N.diff));
 }
 function pintarCelda(i, j) {
   const v = N.cur[i][j], b = cel[i][j];
@@ -156,8 +155,6 @@ function pintar() {
   $('#ngTab').classList.toggle('ganado', N.done);
   pintarReto();
   document.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === modo));
-  document.querySelectorAll('[data-tipo]').forEach(b => { b.classList.toggle('on', b.dataset.tipo === tipo); });
-  $('#ngDifBar').style.opacity = tipo === 'dibujo' && N.nombre ? .45 : 1;
   const m = $('#ngMsg'); m.className = 'msg' + (N.done ? ' win' : '');
   m.textContent = N.done ? `¡Completado en ${fmtTiempo(N.t)}!${N.nombre ? ` Era: ${N.nombre}.` : ''}` : 'Las pistas tachadas ya están cumplidas.';
   $('#ngCrono').textContent = fmtTiempo(N.t);

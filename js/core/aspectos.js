@@ -17,16 +17,18 @@ export const grupoTablero = (titulo = 'Colores del tablero') => ({ clave: 'table
 // si se elige una concreta, se queda fija. Sin imágenes (índice no cargado) el grupo se oculta y se ven las cartas dibujadas de siempre.
 const AZAR = { id: 'azar', nombre: '🎲 Aleatoria', azar: true };
 export const grupoDorso = () => ({ clave: 'dorso', titulo: 'Dorsos de Cartas', icono: '🂠', ventana: true, forma: 'carta', def: 'azar', opciones: [AZAR, ...BARAJAS.dorsos.map(d => ({ id: d.id, nombre: d.nombre, img: urlDorso(d) }))] });
-export const grupoMesa = () => ({ clave: 'mesa', titulo: 'Tapetes', icono: '🟩', ventana: true, forma: 'tapete', def: 'azar', opciones: [AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
+export const grupoMesa = () => ({ clave: 'mesa', titulo: 'Tapete', icono: '🟩', ventana: true, forma: 'tapete', def: 'azar', opciones: [AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
 const grupoBaraja = (tipo, clave, titulo) => ({ clave, titulo, icono: '🃏', ventana: true, forma: 'carta', def: 'azar', opciones: [AZAR, ...BARAJAS[tipo].map(b => ({ id: b.id, nombre: b.nombre, img: urlMuestra(b) }))] });
 export const grupoBarajaEs = () => grupoBaraja('espanola', 'barajaes', 'Barajas');
 export const grupoBarajaFr = () => grupoBaraja('francesa', 'barajafr', 'Barajas');
 
-// «Fondo de Tablero» (todos los juegos que no son de cartas): una imagen de tapete detrás del tablero. `sel` = elemento del tablero (CSS);
+// «Tapete» (todos los juegos que no son de cartas): una imagen de tapete detrás del tablero. `sel` = elemento del tablero (CSS);
 // los juegos de canvas pasan sel = '' y pintan el tapete ellos mismos (core/cartas.js: imagenTapete + pintarTapete) cuando asp.valores.tapete empieza por «t-».
-// `escenas` = true (solo juegos de Arcade): añade los fondos de pantalla ambientados (img/cartas/fondos).
-export const grupoFondo = (sel, escenas = false) => ({ clave: 'tapete', titulo: 'Fondo de Tablero', icono: '🖼️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
-  opciones: [{ id: 'ninguno', nombre: 'Sin fondo', icono: '🚫', nada: true }, AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t), ...(escenas ? { sec: 'Tapetes' } : {}) })), ...(escenas ? BARAJAS.fondos.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t), sec: 'Fondos de pantalla' })) : [])] });
+export const grupoFondo = sel => ({ clave: 'tapete', titulo: 'Tapete', icono: '🖼️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
+  opciones: [{ id: 'ninguno', nombre: 'Sin tapete', icono: '🚫', nada: true }, AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
+// «Fondo de Pantalla» (solo juegos de Arcade y el Ahorcado): escenarios ambientados (img/cartas/fondos). Pasa por delante del Tapete si se elige.
+export const grupoPantalla = sel => ({ clave: 'pantalla', titulo: 'Fondo de Pantalla', icono: '🏞️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
+  opciones: [{ id: 'ninguno', nombre: 'Sin fondo', icono: '🚫', nada: true }, AZAR, ...BARAJAS.fondos.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
 // «Personajes»: tu personaje (los de Sokoban) sustituye a la ficha, bola o cabeza del jugador. Valor 'auto' = el diseño de siempre.
 export const grupoPersonaje = (titulo = 'Personajes') => ({ clave: 'pj', titulo, icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de siempre', sec: 'Por defecto' }, ...opcionesPersonajes()] });
 // Emoji del personaje elegido (o null)
@@ -34,9 +36,9 @@ import { FICHAS as _PJ } from './personajes.js';
 export const emojiDeValores = v => (_PJ[v && v.pj] || {}).e || null;
 export const emojiPersonaje = asp => (_PJ[asp && asp.valores && asp.valores.pj] || {}).e || null;
 // ¿Hay un tapete elegido? → id 't-…' o null
-export const tapeteElegido = asp => { const v = asp && asp.valores && asp.valores.tapete; return v && v.startsWith('t-') ? v : null; };
+export const tapeteElegido = asp => { const V = (asp && asp.valores) || {}; for (const v of [V.pantalla, V.tapete]) if (v && v.startsWith('t-')) return v; return null; };   // el fondo de pantalla pasa por delante del tapete
 
 // «Escenario» de Worms: solo los tapetes con ambientación de campo de batalla (el juego los pinta de fondo y colorea el terreno a juego).
 export const ESCENARIOS_WORMS = ['t-bosque', 't-ciudad', 't-deportivo', 't-desierto', 't-espacio', 't-infierno', 't-lago', 't-medieval'];
-export const grupoEscenario = (sel, titulo = 'Escenario') => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
+export const grupoEscenario = (sel, titulo = 'Fondo de Pantalla') => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
   opciones: [AZAR, ...BARAJAS.fondos.filter(t => ESCENARIOS_WORMS.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });

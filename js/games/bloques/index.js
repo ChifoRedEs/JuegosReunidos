@@ -1,10 +1,11 @@
 import { $, esc } from '../../core/dom.js';
 import * as B from './motor.js';
-import { grupoFondo, tapeteElegido } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, onKey = null, onKeyUp = null, onVis = null;
 let cv = null, ctx = null, cvR = null, cvN = null, dpr = 1, bajando = false, rep = null, gesto = null, flash = null, letrero = null, nuevoRecord = false, onRes = null, hudAnt = '', rejilla = null, podioPos = -1;
+let eraJugando = false;
 let cfg = { modo: 'maraton', nivel: 1, botones: true };
 const DAS = 170, ARR = 50;                                     // retardo y ritmo de la repetición al mantener ◀ ▶
 const PALETAS = {
@@ -27,7 +28,7 @@ const reloj = ms => { const s = Math.max(0, ms) / 1000; return `${Math.floor(s /
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; bajando = false; flash = null; letrero = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo('', true), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
     { clave: 'fantasma', titulo: 'Pieza fantasma', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./bloques.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && B.MODOS[c0.modo] && Number.isInteger(c0.nivel) && c0.nivel >= 1 && c0.nivel <= 15) cfg = { ...cfg, ...c0, botones: c0.botones !== false };
@@ -36,6 +37,11 @@ export async function mount(r, a) {
   onKey = teclaAbajo; onKeyUp = teclaArriba; document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKeyUp);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
+  api.barra({ nueva: () => empezar(),
+    salir: () => { pausar(); setup(); },
+    pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
+    reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
+    config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, botones: cfg.botones }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(B.MODOS) }, { clave: 'nivel', titulo: 'Nivel inicial', visible: !B.porTiempo(v.modo), opciones: [1, 5, 8, 10, 13].map(n => [n, String(n)]) }, { clave: 'botones', titulo: 'Botones táctiles', opciones: [[true, 'Mostrar'], [false, 'Solo gestos']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin') { armar(); dibujar(); } else setup();
 }
@@ -70,7 +76,7 @@ function armar() {
       <button class="btn" data-k="ccw" aria-label="Girar a la izquierda">⟲</button><button class="btn" data-k="izq" aria-label="Mover a la izquierda">◀</button><button class="btn" data-k="abajo" aria-label="Bajar">▼</button><button class="btn" data-k="der" aria-label="Mover a la derecha">▶</button><button class="btn" data-k="cw" aria-label="Girar a la derecha">⟳</button>
       <button class="btn bltodo" data-k="soltar" aria-label="Dejar caer">⤓ Dejar caer</button>
     </div>
-    <p class="note blayuda">Toca el tablero para girar · arrastra a los lados para mover · desliza abajo para bajar · golpe rápido abajo: dejar caer · golpe arriba: reservar.</p>`;
+    <p class="note blayuda">Toca el tablero para girar · arrastra a los lados para mover · desliza abajo para bajar · golpe rápido abajo: dejar caer · golpe arriba: reservar.</p>${api.barraHtml()}`;
   cv = $('#blCv'); ctx = cv.getContext('2d'); cvR = $('#blRes'); cvN = $('#blSig'); dpr = Math.min(window.devicePixelRatio || 1, 3); hudAnt = ''; rejilla = null;
   ajustar();
   const zona = $('#blTab');

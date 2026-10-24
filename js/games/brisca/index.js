@@ -30,6 +30,11 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   root.addEventListener('click', clic);
+  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'n', titulo: 'Jugadores', opciones: [[2, '2 · tú vs CPU'], [3, '3 · cada uno por su cuenta'], [4, '4 · en parejas']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }, { clave: 'cambio', titulo: 'Cambiar el 7 del triunfo', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '👀 Última baza', accion: verUltima }, { texto: '📜 Historial de partidas', accion: () => api.modal('📜 Historial de partidas', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); prevMesa = S.mesa.length; pintar(); bucle(); } else setup();
 }
@@ -52,7 +57,7 @@ function armar() {
     <div class="mesa brm"><div class="bropps" id="brOpps"></div>
       <div class="brcentro"><div id="brMazo"></div><div class="brbaza" id="brBaza"></div></div>
       <div class="brmsg" id="brMsg" role="status" aria-live="polite"></div><div class="brmano" id="brMano"></div></div>
-    <div class="bar" id="brAcc"></div><div id="brFin"></div>`;
+    <div class="bar" id="brAcc"></div><div id="brFin"></div>${api.barraHtml()}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar(lider = null) {

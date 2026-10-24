@@ -46,20 +46,20 @@ export async function mount(r, a) {
   S = g ? { ...g, sel: 0 } : null;
   hist = new Pila(60, g ? g.hist : []);
   root.innerHTML = `<div id="kkReto"></div>
-    <details class="ops" id="kkOps"><summary id="kkSum"></summary>
-      <div class="bar"><span class="lbl">Tamaño</span><div class="seg">${TAMANOS.map(t => `<button class="btn" data-n="${t}">${t}×${t}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(DIFICULTADES).map(([k, d]) => `<button class="btn" data-dif="${k}">${d.nombre}</button>`).join('')}</div></div>
-      <p class="note" id="kkAyuda"></p></details>
     <div class="info"><span class="mut" id="kkInfo"></span><span id="kkCrono" aria-label="Tiempo">0:00</span></div>
     <div class="kk" id="kkTab" role="group" aria-label="Tablero de KenKen"></div>
     <div class="msg" id="kkMsg" role="status" aria-live="polite"></div>
     <div class="kpad" id="kkPad"></div>
-    <div class="kpad" id="kkAcc" style="--n2:3"><button class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button class="acc" data-ac="undo">↶ Deshacer</button><button class="acc" data-ac="pista">💡 Pista</button><button class="acc" data-ac="comprobar">✔ Comprobar</button><button class="acc" data-ac="nuevo">Nuevo</button><button class="acc" data-ac="aspecto">🎨</button></div>`;
+    <div class="kpad" id="kkAcc" style="--n2:3"><button class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button class="acc" data-ac="undo">↶ Deshacer</button><button class="acc" data-ac="pista">💡 Pista</button><button class="acc" data-ac="comprobar">✔ Comprobar</button></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => nueva(S.n, S.dif, false, true),
+    salir: () => { location.hash = '#/cat/logica'; },
+    crono: () => crono,
+    config: { valores: () => ({ n: S.n, dif: S.dif }), grupos: v => [{ clave: 'n', titulo: 'Tamaño', opciones: TAMANOS.map(t => [t, `${t}×${t}`]) }, { clave: 'dif', titulo: 'Nivel', nota: (DIFICULTADES[v.dif] || {}).ayuda, opciones: Object.entries(DIFICULTADES).map(([k, x]) => [k, x.nombre]) }], aplicar: v => nueva(v.n, v.dif, true, true) } });
   menu();
   crono = new Cronometro(() => { if (S) { S.t = crono.s; $('#kkCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
-  if (!S) { $('#kkOps').open = true; await nueva(api.pref('n', 5), api.pref('dif', 'medio'), true); }
+  if (!S) { await nueva(api.pref('n', 5), api.pref('dif', 'medio'), true); }
   else { prepararInfo(); construir(); arrancar(); pintar(); }
 }
 const RETO = { n: 6, dif: 'medio' };
@@ -86,8 +86,7 @@ async function nueva(n, dif, forzar = false, cerrar = false, reto = false) {
   if (!reto) { api.setPref('n', n); api.setPref('dif', dif); } hist.vaciar(); malas = new Set(); ocupado = false; notasOn = false;
   crono = new Cronometro(crono.alTick, 0);
   prepararInfo(); construir(); arrancar(); pintar(); guardar();
-  if (cerrar) $('#kkOps').open = false;
-}
+  }
 function guardar() { if (!S) return; const d = { n: S.n, dif: S.dif, sol: S.sol, cages: S.cages, cur: S.cur, notas: S.notas, t: S.t, pistas: S.pistas, reto: S.reto || null, hist: hist ? hist.toJSON().slice(-60) : [] }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 function prepararInfo() {                          // jaula de cada casilla, casilla de la etiqueta y color (determinista) de cada jaula
   const n = S.n, jaulaDe = new Array(n * n), color = new Array(S.cages.length).fill(-1);
@@ -114,9 +113,6 @@ function construir() {
   cel = [...g.children];
   const pad = $('#kkPad'); pad.style.setProperty('--n2', n + 1);
   pad.innerHTML = Array.from({ length: n }, (_, v) => `<button data-v="${v + 1}" aria-label="Poner ${v + 1}">${v + 1}</button>`).join('') + '<button data-v="0" aria-label="Borrar">⌫</button>';
-  root.querySelectorAll('[data-n]').forEach(b => b.classList.toggle('on', +b.dataset.n === S.n));
-  root.querySelectorAll('[data-dif]').forEach(b => b.classList.toggle('on', b.dataset.dif === S.dif));
-  $('#kkAyuda').textContent = DIFICULTADES[S.dif].ayuda;
 }
 function pintar() {
   if (!S) return;
@@ -136,7 +132,6 @@ function pintar() {
     b.setAttribute('aria-label', `Fila ${(i / n | 0) + 1}, columna ${i % n + 1}, jaula ${S.cages[info.jaulaDe[i]].t}${simbolo(S.cages[info.jaulaDe[i]].op)}, ${v ? 'valor ' + v : 'vacía'}`);
   }
   const lle = S.cur.filter(Boolean).length;
-  $('#kkSum').textContent = `⚙️ ${n}×${n} · ${DIFICULTADES[S.dif].nombre}`;
   $('#kkInfo').textContent = `${lle}/${N} casillas${S.pistas ? ` · ${S.pistas} pista${S.pistas > 1 ? 's' : ''}` : ''}`;
   $('#kkCrono').textContent = fmtTiempo(S.t);
   document.querySelectorAll('#kkPad [data-v]').forEach(b => { b.disabled = S.done; });

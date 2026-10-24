@@ -74,6 +74,11 @@ export async function mount(root, a) {
   libre = !!api.pref('libre', false); parejas = !!api.pref('parejas', false);
   const n0 = api.pref('names', {}); nombres = n0 && typeof n0 === 'object' ? { ...n0 } : {};
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('change', alCambiar);
+  api.barra({ nueva: () => { if (P && P.phase !== 'over' && !api.confirmar('¿Abandonar la partida actual?')) return; iniciarPartida(); },
+    salir: () => { clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false; P = null; api.borrar(); modo = 'setup'; rSetup(); },
+    pausar: () => { clearTimeout(timer); },
+    reanudar: () => { if (P && P.phase !== 'over') drive(); },
+    config: { valores: () => ({ ...Object.fromEntries(PC.map(c => [c, cfgSetup[c] || 'n'])), parejas, libre, vel: api.pref('vel', 'normal') }), grupos: v => [...PC.map(c => ({ clave: c, titulo: `Jugador ${PNAME[c]}${nombres[c] ? ' · ' + nombres[c] : ''}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'parejas', titulo: 'Por parejas (con 4 jugadores)', opciones: [[true, 'Sí'], [false, 'No']], visible: PC.every(c => v[c] !== 'n') }, { clave: 'libre', titulo: 'Salida libre', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'vel', titulo: 'Velocidad CPU', opciones: [['rapida', 'Rápida'], ['normal', 'Normal'], ['lenta', 'Lenta']] }], aplicar: v => { if (PC.filter(c => v[c] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } PC.forEach(c => { cfgSetup[c] = v[c] === 'n' ? null : v[c]; }); api.setPref('cfg', cfgSetup); libre = !!v.libre; parejas = !!v.parejas; api.setPref('libre', libre); api.setPref('parejas', parejas); api.setPref('vel', v.vel); iniciarPartida(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   const g = api.cargar();
   if (g) { restaurar(g); modo = 'juego'; rJuego(); pintarJuego(); drive(); }
@@ -194,9 +199,9 @@ function rJuego() {
   rootEl.innerHTML = `
     ${modo3d ? '<div class="e3d" id="pzView"></div><div id="pzTab" hidden></div>' : `<div class="pzv" id="pzView"><div class="pzb" id="pzTab" style="width:${zoom() * 100}%"></div></div>`}
     <div class="pbar"><button type="button" class="die" id="pzDie" data-ac="roll" aria-label="Dado"></button><div><div class="msg" id="pzMsg" role="status" aria-live="polite"></div><div class="note" id="pzSub"></div></div></div>
-    <div class="bar"><button class="btn on" id="pzRoll" data-ac="roll">Tirar dado</button><button class="btn" data-ac="setup">Nueva partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
+    <div class="bar"><button class="btn on" id="pzRoll" data-ac="roll">Tirar dado</button></div>
     <div class="bar"><span class="lbl">Velocidad CPU</span><span id="pzVel">${velBotones()}</span></div>
-    <ul class="plog" id="pzLog"></ul>`;
+    <ul class="plog" id="pzLog"></ul>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
 }
 async function iniciar3D() {
@@ -344,10 +349,14 @@ function clic(e) {
   const ac = b.dataset.ac;
   if (ac === 'start') {
     if (PC.filter(c => cfgSetup[c]).length < 2) return;
-    const nm = {}; PC.forEach(c => { if (cfgSetup[c] && nombres[c] && nombres[c].trim()) nm[c] = nombres[c].trim().slice(0, 14); });
-    P = nuevaPartida(cfgSetup, nm, { salidaLibre: libre, parejas: parejas && PC.every(c => cfgSetup[c]) }); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
+    iniciarPartida();
   } else if (ac === 'roll') { if (P && P.phase === 'roll' && !esCPU(P, actual(P))) iniciarTirada(); }
   else if (ac === 'setup') nuevaSetup();
   else if (ac === 'aspecto') asp.abrir();
+}
+function iniciarPartida() {
+  const nm = {}; PC.forEach(c => { if (cfgSetup[c] && nombres[c] && nombres[c].trim()) nm[c] = nombres[c].trim().slice(0, 14); });
+  clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false;
+  P = nuevaPartida(cfgSetup, nm, { salidaLibre: libre, parejas: parejas && PC.every(c => cfgSetup[c]) }); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
 }
 function reglas() { api.modal('Parchís', listaReglas()); }

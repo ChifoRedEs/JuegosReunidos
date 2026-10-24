@@ -26,6 +26,7 @@ let panel = null, posPanel = null, arrP = null, anchoPrev = 0, gruposVistos = ''
 let V3 = null, modo3d = false, hay3d = false, forzar2d = false, tok3 = 0, claveMesa = '', supKey = '', LW = 1;
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } modo3d = false; claveMesa = supKey = ''; }
+let pausado = false;
 let cfg = { modo: 'pool8', rival: 'cpu', nivel: 'medio', guia: 'larga' };
 
 /* ---------- validación / resumen ---------- */
@@ -59,6 +60,11 @@ export async function mount(r, a) {
   onKey = tecla; document.addEventListener('keydown', onKey);
   onVis = () => { if (document.hidden) guardar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && ajustar()) dibujar(); limitarPanel(); }; addEventListener('resize', onRes);
+  api.barra({ nueva: () => empezar(),
+    salir: () => { serie++; anim = null; api.borrar(); S = null; setup(); },
+    pausar: () => { pausado = true; },
+    reanudar: () => { pausado = false; tPrev = performance.now(); turnoCPU(); },
+    config: { valores: () => ({ modo: cfg.modo, rival: cfg.rival, nivel: cfg.nivel, guia: cfg.guia }), grupos: v => [{ clave: 'modo', titulo: 'Juego', opciones: Object.entries(B.MODOS) }, { clave: 'rival', titulo: 'Rival', opciones: [['cpu', '🤖 CPU'], ['dos', '👥 2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.rival === 'cpu', opciones: Object.entries(NIVEL) }, { clave: 'guia', titulo: 'Ayuda', opciones: Object.entries(GUIA) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') armar(); else setup();
 }
@@ -68,7 +74,7 @@ export function unmount() {
   guardar();
   document.removeEventListener('keydown', onKey); document.removeEventListener('visibilitychange', onVis); removeEventListener('resize', onRes);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); }
-  quitarPanel(); cerrar3D(); S = null; cv = null; asp = null;
+  quitarPanel(); cerrar3D(); S = null; cv = null; asp = null; pausado = false;
 }
 function guardar() { if (!S || anim) return; const d = { s: S, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
@@ -95,7 +101,7 @@ function armar() {
     <div class="msg bimsg" id="biMsg" role="status" aria-live="polite"></div>
     <div class="bizona" id="biZona"><canvas id="biCv" aria-label="Mesa de billar: toca o arrastra para apuntar"${modo3d ? ' style="display:none"' : ''}></canvas>${modo3d ? '<div class="e3d bi3d" id="bi3d"></div>' : ''}</div>
     <div class="bicesto" id="biCesto" aria-label="Bolas metidas"></div>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="panel">📍 Recolocar controles</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="panel">📍 Recolocar controles</button><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
   cv = $('#biCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3);
   cv.addEventListener('pointerdown', abajo); cv.addEventListener('pointermove', mueve);
   for (const t of ['pointerup', 'pointercancel']) cv.addEventListener(t, () => { arrastre = null; });
@@ -185,7 +191,7 @@ function recolocarPanel() { posPanel = null; api.setPref('panel', null); limitar
 function quitarPanel() { if (panel) { panel.remove(); panel = null; } arrP = null; }
 
 /* ---------- apuntar, bola en mano y tiro ---------- */
-const humanoJuega = () => S && S.fase === 'apuntar' && !anim && !S.jug[S.turno].cpu && !pensando;
+const humanoJuega = () => S && !pausado && S.fase === 'apuntar' && !anim && !S.jug[S.turno].cpu && !pensando;
 const aMesa = e => { if (V3) return V3.aMesa(e); const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * (B.ANCHO + 2 * M) - M, (e.clientY - r.top) / r.height * (B.ALTO + 2 * M) - M]; };
 function abajo(e) {
   if (!humanoJuega()) return;
@@ -220,8 +226,8 @@ function alMover(e) { if (e.target.id === 'biRango') { fuerza = +e.target.value 
 /* ---------- bucle ---------- */
 function bucle(t) {
   if (!S || !cv) return;
-  const dt = Math.min((t - tPrev) / 1000, 1 / 20); tPrev = t;
-  if (anim) {
+  const dt = pausado ? 0 : Math.min((t - tPrev) / 1000, 1 / 20); tPrev = t;
+  if (anim && !pausado) {
     const r = B.radio(S.modo); let mov = false;
     const antes = anim.info.choques, metAntes = anim.info.metidas.length;
     for (let i = 0; i < Math.round(dt * 480); i++) mov = B.pasoFisica(S.bolas, r, 1 / 480, anim.info) || mov;
@@ -241,6 +247,7 @@ async function turnoCPU() {
   pensando = true; const tok = ++serie; pintarHud();
   await new Promise(r => setTimeout(r, 500));
   if (tok !== serie || !S) return;
+  if (pausado) { pensando = false; return; }
   if (S.enMano) { const p = await enSegundoPlano(MOTOR, 'sitioCPU', [S], B.sitioCPU); if (tok !== serie || !S) return; const bb = B.blanca(S); if (B.sitioValido(S, p.x, p.y)) { bb.x = p.x; bb.y = p.y; } }
   const tiro = await enSegundoPlano(MOTOR, 'pensar', [S], B.pensar);
   if (tok !== serie || !S) return;
@@ -250,6 +257,7 @@ async function turnoCPU() {
   await new Promise(res => { const paso = () => { if (tok !== serie || !S) return res(); const p = Math.min(1, (performance.now() - t0) / 700); ang = a0 + d * (1 - (1 - p) ** 3); if (p < 1) requestAnimationFrame(paso); else res(); }; paso(); });
   if (tok !== serie || !S) return;
   await new Promise(r => setTimeout(r, 250));
+  if (pausado) { pensando = false; return; }
   pensando = false; if (tok === serie && S) tirar(tiro.ang, tiro.fuerza, 0, 0);
 }
 function terminar() {

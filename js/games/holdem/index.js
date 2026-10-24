@@ -58,6 +58,11 @@ export async function mount(r, a) {
   const g = api.cargar(); S = g; consejo = api.pref('consejo', true);
   const c0 = api.pref('cfg', null); if (c0 && c0.bots >= 2 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel, modo: c0.modo === 'libre' ? 'libre' : 'torneo', ciegas: H.CIEGAS_LIBRE[c0.ciegas] ? c0.ciegas : 'baja' };
   root.addEventListener('click', clic); root.addEventListener('input', alMover);
+  api.barra({ nueva: () => { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; clearTimeout(timer); empezar(); },
+    salir: () => { clearTimeout(timer); if (S && S.modo === 'libre' && S.fase !== 'terminado') levantarse(true); else { api.borrar(); setup(); } },
+    pausar: () => clearTimeout(timer),
+    reanudar: () => { if (S && S.fase !== 'terminado') bucle(); },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['torneo', '🏆 Torneo'], ['libre', '🃏 Partida libre']] }, { clave: 'ciegas', titulo: 'Ciegas', visible: v.modo === 'libre', opciones: Object.entries(H.CIEGAS_LIBRE).map(([k, [a, b]]) => [k, `${a}/${b}`]) }, { clave: 'bots', titulo: 'Rivales', opciones: [2, 3, 4, 5].map(n => [n, n + ' bots']) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📊 Mis estadísticas', accion: verEstad }, { texto: 'Mostrar mis probabilidades', accion: () => { consejo = !consejo; api.setPref('consejo', consejo); pintar(); }, activo: consejo }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: 'Reglas', accion: reglas }]);
   if (S) { prevTab = S.tablero.length; armar(); pintar(); bucle(); } else setup();
 }
@@ -81,15 +86,15 @@ function armar() {
   root.innerHTML = `${modo3d ? '<div class="e3d pk3" id="hVista"></div><div class="hcentro hc3"><div class="hbote" id="hBote"></div><div class="hmsg" id="hMsg" role="status" aria-live="polite"></div></div>' : `<div class="mesa hm"><div class="hbots" id="hBots" style="--nb:${Math.min(nb, 3)}"></div>
     <div class="hcentro"><div class="hbote" id="hBote"></div><div class="hboard" id="hBoard"></div><div class="hmsg" id="hMsg" role="status" aria-live="polite"></div></div>
     <div class="yo" id="hYo"></div></div>`}<div class="hpanel" id="hPanel"></div><ul class="hlog" id="hLog"></ul>
-    <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="rank">Ranking</button><button class="btn" data-ac="nueva">Nueva partida</button></div>`;
+    <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="rank">Ranking</button></div>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
 }
 function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
 // Partida libre: al levantarse se anota el balance (ganada si terminas con más fichas de las que compraste)
-function levantarse() {
+function levantarse(forzar) {
   if (!S || S.modo !== 'libre') return;
-  if (S.turno >= 0 && !api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
-  if (!api.confirmar(`¿Levantarte de la mesa? Balance: ${H.neto(S) >= 0 ? '+' : ''}${H.neto(S)} fichas.`)) return;
+  if (!forzar && S.turno >= 0 && !api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
+  if (!forzar && !api.confirmar(`¿Levantarte de la mesa? Balance: ${H.neto(S) >= 0 ? '+' : ''}${H.neto(S)} fichas.`)) return;
   const n = H.neto(S); clearTimeout(timer);
   if (S.mano > 0 && !S.reg) { S.reg = true; api.registrar({ res: n > 0 ? 'victoria' : n < 0 ? 'derrota' : 'tablas', variante: `Partida libre · ${NIVEL[S.nivel]}`, puntos: Math.max(0, n) }); }
   S.fase = 'terminado'; S.turno = -1; guardar();

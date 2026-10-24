@@ -45,6 +45,10 @@ export async function mount(r, a) {
   S = api.cargar();
   root.addEventListener('click', clic);
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
+  api.barra({ nueva: () => { cfg = { modo: S.modo, tam: S.tam, nivel: cfg.nivel }; parar(); jugar(); },
+    salir: () => { parar(); setup(); },
+    crono: () => crono,
+    config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(K.MODOS).map(([k, l]) => [k, (k === 'colores' ? '🟦 ' : '🔢 ') + l]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(K.TAMANOS[v.modo]).map(([k, t]) => [k, t.nombre]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVELES) }], alCambiar: (v, c) => { if (c === 'modo' && !K.TAMANOS[v.modo][v.tam]) v.tam = v.modo === 'colores' ? '4x5' : '4x4'; }, aplicar: v => { cfg = { modo: v.modo, tam: v.tam, nivel: v.nivel }; parar(); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '↶ Deshacer', accion: deshacer }, { texto: '💡 Pista', accion: pedirPista }, { texto: '↺ Reiniciar este puzle', accion: reiniciar },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
@@ -88,7 +92,7 @@ function armar() {
   root.innerHTML = `<div class="klcab"><b id="klTit">${esc(K.MODOS[S.modo])} · ${esc(T.nombre)}</b><span id="klInfo"></span></div>
     <div id="klTab" ${modo3d ? 'class="e3d kl3"' : 'class="kltab"'} style="--w:${S.w};--h:${S.h}" role="application" aria-label="Tablero de Klotski: toca o arrastra las fichas"></div>
     <p class="klmsg" id="klMsg" role="status" aria-live="polite"></p>
-    <div class="bar klbar"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="reiniciar">↺ Reiniciar</button><button class="btn" data-ac="nueva">🔄 Nuevo</button></div>`;
+    <div class="bar klbar"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="reiniciar">↺ Reiniciar</button></div>${api.barraHtml()}`;
   if (modo3d) iniciar3D(); else construir2D();
   if (!S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); }
   pintar();

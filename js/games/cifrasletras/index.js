@@ -30,6 +30,9 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   onKey = tecla; document.addEventListener('keydown', onKey);
   onVis = () => { if (document.hidden) { pararReloj(); guardar(); } else if (S && S.fase === 'pensar') arrancarReloj(); }; document.addEventListener('visibilitychange', onVis);
+  api.barra({ nueva: () => nuevaSetup(),
+    salir: () => { location.hash = '#/cat/palabras'; },
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rondas', titulo: 'Rondas', opciones: C.RONDAS.map(n => [n, String(n)]) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: C.TIEMPOS.map(t => [t, t ? t + ' s' : 'Sin límite']) }, { clave: 'rival', titulo: 'Rival', opciones: [['cpu', '🤖 CPU'], ['solo', '👤 Solo']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.rival === 'cpu', opciones: Object.entries(NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📅 Reto del día', accion: reto }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   armar();
   if (S && S.fase === 'pensar') arrancarReloj();
@@ -45,15 +48,9 @@ function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(
 /* ---------- pantallas ---------- */
 function armar() {
   root.innerHTML = `<div id="cyReto"></div>
-    <details class="ops" id="cyOps"><summary id="cySum"></summary>
-      <div class="bar"><span class="lbl">Rondas</span><div class="seg">${C.RONDAS.map(n => `<button class="btn" data-cfg="rondas" data-v="${n}">${n}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Tiempo</span><div class="seg">${C.TIEMPOS.map(t => `<button class="btn" data-cfg="tiempo" data-v="${t}">${t ? t + ' s' : 'Sin límite'}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Rival</span><div class="seg"><button class="btn" data-cfg="rival" data-v="cpu">🤖 CPU</button><button class="btn" data-cfg="rival" data-v="solo">👤 Solo</button></div></div>
-      <div class="bar" id="cyNiv"><span class="lbl">Nivel</span><div class="seg">${Object.entries(NIVEL).map(([k, l]) => `<button class="btn" data-cfg="nivel" data-v="${k}">${l}</button>`).join('')}</div></div>
-      <div class="bar"><button class="btn on" data-ac="start">Nueva partida</button></div></details>
     <div class="cymesa" id="cyMesa"></div>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
-  if (!S) { $('#cyOps').open = true; empezar(); return; }
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+  if (!S) { empezar(); return; }
   pintar();
 }
 function empezar(reto = null) {
@@ -62,7 +59,7 @@ function empezar(reto = null) {
   if (reto) S.datos = api.reto.generar(() => [C.letrasAlAzar(Math.random), C.numerosAlAzar(Math.random), C.letrasAlAzar(Math.random), C.numerosAlAzar(Math.random)]);
   prepararRonda(); pintar(); guardar();
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && S.ronda && !api.confirmar('¿Empezar una partida nueva?')) return; empezar(); $('#cyOps').open = false; }
+function nuevaSetup() { if (S && S.fase !== 'fin' && S.ronda && !api.confirmar('¿Empezar una partida nueva?')) return; empezar(); }
 function reto() {
   if (api.reto.hecho()) { api.aviso('Ya has completado el reto de hoy'); return; }
   if (S && S.reto === api.reto.fecha() && S.fase !== 'fin') return;
@@ -88,9 +85,6 @@ function pintar() {
   if (!S || !$('#cyMesa')) return;
   root.dataset.fichas = asp.valores.fichas;
   pintarReto();
-  root.querySelectorAll('[data-cfg]').forEach(b => b.classList.toggle('on', String(cfg[b.dataset.cfg]) === b.dataset.v));
-  $('#cyNiv').hidden = cfg.rival !== 'cpu';
-  $('#cySum').textContent = `⚙️ ${cfg.rondas} rondas · ${cfg.tiempo ? cfg.tiempo + ' s' : 'sin límite'} · ${cfg.rival === 'cpu' ? 'CPU ' + NIVEL[cfg.nivel].toLowerCase() : 'solo'}`;
   const tipo = C.tipoRonda(S.ronda), m = $('#cyMesa');
   const marcador = `<div class="cymarc"><span class="yo"><small>Tú</small><b>${S.puntos[0]}</b></span><em>${S.fase === 'fin' ? 'Final' : `Ronda ${S.ronda + 1} de ${S.rondas}`}<br><b>${S.fase === 'fin' ? '' : tipo === 'letras' ? '🔤 Letras' : '🔢 Cifras'}</b></em>${S.rival === 'cpu' ? `<span><small>CPU ${NIVEL[S.nivel].toLowerCase()}</small><b>${S.puntos[1]}</b></span>` : '<span class="vacio"></span>'}</div>`;
   const barra = S.fase === 'pensar' && S.tiempo ? `<div class="cybarra" id="cyBarra" style="--p:${S.quedan / S.tiempo}"><i></i><span id="cySeg">${Math.ceil(S.quedan)}</span></div>` : '';
@@ -155,7 +149,7 @@ function htmlFin() {
 }
 
 /* ---------- jugar ---------- */
-function pedir(tipo) { if (S.letras.length >= 9) return; $('#cyOps').open = false; S.letras.push(C.sacarLetra(tipo)); api.sonido('click'); if (S.letras.length === 9) empezarPensar(); else { pintar(); guardar(); } }
+function pedir(tipo) { if (S.letras.length >= 9) return; S.letras.push(C.sacarLetra(tipo)); api.sonido('click'); if (S.letras.length === 9) empezarPensar(); else { pintar(); guardar(); } }
 function empezarPensar() { S.fase = 'pensar'; S.quedan = S.tiempo; sel = []; pintar(); arrancarReloj(); guardar(); }
 function enviar() {
   if (S.fase !== 'pensar') return;
@@ -221,10 +215,10 @@ function clic(e) {
   if (d.n) return tocarNumero(d.n);
   if (d.op) { if (pend) { pend.op = d.op; pintar(); } return; }
   const a = d.ac;
-  if (a === 'start') { empezar(); $('#cyOps').open = false; } else if (a === 'reto') reto();
+  if (a === 'start') { empezar(); } else if (a === 'reto') reto();
   else if (a === 'vocal') pedir('v'); else if (a === 'consonante') pedir('c');
   else if (a === 'azar') { S.letras = C.letrasAlAzar(); empezarPensar(); }
-  else if (a === 'sacar') { $('#cyOps').open = false; const r = C.numerosAlAzar(); S.numeros = r.numeros; S.objetivo = r.objetivo; api.sonido('dado'); empezarPensar(); }
+  else if (a === 'sacar') { const r = C.numerosAlAzar(); S.numeros = r.numeros; S.objetivo = r.objetivo; api.sonido('dado'); empezarPensar(); }
   else if (a === 'borrarL') { sel.pop(); pintar(); } else if (a === 'limpiar') { sel = []; pintar(); }
   else if (a === 'deshacerC') { pasos.pop(); pend = null; pintar(); }
   else if (a === 'enviar') enviar(); else if (a === 'siguiente') siguiente();

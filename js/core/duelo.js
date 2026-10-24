@@ -26,7 +26,7 @@ const serieVacia = n => ({ n, a: 0, b: 0, fin: 0 });
 
 export function crearDuelo(def) {
   const VARS = Object.keys(def.variantes);
-  let S = null, api = null, root = null, timer = null, pensando = false, ctx = null, asp = null, turnoIA = 0;
+  let S = null, api = null, root = null, timer = null, pensando = false, ctx = null, asp = null, turnoIA = 0, pausado = false;
   // La IA: en un Worker si el juego da su módulo; si no, en el hilo principal
   const calcular = (e, v, nivel, rapido) => (def.iaModulo
     ? enSegundoPlano(def.iaModulo, 'ia', [e, v, nivel, rapido], def.ia)
@@ -77,7 +77,8 @@ export function crearDuelo(def) {
       pista: null, valores: () => asp.valores,
       yo: () => (S ? S.yo : 1), modo: () => (S ? S.modo : 'cpu'), sonido: n => api.sonido(n),
       rendirse: def.rendirse ? () => rendirse() : null,
-      puedeJugar: () => !!S && !S.e.fin && !pensando && (S.modo === 'dos' || S.e.turn === S.yo),
+      pausado: () => pausado,
+      puedeJugar: () => !!S && !pausado && !S.e.fin && !pensando && (S.modo === 'dos' || S.e.turn === S.yo),
       jugar: m => {
         if (!ctx.puedeJugar()) return false;
         if (!def.jugadas(S.e, S.v).includes(m)) { api.sonido('error'); return false; }
@@ -98,20 +99,36 @@ export function crearDuelo(def) {
         if (!S.e.fin) siguiente();
       },
     };
+    api.barra({
+      nueva: () => nuevaPartida(true, false),
+      salir: () => { location.hash = '#/cat/tablero'; },
+      pausar: () => { pausado = true; },
+      reanudar: () => { pausado = false; if (S && ctx) { pintar(); siguiente(); } },
+      config: {
+        valores: () => ({ v: S.v, modo: S.modo, nivel: S.nivel, serie: S.serie.n, inicio: S.inicio, ...(def.cfgExtra ? def.cfgExtra.valores() : {}) }),
+        grupos: v => [
+          { clave: 'v', titulo: 'Tablero', opciones: VARS.map(k => [k, def.variantes[k].corto]) },
+          { clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra CPU'], ['dos', '2 jugadores']] },
+          { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.modo === 'cpu', opciones: Object.entries(NIVEL) },
+          { clave: 'serie', titulo: 'Partidas', opciones: Object.entries(SERIES).map(([k, l]) => [+k, l]) },
+          { clave: 'inicio', titulo: 'Empieza', opciones: Object.entries(INICIO) },
+          ...(def.cfgExtra ? def.cfgExtra.grupos(v) : []),
+        ],
+        aplicar: v => {
+          S.v = v.v; S.modo = v.modo; S.nivel = v.nivel; S.inicio = v.inicio; S.serie = serieVacia(v.serie);
+          api.setPref('v', S.v); api.setPref('modo', S.modo); api.setPref('nivel', S.nivel); api.setPref('inicio', S.inicio); api.setPref('serie', v.serie);
+          if (def.cfgExtra) def.cfgExtra.aplicar(v);
+          nuevaPartida(true, true);
+        },
+      },
+    });
     root.innerHTML = `
-      <details class="ops" id="duOps"><summary id="duSum"></summary>
-      <div class="bar"><span class="lbl">Tablero</span><div class="seg">${VARS.map(k => `<button class="btn" data-var="${k}">${def.variantes[k].corto}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Modo</span><div class="seg"><button class="btn" data-modo="cpu">Contra CPU</button><button class="btn" data-modo="dos">2 jugadores</button></div></div>
-      <div class="bar" id="duNiv"><span class="lbl">Nivel</span><div class="seg">${Object.entries(NIVEL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Partidas</span><div class="seg">${Object.entries(SERIES).map(([k, l]) => `<button class="btn" data-serie="${k}">${l}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Empieza</span><div class="seg">${Object.entries(INICIO).map(([k, l]) => `<button class="btn" data-ini="${k}">${l}</button>`).join('')}</div></div>
-      </details>
       <div class="duM" id="duMarc"></div>
       <div class="duSerie" id="duSerie" hidden></div>
       <div class="msg duMsg" id="duMsg" role="status" aria-live="polite"></div>
       <div id="duTab"></div>
-      <div class="bar"><button class="btn on" data-ac="nueva">Nueva partida</button><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>
-      <p class="note" id="duReg"></p>`;
+      <div class="bar"><button class="btn" data-ac="undo">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button></div>
+      <p class="note" id="duReg"></p>${api.barraHtml()}`;
     root.addEventListener('click', clic);
     api.menu([
       { texto: 'Nueva partida', accion: () => nuevaPartida() },
@@ -122,14 +139,13 @@ export function crearDuelo(def) {
       { texto: 'Reiniciar marcador', accion: reiniciarMarcador, peligro: true },
       { texto: 'Reglas', accion: reglas },
     ]);
-    if (!S.e) { $('#duOps').open = true; nuevaPartida(true, true); return; }
-    $('#duOps').open = !S.hist.length && !S.e.fin;
+    if (!S.e) { nuevaPartida(true, true); return; }
     montarTablero(); pintar(); siguiente();
   }
   function unmount() {
     clearTimeout(timer); timer = null; pensando = false; turnoIA++;
     if (root) root.removeEventListener('click', clic);
-    S = null; ctx = null; root = null; asp = null;
+    S = null; ctx = null; root = null; asp = null; pausado = false;
   }
   const montarTablero = () => def.vista.montar($('#duTab'), ctx, S.v);
 
@@ -178,10 +194,12 @@ export function crearDuelo(def) {
     pensando = true; pintarMsg();
     clearTimeout(timer);
     timer = setTimeout(async () => {
+      if (pausado) return;
       if (!S || !pensando || S.e.fin) { pensando = false; return; }
       const tok = ++turnoIA, e0 = S.e;
       const m = await calcular(S.e, S.v, S.nivel, false);
       if (!S || tok !== turnoIA || S.e !== e0) return;           // la partida cambió mientras pensaba
+      if (pausado) { pensando = false; return; }
       pensando = false;
       if (m != null && def.jugadas(S.e, S.v).includes(m)) hacer(m); else pintar();
     }, 380);
@@ -237,16 +255,9 @@ export function crearDuelo(def) {
   function pintar() {
     if (!S) return;
     const e = S.e, cpu = S.modo === 'cpu', s1 = S.yo, s2 = 3 - S.yo;
-    root.querySelectorAll('[data-var]').forEach(b => b.classList.toggle('on', b.dataset.var === S.v));
-    root.querySelectorAll('[data-modo]').forEach(b => b.classList.toggle('on', b.dataset.modo === S.modo));
-    root.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.nivel));
-    root.querySelectorAll('[data-ini]').forEach(b => b.classList.toggle('on', b.dataset.ini === S.inicio));
-    root.querySelectorAll('[data-serie]').forEach(b => b.classList.toggle('on', +b.dataset.serie === S.serie.n));
     const ds = $('#duSerie'), sr = S.serie;
     ds.hidden = sr.n === 1;
     if (sr.n > 1) ds.innerHTML = `${SERIES[sr.n]}: <b>${sr.a} – ${sr.b}</b>${sr.fin ? ` · ${sr.fin === 1 ? (cpu ? '¡serie tuya!' : 'serie del jugador 1') : (cpu ? 'serie para la CPU' : 'serie del jugador 2')}` : ` · gana quien llegue a ${Math.ceil(sr.n / 2)}`}`;
-    $('#duNiv').style.display = cpu ? '' : 'none';
-    $('#duSum').textContent = `⚙️ ${J().corto} · ${cpu ? 'CPU ' + NIVEL[S.nivel] : '2 jugadores'}${S.serie.n > 1 ? ' · al mejor de ' + S.serie.n : ''} · empieza ${S.inicio === 'tu' ? 'tú' : S.inicio === 'cpu' ? 'la CPU' : 'alterno'}`;
     const M = S.marcador;
     $('#duMarc').innerHTML = `<div class="${!e.fin && e.turn === s1 ? 'turno' : ''}"><b>${M.p1}</b><small>${chip(s1)} ${cpu ? 'Tú' : 'Jugador 1'}</small></div>
       <div><b>${M.t}</b><small>Empates</small></div>
@@ -259,28 +270,10 @@ export function crearDuelo(def) {
 
   /* ---------- entrada ---------- */
   function clic(ev) {
-    const b = ev.target.closest('button[data-var],button[data-modo],button[data-niv],button[data-ini],button[data-serie],button[data-ac]');
+    const b = ev.target.closest('button[data-ac]');
     if (!b || !S) return;
     const d = b.dataset;
-    if (d.var) {
-      if (d.var === S.v) return;
-      if (progreso() && !api.confirmar('Cambiar de tablero empieza una partida nueva. ¿Continuar?')) return;
-      S.v = d.var; api.setPref('v', S.v); nuevaPartida(true, true);
-    } else if (d.modo) {
-      if (d.modo === S.modo) return;
-      if (progreso() && !api.confirmar('Cambiar de modo empieza una partida nueva. ¿Continuar?')) return;
-      S.modo = d.modo; api.setPref('modo', S.modo); nuevaPartida(true, false);
-    } else if (d.niv) { S.nivel = d.niv; api.setPref('nivel', S.nivel); pintar(); guardar(); }
-    else if (d.ini) {
-      S.inicio = d.ini; api.setPref('inicio', S.inicio);
-      if (!S.hist.length && !S.e.fin) nuevaPartida(true, false);
-      else { api.aviso('Se aplicará en la próxima partida'); pintar(); guardar(); }
-    } else if (d.serie) {
-      const n = +d.serie; if (n === S.serie.n) return;
-      api.setPref('serie', n);
-      if (progreso() && !api.confirmar('Cambiar el tipo de serie empieza una partida nueva. ¿Continuar?')) return;
-      S.serie = serieVacia(n); nuevaPartida(true, false);
-    } else if (d.ac === 'nueva') nuevaPartida();
+    if (d.ac === 'nueva') nuevaPartida();
     else if (d.ac === 'undo') deshacer();
     else if (d.ac === 'pista') pista();
     else if (d.ac === 'aspecto') asp.abrir();

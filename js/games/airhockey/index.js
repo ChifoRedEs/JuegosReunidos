@@ -1,11 +1,12 @@
 // Air Hockey: contra la CPU (3 niveles) o 2 jugadores en el mismo móvil (cada uno controla su mitad con un dedo).
 import { $ } from '../../core/dom.js';
 import * as A from './motor.js';
-import { grupoFondo, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, esc = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, dedos = new Map(), obj = [null, null], teclas = {}, rastro = [], cartel = null, ultGolpe = 0, hudAnt = '';
+let eraJugando = false;
 let cfg = { modo: 'cpu', nivel: 'medio', meta: 7 };
 const TEMAS = {
   hielo: { nombre: 'Hielo', mesa: '#EAF6FF', linea: '#9CC9F0', borde: '#2F6BFF', disco: '#1B2340', sw: ['#EAF6FF', '#2F6BFF'] },
@@ -26,7 +27,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; dedos = new Map(); obj = [null, null]; rastro = []; cartel = null;
-  asp = api.aspecto([grupoFondo('', true), grupoPersonaje('Personajes (tu mazo)'), { clave: 'tema', titulo: 'Mesa', def: 'hielo', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (tu mazo)'), { clave: 'tema', titulo: 'Mesa', def: 'hielo', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) }], () => { if (S) dibujar(); });
   await api.css(new URL('./airhockey.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && A.MODOS[c0.modo] && A.NIVELES[c0.nivel] && A.METAS.includes(c0.meta)) cfg = { ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -36,6 +37,11 @@ export async function mount(r, a) {
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKeyUp);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
+  api.barra({ nueva: () => empezar(),
+    salir: () => { pausar(); setup(); },
+    pausar: () => { eraJugando = !!S && (S.fase === 'juego' || S.fase === 'gol'); pausar(); },
+    reanudar: o => { if (o === 'salir' && eraJugando) seguir(); },
+    config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, meta: cfg.meta }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(A.MODOS) }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.modo === 'cpu', opciones: Object.entries(A.NIVELES).map(([k, n]) => [k, n.nombre]) }, { clave: 'meta', titulo: 'Partido a', opciones: A.METAS.map(m => [m, `${m} goles`]) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (S && S.fase !== 'fin') { if (S.fase !== 'listo') S.fase = 'pausa'; armar(); } else setup();
 }
@@ -59,7 +65,7 @@ function setup() {
 function armar() {
   root.innerHTML = `<div class="ahhud" id="ahHud"></div>
     <div class="ahzona" id="ahZona"><canvas id="ahCv" aria-label="Mesa de air hockey"></canvas><div class="ahover" id="ahOver" hidden></div></div>
-    <div class="bar ahbar"><button class="btn" data-ac="pausa">⏸️ Pausa</button><button class="btn" data-ac="opciones">⚙️ Opciones</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${api.barraHtml()}`;
   cv = $('#ahCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3); hudAnt = '';
   cv.addEventListener('pointerdown', dedoAbajo); cv.addEventListener('pointermove', dedoMueve);
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) cv.addEventListener(t, dedoArriba);

@@ -91,7 +91,56 @@ btnAtras.addEventListener('click', () => { const r = ruta(); location.hash = r.c
 /* ---------- API que reciben los juegos ---------- */
 function crearApi(j, ent, mod, root) {
   const id = j.id;
+  let abrirAsp = null, defBarra = null;
+  // Barra inferior común (Nuevo panel / Configurar / Apariencia / Pausa-Salir): cada juego la pide con api.barraHtml() al final de su pantalla de partida.
+  const PANEL = ['sopa', 'crucigrama', 'rosco', 'ruleta', 'encadenadas', 'cifrasletras', 'ahorcado'];
+  const etiquetaNueva = () => (defBarra && defBarra.etiqueta) || (j.categoria === 'logica' || PANEL.includes(id) ? 'Nuevo panel' : 'Nueva partida');
+  // Pausa: el juego puede dar `pausar()/reanudar()` propios y/o `crono: () => cronómetro` (se para y se reanuda solo si estaba en marcha).
+  const parar_ = () => {
+    let c = null, activo = false;
+    try { c = defBarra && defBarra.crono ? defBarra.crono() : null; activo = !!(c && c.activo); if (activo) c.pausar(); defBarra && defBarra.pausar && defBarra.pausar(); } catch (e) { console.error(e); }
+    return origen => { try { if (activo && c && !c.activo) c.iniciar(); defBarra && defBarra.reanudar && defBarra.reanudar(origen); } catch (e) { console.error(e); } };
+  };
+  const pausaTemp = fn => { const seguir = parar_(); fn(() => seguir('aux')); };
+  function abrirConfig() {
+    const c = defBarra && defBarra.config; if (!c) return;
+    pausaTemp(volver => {
+      const vals = { ...c.valores() }, cont = el('div', { class: 'cfg-cont' });
+      let aplicado = false, cerrar;
+      const pintar = () => {
+        cont.replaceChildren(...c.grupos(vals).filter(g => g.visible !== false).map(g => el('div', { class: 'cfg-g' }, el('span', { class: 'lbl' }, g.titulo),
+          el('div', { class: 'seg' }, ...g.opciones.map(([v, l]) => el('button', { type: 'button', class: 'btn' + (String(vals[g.clave]) === String(v) ? ' on' : ''), 'data-k': g.clave, 'data-v': JSON.stringify(v) }, l))),
+          g.nota ? el('small', { class: 'note' }, g.nota) : null)));
+      };
+      cont.addEventListener('click', e => {
+        const b = e.target.closest('button[data-k]'); if (!b) return;
+        vals[b.dataset.k] = JSON.parse(b.dataset.v); if (c.alCambiar) c.alCambiar(vals, b.dataset.k); pintar();
+      });
+      pintar();
+      const emp = el('button', { class: 'btn on', onclick: () => { aplicado = true; cerrar(); c.aplicar({ ...vals }); } }, '▶️ ' + etiquetaNueva());
+      cerrar = hoja([el('h2', {}, '⚙️ Configurar partida'), el('p', { class: 'note' }, c.nota || 'Elige las opciones y empieza una partida nueva. La partida actual se abandona.'), cont,
+        el('div', { class: 'bar', style: 'margin-top:14px' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'), emp)], () => { if (!aplicado) volver(); });
+    });
+  }
+  function preguntarSalir() {
+    const seguir = parar_();
+    let decidido = false, cerrar;
+    const no = el('button', { class: 'btn on', onclick: () => { decidido = true; cerrar(); seguir('salir'); } }, 'No, seguir jugando');
+    const si = el('button', { class: 'btn', onclick: () => { decidido = true; cerrar(); if (defBarra && defBarra.salir) defBarra.salir(); else location.hash = j.categoria ? '#/cat/' + j.categoria : '#/'; } }, 'Sí, salir');
+    cerrar = hoja([el('h2', {}, '⏸️ Partida en pausa'), el('p', {}, '¿Salir de la partida?'), el('div', { class: 'bar', style: 'margin-top:14px' }, si, no)], () => { if (!decidido) seguir('salir'); });
+  }
   return {
+    barra(def) { defBarra = def; },
+    barraHtml() {
+      return `<div class="barra-gen" role="group" aria-label="Controles de la partida"><button type="button" data-gen="nueva"><span aria-hidden="true">🆕</span>${esc(etiquetaNueva())}</button><button type="button" data-gen="config"><span aria-hidden="true">⚙️</span>Configurar partida</button>${abrirAsp ? '<button type="button" data-gen="aspecto"><span aria-hidden="true">🎨</span>Apariencia</button>' : ''}<button type="button" data-gen="salir"><span aria-hidden="true">⏸️</span>Pausa / Salir</button></div>`;
+    },
+    gen(ac) {
+      if (!defBarra) return;
+      if (ac === 'nueva') { if (defBarra.nueva) defBarra.nueva(); }
+      else if (ac === 'config') abrirConfig();
+      else if (ac === 'aspecto') { if (abrirAsp) pausaTemp(volver => abrirAsp(volver)); }
+      else if (ac === 'salir') preguntarSalir();
+    },
     id, root,
     cargar() { if (!ent) return null; try { return mod.validar(ent.datos) || null; } catch { return null; } },
     guardar: (datos, resumen = null, fin = false) => store.setJuego(id, datos, resumen, fin),
@@ -155,12 +204,12 @@ function crearApi(j, ent, mod, root) {
         vals[g.clave] = c[Math.random() * c.length | 0].id;
       });
       // Grupo con `sel` («Fondo de Tablero»): la imagen elegida va a --tapete-url y una regla de <style> la pone detrás del tablero del juego.
-      const gF = defs.find(g => g.sel !== undefined);
+      const gFs = defs.filter(g => g.sel !== undefined), gF = gFs[0];
       let stF = document.getElementById('jr-tapete-sel'); if (!stF) { stF = document.createElement('style'); stF.id = 'jr-tapete-sel'; document.head.append(stF); }
-      stF.textContent = gF && gF.sel ? `.juego[data-${gF.clave}^="t-"] ${gF.sel}{background:var(--tapete-url) center/cover no-repeat!important;padding:6px;box-sizing:border-box;border-radius:14px}` : '';
+      stF.textContent = gFs.filter(g => g.sel).map((g, k, arr) => { const despues = gFs.slice(gFs.indexOf(g) + 1).map(x => `:not([data-${x.clave}^="t-"])`).join(''); return `.juego[data-${g.clave}^="t-"]${despues}${g.sel === 'raiz' ? '' : ' ' + g.sel}{background:var(--tapete-url) center/cover no-repeat!important;padding:6px;box-sizing:border-box;border-radius:14px}`; }).join('\n');
       const poner = () => {
         defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; }); precargarSeleccion(vals);
-        const t = gF && buscarFondo(vals[gF.clave]);
+        let t = null; for (const g of gFs) { const x = buscarFondo(vals[g.clave]); if (x) t = x; }       // «Fondo de Pantalla» (último grupo) pasa por delante del «Tapete»
         if (t) root.style.setProperty('--tapete-url', `url("${urlTapete(t)}")`); else root.style.removeProperty('--tapete-url');
       };
       defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
@@ -172,49 +221,47 @@ function crearApi(j, ent, mod, root) {
         btnVista = el('button', { type: 'button', class: 'btn vista-flot' }); document.body.append(btnVista); root.classList.add('con-vista'); posVista(); refrescarVista();
         btnVista.addEventListener('click', () => { elec.vista = vals.vista === '3d' ? '2d' : '3d'; delete vals.vista; resolver(false); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); });
       }
-      // 🎨 Apariencia: cada grupo es un enlace que abre su propia ventana con las opciones (muestras de color, iconos o imágenes).
-      // Los grupos de 2 opciones (sí/no) se quedan a la vista como botones, salvo que el grupo diga `ventana: true/false`.
-      const enVentana = g => (g.ventana !== undefined ? !!g.ventana : g.opciones.length > 2);
-      const abrir = () => {
+      // 🎨 Apariencia (igual en todos los juegos): una ventana con una sección desplegable por grupo (se abre una a la vez).
+      // Cada sección muestra sus opciones como botones, muestras de color, iconos o miniaturas de imagen, según el grupo.
+      const abrir = (alCerrarV) => {
         const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
-          ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.img ? el('img', { class: 'ap-th', src: o.img, alt: '', loading: 'lazy' }) : null, o.nombre]));
-        // `emoji` = rejilla compacta de iconos; `sec` en las opciones agrupa la rejilla en secciones (Hombres, Mujeres, Animales…)
-        const opciones = g => { const out = []; let sec = null; for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); } return out; };
-        const contenedor = g => el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g));
+          ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.nombre]));
         const actual = g => g.opciones.find(x => x.id === elec[g.clave]) || g.opciones[0];
-        const elegir = (g, id) => { elec[g.clave] = id; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); };
-        const enlaces = new Map();
-        const pintarEnlace = g => {
-          const b = enlaces.get(g.clave), o = actual(g);
+        const resumenSec = new Map();
+        const pintarResumen = g => {
+          const o = actual(g), r = resumenSec.get(g.clave); if (!r) return;
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
-          b.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre), el('i', {}, '›'));
+          r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
         };
-        const ventana = g => {
-          let cerrarV;
+        const elegir = (g, idO) => { elec[g.clave] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); if (alCambiar) alCambiar({ ...vals }); };
+        const cuerpoDe = g => {
           const imgs = g.opciones.some(o => o.img) && g.forma;
-          const cuerpo = imgs
-            ? el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => {
-              const bt = el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), title: o.nombre }, o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || '🎲'), el('small', {}, o.nombre));
-              bt.addEventListener('click', () => { elegir(g, o.id); pintarEnlace(g); cerrarV(); }); return bt;
-            }))
-            : el('div', { class: 'ap-g' }, contenedor(g));
-          if (!imgs) cuerpo.addEventListener('click', e => { const b = e.target.closest('.ap-o'); if (!b) return; elegir(g, b.dataset.o); pintarEnlace(g); cerrarV(); });
-          cerrarV = hoja([el('h2', {}, g.titulo), cuerpo, el('div', { class: 'bar', style: 'margin-top:14px' }, el('button', { class: 'btn', onclick: () => cerrarV() }, 'Cerrar'))]);
+          if (imgs) return el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
+            o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || (o.nada ? '🚫' : '🎲')), el('small', {}, o.nombre))));
+          const out = []; let sec = null;
+          for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); }
+          return el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, out);
         };
-        const enlace = g => { const b = el('button', { type: 'button', class: 'ap-link' }); enlaces.set(g.clave, b); pintarEnlace(g); b.addEventListener('click', () => ventana(g)); return b; };
-        const lista = defs.filter(enVentana).map(enlace);
-        const fijos = defs.filter(g => !enVentana(g)).map(g => el('div', { class: 'ap-g' }, el('h3', {}, g.titulo), contenedor(g)));
-        const wrap = el('div', {}, lista.length ? el('div', { class: 'ap-links' }, ...lista) : null, ...fijos);
-        wrap.addEventListener('click', e => {      // opciones a la vista (grupos pequeños)
-          const b = e.target.closest('.ap-g .ap-o'); if (!b) return;
-          elegir(defs.find(g => g.clave === b.dataset.g), b.dataset.o);
-          wrap.querySelectorAll(`.ap-o[data-g="${b.dataset.g}"]`).forEach(x => x.classList.toggle('on', x === b));
+        const secciones = defs.map(g => {
+          const det = el('details', { class: 'ap-det' }), sum = el('summary', { class: 'ap-link' }); resumenSec.set(g.clave, sum); pintarResumen(g);
+          const cuerpo = cuerpoDe(g); cuerpo.classList.add('ap-cuerpo');
+          cuerpo.addEventListener('click', e => {
+            const b = e.target.closest('.ap-o, .ap-ficha'); if (!b) return;
+            const idO = b.dataset.o; if (idO == null) return;
+            elegir(g, idO); cuerpo.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === idO));
+          });
+          det.append(sum, cuerpo);
+          det.addEventListener('toggle', () => { if (det.open) secciones_.forEach(d => { if (d !== det) d.open = false; }); });
+          return det;
         });
+        const secciones_ = secciones; if (secciones.length === 1) secciones[0].open = true;
+        const wrap = el('div', { class: 'ap-acordeon' }, ...secciones);
         let cerrar;
         const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { elec[g.clave] = g.def; delete vals[g.clave]; }); resolver(true); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
         const ok = el('button', { class: 'btn on', onclick: () => cerrar() }, 'Listo');
-        cerrar = hoja([el('h2', {}, '🎨 Apariencia'), wrap, el('div', { class: 'bar', style: 'margin-top:14px' }, rest, ok)]);
+        cerrar = hoja([el('h2', {}, '🎨 Apariencia'), wrap, el('div', { class: 'bar', style: 'margin-top:14px' }, rest, ok)], typeof alCerrarV === 'function' ? alCerrarV : null);
       };
+      abrirAsp = abrir;
       return { valores: vals, abrir, sortear() { resolver(true); poner(); } };   // sortear(): nueva baraja/dorso al azar (partida nueva)
     },
     css(url) {
@@ -280,7 +327,7 @@ async function abrirJuego(id, t) {
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', render);
-app.addEventListener('click', e => { const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); });
+app.addEventListener('click', e => { const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); const g = e.target.closest('[data-gen]'); if (g && actual) actual.api.gen(g.dataset.gen); });
 
 /* ---------- inicio ---------- */
 function enCursoDe(j) { const e = store.getResumen(j.id); return e && !e.fin && e.resumen ? e : null; }

@@ -65,18 +65,18 @@ export async function mount(r, a) {
   const g = api.cargar();
   S = g ? { ...g } : null;
   root.innerHTML = `<div id="spReto"></div>
-    <details class="ops" id="spOps"><summary id="spSum"></summary>
-      <div class="bar"><span class="lbl">Tema</span><div class="seg">${[...Object.entries(TEMAS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }], ['diccionario', { nombre: 'Diccionario', icono: '📚' }]].map(([k, t]) => `<button class="btn" data-tema="${k}">${t.icono} ${t.nombre}</button>`).join('')}</div></div>
-      <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(LVL).map(([k, l]) => `<button class="btn" data-niv="${k}">${l}</button>`).join('')}</div></div>
-    </details>
     <div class="info"><span class="mut" id="spInfo"></span><span id="spCrono" aria-label="Tiempo">0:00</span></div>
     <div class="spw0"><div class="spg" id="spGrid" role="group" aria-label="Sopa de letras"></div><svg class="spo" id="spSvg" aria-hidden="true"></svg></div>
     <div class="msg" id="spMsg" role="status" aria-live="polite"></div>
     <div class="spl" id="spList"></div>
-    <div class="bar"><button class="btn on" data-ac="nueva">Nueva sopa</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    <div class="bar"><button class="btn" data-ac="pista">💡 Pista</button></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
   const gr = $('#spGrid');
   gr.addEventListener('pointerdown', pDown); gr.addEventListener('pointermove', pMove); gr.addEventListener('pointerup', pUp); gr.addEventListener('pointercancel', pCancel);
+  api.barra({ nueva: () => nueva(S.tema, S.nivel),
+    salir: () => { location.hash = '#/cat/palabras'; },
+    crono: () => crono,
+    config: { valores: () => ({ tema: S.tema, nivel: S.nivel }), grupos: v => [{ clave: 'tema', titulo: 'Tema', opciones: [...Object.entries(TEMAS), ['mezcla', { nombre: 'Mezcla', icono: '🎲' }], ['diccionario', { nombre: 'Diccionario', icono: '📚' }]].map(([k, t]) => [k, `${t.icono} ${t.nombre}`]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(LVL) }], aplicar: v => nueva(v.tema, v.nivel, true) } });
   api.menu([
     { texto: 'Nueva sopa', accion: () => nueva(S.tema, S.nivel) },
     { texto: '📅 Reto del día', accion: () => nueva(RETO.tema, RETO.nivel, false, true) },
@@ -86,7 +86,7 @@ export async function mount(r, a) {
     { texto: 'Cómo se juega', accion: reglas },
   ]);
   crono = new Cronometro(() => { if (S) { S.t = crono.s; $('#spCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
-  if (!S) { $('#spOps').open = true; await nueva(api.pref('tema', 'animales'), api.pref('nivel', 'medio'), true); }
+  if (!S) { await nueva(api.pref('tema', 'animales'), api.pref('nivel', 'medio'), true); }
   else { construir(); arrancar(); pintar(); }
 }
 export function unmount() {
@@ -120,7 +120,7 @@ async function nueva(tema, nivel, forzar = false, reto = false) {
   ocupado = false; ancla = null; sel = null; pistaCel = -1;
   crono = new Cronometro(crono.alTick, 0);
   construir(); arrancar(); pintar(); guardar();
-  $('#spOps').open = false;
+  
 }
 function guardar() { if (!S) return; const d = { tema: S.tema, nivel: S.nivel, n: S.n, grid: S.grid, palabras: S.palabras, halladas: S.halladas, t: S.t, pistas: S.pistas, rendido: S.rendido , reto: S.reto || null }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 function rendirse() {
@@ -142,8 +142,6 @@ function construir() {
   gr.style.setProperty('--n', n);
   gr.innerHTML = S.grid.map((c, i) => `<button type="button" class="spc" data-i="${i}" aria-label="Fila ${(i / n | 0) + 1}, columna ${i % n + 1}, letra ${c}">${c}</button>`).join('');
   cel = [...gr.children]; $('#spSvg').setAttribute('viewBox', `0 0 ${n} ${n}`);
-  root.querySelectorAll('[data-tema]').forEach(b => b.classList.toggle('on', b.dataset.tema === S.tema));
-  root.querySelectorAll('[data-niv]').forEach(b => b.classList.toggle('on', b.dataset.niv === S.nivel));
 }
 const centro = (n, i) => [(i % n) + .5, (i / n | 0) + .5];
 function colorDe(i) { const p = MARCAS[asp.valores.marca] || MARCAS.arcoiris; return p[i % p.length]; }
@@ -175,7 +173,6 @@ function pintar() {
     api.sonido('ganar'); api.vibrar([60, 40, 60]); guardar();
   }
   cel.forEach((b, i) => b.classList.toggle('an', ancla === i));
-  $('#spSum').textContent = `⚙️ ${temaNombre(S.tema)} · ${LVL[S.nivel]}`;
   $('#spInfo').textContent = `${nHalladas(S)}/${S.palabras.length} palabras${S.pistas ? ` · ${S.pistas} pista${S.pistas > 1 ? 's' : ''}` : ''}`;
   $('#spCrono').textContent = fmtTiempo(S.t);
   $('#spList').innerHTML = S.palabras.map((w, i) => { const h = S.halladas.find(x => x.i === i); return `<span class="${h ? (h.r ? 'rev' : 'ok') : ''}" ${h && !h.r ? `style="background:${colorDe(i)}"` : ''}>${w.p}</span>`; }).join('');
