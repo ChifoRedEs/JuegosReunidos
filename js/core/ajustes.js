@@ -1,6 +1,6 @@
 // Ajustes globales (tema, sonido, vibración) y preferencias por juego.
 import { leer, escribir } from './storage.js';
-const DEF = { tema: 'auto', sonido: true, vibracion: true, j: {} };
+const DEF = { tema: 'auto', sonido: true, vibracion: true, celebrar: true, j: {} };
 let A = { ...DEF, ...(leer('ajustes', {}) || {}) };
 if (!A.j || typeof A.j !== 'object') A.j = {};
 const guardar = () => escribir('ajustes', A);
@@ -14,6 +14,7 @@ export function importar(o) {
   if (['auto', 'claro', 'oscuro'].includes(o.tema)) A.tema = o.tema;
   if (typeof o.sonido === 'boolean') A.sonido = o.sonido;
   if (typeof o.vibracion === 'boolean') A.vibracion = o.vibracion;
+  if (typeof o.celebrar === 'boolean') A.celebrar = o.celebrar;
   if (o.j && typeof o.j === 'object') for (const [id, p] of Object.entries(o.j)) if (p && typeof p === 'object') {
     const antes = A.j[id] || {};
     A.j[id] = { ...p };

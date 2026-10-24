@@ -207,7 +207,7 @@ function cierre() {
       const gano = S.ganador === 0; if (gano) marcador.g++; else marcador.p++;
       api.registrar({ res: gano ? 'victoria' : 'derrota', variante: `${F.FLOTAS[S.flota].nombre} · ${F.NIVEL[S.nivel]}` });
       api.sonido(gano ? 'ganar' : 'perder'); if (gano) api.vibrar([60, 40, 60]);
-    } else { api.registrar({ res: 'partida', variante: `${F.FLOTAS[S.flota].nombre} · 2 jugadores` }); api.sonido('ganar'); }
+    } else { api.registrar({ res: 'partida', variante: `${F.FLOTAS[S.flota].nombre} · 2 jugadores` }); api.sonido('ganar'); api.victoria(); }
   }
   pintar(); guardar();
 }

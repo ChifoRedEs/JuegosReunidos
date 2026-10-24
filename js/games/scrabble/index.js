@@ -377,6 +377,7 @@ function terminar() {
   const res = !cpu ? 'partida' : g < 0 ? 'tablas' : g === yo ? 'victoria' : 'derrota';
   const variante = `${S.jug.length} jugadores${cpu ? ' · ' + M.NIVELES[S.nivel] : ' · personas'}`;
   api.registrar({ res, variante, puntos: S.jug[Math.max(0, yo)].pts });
+  if (!cpu && g >= 0) api.victoria();
   anotarPartida(api, { res: res === 'victoria' ? 'g' : res === 'derrota' ? 'p' : 'e', texto: `${variante} · ${S.jug.map(j => `${j.nombre} ${j.pts}`).join(', ')}` });
   api.sonido(res === 'derrota' ? 'perder' : 'ganar'); if (res === 'victoria') api.vibrar([60, 40, 60]);
   guardar();

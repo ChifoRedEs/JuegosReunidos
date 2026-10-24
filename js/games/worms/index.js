@@ -528,7 +528,7 @@ function final() {
   finMostrado = true; cargando = false; guardar();
   const g = S.ganador, cpu = S.cfg.modo === 'cpu', variante = `${S.cfg.n} vs ${S.cfg.n} · ${M.MAPAS[S.cfg.mapa]}`;
   if (cpu) api.registrar({ res: g === -1 ? 'tablas' : g === 0 ? 'victoria' : 'derrota', variante: `${variante} · ${M.NIVELES[S.cfg.nivel]}`, tiempo: Math.round(S.reloj) });
-  else api.registrar({ res: g === -1 ? 'tablas' : 'partida', variante: `2 jugadores · ${variante}` });
+  else { api.registrar({ res: g === -1 ? 'tablas' : 'partida', variante: `2 jugadores · ${variante}` }); if (g !== -1) api.victoria(); }
   api.sonido(g === 1 && cpu ? 'perder' : 'ganar'); if (!(g === 1 && cpu)) api.vibrar([60, 40, 60]);
   const quien = g === -1 ? 'Tablas' : cpu ? (g === 0 ? '¡Has ganado!' : 'Gana la CPU') : `¡Gana el equipo ${M.EQUIPOS[g]}!`;
   const vivosG = g >= 0 ? M.vivos(S, g).map(w => `<li>${esc(w.nombre)} · ${w.hp} ❤️</li>`).join('') : '';

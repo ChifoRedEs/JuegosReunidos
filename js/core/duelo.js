@@ -115,6 +115,7 @@ export function crearDuelo(def) {
           ...(def.cfgExtra ? def.cfgExtra.grupos(v) : []),
         ],
         aplicar: v => {
+          pausado = false;
           S.v = v.v; S.modo = v.modo; S.nivel = v.nivel; S.inicio = v.inicio; S.serie = serieVacia(v.serie);
           api.setPref('v', S.v); api.setPref('modo', S.modo); api.setPref('nivel', S.nivel); api.setPref('inicio', S.inicio); api.setPref('serie', v.serie);
           if (def.cfgExtra) def.cfgExtra.aplicar(v);
@@ -186,7 +187,7 @@ export function crearDuelo(def) {
     if (S.modo === 'cpu') {
       api.registrar({ res: !w ? 'tablas' : w === S.yo ? 'victoria' : 'derrota', variante: `${J().nombre} · ${NIVEL[S.nivel]}` });
       api.sonido(!w ? 'ok' : w === S.yo ? 'ganar' : 'perder');
-    } else api.sonido(w ? 'ganar' : 'ok');
+    } else { api.sonido(w ? 'ganar' : 'ok'); if (w) api.victoria(); }
     if (w) api.vibrar([40, 30, 40]);
   }
   function siguiente() {

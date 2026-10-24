@@ -68,7 +68,7 @@ export async function mount(root, a) {
     config: {
       valores: () => ({ regla: C.regla, nivel: C.nivel }),
       grupos: () => [{ clave: 'regla', titulo: 'Reglamento', opciones: Object.entries(REGLAS).map(([k, r]) => [k, r.corto || r.nombre]) }, { clave: 'nivel', titulo: 'Nivel de la CPU', opciones: Object.entries(NIVEL) }],
-      aplicar: v => nueva(v.regla, v.nivel, true),
+      aplicar: v => { pausado = false; nueva(v.regla, v.nivel, true); },
     },
   });
   root.innerHTML = `

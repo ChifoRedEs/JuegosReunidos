@@ -62,7 +62,7 @@ export async function mount(r, a) {
     salir: () => { serie++; anim = null; api.borrar(); S = null; setup(); },
     pausar: () => { pausado = true; },
     reanudar: () => { pausado = false; tPrev = performance.now(); turnoCPU(); },
-    config: { valores: () => ({ modo: cfg.modo, rival: cfg.rival, nivel: cfg.nivel, guia: cfg.guia }), grupos: v => [{ clave: 'modo', titulo: 'Juego', opciones: Object.entries(B.MODOS) }, { clave: 'rival', titulo: 'Rival', opciones: [['cpu', '🤖 CPU'], ['dos', '👥 2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.rival === 'cpu', opciones: Object.entries(NIVEL) }, { clave: 'guia', titulo: 'Ayuda', opciones: Object.entries(GUIA) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
+    config: { valores: () => ({ modo: cfg.modo, rival: cfg.rival, nivel: cfg.nivel, guia: cfg.guia }), grupos: v => [{ clave: 'modo', titulo: 'Juego', opciones: Object.entries(B.MODOS) }, { clave: 'rival', titulo: 'Rival', opciones: [['cpu', '🤖 CPU'], ['dos', '👥 2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.rival === 'cpu', opciones: Object.entries(NIVEL) }, { clave: 'guia', titulo: 'Ayuda', opciones: Object.entries(GUIA) }], aplicar: v => { Object.assign(cfg, v); pausado = false; empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') armar(); else setup();
 }
@@ -263,6 +263,7 @@ function terminar() {
   if (reg) return; reg = true;
   const cpu = S.jug[1].cpu, g = S.ganador, res = !cpu ? 'partida' : g < 0 ? 'tablas' : g === 0 ? 'victoria' : 'derrota';
   api.registrar({ res, variante: `${B.MODOS[S.modo]}${cpu ? ' · ' + NIVEL[S.nivel] : ' · 2 jugadores'}` });
+  if (!cpu && g >= 0) api.victoria();
   anotarPartida(api, { res: res === 'victoria' ? 'g' : res === 'derrota' ? 'p' : 'e', texto: `${B.MODOS[S.modo]} · ${cpu ? NIVEL[S.nivel] : '2 jugadores'} · ${S.msg.replace(/^🏆 /, '')}` });
   api.sonido(res === 'derrota' ? 'perder' : 'ganar'); if (res === 'victoria') api.vibrar([60, 40, 60]); guardar();
 }

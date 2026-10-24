@@ -179,7 +179,7 @@ function cierre() {
     reg = true;
     if (S.modo === 'cpu') { const g = S.ganador === 0; if (g) marcador.g++; else marcador.p++; api.registrar({ res: g ? 'victoria' : 'derrota', variante: `${E.NIVEL[S.nivel]} · ${E.ENLACES[S.enlace]}` }); api.sonido(g ? 'ganar' : 'perder'); }
     else if (S.modo === 'solo') { const nuevo = S.mejorCadena > marcador.record; marcador.record = Math.max(marcador.record, S.mejorCadena); api.registrar({ res: 'partida', variante: `Solo · cadena de ${S.mejorCadena}` }); api.sonido(nuevo ? 'ganar' : 'ok'); if (nuevo) api.aviso('🎉 ¡Nuevo récord!'); }
-    else { api.registrar({ res: 'partida', variante: `Grupo de ${S.jug.length}` }); api.sonido('ganar'); }
+    else { api.registrar({ res: 'partida', variante: `Grupo de ${S.jug.length}` }); api.sonido('ganar'); api.victoria(); }
   }
   pintar(); guardar();
 }

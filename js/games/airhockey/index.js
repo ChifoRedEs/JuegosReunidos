@@ -144,7 +144,7 @@ function terminar() {
   if (!reg) {
     reg = true;
     if (S.modo === 'cpu') { api.registrar({ res: g === 0 ? 'victoria' : 'derrota', variante: `${A.NIVELES[S.nivel].nombre} · a ${S.meta}` }); api.sonido(g === 0 ? 'ganar' : 'perder'); if (g === 0) api.vibrar([60, 40, 60]); }
-    else { api.registrar({ res: 'partida', variante: `2 jugadores · a ${S.meta}` }); api.sonido('ganar'); }
+    else { api.registrar({ res: 'partida', variante: `2 jugadores · a ${S.meta}` }); api.sonido('ganar'); api.victoria(); }
   }
   guardar(); pintarOver();
 }

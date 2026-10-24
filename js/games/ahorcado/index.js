@@ -83,7 +83,7 @@ async function dosJugadores() {
 }
 function terminar(res) {
   S.fin = res; S.reg = true;
-  if (S.dos) { api.sonido(res === 'gana' ? 'ganar' : 'perder'); api.registrar({ res: 'partida', variante: '2 jugadores' }); return; }
+  if (S.dos) { api.sonido(res === 'gana' ? 'ganar' : 'perder'); api.registrar({ res: 'partida', variante: '2 jugadores' }); if (res === 'gana') api.victoria(); return; }
   if (res === 'gana') { S.marcador.g++; S.marcador.racha++; api.sonido('ganar'); api.vibrar([50, 30, 50]); } else { S.marcador.p++; S.marcador.racha = 0; api.sonido('perder'); }
   api.registrar({ res: res === 'gana' ? 'victoria' : 'derrota', variante: NIVELES[S.nivel].nombre });
 }

@@ -94,6 +94,15 @@ function crearApi(j, ent, mod, root) {
   let abrirAsp = null, defBarra = null;
   // Barra inferior común (Nuevo panel / Configurar / Apariencia / Pausa-Salir): cada juego la pide con api.barraHtml() al final de su pantalla de partida.
   const PANEL = ['sopa', 'crucigrama', 'rosco', 'ruleta', 'encadenadas', 'cifrasletras', 'ahorcado'];
+  let celebrada = 0;
+  function victoria() {
+    if (aj.ajustes().celebrar === false || Date.now() - celebrada < 3000) return;
+    celebrada = Date.now();
+    setTimeout(() => {
+      if (!root.isConnected) return;
+      import('./core/victoria.js').then(m => { if (root.isConnected) m.celebrar({ etiqueta: etiquetaNueva(), nueva: defBarra && defBarra.nueva ? () => defBarra.nueva() : null }); }).catch(() => {});
+    }, 900);
+  }
   const etiquetaNueva = () => (defBarra && defBarra.etiqueta) || (j.categoria === 'logica' || PANEL.includes(id) ? 'Nuevo panel' : 'Nueva partida');
   // Pausa: el juego puede dar `pausar()/reanudar()` propios y/o `crono: () => cronómetro` (se para y se reanuda solo si estaba en marcha).
   const parar_ = () => {
@@ -145,7 +154,10 @@ function crearApi(j, ent, mod, root) {
     cargar() { if (!ent) return null; try { return mod.validar(ent.datos) || null; } catch { return null; } },
     guardar: (datos, resumen = null, fin = false) => store.setJuego(id, datos, resumen, fin),
     borrar: () => store.borrarJuego(id),
-    registrar: r => { stats.registrar(id, r); revisarLogros(); },
+    registrar: r => { stats.registrar(id, r); revisarLogros(); if (r && r.res === 'victoria') victoria(); },
+    // Victoria: mensaje y animación al azar con el botón de nueva partida (core/victoria.js), común a todos los juegos.
+    // Se lanza sola con registrar({ res: 'victoria' }); los modos sin CPU (2 jugadores) que no puntúan llaman a api.victoria() al acabar con ganador.
+    victoria,
     record: variante => stats.record(id, variante),
     pref: (k, d) => aj.pref(id, k, d), setPref: (k, v) => aj.setPref(id, k, v),
     sonido: son.play, vibrar: son.vibrar,
@@ -432,6 +444,8 @@ function vAjustes() {
   <div class="panel"><h3>Sonido y vibración</h3>
     <div class="fila"><span>Sonidos</span>${seg('sonido', [[true, 'Sí'], [false, 'No']])}</div>
     <div class="fila"><span>Vibración</span>${seg('vibracion', [[true, 'Sí'], [false, 'No']])}</div></div>
+  <div class="panel"><h3>Victorias</h3>
+    <div class="fila"><span>Celebrar al ganar</span>${seg('celebrar', [[true, 'Sí'], [false, 'No']])}</div></div>
   <div class="panel"><h3>Copia de seguridad</h3>
     <p class="note">Tus partidas y estadísticas se guardan solo en este navegador. Exporta un archivo .json para pasarlas a otro dispositivo o como copia.</p>
     <div class="bar"><button class="btn on" id="gExp">Exportar .json</button>
