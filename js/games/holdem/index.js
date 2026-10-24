@@ -6,7 +6,7 @@ import * as H from './motor.js';
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 let S = null, api = null, asp = null, root = null, timer = null, prevTab = 0, cfg = { bots: 3, nivel: 'medio', modo: 'torneo', ciegas: 'baja' }, consejo = true, subir = 0, ocupado = false;
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 // Estadísticas de tus manos (acumuladas en las preferencias): VPIP = manos en las que pusiste fichas voluntariamente antes del flop
 const EST0 = { manos: 0, vpip: 0, pfr: 0, ganadas: 0, showdowns: 0, showGanados: 0, mayorBote: 0, mejor: 0, mejorTxt: '' };
 const est = () => ({ ...EST0, ...(api.pref('estad', {}) || {}) });
@@ -52,7 +52,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []), grupoMesa(), grupoDorso(), grupoBarajaFr()],
+  asp = api.aspecto([...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []), grupoMesa(), grupoDorso(), grupoBarajaFr()],
     () => { if (S && $('#hMsg')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else if (V3) { V3.recolor(); pintar(); } } });
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./holdem.css', import.meta.url));
   const g = api.cargar(); S = g; consejo = api.pref('consejo', true);

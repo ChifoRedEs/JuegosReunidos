@@ -25,7 +25,7 @@ const GIRAN = new Set(['Animales', 'Vehículos']);
 const ficha = () => FICHAS[asp.valores.ficha] || FICHAS.ofi0;
 let S = null, L = null, api = null, asp = null, root = null, cfg = { modo: 'campana', tam: 'mediano' };
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 let onKey = null, gesto = null, andando = null, ocupado = false, serie = 0, mira = 'izquierda';
 
 /* ---------- validación / resumen ---------- */
@@ -51,7 +51,7 @@ export function resumen(d) { return { texto: `${titulo(d)} · ${d.done ? `resuel
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; andando = null; forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#skTab'), { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#skTab'), { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: opcionesPersonajes() }],
   () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });

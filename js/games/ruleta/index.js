@@ -13,7 +13,7 @@ const RUEDAS = {
 let S = null, api = null, asp = null, root = null, tk = null, timer = null, girando = false, reg = false, onKey = null, res = null, recien = new Set(), cv = null, dpr = 1;
 // Vista 3D (Three.js) de la rueda: opcional, con vuelta automática a la rueda 2D si no hay WebGL
 let V3 = null, modo3d = false, hay3d = false, forzar2d = false, tok3 = 0, claveRueda = '';
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } modo3d = false; claveRueda = ''; }
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c']], rondas: 4, nivel: 'medio' };
 
@@ -29,7 +29,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; girando = false; res = null; recien = new Set(); forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista de la ruleta', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#rlJuego'), grupoTablero('Colores del panel'), { clave: 'ruleta', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { if (cv && modo3d !== quiere3D()) armar(); else { claveRueda = ''; dibujar(); } pintar(); } });
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista de la ruleta', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#rlJuego'), grupoTablero('Colores del panel'), { clave: 'ruleta', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { if (cv && modo3d !== quiere3D()) armar(); else { claveRueda = ''; dibujar(); } pintar(); } });
   await api.css(new URL('./ruleta.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && R.RONDAS.includes(c0.rondas) && R.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 3) cfg = { ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };

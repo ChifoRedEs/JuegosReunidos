@@ -11,7 +11,7 @@ const zoom = () => +(asp && asp.valores.zoom) || 1.4;
 const forma = () => (asp && asp.valores.fichas) || 'canica';
 // Vista 3D (Three.js): opcional, con vuelta automática al tablero SVG si no hay WebGL
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 const mundo = v => v / 10 - 9.5;
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } }
 
@@ -51,7 +51,7 @@ function guardar() {
 
 /* ---------- ciclo de vida ---------- */
 const DEFS_ASPECTO = [
-  { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] },
+  { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
   grupoFondo('#pzView'), grupoPersonaje('Personajes (tus fichas)'),
   { clave: 'tablero', titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
   { clave: 'colores', titulo: 'Colores de los jugadores', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicos', sw: ['#FFC21A', '#2F6BFF', '#FF4757', '#0FB56A'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#FFD76A', '#7FA8FF', '#FF8FA0', '#7FDDA8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FFE600', '#00C8FF', '#FF2E88', '#39E614'] }, { id: 'accesible', nombre: 'Daltonismo', sw: ['#F0E442', '#0072B2', '#D55E00', '#009E73'] }] },

@@ -18,7 +18,7 @@ const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550, dado: 900 }
 let vista = null, mod3d = null, botones3d = null, hay3d = false, tok3 = 0, forzar2d = false, modo3d = false;
 const TIPO3 = { empresa: 'destino', nube: 'aero', red: 'serv', noticias: 'suerte', tendencias: 'imprevisto' };
 const estado3D = () => ({ jug: G.jug, c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
-const quiere3D = () => hay3d && !forzar2d && asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (vista) { vista.destruir(); vista = null; } }
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0;
 // sesion: cambia al salir del juego o empezar otra partida; los turnos que estuvieran a medias se cancelan (ABORTO)
@@ -39,7 +39,7 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; jugando = false; pendiente = null; vista = null; forzar2d = false; hay3d = false;
   try { const b = await import('../../core/escena3d.js'); if (b.hayWebGL()) { mod3d = await import('../../core/anillo3d.js'); botones3d = b.botonesCamara; hay3d = true; } } catch (e) { console.error(e); }
   if (!vivo) return;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#mtTab'), grupoTablero(),
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#mtTab'), grupoTablero(),
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
     { clave: 'edif', titulo: 'Iconos de oficinas y sede (vista 2D)', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) },
     { clave: 'estilo', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) }],

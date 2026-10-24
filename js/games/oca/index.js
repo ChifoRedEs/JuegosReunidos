@@ -5,7 +5,7 @@ import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.
 let animJ = -1;
 // Vista 3D (Three.js): opcional, con vuelta automática al tablero HTML si no hay WebGL
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } }
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, anim = false, vis = {}, dadosVis = null, msgEvento = '';
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'n'], ['CPU 3', 'n']], dados: 1, pozo: 'rescate' };
@@ -24,7 +24,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; anim = false; vis = {}; dadosVis = null; msgEvento = ''; forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
   await api.css(new URL('./oca.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4 && [1, 2].includes(c0.dados)) cfg = { ...cfg, ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };

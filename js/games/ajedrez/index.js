@@ -15,7 +15,7 @@ const PIEZAS = { clasicas: ['#FFFFFF', '#1E1E24'], marfil: ['#FFF4DC', '#4A2E17'
 const MARCOS = { madera: '#5A3A22', torneo: '#3D5230', oceano: '#2F4A94', uva: '#4B2A9A', noche: '#12163A' };
 function cerrar3D() { tok3++; if (m3) { m3.destruir(); m3 = null; } }
 async function activar3D() {
-  const t = ++tok3; if (!cont || !ctxR || (ctxR.valores().vista || '3d') !== '3d') return;
+  const t = ++tok3; if (!cont || !ctxR || (ctxR.valores().vista || '2d') !== '3d') return;
   try {
     const base = await import('../../core/escena3d.js'); if (!base.hayWebGL()) return;
     const { crearMesa3D } = await import('../../core/mesa3d.js'); if (t !== tok3 || !cont) return;
@@ -272,7 +272,7 @@ function pintar(eReal, ctx) {
 const duelo = crearDuelo({
   id: 'ajedrez', css: new URL('./ajedrez.css', import.meta.url), iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Blancas', 'Negras'],
   chip: n => `<i class="ch axch${n}">${GLIFO[6]}</i>`,
-  aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#duTab'), 
+  aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#duTab'), 
     { clave: 'tablero', titulo: 'Colores del tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#F0D9B5', '#B58863'] }, { id: 'torneo', nombre: 'Torneo', sw: ['#EEEED2', '#769656'] }, { id: 'oceano', nombre: 'Océano', sw: ['#E4EDFF', '#5B7FD6'] }, { id: 'uva', nombre: 'Uva', sw: ['#F3E8FF', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#4A5486', '#232A55'] }] },
     { clave: 'piezas', titulo: 'Colores de las piezas', def: 'clasicas', opciones: [{ id: 'clasicas', nombre: 'Blancas y negras', sw: ['#FFFFFF', '#1E1E24'] }, { id: 'marfil', nombre: 'Marfil y ébano', sw: ['#FFF4DC', '#4A2E17'] }, { id: 'colores', nombre: 'Oro y morado', sw: ['#FFD43B', '#5B2DD4'] }] },
     { clave: 'marcas', titulo: 'Marcar las casillas posibles', def: 'si', opciones: [{ id: 'si', nombre: 'Sí' }, { id: 'no', nombre: 'No' }] },

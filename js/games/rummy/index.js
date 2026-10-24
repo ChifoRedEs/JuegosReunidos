@@ -5,7 +5,7 @@ import { grupoMesa } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, arr = null;
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 let W = null, recientes = new Set(), marcador = { g: 0, p: 0 };
 let cfg = { rivales: 1, nivel: 'medio' }, ord = { modo: 'color', ids: [] };
 const MODOS = ['color', 'numero', 'libre'];
@@ -29,7 +29,7 @@ export async function mount(r, a) {
   api = a; root = r; W = null; recientes = new Set(); arr = null; forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([
-    ...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
+    ...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     grupoMesa(),
     { clave: 'fichas', titulo: 'Fichas', def: 'marfil', opciones: [{ id: 'marfil', nombre: 'Marfil', sw: ['#FFF8E7'] }, { id: 'blanco', nombre: 'Blanco', sw: ['#FFFFFF'] }, { id: 'oscuro', nombre: 'Oscuras', sw: ['#26304F'] }] },
   ], () => { if (S && $('#rmMesa')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else { if (V3) V3.recolor(); pintar(); } } });

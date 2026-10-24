@@ -166,6 +166,12 @@ function crearApi(j, ent, mod, root) {
       defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
       resolver(true); poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
+      const refrescarVista = () => { if (btnVista) { const es3 = vals.vista === '3d'; btnVista.textContent = es3 ? '🔲 Ver en 2D' : '🧊 Ver en 3D'; btnVista.setAttribute('aria-label', es3 ? 'Cambiar a la vista 2D' : 'Cambiar a la vista 3D'); } };
+      quitarVista();
+      if (defs.some(g => g.clave === 'vista')) {
+        btnVista = el('button', { type: 'button', class: 'btn vista-flot' }); document.body.append(btnVista); posVista(); refrescarVista();
+        btnVista.addEventListener('click', () => { elec.vista = vals.vista === '3d' ? '2d' : '3d'; delete vals.vista; resolver(false); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); });
+      }
       // 🎨 Apariencia: cada grupo es un enlace que abre su propia ventana con las opciones (muestras de color, iconos o imágenes).
       // Los grupos de 2 opciones (sí/no) se quedan a la vista como botones, salvo que el grupo diga `ventana: true/false`.
       const enVentana = g => (g.ventana !== undefined ? !!g.ventana : g.opciones.length > 2);
@@ -176,7 +182,7 @@ function crearApi(j, ent, mod, root) {
         const opciones = g => { const out = []; let sec = null; for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); } return out; };
         const contenedor = g => el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, opciones(g));
         const actual = g => g.opciones.find(x => x.id === elec[g.clave]) || g.opciones[0];
-        const elegir = (g, id) => { elec[g.clave] = id; delete vals[g.clave]; resolver(false); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); };
+        const elegir = (g, id) => { elec[g.clave] = id; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); };
         const enlaces = new Map();
         const pintarEnlace = g => {
           const b = enlaces.get(g.clave), o = actual(g);
@@ -205,7 +211,7 @@ function crearApi(j, ent, mod, root) {
           wrap.querySelectorAll(`.ap-o[data-g="${b.dataset.g}"]`).forEach(x => x.classList.toggle('on', x === b));
         });
         let cerrar;
-        const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { elec[g.clave] = g.def; delete vals[g.clave]; }); resolver(true); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
+        const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { elec[g.clave] = g.def; delete vals[g.clave]; }); resolver(true); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
         const ok = el('button', { class: 'btn on', onclick: () => cerrar() }, 'Listo');
         cerrar = hoja([el('h2', {}, '🎨 Apariencia'), wrap, el('div', { class: 'bar', style: 'margin-top:14px' }, rest, ok)]);
       };
@@ -229,7 +235,13 @@ function ruta() {
   if (a === 'cat' && Object.keys(CATEGORIAS).includes(b)) return { v: 'inicio', cat: b };
   return { v: a === 'stats' || a === 'ajustes' ? a : 'inicio', cat: null };
 }
+// Botón flotante 2D/3D (solo en los juegos con grupo de Apariencia «vista»): cambia de vista al instante desde cualquier punto de la pantalla.
+let btnVista = null;
+const quitarVista = () => { if (btnVista) { btnVista.remove(); btnVista = null; } };
+const posVista = () => { const t = document.querySelector('.top'); if (btnVista && t) btnVista.style.top = Math.round(t.getBoundingClientRect().bottom + 8) + 'px'; };
+window.addEventListener('resize', posVista);
 async function cerrarJuego() {
+  quitarVista();
   if (!actual) return;
   const a = actual; actual = null;
   try { await a.mod.unmount?.(); } catch (e) { console.error(e); }

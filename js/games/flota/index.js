@@ -5,7 +5,7 @@ import { grupoFondo } from '../../core/aspectos.js';
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, onKey = null;
 // Vista 3D (Three.js) del tablero grande; el contenedor se conserva entre pintados y se recoloca en el DOM
 let V3 = null, hostEl = null, hay3d = false, forzar2d = false, tok3 = 0;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 const usa3D = () => !!V3 && quiere3D();
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } if (hostEl) { hostEl.remove(); hostEl = null; } }
 let sel = 0, vertical = false, pista = -1, efecto = null, marcador = { g: 0, p: 0 };
@@ -29,7 +29,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; sel = 0; vertical = false; pista = -1; efecto = null; forzar2d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#flCuerpo'), 
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#flCuerpo'), 
     { clave: 'mar', titulo: 'Color del mar', def: 'oceano', opciones: [{ id: 'oceano', nombre: 'Océano', sw: ['#2F80ED', '#1B4FA8'] }, { id: 'tropical', nombre: 'Tropical', sw: ['#16C1C8', '#0B8A9A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3A78', '#141C40'] }, { id: 'papel', nombre: 'Papel', sw: ['#EEF2FB', '#9DB0D8'] }] },
     { clave: 'barcos', titulo: 'Color de los barcos', def: 'gris', opciones: [{ id: 'gris', nombre: 'Gris naval', sw: ['#6B7A90'] }, { id: 'verde', nombre: 'Verde militar', sw: ['#5F7A3A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#F07B22'] }] },
   ], () => { if (!S) return; if (quiere3D() && !V3) iniciar3D(); else if (V3 && !quiere3D()) cerrar3D(); else if (V3) V3.recolor(); pintar(); });

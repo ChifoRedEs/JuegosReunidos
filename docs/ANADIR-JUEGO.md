@@ -70,7 +70,7 @@ Cada juego conserva su id, su partida guardada y sus estadísticas.
 **Vistas propias** (junto al juego): `sokoban/vista3d.js`, `rummy/vista3d.js`, `parchis/vista3d.js`, `oca/vista3d.js`, `flota/vista3d.js`, `billar/vista3d.js`, `ruleta/vista3d.js`. Todas siguen el mismo patrón: la vista **solo dibuja** (recibe el estado y devuelve toques) y el juego conserva sus reglas.
 
 **Cómo se integra en un juego existente (patrón usado en los 9 juegos)**
-1. Grupo de Apariencia `{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }`.
+1. Grupo de Apariencia `{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }`.
 2. En `mount`: `hay3d = (await import('../../core/escena3d.js')).hayWebGL()` y `quiere3D = () => hay3d && !forzar2d && asp.valores.vista === '3d'`.
 3. Un contenedor `<div class="e3d" id="…">` (estilos en `css/marca.css`) con el canvas dentro; el «Fondo de Tablero» (`grupoFondo('#id')`) se ve detrás porque el canvas es transparente.
 4. `activar3D()/iniciar3D()` asíncrono con un `token` para ignorar respuestas tardías; si falla (sin WebGL, error), `forzar2d = true` y se vuelve a montar la vista 2D de siempre.

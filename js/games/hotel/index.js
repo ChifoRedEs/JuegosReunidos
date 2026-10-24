@@ -9,7 +9,7 @@ const VELOCIDAD = { normal: { nombre: 'Normal', paso: 170, bot: 750, dado: 900 }
 const NIVELES = ['', 'Fácil', 'Normal', 'Difícil'];
 let S = null, api = null, asp = null, root = null, vivo = false, V = null, hay3d = false, forzar2d = false, modo3d = false, tok3 = 0, ses = 0, bloqueado = false, sel = null, plan = {}, onKey = null, dadoVis = 0;
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'n']], nivel: 2, limite: 0, vel: 'normal' };
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 const vel = () => VELOCIDAD[cfg.vel] || VELOCIDAD.normal;
 const pausa = ms => (ms ? esperar(ms) : Promise.resolve());
 const eur = n => M.fmt(n);
@@ -29,7 +29,7 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; bloqueado = false; V = null; sel = null; plan = {}; forzar2d = false; modo3d = false; ses++;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   if (!vivo) return;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), grupoTablero()],
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), grupoTablero()],
     () => { if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
   await api.css(new URL('./hotel.css', import.meta.url));
   const c0 = api.pref('cfg', null);

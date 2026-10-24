@@ -10,7 +10,7 @@ const FICHAS_COL = { clasico: ['#FFFDF6', '#C21F2A'], oceano: ['#52C7F0', '#E26A
 const oscurecer = (hex, f) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * f).toString(16).padStart(2, '0')).join('');
 function cerrar3D() { tok3++; if (m3) { m3.destruir(); m3 = null; } }
 async function activar3D() {
-  const t = ++tok3; if (!rootEl || !asp || (asp.valores.vista || '3d') !== '3d') return;
+  const t = ++tok3; if (!rootEl || !asp || (asp.valores.vista || '2d') !== '3d') return;
   try {
     const base = await import('../../core/escena3d.js'); if (!base.hayWebGL()) return;
     const { crearMesa3D } = await import('../../core/mesa3d.js'); if (t !== tok3 || !rootEl || !C) return;
@@ -53,11 +53,11 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
   api = a; rootEl = root; pensando = false; anim = null;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#dmTab'), grupoPersonaje('Personajes (tus fichas)'), 
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#dmTab'), grupoPersonaje('Personajes (tus fichas)'), 
     { clave: 'tablero', titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
     { clave: 'colores', titulo: 'Colores de las fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Marfil / Rojo', sw: ['#FFFDF6', '#C21F2A'] }, { id: 'oceano', nombre: 'Celeste / Naranja', sw: ['#52C7F0', '#E26A00'] }, { id: 'bosque', nombre: 'Verde / Morado', sw: ['#56C94A', '#6B2FD1'] }, { id: 'oro', nombre: 'Oro / Negro', sw: ['#E0A800', '#161B33'] }] },
     { clave: 'fichas', titulo: 'Forma de las fichas', def: 'disco', opciones: [{ id: 'disco', nombre: '● Disco' }, { id: 'anillo', nombre: '◎ Anillo' }, { id: 'gema', nombre: '⬢ Gema' }, { id: 'cuadrada', nombre: '▢ Cuadrada' }] },
-  ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '3d') !== '3d') || (m3 && forma3 !== (asp.valores.fichas || 'disco')))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
+  ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '2d') !== '3d') || (m3 && forma3 !== (asp.valores.fichas || 'disco')))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
   await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
   root.innerHTML = `

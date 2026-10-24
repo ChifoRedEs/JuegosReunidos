@@ -7,7 +7,7 @@ import * as P from './motor.js';
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 let S = null, api = null, asp = null, root = null, timer = null, consejo = true, subir = 0, marcadas = new Set();
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 let cfg = { bots: 3, nivel: 'medio', modo: 'torneo', ante: 'baja', apertura: 'libre' };
 
 // Estadísticas de tus manos (acumuladas en las preferencias)
@@ -52,7 +52,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; marcadas = new Set(); forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []), grupoMesa(), grupoDorso(), grupoBarajaFr()],
+  asp = api.aspecto([...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []), grupoMesa(), grupoDorso(), grupoBarajaFr()],
     () => { if (S && $('#pcMsg')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else if (V3) { V3.recolor(); pintar(); } } });
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./pokercub.css', import.meta.url));
   S = api.cargar(); consejo = api.pref('consejo', true);

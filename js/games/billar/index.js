@@ -24,7 +24,7 @@ let ang = -Math.PI / 2, fuerza = .6, anim = null, arrastre = null, pensando = fa
 let panel = null, posPanel = null, arrP = null, anchoPrev = 0, gruposVistos = '', popHasta = 0, hudPrev = '';     // panel flotante de tiro · ancho de pantalla con el que se midió la mesa
 // Vista 3D (Three.js): opcional, con vuelta automática a la mesa 2D si no hay WebGL
 let V3 = null, modo3d = false, hay3d = false, forzar2d = false, tok3 = 0, claveMesa = '', supKey = '', LW = 1;
-const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '3d') === '3d';
+const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } modo3d = false; claveMesa = supKey = ''; }
 let cfg = { modo: 'pool8', rival: 'cpu', nivel: 'medio', guia: 'larga' };
 
@@ -43,7 +43,7 @@ export async function mount(r, a) {
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   await cargarBarajas();
   asp = api.aspecto([
-    { clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '3d', opciones: [{ id: '3d', nombre: '🧊 3D (Three.js)' }, { id: '2d', nombre: '🔲 2D clásica' }] },
+    { clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
     // tapete: un color liso o, encima, uno de los tapetes de imagen de la app (img/cartas/tapetes)
     { clave: 'pano', titulo: 'Color del tapete', def: 'verde', opciones: Object.entries(TAPETES).map(([id, [n, c]]) => ({ id, nombre: n, sw: [c] })) },
     { clave: 'panoimg', titulo: 'Tapete de imagen', icono: '🟩', ventana: true, forma: 'tapete', def: 'ninguno',

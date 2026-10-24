@@ -99,3 +99,6 @@ button.ficha{display:flex}
 .e3d-carga{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut);font-weight:800}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .e3d{background:radial-gradient(circle at 50% 38%,#2C3770,#1E2756 70%,#141A3C)}}
 :root[data-theme="dark"] .e3d{background:radial-gradient(circle at 50% 38%,#2C3770,#1E2756 70%,#141A3C)}
+
+/* botón flotante para cambiar entre vista 2D y 3D */
+.vista-flot{position:fixed;top:120px;left:10px;z-index:15;min-height:36px;padding:0 14px;font-size:13px;border-radius:99px;background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(4px);box-shadow:var(--sombra-m)}
