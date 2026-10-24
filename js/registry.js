@@ -42,7 +42,7 @@ export const JUEGOS = [
   { id: 'airhockey', nombre: 'Air Hockey', icono: '🏒', color: '#1E9BD7', categoria: 'arcade', descripcion: 'Contra la CPU o 2 jugadores en el mismo móvil.', cargar: () => import('./games/airhockey/index.js') },
   { id: 'billar', nombre: 'Billar', icono: '🎱', color: '#1F8A4C', categoria: 'arcade', descripcion: 'Pool 8, Pool 9 y Snooker contra la CPU o entre dos.', cargar: () => import('./games/billar/index.js') },
   { id: 'worms', nombre: 'Worms', icono: '🪱', color: '#E0457B', categoria: 'arcade', descripcion: 'Dos ejércitos de gusanos: bazukas, granadas, cuerda ninja y tumbas. De 3 a 12 por equipo.', cargar: () => import('./games/worms/index.js') },
-  { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'tablero', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/trivial/index.js') },
+  { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
   { id: 'magnate', nombre: 'Magnate Tecnológico', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas tecnológicas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
   { id: 'hotel', nombre: 'Hotel', icono: '🏨', color: '#E0457B', categoria: 'tablero', descripcion: 'El clásico de Milton Bradley: compra terrenos, levanta hoteles por fases, abre entradas y cobra las noches. Tablero 3D.', cargar: () => import('./games/hotel/index.js') },
@@ -53,7 +53,7 @@ export const JUEGOS = [
 export const GRUPOS = [
   { id: 'parchis-oca', nombre: 'Parchís y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Parchís y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
   { id: 'ajedrez-damas', nombre: 'Ajedrez y Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
-  { id: 'poker', nombre: 'Póker', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em o Póker cubierto contra bots.", juegos: ['holdem', 'pokercub'] },
+  { id: 'poker', nombre: 'Poker & BlackJack', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em, Póker cubierto o BlackJack contra la banca.", juegos: ['holdem', 'pokercub', 'blackjack'] },
   { id: 'sopa-crucigramas', nombre: 'Sopa y Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopa', 'crucigrama'] },
 ];
 export const grupoDe = id => GRUPOS.find(g => g.juegos.includes(id)) || null;
