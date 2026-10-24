@@ -20,7 +20,7 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; cola = []; efecto = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo(''), grupoPersonaje('Personajes (cabeza)'), { clave: 'tema', titulo: 'Estilo', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo('', true), grupoPersonaje('Personajes (cabeza)'), { clave: 'tema', titulo: 'Estilo', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./serpiente.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.MODOS[c0.modo] && M.VELOCIDADES[c0.vel] && M.TAMANOS[c0.tam]) cfg = { ...cfg, ...c0, cruceta: c0.cruceta !== false };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;

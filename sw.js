@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-9f80d9a761';
+const VERSION = 'jr-44d0826bd0';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -17,6 +17,7 @@ const ARCHIVOS = [
 './icons/icon.svg',
 './img/cartas/barajas.json',
 './img/cartas/dorsos/nombres.json',
+'./img/cartas/fondos/nombres.json',
 './img/cartas/tapetes/nombres.json',
 './js/app.js',
 './js/registry.js',
@@ -139,6 +140,10 @@ const ARCHIVOS = [
 './js/games/magnate/index.js',
 './js/games/magnate/magnate.css',
 './js/games/magnate/motor.js',
+'./js/games/mastermind/index.js',
+'./js/games/mastermind/mastermind.css',
+'./js/games/mastermind/motor.js',
+'./js/games/mastermind/vista3d.js',
 './js/games/minigolf/hoyos.js',
 './js/games/minigolf/index.js',
 './js/games/minigolf/minigolf.css',
@@ -235,7 +240,7 @@ async function guardarCartas(elegidas) {
     rs.forEach(x => todas.add(x)); todas.add(muestra); bajar.add(muestra);
     if (quiero.has(b.id)) rs.forEach(x => bajar.add(x));
   }
-  for (const x of [...(d.dorsos || []), ...(d.tapetes || [])]) { todas.add(x.archivo); if (quiero.has(x.id)) bajar.add(x.archivo); }
+  for (const x of [...(d.dorsos || []), ...(d.tapetes || []), ...(d.fondos || [])]) { todas.add(x.archivo); if (quiero.has(x.id)) bajar.add(x.archivo); }
   const url = x => new URL(x.split('/').map(encodeURIComponent).join('/'), base).href, ok = x => typeof x === 'string' && !x.includes('..');
   const validas = new Set([...todas].filter(ok).map(url)), urls = [...bajar].filter(ok).map(url), c = await caches.open(CARTAS);
   for (const req of await c.keys()) if (!validas.has(req.url)) await c.delete(req);   // barajas que ya no están

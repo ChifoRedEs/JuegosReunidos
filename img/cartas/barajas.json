@@ -174,6 +174,11 @@
    "archivo": "tapetes/ciudad.webp"
   },
   {
+   "id": "t-deportivo",
+   "nombre": "Deportivo",
+   "archivo": "tapetes/deportivo.webp"
+  },
+  {
    "id": "t-desierto",
    "nombre": "Desierto",
    "archivo": "tapetes/desierto.webp"
@@ -182,11 +187,6 @@
    "id": "t-espacio",
    "nombre": "Espacio",
    "archivo": "tapetes/espacio.webp"
-  },
-  {
-   "id": "t-deportivo",
-   "nombre": "Estadio",
-   "archivo": "tapetes/deportivo.webp"
   },
   {
    "id": "t-galaxia",
@@ -242,6 +242,48 @@
    "id": "t-verde",
    "nombre": "Verde",
    "archivo": "tapetes/verde.webp"
+  }
+ ],
+ "fondos": [
+  {
+   "id": "t-bosque",
+   "nombre": "Bosque",
+   "archivo": "fondos/bosque.webp"
+  },
+  {
+   "id": "t-ciudad",
+   "nombre": "Ciudad",
+   "archivo": "fondos/ciudad.webp"
+  },
+  {
+   "id": "t-desierto",
+   "nombre": "Desierto",
+   "archivo": "fondos/desierto.webp"
+  },
+  {
+   "id": "t-espacio",
+   "nombre": "Espacio",
+   "archivo": "fondos/espacio.webp"
+  },
+  {
+   "id": "t-deportivo",
+   "nombre": "Estadio",
+   "archivo": "fondos/deportivo.webp"
+  },
+  {
+   "id": "t-infierno",
+   "nombre": "Infierno",
+   "archivo": "fondos/infierno.webp"
+  },
+  {
+   "id": "t-lago",
+   "nombre": "Lago",
+   "archivo": "fondos/lago.webp"
+  },
+  {
+   "id": "t-medieval",
+   "nombre": "Medieval",
+   "archivo": "fondos/medieval.webp"
   }
  ]
 }

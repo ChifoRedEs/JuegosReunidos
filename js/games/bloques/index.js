@@ -27,7 +27,7 @@ const reloj = ms => { const s = Math.max(0, ms) / 1000; return `${Math.floor(s /
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; bajando = false; flash = null; letrero = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo(''), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
+  asp = api.aspecto([grupoFondo('', true), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
     { clave: 'fantasma', titulo: 'Pieza fantasma', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./bloques.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && B.MODOS[c0.modo] && Number.isInteger(c0.nivel) && c0.nivel >= 1 && c0.nivel <= 15) cfg = { ...cfg, ...c0, botones: c0.botones !== false };

@@ -5,7 +5,7 @@ import * as store from './core/storage.js';
 import * as aj from './core/ajustes.js';
 import * as stats from './core/stats.js';
 import * as son from './core/sonido.js';
-import { BARAJAS, urlTapete, cargarBarajas, precargarSeleccion } from './core/cartas.js';
+import { BARAJAS, urlTapete, buscarFondo, cargarBarajas, precargarSeleccion } from './core/cartas.js';
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION, FECHA } from './version.js';
@@ -160,7 +160,7 @@ function crearApi(j, ent, mod, root) {
       stF.textContent = gF && gF.sel ? `.juego[data-${gF.clave}^="t-"] ${gF.sel}{background:var(--tapete-url) center/cover no-repeat!important;padding:6px;box-sizing:border-box;border-radius:14px}` : '';
       const poner = () => {
         defs.forEach(g => { root.dataset[g.clave] = vals[g.clave]; }); precargarSeleccion(vals);
-        const t = gF && BARAJAS.tapetes.find(x => x.id === vals[gF.clave]);
+        const t = gF && buscarFondo(vals[gF.clave]);
         if (t) root.style.setProperty('--tapete-url', `url("${urlTapete(t)}")`); else root.style.removeProperty('--tapete-url');
       };
       defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
@@ -485,7 +485,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
   // en segundo plano: guardar las imágenes de los naipes para jugar sin conexión (solo baja las que falten)
   // Como baraja y dorso cambian al azar, se guardan todas las imágenes (~3 MB), salvo con «Ahorro de datos» activado.
-  const elegidas = () => [...BARAJAS.espanola, ...BARAJAS.francesa, ...BARAJAS.dorsos, ...BARAJAS.tapetes].map(x => x.id);
+  const elegidas = () => [...BARAJAS.espanola, ...BARAJAS.francesa, ...BARAJAS.dorsos, ...BARAJAS.tapetes, ...BARAJAS.fondos].map(x => x.id);
   const ahorro = navigator.connection && navigator.connection.saveData;
   if (!ahorro) navigator.serviceWorker.ready.then(r => setTimeout(() => r.active && r.active.postMessage({ tipo: 'guardar-cartas', ids: elegidas() }), 4000)).catch(() => {});
 }

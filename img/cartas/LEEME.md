@@ -7,7 +7,8 @@ Todo lo que pongas aquí aparece en **🎨 Apariencia** de los juegos de cartas.
 | `espanola/<MAZO>/` | una baraja española por carpeta | Brisca, Chinchón, Mus, Cinquillo |
 | `francesa/<MAZO>/` | una baraja francesa por carpeta | BlackJack, Klondike, Texas Hold'em, Continental |
 | `dorsos/` | imágenes de dorso (valen para las dos barajas) | todos los de cartas |
-| `tapetes/` | fondos de mesa (webp de ~1280 px de ancho, 50–170 KB). `nombres.json` permite poner tildes | todos los de cartas y Rummy |
+| `tapetes/` | fondos de mesa (webp de ~1280 px de ancho, 50–170 KB). `nombres.json` permite poner tildes | todos los de cartas, Rummy y los tableros |
+| `fondos/` | fondos de pantalla ambientados (escenarios). **Solo** se ofrecen en juegos de Arcade (Worms, Serpiente, Bloques, Rompe-Ladrillos, Air Hockey); nunca en cartas ni tableros, donde distraen | Arcade |
 
 ## Nombres de archivo (respeta mayúsculas)
 - **Española** (`NN-X`): `01-O.webp` … `12-O.webp`. NN = 01–07, 10, 11, 12 (los 08 y 09 se permiten pero no se usan). X = **O** oros · **C** copas · **E** espadas · **B** bastos.

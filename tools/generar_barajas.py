@@ -132,11 +132,11 @@ def dorsos(carpeta='dorsos', pref='i-'):
     return salida
 
 
-indice = {'version': 1, 'espanola': barajas('espanola'), 'francesa': barajas('francesa'), 'dorsos': dorsos(), 'tapetes': dorsos('tapetes', 't-')}
+indice = {'version': 1, 'espanola': barajas('espanola'), 'francesa': barajas('francesa'), 'dorsos': dorsos(), 'tapetes': dorsos('tapetes', 't-'), 'fondos': dorsos('fondos', 't-')}
 os.makedirs(CARTAS, exist_ok=True)
 with open(os.path.join(CARTAS, 'barajas.json'), 'w', encoding='utf-8') as f:
     json.dump(indice, f, ensure_ascii=False, indent=1)
     f.write('\n')
-print('barajas.json: %d española(s), %d francesa(s), %d dorso(s), %d tapete(s)' % (len(indice['espanola']), len(indice['francesa']), len(indice['dorsos']), len(indice['tapetes'])))
+print('barajas.json: %d española(s), %d francesa(s), %d dorso(s), %d tapete(s), %d fondo(s) de pantalla' % (len(indice['espanola']), len(indice['francesa']), len(indice['dorsos']), len(indice['tapetes']), len(indice['fondos'])))
 for a in avisos:
     print('AVISO ' + a)

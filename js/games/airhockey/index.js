@@ -26,7 +26,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; dedos = new Map(); obj = [null, null]; rastro = []; cartel = null;
-  asp = api.aspecto([grupoFondo(''), grupoPersonaje('Personajes (tu mazo)'), { clave: 'tema', titulo: 'Mesa', def: 'hielo', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo('', true), grupoPersonaje('Personajes (tu mazo)'), { clave: 'tema', titulo: 'Mesa', def: 'hielo', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) }], () => { if (S) dibujar(); });
   await api.css(new URL('./airhockey.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && A.MODOS[c0.modo] && A.NIVELES[c0.nivel] && A.METAS.includes(c0.meta)) cfg = { ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;

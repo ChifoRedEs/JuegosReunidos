@@ -48,7 +48,7 @@ const ESP_L = ['O', 'C', 'E', 'B'], FR_L = ['P', 'C', 'D', 'T'];
 const n2 = n => String(n).padStart(2, '0');
 const claveEs = id => ESP_L[paloEs(id)] + n2(rangoEs(id));
 const claveFr = id => FR_L[paloDe(id)] + n2(rangoDe(id) + 1);
-export const BARAJAS = { espanola: [], francesa: [], dorsos: [], tapetes: [] };
+export const BARAJAS = { espanola: [], francesa: [], dorsos: [], tapetes: [], fondos: [] };
 const RAIZ_IMG = new URL('../../img/cartas/', import.meta.url);
 const EXT_OK = ['webp', 'png', 'jpg', 'jpeg'];
 const ID_OK = /^[a-z0-9-]{1,40}$/;
@@ -57,6 +57,8 @@ const urlImg = r => new URL(r.split('/').map(encodeURIComponent).join('/'), RAIZ
 export const urlCarta = (b, clave) => urlImg(`${b.ruta}/${clave.slice(1)}-${clave[0]}.${b.ext}`);
 export const urlMuestra = b => urlImg(`${b.ruta}/${b.muestra}.${b.ext}`);
 export const urlDorso = d => urlImg(d.archivo);
+// Tapetes (lisos, para cartas y tableros) y fondos de pantalla (escenarios: solo juegos de Arcade): se buscan en ambas listas.
+export const buscarFondo = id => BARAJAS.tapetes.find(x => x.id === id) || BARAJAS.fondos.find(x => x.id === id) || null;
 export const urlTapete = t => urlImg(t.archivo);
 const urlJoker = b => urlImg(`${b.ruta}/00.${EXT_OK.includes(b.joker) ? b.joker : b.ext}`);   // joker: extensión del comodín (o true si es la del mazo)
 
@@ -87,7 +89,7 @@ export function cargarBarajas() {
       const r = await fetch(new URL('barajas.json', RAIZ_IMG));
       if (!r.ok) throw new Error('barajas.json ' + r.status);
       const d = await r.json();
-      BARAJAS.espanola = limpiar(d.espanola); BARAJAS.francesa = limpiar(d.francesa); BARAJAS.dorsos = limpiar(d.dorsos, 'dorso'); BARAJAS.tapetes = limpiar(d.tapetes, 'dorso');
+      BARAJAS.espanola = limpiar(d.espanola); BARAJAS.francesa = limpiar(d.francesa); BARAJAS.dorsos = limpiar(d.dorsos, 'dorso'); BARAJAS.tapetes = limpiar(d.tapetes, 'dorso'); BARAJAS.fondos = limpiar(d.fondos || [], 'dorso');
       let st = document.getElementById('cartas-img-css');
       if (!st) { st = document.createElement('style'); st.id = 'cartas-img-css'; document.head.appendChild(st); }
       st.textContent = cssBarajas();
@@ -108,13 +110,13 @@ export function precargarSeleccion(vals) {
     else for (let rg = 1; rg <= 13; rg++) FR_L.forEach(l => lanzar(urlCarta(b, l + n2(rg))));
   }
   const d = vals.dorso && BARAJAS.dorsos.find(x => x.id === vals.dorso); if (d) lanzar(urlDorso(d));
-  const t = BARAJAS.tapetes.find(x => x.id === (vals.mesa || vals.tapete)); if (t) lanzar(urlTapete(t));
+  const t = buscarFondo(vals.mesa || vals.tapete || vals.esc); if (t) lanzar(urlTapete(t));
 }
 
 // Tapete como imagen para los juegos de canvas (Air Hockey, Ladrillos, Serpiente…): devuelve la imagen ya cargada o null (y llama a alCargar al terminar).
 const _imgs = new Map();
 export function imagenTapete(id, alCargar) {
-  const t = BARAJAS.tapetes.find(x => x.id === id); if (!t) return null;
+  const t = buscarFondo(id); if (!t) return null;
   let e = _imgs.get(id);
   if (!e) { e = { im: new Image(), ok: false, cbs: [] }; e.im.onload = () => { e.ok = true; e.cbs.splice(0).forEach(f => f()); }; e.im.src = urlTapete(t); _imgs.set(id, e); }
   if (e.ok) return e.im;

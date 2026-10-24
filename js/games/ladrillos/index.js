@@ -19,7 +19,7 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; particulas = []; aviso = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo(''), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo('', true), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] }], () => { if (S) dibujar(); });
   await api.css(new URL('./ladrillos.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && L.MODOS[c0.modo] && Number.isInteger(c0.nivel)) cfg = { ...cfg, ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;

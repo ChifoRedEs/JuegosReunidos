@@ -24,8 +24,9 @@ export const grupoBarajaFr = () => grupoBaraja('francesa', 'barajafr', 'Barajas'
 
 // «Fondo de Tablero» (todos los juegos que no son de cartas): una imagen de tapete detrás del tablero. `sel` = elemento del tablero (CSS);
 // los juegos de canvas pasan sel = '' y pintan el tapete ellos mismos (core/cartas.js: imagenTapete + pintarTapete) cuando asp.valores.tapete empieza por «t-».
-export const grupoFondo = sel => ({ clave: 'tapete', titulo: 'Fondo de Tablero', icono: '🖼️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
-  opciones: [{ id: 'ninguno', nombre: 'Sin fondo', icono: '🚫', nada: true }, AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
+// `escenas` = true (solo juegos de Arcade): añade los fondos de pantalla ambientados (img/cartas/fondos).
+export const grupoFondo = (sel, escenas = false) => ({ clave: 'tapete', titulo: 'Fondo de Tablero', icono: '🖼️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
+  opciones: [{ id: 'ninguno', nombre: 'Sin fondo', icono: '🚫', nada: true }, AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t), ...(escenas ? { sec: 'Tapetes' } : {}) })), ...(escenas ? BARAJAS.fondos.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t), sec: 'Fondos de pantalla' })) : [])] });
 // «Personajes»: tu personaje (los de Sokoban) sustituye a la ficha, bola o cabeza del jugador. Valor 'auto' = el diseño de siempre.
 export const grupoPersonaje = (titulo = 'Personajes') => ({ clave: 'pj', titulo, icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de siempre', sec: 'Por defecto' }, ...opcionesPersonajes()] });
 // Emoji del personaje elegido (o null)
@@ -38,4 +39,4 @@ export const tapeteElegido = asp => { const v = asp && asp.valores && asp.valore
 // «Escenario» de Worms: solo los tapetes con ambientación de campo de batalla (el juego los pinta de fondo y colorea el terreno a juego).
 export const ESCENARIOS_WORMS = ['t-bosque', 't-ciudad', 't-deportivo', 't-desierto', 't-espacio', 't-infierno', 't-lago', 't-medieval'];
 export const grupoEscenario = (sel, titulo = 'Escenario') => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
-  opciones: [AZAR, ...BARAJAS.tapetes.filter(t => ESCENARIOS_WORMS.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
+  opciones: [AZAR, ...BARAJAS.fondos.filter(t => ESCENARIOS_WORMS.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
