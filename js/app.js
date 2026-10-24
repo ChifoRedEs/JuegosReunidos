@@ -169,7 +169,7 @@ function crearApi(j, ent, mod, root) {
       const refrescarVista = () => { if (btnVista) { const es3 = vals.vista === '3d'; btnVista.textContent = es3 ? '🔲 Ver en 2D' : '🧊 Ver en 3D'; btnVista.setAttribute('aria-label', es3 ? 'Cambiar a la vista 2D' : 'Cambiar a la vista 3D'); } };
       quitarVista();
       if (defs.some(g => g.clave === 'vista')) {
-        btnVista = el('button', { type: 'button', class: 'btn vista-flot' }); document.body.append(btnVista); posVista(); refrescarVista();
+        btnVista = el('button', { type: 'button', class: 'btn vista-flot' }); document.body.append(btnVista); root.classList.add('con-vista'); posVista(); refrescarVista();
         btnVista.addEventListener('click', () => { elec.vista = vals.vista === '3d' ? '2d' : '3d'; delete vals.vista; resolver(false); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); });
       }
       // 🎨 Apariencia: cada grupo es un enlace que abre su propia ventana con las opciones (muestras de color, iconos o imágenes).

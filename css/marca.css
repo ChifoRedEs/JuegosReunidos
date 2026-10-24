@@ -102,3 +102,4 @@ button.ficha{display:flex}
 
 /* botón flotante para cambiar entre vista 2D y 3D */
 .vista-flot{position:fixed;top:120px;left:10px;z-index:15;min-height:36px;padding:0 14px;font-size:13px;border-radius:99px;background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(4px);box-shadow:var(--sombra-m)}
+.juego.con-vista{padding-top:44px}
