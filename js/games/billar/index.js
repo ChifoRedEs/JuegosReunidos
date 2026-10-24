@@ -3,12 +3,13 @@ import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { anotarPartida, htmlPartidas } from '../../core/historial.js';
 import * as B from './motor.js';
-import { BARAJAS, cargarBarajas, urlTapete, imagenTapete, pintarTapete } from '../../core/cartas.js';
+import { cargarBarajas, imagenTapete, pintarTapete } from '../../core/cartas.js';
+import { grupoFondo, tapeteElegido } from '../../core/aspectos.js';
 
 const MOTOR = new URL('./motor.js', import.meta.url).href, M = 26;              // M: ancho de la banda de madera alrededor
 const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 const GUIA = { larga: 'Larga', corta: 'Corta', no: 'Sin línea' };
-const TAPETES = { verde: ['Verde', '#1F8A4C'], azul: ['Azul', '#1E5FA8'], rojo: ['Rojo', '#A42A3A'], gris: ['Gris', '#5D6675'], morado: ['Morado', '#5B3A9B'], negro: ['Negro', '#22262E'] };
+const PANO = '#1F8A4C';     // fieltro liso cuando no hay tapete de imagen
 const MADERAS = { nogal: ['Nogal', '#5A3A22', '#7A5232'], roble: ['Roble', '#9A6B3D', '#B98654'], negro: ['Negro', '#16181D', '#2B2E36'], blanco: ['Blanco', '#D9D4C8', '#F1ECE1'] };
 const BOLAS = {
   clasicas: ['Clásicas', ['#F5C518', '#1D4ED8', '#DC2626', '#6D28D9', '#F97316', '#15803D', '#7F1D1D', '#111']],
@@ -45,10 +46,7 @@ export async function mount(r, a) {
   await cargarBarajas();
   asp = api.aspecto([
     { clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
-    // tapete: un color liso o, encima, uno de los tapetes de imagen de la app (img/cartas/tapetes)
-    { clave: 'pano', titulo: 'Color del tapete', def: 'verde', opciones: Object.entries(TAPETES).map(([id, [n, c]]) => ({ id, nombre: n, sw: [c] })) },
-    { clave: 'panoimg', titulo: 'Tapete de imagen', icono: '🟩', ventana: true, forma: 'tapete', def: 'ninguno',
-      opciones: [{ id: 'ninguno', nombre: 'Sin imagen (color liso)', icono: '🚫', nada: true }, { id: 'azar', nombre: '🎲 Aleatoria', azar: true }, ...(BARAJAS.tapetes || []).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] },
+    grupoFondo(''),
     { clave: 'madera', titulo: 'Bandas', icono: '🪵', def: 'nogal', opciones: Object.entries(MADERAS).map(([id, [n, c, c2]]) => ({ id, nombre: n, sw: [c, c2] })) },
     { clave: 'bolas', titulo: 'Bolas (pool)', icono: '🎱', def: 'clasicas', opciones: Object.entries(BOLAS).map(([id, [n, cs]]) => ({ id, nombre: n, sw: cs.slice(0, 3) })) },
     { clave: 'taco', titulo: 'Taco', icono: '🏒', def: 'clasico', opciones: Object.entries(TACOS).map(([id, [n, c, c2]]) => ({ id, nombre: n, sw: [c, c2] })) },
@@ -279,8 +277,8 @@ function colorBola(id) {
 function dibujar() {
   if (!cv || !S) return;
   if (modo3d) { if (V3) dibujar3D(); return; }
-  const W = B.ANCHO, H = B.ALTO, r = B.radio(S.modo), pano = asp.valores.pano, tap = (TAPETES[pano] || TAPETES.verde)[1], mad = MADERAS[asp.valores.madera] || MADERAS.nogal;
-  const pi = asp.valores.panoimg, imPano = pi && pi.startsWith('t-') ? imagenTapete(pi, () => dibujar()) : null;
+  const W = B.ANCHO, H = B.ALTO, r = B.radio(S.modo), tap = PANO, mad = MADERAS[asp.valores.madera] || MADERAS.nogal;
+  const pi = tapeteElegido(asp), imPano = pi ? imagenTapete(pi, () => dibujar()) : null;
   ctx.setTransform(k * dpr, 0, 0, k * dpr, M * k * dpr, M * k * dpr);
   pintarMesa(W, H, r, tap, mad, imPano);
   // guía y taco
@@ -319,14 +317,14 @@ async function iniciar3D() {
   } catch (e) { console.error(e); if (t === tok3 && cv) { forzar2d = true; armar(); } }
 }
 function texMesa3D(r) {
-  const W = B.ANCHO, H = B.ALTO, tap = (TAPETES[asp.valores.pano] || TAPETES.verde)[1], mad = MADERAS[asp.valores.madera] || MADERAS.nogal;
-  const pi = asp.valores.panoimg, imPano = pi && pi.startsWith('t-') ? imagenTapete(pi, () => { claveMesa = ''; dibujar(); }) : null;
+  const W = B.ANCHO, H = B.ALTO, tap = PANO, mad = MADERAS[asp.valores.madera] || MADERAS.nogal;
+  const pi = tapeteElegido(asp), imPano = pi ? imagenTapete(pi, () => { claveMesa = ''; dibujar(); }) : null;
   const c = document.createElement('canvas'); c.width = W + 2 * M; c.height = H + 2 * M;
   const c0 = ctx; ctx = c.getContext('2d'); ctx.setTransform(1, 0, 0, 1, M, M); pintarMesa(W, H, r, tap, mad, imPano); ctx = c0;
   V3.mesa(c); V3.madera(mad[1], tap);
 }
 function dibujar3D() {
-  const r = B.radio(S.modo), clave = [asp.valores.pano, asp.valores.madera, asp.valores.panoimg, S.modo].join();
+  const r = B.radio(S.modo), clave = [asp.valores.madera, tapeteElegido(asp), S.modo].join();
   if (clave !== claveMesa) { claveMesa = clave; texMesa3D(r); }
   const bb = B.blanca(S), apuntando = S.fase === 'apuntar' && !anim && !bb.fuera, snk = S.modo === 'snooker', Tc = TACOS[asp.valores.taco] || TACOS.clasico;
   V3.pintar({ bolas: S.bolas.map(b => ({ id: b.id, x: b.x, y: b.y, fuera: !!b.fuera, color: colorBola(b.id), raya: !snk && b.id >= 9, num: !snk })), r,
