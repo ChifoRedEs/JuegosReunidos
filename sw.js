@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-b5dc3b5e40';
+const VERSION = 'jr-a0ad653f45';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -19,6 +19,9 @@ const ARCHIVOS = [
 './img/cartas/dorsos/nombres.json',
 './img/cartas/fondos/nombres.json',
 './img/cartas/tapetes/nombres.json',
+'./img/memorama/coches/nombres.json',
+'./img/memorama/frutas/nombres.json',
+'./img/memorama/pokemon/nombres.json',
 './js/app.js',
 './js/registry.js',
 './js/version.js',
@@ -145,6 +148,10 @@ const ARCHIVOS = [
 './js/games/mastermind/mastermind.css',
 './js/games/mastermind/motor.js',
 './js/games/mastermind/vista3d.js',
+'./js/games/memorama/bancos.js',
+'./js/games/memorama/index.js',
+'./js/games/memorama/memorama.css',
+'./js/games/memorama/motor.js',
 './js/games/minigolf/hoyos.js',
 './js/games/minigolf/index.js',
 './js/games/minigolf/minigolf.css',

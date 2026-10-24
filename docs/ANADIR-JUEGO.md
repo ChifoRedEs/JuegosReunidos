@@ -107,3 +107,6 @@ Los botones propios de cada juego (Pista, Deshacer, Reiniciar…) siguen en su f
 No hace falta código extra: cuando tu juego anota el final con `api.registrar({ res: 'victoria', ... })`, la app muestra sola la ventana de celebración (mensaje y animación al azar + botón «Nueva partida», que llama al `nueva` de `api.barra`). Si el juego acaba con ganador pero no puntúa (p. ej. 2 jugadores sin CPU), llama a `api.victoria()`. El usuario puede desactivarla en Ajustes → Victorias.
 
 Las animaciones están en `img/victoria/*.webp` y se declaran en `ANIMACIONES` de `js/core/victoria.js` (imagen, fondo de la ventana y efecto opcional a pantalla completa: confeti o lluvia de emojis). Para añadir una: copia el .webp (animado, con transparencia si quieres) y añade una línea.
+
+## Bancos de imágenes (Memorama)
+Las imágenes viven en `img/memorama/<tema>/<id>.webp` con un `nombres.json` (`{id: "Nombre"}`) por tema. Tras añadir/quitar imágenes o un tema nuevo (añádelo al dict `TEMAS` del script) ejecuta `python3 tools/generar_memorama.py`, que regenera `js/games/memorama/bancos.js`.

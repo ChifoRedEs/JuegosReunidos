@@ -1,0 +1,41 @@
+/* Memorama · cartas con giro 3D. Apariencia: data-marco / data-forma / data-nombres en .juego-memorama; dorso (--dorso) en #mrTab */
+.juego-memorama{--mr-cara:#fff;--mr-borde:#d7dbe8;--mr-tinta:#1F2340;--mr-rad:14px}
+.juego-memorama[data-marco="crema"]{--mr-cara:#FFF3D6;--mr-borde:#E3C98F}
+.juego-memorama[data-marco="oscuro"]{--mr-cara:#2B2F44;--mr-borde:#12141F;--mr-tinta:#fff}
+.juego-memorama[data-marco="azul"]{--mr-cara:#DCE8FF;--mr-borde:#3B6FD8}
+.juego-memorama[data-marco="verde"]{--mr-cara:#DDF5E4;--mr-borde:#3E8E5A}
+.juego-memorama[data-marco="rosa"]{--mr-cara:#FFE0EE;--mr-borde:#D9488C}
+.juego-memorama[data-forma="cuadrada"]{--mr-rad:4px}
+.juego-memorama[data-forma="circulo"]{--mr-rad:50%}
+.mrcab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:4px 2px;font-size:14px}
+.mrcab b{font:800 16px var(--f-titulo)}.mrcab span{color:var(--mut);font-weight:800;font-variant-numeric:tabular-nums}
+.mrmsg{text-align:center;font-size:14px;min-height:22px;margin:6px 4px}
+.mrbar{justify-content:center}
+.mrmarc{display:flex;justify-content:center;gap:10px;margin:4px 0}
+.mrmarc div{min-width:112px;text-align:center;padding:6px 14px;border-radius:14px;background:var(--card);border:2px solid var(--line)}
+.mrmarc div.turno{border-color:var(--yel);box-shadow:0 0 0 3px color-mix(in srgb,var(--yel) 40%,transparent)}
+.mrmarc small{display:block;font-weight:800;color:var(--mut);font-size:12px}.mrmarc b{font:800 24px var(--f-titulo)}
+/* tablero */
+.mrtab{--g:clamp(4px,1.6vw,8px);display:grid;grid-template-columns:repeat(var(--c),1fr);gap:var(--g);width:min(100%,calc(var(--c) * 112px + (var(--c) - 1) * var(--g)));margin:8px auto 4px;container-type:inline-size;padding:8px;border-radius:18px;box-sizing:border-box}
+.mrc{position:relative;aspect-ratio:1;border:0;padding:0;background:none;perspective:700px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:var(--mr-rad)}
+.mrc:disabled{cursor:default;opacity:1}
+.mrc:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.mri{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.3,1)}
+.mrc.up .mri{transform:rotateY(180deg)}
+.mrdorso,.mrcara{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--mr-rad);overflow:hidden;box-shadow:0 3px 7px rgba(0,0,0,.3)}
+.mrdorso{display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(45deg,#4B3FD1 0 8px,#6A5CF2 8px 16px);border:3px solid #fff}
+.mrdorso i{font:800 calc(100cqw / var(--c) * .42)/1 var(--f-titulo);font-style:normal;color:rgba(255,255,255,.85);text-shadow:0 2px 4px rgba(0,0,0,.35)}
+.con-dorso .mrdorso{background:#fff var(--dorso) center/cover no-repeat;border:2px solid #fff}
+.con-dorso .mrdorso i{display:none}
+.mrcara{transform:rotateY(180deg);background:var(--mr-cara);border:3px solid var(--mr-borde);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.mrcara img{width:100%;height:100%;object-fit:contain;display:block}
+.mrc[data-tema="coches"] .mrcara img{object-fit:cover}
+.mrcara b{position:absolute;left:0;right:0;bottom:0;padding:2px 3px 3px;text-align:center;font:800 clamp(8px,calc(100cqw / var(--c) * .13),12px)/1.1 var(--f-texto);color:#fff;background:linear-gradient(transparent,rgba(10,12,30,.82) 40%);text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.juego-memorama[data-nombres="no"] .mrcara b{display:none}
+.juego-memorama[data-forma="circulo"] .mrcara b{display:none}
+.mrc.hit .mrcara{border-color:var(--ok,#1FA971);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok,#1FA971) 55%,transparent),0 3px 7px rgba(0,0,0,.3)}
+.mrc.hit{animation:mrpop .4s ease-out}
+.mrc.mal .mrcara{border-color:var(--red,#E5484D)}
+@keyframes mrpop{50%{transform:scale(1.07)}}
+@media (prefers-reduced-motion:reduce){.mri{transition:none}.mrc.hit{animation:none}}
+.juego-memorama [hidden]{display:none!important}
