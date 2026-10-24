@@ -142,7 +142,63 @@
    "archivo": "dorsos/fr-verde.webp"
   }
  ],
- "tapetes": [],
+ "tapetes": [
+  {
+   "id": "t-amarillo",
+   "nombre": "Amarillo",
+   "archivo": "tapetes/amarillo.webp"
+  },
+  {
+   "id": "t-arcoiris",
+   "nombre": "Arcoíris",
+   "archivo": "tapetes/arcoiris.webp"
+  },
+  {
+   "id": "t-azul-claro",
+   "nombre": "Azul claro",
+   "archivo": "tapetes/azul-claro.webp"
+  },
+  {
+   "id": "t-azul-oscuro",
+   "nombre": "Azul oscuro",
+   "archivo": "tapetes/azul-oscuro.webp"
+  },
+  {
+   "id": "t-ladrillos",
+   "nombre": "Ladrillos",
+   "archivo": "tapetes/ladrillos.webp"
+  },
+  {
+   "id": "t-madera",
+   "nombre": "Madera",
+   "archivo": "tapetes/madera.webp"
+  },
+  {
+   "id": "t-morado",
+   "nombre": "Morado",
+   "archivo": "tapetes/morado.webp"
+  },
+  {
+   "id": "t-marmol",
+   "nombre": "Mármol",
+   "archivo": "tapetes/marmol.webp"
+  },
+  {
+   "id": "t-rojo",
+   "nombre": "Rojo",
+   "archivo": "tapetes/rojo.webp"
+  },
+  {
+   "id": "t-turquesa",
+   "nombre": "Turquesa",
+   "archivo": "tapetes/turquesa.webp"
+  },
+  {
+   "id": "t-verde",
+   "nombre": "Verde",
+   "archivo": "tapetes/verde.webp"
+  }
+ ],
  "fondos": [
   {
    "id": "t-bosque",
@@ -155,6 +211,11 @@
    "archivo": "fondos/ciudad.webp"
   },
   {
+   "id": "t-deportivo",
+   "nombre": "Deportivo",
+   "archivo": "fondos/deportivo.webp"
+  },
+  {
    "id": "t-desierto",
    "nombre": "Desierto",
    "archivo": "fondos/desierto.webp"
@@ -165,9 +226,9 @@
    "archivo": "fondos/espacio.webp"
   },
   {
-   "id": "t-deportivo",
-   "nombre": "Estadio",
-   "archivo": "fondos/deportivo.webp"
+   "id": "t-galaxia",
+   "nombre": "Galaxia",
+   "archivo": "fondos/galaxia.webp"
   },
   {
    "id": "t-infierno",
