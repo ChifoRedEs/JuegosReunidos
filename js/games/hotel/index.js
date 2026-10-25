@@ -31,7 +31,7 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; bloqueado = false; V = null; sel = null; plan = {}; forzar2d = false; modo3d = false; ses++;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   if (!vivo) return;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), grupoTablero(), ...gruposFichas({ titulo: 'Coches de los jugadores', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), grupoTablero(), ...gruposFichas({ pocos: true, titulo: 'Coches de los jugadores', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
     () => { if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./hotel.css', import.meta.url));
