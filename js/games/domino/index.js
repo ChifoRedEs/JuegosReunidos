@@ -12,6 +12,7 @@ const NEUTROS = [['marfil', 'Marfil', '#F4EEDC'], ['blanco', 'Blanco', '#FFFFFF'
 const TONOS = [['Rojo', 0], ['Naranja', 26], ['Amarillo', 48], ['Lima', 78], ['Verde', 128], ['Esmeralda', 158], ['Turquesa', 178], ['Cian', 195], ['Azul', 215], ['Índigo', 238], ['Violeta', 268], ['Magenta', 305], ['Rosa', 338]];
 const COLORES = [...NEUTROS.map(([id, nombre, hex]) => ({ id, nombre, hex })),
   ...TONOS.flatMap(([n, h]) => [['c', 'claro', 75, 72], ['m', '', 72, 48], ['o', 'oscuro', 68, 28]].map(([k, suf, s, l]) => ({ id: `${n.toLowerCase().replace('í', 'i')}-${k}`, nombre: `${n} ${suf}`.trim(), hex: hsl(h, s, l) })))];
+const IDS_POCOS = ['marfil', 'blanco', 'plata', 'gris', 'negro', 'dorado', 'rojo-m', 'naranja-m', 'amarillo-m', 'lima-m', 'verde-m', 'turquesa-m', 'azul-m', 'violeta-m', 'rosa-m', 'azul-o', 'verde-o', 'rojo-o'];
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const luz = h => { const [r, g, b] = hexRgb(h); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
 const TEXTURAS = { liso: ['Liso', ['#EDE6D2', '#CFC5A6']], brillante: ['Brillante', ['#FFFFFF', '#9EA6B5']], marmol: ['Mármol', ['#F4F1EA', '#8F8C86']], madera: ['Madera', ['#B07A45', '#6B4423']],
@@ -42,7 +43,7 @@ export async function mount(r, a) {
   api = a; root = r; pausado = false; sel = null; pista = null; clearTimeout(tim); tim = 0;
   asp = api.aspecto([
     grupoFondo('#dmMesa'),
-    { clave: 'fichas', titulo: 'Fichas · Color', icono: '🎨', def: 'marfil', opciones: COLORES.map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] })) },
+    { clave: 'fichas', titulo: 'Fichas · Color', icono: '🎨', def: 'marfil', soloColor: true, opciones: COLORES.filter(c => IDS_POCOS.includes(c.id)).map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] })) },
     { clave: 'textura', titulo: 'Fichas · Textura', icono: '✨', def: 'brillante', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) },
     { clave: 'forma', titulo: 'Fichas · Forma', icono: '📐', def: 'redonda', opciones: Object.entries(FORMAS).map(([id, nombre]) => ({ id, nombre })) },
     { clave: 'tamano', titulo: 'Fichas · Tamaño', icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).map(([id, [nombre]]) => ({ id, nombre })) },
@@ -238,5 +239,5 @@ function reglas() {
     <li>Gana la mano quien se queda sin fichas y suma los puntos de las fichas de los rivales. Si nadie puede mover, el juego se <b>cierra</b> y gana quien menos puntos tenga en la mano.</li>
     <li>Partida: a una sola mano o hasta 50, 100 o 200 puntos. <b>Por parejas</b>: tú y la ficha de enfrente (tu pareja) contra los otros dos; los puntos van al equipo.</li>
     <li>💡 La pista te señala una buena jugada. La máquina tiene 3 niveles; en Difícil recuerda qué números les faltan a los demás.</li>
-    <li>🎨 En Apariencia cambias el tapete y las fichas: color (más de 60), textura, forma, tamaño y estilo de los puntos.</li></ul>`);
+    <li>🎨 En Apariencia cambias el tapete y las fichas: color (paleta reducida), textura, forma, tamaño y estilo de los puntos.</li></ul>`);
 }

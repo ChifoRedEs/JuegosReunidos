@@ -40,7 +40,7 @@ export async function mount(r, a) {
     { clave: 'marco', titulo: 'Tablero', icono: '🪵', def: 'madera', opciones: Object.entries(MARCOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'paleta', titulo: 'Colores de las fichas', icono: '🎨', def: 'vivo', opciones: Object.entries(PALETAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'estilo', titulo: 'Estilo de las fichas', icono: '🧩', def: 'clasico', opciones: Object.entries(ESTILOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    ...gruposFichas({ titulo: 'Fichas', icono: '🟦', tamano: ['pequeno', 'normal'] }),
+    ...gruposFichas({ titulo: 'Fichas', icono: '🟦', color: false, tamano: ['pequeno', 'normal'] }),
   ], () => { if (S && $('#klTab')) { if (modo3d !== quiere3D()) armar(); else if (V3) { V3.recolor(aplicarFichas()); pintar(); } else aplicarFichas(); } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./klotski.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && K.dims(c0.modo, c0.tam) && K.NIVELES[c0.nivel]) cfg = { modo: c0.modo, tam: c0.tam, nivel: c0.nivel };

@@ -236,14 +236,14 @@ function crearApi(j, ent, mod, root) {
       // 🎨 Apariencia (igual en todos los juegos): una ventana con una sección desplegable por grupo (se abre una a la vez).
       // Cada sección muestra sus opciones como botones, muestras de color, iconos o miniaturas de imagen, según el grupo.
       const abrir = (alCerrarV) => {
-        const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
-          ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), o.nombre]));
+        const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji || g.soloColor ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
+          ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), ...(g.soloColor ? [] : [o.nombre])]));
         const actual = g => g.opciones.find(x => x.id === elec[g.clave]) || g.opciones[0];
         const resumenSec = new Map();
         const pintarResumen = g => {
           const o = actual(g), r = resumenSec.get(g.clave); if (!r) return;
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
-          r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
+          r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, g.soloColor && o.sw ? '' : o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
         };
         const elegir = (g, idO) => { elec[g.clave] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); if (alCambiar) alCambiar({ ...vals }); };
         const cuerpoDe = g => {

@@ -52,7 +52,7 @@ export async function mount(r, a) {
     grupoEscenario('.wmfondo'),
     { ...grupoPersonaje('Personajes · equipo Rojo'), clave: 'pj' },
     { ...grupoPersonaje('Personajes · equipo Azul o CPU'), clave: 'pj2' },
-    ...gruposFichas({ titulo: 'Terreno', icono: '⛰️', formas: false, tamano: false }),
+    ...gruposFichas({ titulo: 'Terreno', icono: '⛰️', pocos: true, formas: false, tamano: false }),
   ], () => { if (S) { construirTerreno(); dibujar(); } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./worms.css', import.meta.url));
   PRECARGA.forEach(ico);

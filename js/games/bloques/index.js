@@ -30,7 +30,7 @@ const reloj = ms => { const s = Math.max(0, ms) / 1000; return `${Math.floor(s /
 export async function mount(r, a) {
   api = a; root = r; bajando = false; flash = null; letrero = null; nuevoRecord = false;
   asp = api.aspecto([grupoFondo(''), grupoPantalla(''), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
-    ...gruposFichas({ titulo: 'Bloques', icono: '🧱' }),
+    ...gruposFichas({ titulo: 'Bloques', icono: '🧱', color: false }),
     { clave: 'fantasma', titulo: 'Pieza fantasma', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] }], () => { EST = estilo(asp.valores); if (S) dibujar(); });
   EST = estilo(asp.valores);
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./bloques.css', import.meta.url));

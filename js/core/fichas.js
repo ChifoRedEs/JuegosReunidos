@@ -17,10 +17,12 @@ export const FORMAS = { original: 'Original', redonda: 'Esquinas redondeadas', c
 export const TAMANOS = { pequeno: ['Pequeño', .82], normal: ['Normal', 1], grande: ['Grande', 1.14] };
 
 /* ---------- grupos de 🎨 Apariencia ---------- */
-// o: { clave:'f', titulo:'Cajas', icono:'📦', lados:['Rojo','Amarillo'] (un grupo de color por bando: fcolor, fcolor2…), formas:true|false|[ids], tamano:true|false|[ids], textura:true|false, color:true|false }
+// Paleta reducida (se muestra solo con el color, sin nombre): para juegos donde el color de la pieza no condiciona el juego (Dominó, Worms)
+export const IDS_POCOS = ['marfil', 'blanco', 'plata', 'gris', 'negro', 'dorado', 'rojo-m', 'naranja-m', 'amarillo-m', 'lima-m', 'verde-m', 'turquesa-m', 'azul-m', 'violeta-m', 'rosa-m', 'azul-o', 'verde-o', 'rojo-o'];
+// o: { clave:'f', titulo:'Cajas', icono:'📦', lados:['Rojo','Amarillo'] (un grupo de color por bando: fcolor, fcolor2…), formas:true|false|[ids], tamano:true|false|[ids], textura:true|false, color:true|false, pocos:true (paleta reducida, solo color sin nombre) }
 export function gruposFichas(o = {}) {
   const k = o.clave || 'f', t = o.titulo || 'Fichas', out = [];
-  if (o.color !== false) (o.lados || [null]).forEach((lado, i) => out.push({ clave: k + 'color' + (i ? i + 1 : ''), titulo: `${t} · Color${lado ? ` (${lado})` : ''}`, icono: o.icono || '🎨', def: 'original', opciones: [{ id: 'original', nombre: 'Original', emoji: '↩️' }, ...COLORES.map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] }))] }));
+  if (o.color !== false) (o.lados || [null]).forEach((lado, i) => out.push({ clave: k + 'color' + (i ? i + 1 : ''), titulo: `${t} · Color${lado ? ` (${lado})` : ''}`, icono: o.icono || '🎨', def: 'original', soloColor: !!o.pocos, opciones: [{ id: 'original', nombre: 'Original', emoji: '↩️' }, ...COLORES.filter(c => !o.pocos || IDS_POCOS.includes(c.id)).map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] }))] }));
   if (o.textura !== false) out.push({ clave: k + 'tex', titulo: `${t} · Textura`, icono: '✨', def: 'original', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) });
   if (o.formas !== false) { const ids = Array.isArray(o.formas) ? o.formas : Object.keys(FORMAS); out.push({ clave: k + 'forma', titulo: `${t} · Forma`, icono: '📐', def: 'original', opciones: ids.map(id => ({ id, nombre: FORMAS[id] })) }); }
   if (o.tamano !== false) out.push({ clave: k + 'tam', titulo: `${t} · Tamaño`, icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).filter(([id]) => !Array.isArray(o.tamano) || o.tamano.includes(id)).map(([id, [nombre]]) => ({ id, nombre })) });

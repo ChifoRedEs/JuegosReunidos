@@ -22,7 +22,7 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 export async function mount(r, a) {
   api = a; root = r; particulas = []; aviso = null; nuevoRecord = false;
   asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] },
-    ...gruposFichas({ titulo: 'Ladrillos', icono: '🧱' })], () => { EST = estilo(asp.valores); VARS = EST.hex ? variantes(EST.hex, 6) : null; if (S) dibujar(); });
+    ...gruposFichas({ titulo: 'Ladrillos', icono: '🧱', color: false })], () => { EST = estilo(asp.valores); VARS = EST.hex ? variantes(EST.hex, 6) : null; if (S) dibujar(); });
   EST = estilo(asp.valores); VARS = EST.hex ? variantes(EST.hex, 6) : null;
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./ladrillos.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && L.MODOS[c0.modo] && Number.isInteger(c0.nivel)) cfg = { ...cfg, ...c0 };

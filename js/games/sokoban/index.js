@@ -54,7 +54,7 @@ export async function mount(r, a) {
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#skTab'), { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    ...gruposFichas({ titulo: 'Cajas', icono: '📦' }),
+    ...gruposFichas({ titulo: 'Cajas', icono: '📦', color: false }),
     { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: opcionesPersonajes() }],
   () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./sokoban.css', import.meta.url));
