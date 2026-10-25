@@ -37,6 +37,7 @@ export async function mount(r, a) {
       { clave: 'nivel', titulo: 'Nivel', visible: prog.max > 1, opciones: Array.from({ length: prog.max }, (_, i) => [i + 1, `${i + 1}`]) },
       { clave: 'ia', titulo: 'IA del jefe', opciones: Object.entries(M.IA).map(([x, v]) => [x, v.nombre]) },
       { clave: 'obj', titulo: 'Objetivo', opciones: Object.entries(M.OBJ).map(([x, v]) => [x, v.nombre]) },
+      { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(M.VEL).map(([x, v]) => [x, v.nombre]) },
       { clave: 'vidas', titulo: 'Vidas', opciones: [[3, '3'], [5, '5'], [7, '7']] },
       { clave: 'trazo', titulo: 'Crecimiento del cuadrado', opciones: Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
@@ -66,9 +67,10 @@ function setup() {
     <p class="note"><b>${cfg.nivel}. ${d.n}</b> · ${n} jefe${n > 1 ? 's' : ''} · objetivo ${M.objetivoDe(cfg.nivel, cfg.obj)} % · imagen: ${nombreImg(imgDe(cfg.nivel))}</p>
     <div class="bar"><span class="lbl">IA del jefe</span>${seg('ia', Object.entries(M.IA).map(([x, v]) => [x, v.nombre]))}</div>
     <div class="bar"><span class="lbl">Objetivo</span>${seg('obj', Object.entries(M.OBJ).map(([x, v]) => [x, v.nombre]))}</div>
+    <div class="bar"><span class="lbl">Velocidad</span>${seg('vel', Object.entries(M.VEL).map(([x, v]) => [x, v.nombre]))}</div>
     <div class="bar"><span class="lbl">Vidas</span>${seg('vidas', [[3, '3'], [5, '5'], [7, '7']])}</div>
-    <div class="bar"><span class="lbl">Crecimiento</span>${seg('trazo', Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]))}</div>
-    <p class="note">IA: velocidad del jefe y lo bien que persigue el cuadrado que estás creando. Crecimiento lento = más tiempo expuesto.</p>
+    <div class="bar"><span class="lbl">Crecimiento del cuadrado</span>${seg('trazo', Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]))}</div>
+    <p class="note"><b>IA ${M.IA[cfg.ia].nombre}</b>: ${M.IA[cfg.ia].desc}. Velocidad: lo rápido que se mueven los jefes. Crecimiento: Pequeño crece despacio (más tiempo expuesto) y Grande crece deprisa.</p>
     <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">💠 Jugar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
 }
 function armar() {
@@ -83,10 +85,14 @@ function armar() {
     if (S && (S.fase === 'listo' || S.fase === 'pausa')) { jugarYa(); return; }
     if (!S || S.fase !== 'jugar') return;
     const [cx, cy] = celda(e), a = M.anclaje(S, cx, cy);
+    M.mirar(S, cx + .5, cy + .5);
     if (a && M.empezarRect(S, a.x, a.y)) { activo = e.pointerId; try { zona.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ } M.apuntar(S, cx, cy); api.vibrar(6); }
     else aviso = performance.now();
   });
-  zona.addEventListener('pointermove', e => { if (activo === e.pointerId && S && S.rect) { const [cx, cy] = celda(e); M.apuntar(S, cx, cy); } });
+  zona.addEventListener('pointermove', e => {
+    if (!S || S.fase !== 'jugar' || !(e.buttons || activo === e.pointerId)) return;
+    const [cx, cy] = celda(e); M.mirar(S, cx + .5, cy + .5); if (activo === e.pointerId && S.rect) M.apuntar(S, cx, cy);
+  });
   zona.addEventListener('contextmenu', e => e.preventDefault());
   zona.addEventListener('gesturestart', e => e.preventDefault()); zona.addEventListener('dblclick', e => e.preventDefault());
   encajar(); ajustarTamano(); pintarOver(); pintarHud();
@@ -277,6 +283,6 @@ function reglas() {
     <li>Mientras el cuadrado crece está <b>en peligro</b>: si un jefe lo toca, pierdes una vida y el cuadrado se cancela. Cuanto más grande y más lento, más riesgo.</li>
     <li>Si tus cuadrados encierran una zona sin jefes, esa zona se descubre sola.</li>
     <li><b>Jefes</b>: <span style="color:#FF4FD8">rebotadores</span> (en línea recta), <span style="color:#FFB020">errantes</span> (giran al azar) y <span style="color:#FF3B3B">cazadores</span> (persiguen tu cuadrado).</li>
-    <li><b>IA del jefe</b>: Dócil, Normal, Astuto o Maestro cambia su velocidad y cuánto te persigue. <b>Objetivo</b>, <b>vidas</b> y <b>crecimiento</b> (velocidad del cuadrado) también se ajustan.</li>
+    <li><b>IA del jefe</b>: Dócil (rebota al azar), Normal (rebota y empieza a perseguir tu cuadrado), Astuto (te persigue bastante) y Maestro (sabe con precisión dónde estás y te persigue sin descanso). <b>Velocidad</b>: Lenta, Media (+20 %), Rápida (+40 %) o Supersónica (+60 %). <b>Objetivo</b>: 60, 75 o 90 %. <b>Crecimiento del cuadrado</b>: Pequeño, Mediano o Grande.</li>
     <li>Niveles cada vez más difíciles (más jefes y más rápidos), con imágenes de los escenarios de Worms. Puntos por celdas (más si el cuadrado es grande), vidas sobrantes y estrellas (3 ★ sin perder vidas).</li></ul>`);
 }

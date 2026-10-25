@@ -2,7 +2,8 @@
 import * as M from '../js/games/quantix/motor.js';
 let fallos = 0; const t = (n, c) => { if (!c) { fallos++; console.log('✗', n); } else console.log('✓', n); };
 t('20 niveles: 4 grupos de jefes × 5 velocidades', M.N_NIVELES === 20 && M.NIVELES.map(n => n.j.length).join('') === '1'.repeat(5) + '2'.repeat(5) + '3'.repeat(5) + '4'.repeat(5) && M.NIVELES[0].j[0][1] < M.NIVELES[2].j[0][1] && M.NIVELES[2].j[0][1] < M.NIVELES[4].j[0][1] && M.NIVELES[5].j[0][1] === M.NIVELES[0].j[0][1] && M.NIVELES[12].j.length === 3 && M.NIVELES[15].j.length === 4);
-t('cfg inválida rechazada', M.cfgValida({ ...M.CFG_DEF, nivel: 99 }) === null && M.cfgValida({ ...M.CFG_DEF, vidas: 4 }) === null && M.cfgValida(null) === null);
+t('objetivos 60/75/90 y velocidades +20/+40/+60', M.OBJ.facil.p === 60 && M.OBJ.normal.p === 75 && M.OBJ.dificil.p === 90 && M.VEL.media.k === 1.2 && M.VEL.rapida.k === 1.4 && M.VEL.supersonica.k === 1.6);
+t('cfg inválida rechazada', M.cfgValida({ ...M.CFG_DEF, nivel: 99 }) === null && M.cfgValida({ ...M.CFG_DEF, vidas: 4 }) === null && M.cfgValida({ ...M.CFG_DEF, vel: 'x' }) === null && M.cfgValida(null) === null);
 const S0 = M.crear({ ...M.CFG_DEF, nivel: 13 }, 7); S0.fase = 'jugar';
 t('jefes en zona libre', S0.jefes.length === 3 && S0.jefes.every(b => !S0.g[Math.floor(b.y) * M.COLS + Math.floor(b.x)]));
 t('empieza en 0 %', M.pct(S0) === 0);
@@ -19,6 +20,10 @@ t('reclama 10×10', r && r.celdas === 100 && Math.abs(M.pct(B) - 100 / M.INTERIO
 const C = M.crear({ ...M.CFG_DEF, nivel: 1 }, 3); C.fase = 'jugar'; C.jefes[0].x = 5.5; C.jefes[0].y = 5.5; C.jefes[0].v = 0;
 M.empezarRect(C, 1, 20); M.apuntar(C, 34, 22); while (!M.completo(C)) M.paso(C); const rc = M.soltar(C);
 t('la zona sin jefe se descubre', rc && rc.celdas > 34 * 3 + 100);
+// la IA: Dócil no persigue; Maestro se acerca al cuadrado que crece
+const dist = ia => { const D = M.crear({ ...M.CFG_DEF, nivel: 1, ia, vel: 'media' }, 5); D.fase = 'jugar'; const j = D.jefes[0]; j.x = 28.5; j.y = 40.5; j.vx = 0; j.vy = -1; j.t = 'rebote'; M.empezarRect(D, 1, 1); M.apuntar(D, 8, 8); let mn = 1e9; for (let i = 0; i < 900 && D.fase === 'jugar'; i++) { M.paso(D); mn = Math.min(mn, Math.hypot(j.x - 5, j.y - 5)); if (D.vidas < D.vidas0) break; } return { mn, golpe: D.vidas < D.vidas0 }; };
+const dm = dist('maestro'), dd = dist('docil');
+t("el Maestro persigue y el Dócil no", dm.golpe && !dd.golpe);
 // guardado
 const s1 = JSON.parse(JSON.stringify(M.serializar(B))), v = M.validar(s1);
 t('serializar/validar', v && v.g.every((x, i) => x === B.g[i]) && v.nivel === 1);
@@ -43,6 +48,6 @@ function juega(cfg, seed) {
   return S;
 }
 const mal = [];
-for (let n = 1; n <= 20; n++) { const S = juega({ ...M.CFG_DEF, nivel: n, ia: 'maestro', vidas: 3 }, 100 + n); if (S.fase !== 'meta') mal.push(n + ':' + Math.round(M.pct(S)) + '%'); }
-t('los 20 niveles se superan con IA Maestro' + (mal.length ? ' fallan ' + mal : ''), mal.length === 0);
+for (let n = 1; n <= 20; n++) { const S = juega({ ...M.CFG_DEF, nivel: n, ia: 'maestro', vel: 'supersonica', obj: 'dificil', vidas: 3 }, 100 + n); if (S.fase !== 'meta') mal.push(n + ':' + Math.round(M.pct(S)) + '%'); }
+t('los 20 niveles se superan con IA Maestro, Supersónica y objetivo 90 %' + (mal.length ? ' fallan ' + mal : ''), mal.length === 0);
 console.log(fallos ? `${fallos} FALLOS` : 'Todo OK'); process.exit(fallos ? 1 : 0);

@@ -2,11 +2,18 @@
 // deslizas para crecer un rectángulo; si el jefe lo toca mientras crece, pierdes una vida. Al soltar, el rectángulo se descubre.
 export const COLS = 36, ROWS = 48, CELDA = 10, W = COLS * CELDA, H = ROWS * CELDA, R = .45, DT = 1 / 90;
 export const INTERIOR = (COLS - 2) * (ROWS - 2);
-export const IA = { docil: { nombre: 'Dócil', v: .75, caza: 0 }, normal: { nombre: 'Normal', v: 1, caza: .35 }, astuto: { nombre: 'Astuto', v: 1.12, caza: .65 }, maestro: { nombre: 'Maestro', v: 1.25, caza: 1 } };
-export const OBJ = { facil: { nombre: 'Fácil', d: -10 }, normal: { nombre: 'Normal', d: 0 }, dificil: { nombre: 'Exigente', d: 5 } };
+// IA del jefe: solo cambia su comportamiento (la velocidad se elige aparte). giro = lo rápido que corrige su rumbo hacia ti.
+export const IA = {
+  docil: { nombre: 'Dócil', giro: 0, rebote: .7, desc: 'rebota al azar, sin perseguirte' },
+  normal: { nombre: 'Normal', giro: 1.8, desc: 'rebota y empieza a perseguir tu cuadrado' },
+  astuto: { nombre: 'Astuto', giro: 4, desc: 'rebota y te persigue bastante' },
+  maestro: { nombre: 'Maestro', giro: 9, precisa: true, incansable: true, desc: 'detecta con precisión dónde estás y te persigue sin descanso' },
+};
+export const OBJ = { facil: { nombre: 'Fácil (60 %)', p: 60 }, normal: { nombre: 'Normal (75 %)', p: 75 }, dificil: { nombre: 'Exigente (90 %)', p: 90 } };
+export const VEL = { lenta: { nombre: 'Lenta', k: 1 }, media: { nombre: 'Media (+20 %)', k: 1.2 }, rapida: { nombre: 'Rápida (+40 %)', k: 1.4 }, supersonica: { nombre: 'Supersónica (+60 %)', k: 1.6 } };
 export const VIDAS = { 3: '3', 5: '5', 7: '7' };
-export const TRAZO = { lento: { nombre: 'Lento', v: 14 }, normal: { nombre: 'Normal', v: 22 }, rapido: { nombre: 'Rápido', v: 34 } };
-export const CFG_DEF = { nivel: 1, ia: 'normal', obj: 'normal', vidas: 5, trazo: 'normal' };
+export const TRAZO = { lento: { nombre: 'Pequeño', v: 14 }, normal: { nombre: 'Mediano', v: 22 }, rapido: { nombre: 'Grande', v: 34 } };
+export const CFG_DEF = { nivel: 1, ia: 'normal', obj: 'normal', vel: 'lenta', vidas: 5, trazo: 'normal' };
 // 20 niveles = 4 grupos de jefes (1 a 4) × 5 velocidades. Nivel n → jefes = ⌈n/5⌉, velocidad = (n-1) % 5.
 export const VELOCIDADES = [['Lenta', 6], ['Moderada', 8.5], ['Media', 11], ['Rápida', 13.5], ['Muy rápida', 16]];
 const TIPOS = [['rebote', 'errante', 'rebote', 'errante'], ['errante', 'rebote', 'errante', 'rebote'], ['errante', 'cazador', 'rebote', 'errante'], ['cazador', 'rebote', 'cazador', 'errante'], ['cazador', 'cazador', 'rebote', 'cazador']];
@@ -20,16 +27,16 @@ export function rnd(S) { S.rs = (S.rs + 0x6D2B79F5) | 0; let t = Math.imul(S.rs 
 export function cfgValida(c) {
   if (!c || typeof c !== 'object') return null;
   const nivel = Number(c.nivel), vidas = Number(c.vidas);
-  if (!Number.isInteger(nivel) || nivel < 1 || nivel > N_NIVELES || !Object.hasOwn(IA, c.ia) || !Object.hasOwn(OBJ, c.obj) || !Object.hasOwn(TRAZO, c.trazo) || !Object.hasOwn(VIDAS, vidas)) return null;
-  return { nivel, ia: c.ia, obj: c.obj, vidas, trazo: c.trazo };
+  if (!Number.isInteger(nivel) || nivel < 1 || nivel > N_NIVELES || !Object.hasOwn(IA, c.ia) || !Object.hasOwn(OBJ, c.obj) || !Object.hasOwn(TRAZO, c.trazo) || !Object.hasOwn(VEL, c.vel) || !Object.hasOwn(VIDAS, vidas)) return null;
+  return { nivel, ia: c.ia, obj: c.obj, vel: c.vel, vidas, trazo: c.trazo };
 }
-export const objetivoDe = (nivel, obj) => cl(NIVELES[nivel - 1].obj + OBJ[obj].d, 40, 95);
+export const objetivoDe = (nivel, obj) => OBJ[obj].p;
 const idx = (x, y) => y * COLS + x;
 export function crear(cfg, seed = Math.floor(Math.random() * 4294967295) + 1) {
   const c = cfgValida(cfg) || { ...CFG_DEF }, def = NIVELES[c.nivel - 1];
   const g = new Uint8Array(COLS * ROWS);
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (x === 0 || y === 0 || x === COLS - 1 || y === ROWS - 1) g[idx(x, y)] = 1;
-  const S = { v: 1, nivel: c.nivel, ia: c.ia, objk: c.obj, trazo: c.trazo, obj: objetivoDe(c.nivel, c.obj), vidas: c.vidas, vidas0: c.vidas, perd: 0, g, jefes: [], rect: null, puntos: 0, t: 0, inv: 0, fase: 'listo', est: 0, rs: seed | 0 || 1, rec: 0 };
+  const S = { v: 1, nivel: c.nivel, ia: c.ia, objk: c.obj, velk: c.vel, trazo: c.trazo, obj: objetivoDe(c.nivel, c.obj), vidas: c.vidas, vidas0: c.vidas, perd: 0, g, jefes: [], rect: null, mira: null, puntos: 0, t: 0, inv: 0, fase: 'listo', est: 0, rs: seed | 0 || 1, rec: 0 };
   const ya = [];
   for (const [tipo, v] of def.j) {
     let x, y, n = 0;
@@ -64,25 +71,28 @@ export function empezarRect(S, ax, ay) {
 export function apuntar(S, tx, ty) { if (S.rect) { S.rect.tx = cl(tx, 1, COLS - 2); S.rect.ty = cl(ty, 1, ROWS - 2); } }
 export const completo = S => !S.rect || (Math.abs(S.rect.dx - (S.rect.tx - S.rect.ax)) < .5 && Math.abs(S.rect.dy - (S.rect.ty - S.rect.ay)) < .5);
 
+export function mirar(S, x, y) { S.mira = { x, y, t: S.t }; }          // dónde está el dedo (los jefes más listos lo usan)
 function moverJefes(S, dt) {
-  const ia = IA[S.ia], c = cuadro(S);
+  const ia = IA[S.ia], vk = VEL[S.velk].k, c = cuadro(S);
+  const lejos = !c && ia.incansable && S.mira && S.t - S.mira.t < 3 ? S.mira : null;
   for (const b of S.jefes) {
-    const sp = b.v * ia.v;
+    const sp = b.v * vk;
     if (b.t !== 'rebote') {                                    // errante / cazador: giran de vez en cuando
       b.g -= dt;
       if (b.g <= 0) { b.g = .35 + rnd(S) * .9; const a = Math.atan2(b.vy, b.vx) + (rnd(S) - .5) * 2.2; b.vx = Math.cos(a); b.vy = Math.sin(a); }
-      const caza = b.t === 'cazador' ? ia.caza : ia.caza * .25;
-      if (c && caza > 0) {                                     // se orientan hacia el rectángulo que está creciendo
-        const tx = (c.x0 + c.x1 + 1) / 2 - b.x, ty = (c.y0 + c.y1 + 1) / 2 - b.y, l = Math.hypot(tx, ty) || 1, k = Math.min(1, caza * dt * 3);
-        b.vx += (tx / l - b.vx) * k; b.vy += (ty / l - b.vy) * k;
-      }
     }
+    let tg = null;                                             // persecución: hacia el cuadrado que estás creando (o, en Maestro, hacia tu dedo)
+    if (ia.giro > 0) {
+      if (c) tg = ia.precisa ? { x: cl(b.x, c.x0, c.x1 + 1), y: cl(b.y, c.y0, c.y1 + 1) } : { x: (c.x0 + c.x1 + 1) / 2, y: (c.y0 + c.y1 + 1) / 2 };
+      else tg = lejos;
+    }
+    if (tg) { const tx = tg.x - b.x, ty = tg.y - b.y, l = Math.hypot(tx, ty) || 1, k = Math.min(1, ia.giro * dt); b.vx += (tx / l - b.vx) * k; b.vy += (ty / l - b.vy) * k; }
     const l = Math.hypot(b.vx, b.vy) || 1; b.vx /= l; b.vy /= l;
     const nx = b.x + b.vx * sp * dt; let rebote = false;
     if (bloq(S.g, nx, b.y)) { b.vx = -b.vx; rebote = true; } else b.x = nx;
     const ny = b.y + b.vy * sp * dt;
     if (bloq(S.g, b.x, ny)) { b.vy = -b.vy; rebote = true; } else b.y = ny;
-    if (rebote && b.t === 'rebote') { const a = Math.atan2(b.vy, b.vx) + (rnd(S) - .5) * .22; b.vx = Math.cos(a); b.vy = Math.sin(a); }
+    if (rebote) { const a = Math.atan2(b.vy, b.vx) + (rnd(S) - .5) * (ia.rebote || (b.t === 'rebote' ? .22 : .1)); b.vx = Math.cos(a); b.vy = Math.sin(a); }
     if (!Number.isFinite(b.x + b.y + b.vx + b.vy)) { b.x = COLS / 2; b.y = ROWS / 2; b.vx = 1; b.vy = .7; }
     if (bloq(S.g, b.x, b.y)) { b.x = Math.floor(b.x) + .5; b.y = Math.floor(b.y) + .5; if (S.g[idx(Math.floor(b.x), Math.floor(b.y))]) recolocar(S, b); }
   }
@@ -132,13 +142,13 @@ export function soltar(S) {
   if (pct(S) >= S.obj) { S.est = S.perd === 0 ? 3 : S.perd <= 1 ? 2 : 1; S.puntos += S.vidas * 300 + S.est * 200; S.fase = 'meta'; res.ev.push('meta'); }
   return res;
 }
-export function clonar(S) { return { ...S, g: S.g.slice(), jefes: S.jefes.map(b => ({ ...b })), rect: S.rect ? { ...S.rect } : null }; }
+export function clonar(S) { return { ...S, mira: S.mira ? { ...S.mira } : null, g: S.g.slice(), jefes: S.jefes.map(b => ({ ...b })), rect: S.rect ? { ...S.rect } : null }; }
 
 /* ---------- guardado ---------- */
 const finito = v => typeof v === 'number' && Number.isFinite(v);
-export function serializar(S) { const o = { ...S, g: Array.from({ length: ROWS }, (_, y) => Array.from(S.g.subarray(y * COLS, y * COLS + COLS)).join('')), rect: null, rec: 0 }; if (o.fase === 'jugar') o.fase = 'pausa'; return o; }
+export function serializar(S) { const o = { ...S, g: Array.from({ length: ROWS }, (_, y) => Array.from(S.g.subarray(y * COLS, y * COLS + COLS)).join('')), rect: null, mira: null, rec: 0 }; if (o.fase === 'jugar') o.fase = 'pausa'; return o; }
 export function validar(d) {
-  if (!d || typeof d !== 'object' || d.v !== 1 || !Array.isArray(d.g) || d.g.length !== ROWS || !Object.hasOwn(IA, d.ia) || !Object.hasOwn(OBJ, d.objk) || !Object.hasOwn(TRAZO, d.trazo)) return null;
+  if (!d || typeof d !== 'object' || d.v !== 1 || !Array.isArray(d.g) || d.g.length !== ROWS || !Object.hasOwn(IA, d.ia) || !Object.hasOwn(OBJ, d.objk) || (d.velk !== undefined && !Object.hasOwn(VEL, d.velk)) || !Object.hasOwn(TRAZO, d.trazo)) return null;
   if (!Number.isInteger(d.nivel) || d.nivel < 1 || d.nivel > N_NIVELES || !['listo', 'jugar', 'pausa', 'fin', 'meta'].includes(d.fase)) return null;
   const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
   if (!ent(d.vidas, 0, 7) || !ent(d.vidas0, 3, 7) || !ent(d.perd, 0, 1e4) || !ent(d.puntos, 0, 1e9) || !ent(d.est || 0, 0, 3) || !ent(d.rs, -2147483648, 2147483647) || !finito(d.t) || !finito(d.inv)) return null;
@@ -148,7 +158,7 @@ export function validar(d) {
   if (!Array.isArray(d.jefes) || d.jefes.length !== def.j.length) return null;
   const jefes = [];
   for (const b of d.jefes) { if (!b || !finito(b.x) || !finito(b.y) || !finito(b.vx) || !finito(b.vy) || !finito(b.v) || !finito(b.g) || !['rebote', 'errante', 'cazador'].includes(b.t) || b.x < 1 || b.y < 1 || b.x > COLS - 1 || b.y > ROWS - 1 || g[idx(Math.floor(b.x), Math.floor(b.y))]) return null; jefes.push({ x: b.x, y: b.y, vx: b.vx, vy: b.vy, t: b.t, v: b.v, g: b.g }); }
-  return { v: 1, nivel: d.nivel, ia: d.ia, objk: d.objk, trazo: d.trazo, obj: objetivoDe(d.nivel, d.objk), vidas: d.vidas, vidas0: d.vidas0, perd: d.perd, g, jefes, rect: null, puntos: d.puntos, t: d.t, inv: 0, fase: d.fase === 'jugar' ? 'pausa' : d.fase, est: d.est || 0, rs: d.rs, rec: 0 };
+  return { v: 1, nivel: d.nivel, ia: d.ia, objk: d.objk, velk: d.velk || 'lenta', trazo: d.trazo, obj: objetivoDe(d.nivel, d.objk), vidas: d.vidas, vidas0: d.vidas0, perd: d.perd, g, jefes, rect: null, mira: null, puntos: d.puntos, t: d.t, inv: 0, fase: d.fase === 'jugar' ? 'pausa' : d.fase, est: d.est || 0, rs: d.rs, rec: 0 };
 }
 export function resumen(S) {
   const q = `Nivel ${S.nivel}`, p = Math.round(pct(S));
