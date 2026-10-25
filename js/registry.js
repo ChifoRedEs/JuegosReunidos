@@ -6,6 +6,7 @@ export const JUEGOS = [
   { id: 'sudoku',   v1: 'sudoku',   nombre: 'Sudoku',   icono: '🔢', color: '#2B6CB0', categoria: 'logica',  descripcion: '4 niveles por técnica, notas y reto del día.', cargar: () => import('./games/sudoku/index.js') },
   { id: 'nonogram', v1: 'nonogram', nombre: 'Nonogram', icono: '🖼️', color: '#F2B84B', categoria: 'logica',  descripcion: 'Pinta y descubre el dibujo. Reto del día.',       cargar: () => import('./games/nonogram/index.js') },
   { id: 'damas',    v1: 'damas',    nombre: 'Damas',    icono: '👑', color: '#D6453D', categoria: 'tablero', descripcion: '4 reglamentos, hasta el internacional 10×10.',    cargar: () => import('./games/damas/index.js') },
+  { id: 'domino', nombre: 'Dominó', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Clásico, bloqueo, de a cinco y por parejas. 2–4 jugadores, doble 6 o 9 y fichas personalizables.', cargar: () => import('./games/domino/index.js') },
   { id: 'tresenraya', nombre: '3 en raya', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: '4 tableros y series al mejor de 3 o 5.', cargar: () => import('./games/tresenraya/index.js') },
   { id: 'conecta4', nombre: 'Conecta 4', icono: '🔴', color: '#E5622B', categoria: 'tablero', descripcion: '4 tableros, hasta Conecta 5. Pista y marcador.', cargar: () => import('./games/conecta4/index.js') },
   { id: 'sopa', nombre: 'Sopa de letras', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: '11 temas, 3 niveles y reto del día.', cargar: () => import('./games/sopa/index.js') },
