@@ -58,6 +58,9 @@ export const GRUPOS = [
   { id: 'solitarios', nombre: 'Solitarios', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Klondike (siempre con solución y modo Vegas), Spider (104 cartas, de 1 a 4 palos) o Carta Blanca (FreeCell).', juegos: ['klondike', 'spider', 'freecell'] },
   { id: 'parchis-oca', nombre: 'Parchís y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Parchís y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
   { id: 'ajedrez-damas', nombre: 'Ajedrez y Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
+  { id: 'buscaminas-klotski', nombre: 'Buscaminas y Klotski', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Buscaminas (sin adivinar, reto del día) o Klotski (bloques deslizantes y números).', juegos: ['buscaminas', 'klotski'] },
+  { id: 'tresenraya-conecta4', nombre: '3 en raya y Conecta 4', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: 'Dos duelos de líneas: 3 en raya y Conecta 4, contra la CPU.', juegos: ['tresenraya', 'conecta4'] },
+  { id: 'domino-rummy', nombre: 'Dominó y Rummy', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Dos juegos de fichas: Dominó (varias modalidades) y Rummy de fichas.', juegos: ['domino', 'rummy'] },
   { id: 'poker', nombre: 'Poker & BlackJack', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em, Póker cubierto o BlackJack contra la banca.", juegos: ['holdem', 'pokercub', 'blackjack'] },
   { id: 'sopa-crucigramas', nombre: 'Sopa y Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopa', 'crucigrama'] },
 ];
