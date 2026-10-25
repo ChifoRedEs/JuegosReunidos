@@ -1,5 +1,6 @@
 // Rummy · mesa en 3D (Three.js): las jugadas se ven sobre un tapete con fichas con relieve (bisel y grosor reales).
 // Las fichas se deslizan al reorganizar la mesa. El atril sigue siendo HTML (se arrastra para ordenarlo).
+import { capaTextura } from '../../core/fichas.js';
 import { crearEscena, T, lienzo, textura } from '../../core/escena3d.js';
 import { BARAJAS, urlTapete } from '../../core/cartas.js';
 
@@ -12,7 +13,7 @@ const esComodin = id => id >= 104, color = id => (id % 52) / 13 | 0, numero = id
 export function crearRummy3D(cont) {
   const E = crearEscena(cont, { fov: 36, az: 0, pol: .6, polMin: .25, polMax: 1.2, radio: 3.8, margen: .5, objetivo: [0, 0, 0], distMin: 5, distMax: 22, sombraRadio: 8, sombraTam: 1536, sol: { pos: [-3, 11, 6], int: 2.1 }, hemi: { int: 1.7 }, sueloY: -.3, etiqueta: 'Mesa de Rummy en 3D' });
   const V = { alFicha: null, alJugada: null }, esc = E.escena;
-  let col = {}, texCache = new Map();
+  let col = {}, texCache = new Map(), estF = { tex: null, esc: 1 };
   const leer = el => { col = { r1: css(el, '--rm1', '#12A05C'), r2: css(el, '--rm2', '#0A6B3C'), fz: css(el, '--fz', '#FFF8E7'), fz2: css(el, '--fz2', '#EADFC4'), fb: css(el, '--fb', '#C9B88F'), k: [0, 1, 2, 3].map(i => css(el, '--k' + i, ['#E0243A', '#1F6BFF', '#F28C1B', '#1B2340'][i])) }; };
   leer(cont);
 
@@ -33,7 +34,7 @@ export function crearRummy3D(cont) {
   const texFicha = id => {
     const k = esComodin(id) ? 'J' : color(id) + '-' + numero(id);
     if (texCache.has(k)) return texCache.get(k);
-    const W = 160, H = 216, c = lienzo(W, H), x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, col.fz); g.addColorStop(1, col.fz2); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    const W = 160, H = 216, c = lienzo(W, H), x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, col.fz); g.addColorStop(1, col.fz2); x.fillStyle = g; x.fillRect(0, 0, W, H); capaTextura(x, 0, 0, W, H, estF.tex);
     x.strokeStyle = 'rgba(0,0,0,.10)'; x.lineWidth = 5; rr(x, 14, 14, W - 28, H - 28, 16); x.stroke();
     x.textAlign = 'center'; x.textBaseline = 'middle';
     if (esComodin(id)) { const gr = x.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#FF8FB1'); gr.addColorStop(.5, '#FFD34D'); gr.addColorStop(1, '#6FA8FF'); x.fillStyle = gr; x.font = `800 132px system-ui,sans-serif`; x.fillText('★', W / 2, H / 2 + 6); }
@@ -96,6 +97,11 @@ export function crearRummy3D(cont) {
     E.marcar();
   };
   let texTapete = null;
+  V.fichas = e => {                                                      // 🀫 Apariencia: textura y tamaño de las fichas
+    if (e.tex === estF.tex && e.esc === estF.esc) return; const nt = e.tex !== estF.tex; estF = { tex: e.tex, esc: e.esc };
+    if (nt) { for (const t of texCache.values()) t.dispose(); texCache = new Map(); for (const f of fichas.values()) { f.k = ''; f.mat.map = null; f.mat.needsUpdate = true; } }
+    E.marcar();
+  };
   V.recolor = () => {
     leer(cont); matTapete.color.set(col.r1); centro.material.color.set(col.r2); matLado.color.set(col.fb);
     if (texTapete) { texTapete.dispose(); texTapete = null; } matTapete.map = null; centro.visible = true;
@@ -113,7 +119,7 @@ export function crearRummy3D(cont) {
     for (const f of fichas.values()) {
       if (!f.vivo) continue; const c = f.c, t = f.t;
       if (Math.abs(t.x - c.x) + Math.abs(t.y - c.y) + Math.abs(t.z - c.z) + Math.abs(t.s - c.s) > .003) { c.x = lerp(c.x, t.x, .25); c.y = lerp(c.y, t.y, .25); c.z = lerp(c.z, t.z, .25); c.s = lerp(c.s, t.s, .25); mueve = true; } else Object.assign(c, t);
-      f.m.position.set(c.x, c.y, c.z); f.m.scale.setScalar(c.s);
+      f.m.position.set(c.x, c.y, c.z); f.m.scale.setScalar(c.s * estF.esc);
     }
     return mueve;
   };

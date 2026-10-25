@@ -91,3 +91,7 @@
 
 .axw .e3d{width:100%;margin:0}
 .axtab[hidden]{display:none}
+/* 🎨 Piezas · Tamaño y textura (el glifo se rellena con la textura recortada al texto) */
+.axtab .pz,.axghost .pz{scale:var(--fx-esc,1)}
+[data-ftex]:not([data-ftex="original"]) .pz{background-image:var(--fx-img),linear-gradient(var(--pzc),var(--pzc));background-size:var(--fx-bs,auto),100% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.pz.b{--pzc:var(--pzb)}.pz.n{--pzc:var(--pzn)}

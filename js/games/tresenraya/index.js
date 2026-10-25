@@ -1,5 +1,6 @@
 import { crearDuelo } from '../../core/duelo.js';
 import { grupoTablero, grupoFondo, grupoPersonaje, emojiDeValores } from '../../core/aspectos.js';
+import { gruposFichas, estilo } from '../../core/fichas.js';
 import { VARIANTES, estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML } from './reglas.js';
 
 let cel = [], tab = null, prevN = -1, vAct = null;
@@ -23,7 +24,10 @@ function montar(cont, ctx, v) {
 }
 function pintar(e, ctx, v) {
   if (!tab || v !== vAct) return;
-  const V = VARIANTES[v], n = V.n, linea = new Set(e.fin ? e.fin.linea : []), emo = emojiDeValores(ctx.valores());      // «Personajes»: tu marca es tu personaje
+  const V = VARIANTES[v], n = V.n, linea = new Set(e.fin ? e.fin.linea : []), emo = emojiDeValores(ctx.valores()), est = estilo(ctx.valores());
+  const raiz = tab.closest('.juego-tresenraya') || tab;      // 🎨 Fichas: color de cada marca (--tr-x / --tr-o) y tamaño
+  est.hex ? raiz.style.setProperty('--tr-x', est.hex) : raiz.style.removeProperty('--tr-x'); est.hex2 ? raiz.style.setProperty('--tr-o', est.hex2) : raiz.style.removeProperty('--tr-o');
+  raiz.style.setProperty('--fx-esc', est.esc);      // «Personajes»: tu marca es tu personaje
   if (prevN < 0) prevN = e.n;
   for (let i = 0; i < n * n; i++) {
     const val = e.b[i], b = cel[i], pj = emo && val && val === ctx.yo() ? emo : '', kk = val + pj, cambio = b.dataset.v !== kk;
@@ -45,6 +49,7 @@ const duelo = crearDuelo({
   chip: (n, vals = {}) => EMOJIS[vals.fichas] ? `<i class="ch em">${EMOJIS[vals.fichas][n - 1]}</i>` : `<i class="ch tr${n}">${n === 1 ? '✕' : '○'}</i>`,
   aspecto: [grupoFondo('#duTab'), grupoPersonaje('Personajes (tu marca)'), 
     grupoTablero(),
+    ...gruposFichas({ titulo: 'Marcas', icono: '❌', lados: ['✕', '○'], textura: false, formas: false }),
     { clave: 'fichas', titulo: 'Fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: '✕ ○ Clásicas' }, { id: 'animales', nombre: '🐱 🐶 Animales' }, { id: 'espacio', nombre: '🚀 👽 Espacio' }, { id: 'comida', nombre: '🍕 🍔 Comida' }, { id: 'deporte', nombre: '⚽ 🏀 Deporte' }] },
     { clave: 'colores', titulo: 'Colores de las fichas clásicas', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Azul / Rojo', sw: ['#2F6BFF', '#FF4757'] }, { id: 'bosque', nombre: 'Verde / Naranja', sw: ['#0FA971', '#FF8A00'] }, { id: 'fantasia', nombre: 'Violeta / Rosa', sw: ['#8B3DFF', '#FF3FA4'] }, { id: 'dorado', nombre: 'Negro / Oro', sw: ['#1B2340', '#E8A800'] }] },
   ],

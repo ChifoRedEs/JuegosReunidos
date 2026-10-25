@@ -4,6 +4,7 @@
 //   V.dado(valor|null, rodando, color) · V.recolor() (lee las variables --pz-* del contenedor) · V.camara(modo) · V.destruir()
 // Coordenadas del mundo: la rejilla 19×19 del tablero SVG, 1 casilla = 1 unidad, centro del tablero en (0,0).
 import { T, crearEscena, lienzo, textura, emojiTextura } from '../../core/escena3d.js';
+import { lienzoTextura } from '../../core/fichas.js';
 import { PC, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS } from './tablero.js';
 
 const mundo = v => v / 10 - 9.5;
@@ -121,7 +122,7 @@ export async function crearParchis3D(cont, o = {}) {
       let g = fichas.get(k);
       if (g && g.userData.emoji !== (p.emoji || '')) { const [x, z] = [g.position.x, g.position.z]; piezasG.remove(g); g = null; fichas.delete(k); p._x = x; p._z = z; }
       if (!g) { g = crearFicha(p); g.position.set(p._x ?? p.x, Y0, p._z ?? p.z); piezasG.add(g); fichas.set(k, g); }
-      Object.assign(g.userData, { tx: p.x, tz: p.z, ts: p.esc || 1, mov: !!p.mov });
+      Object.assign(g.userData, { tx: p.x, tz: p.z, ts0: p.esc || 1, ts: (p.esc || 1) * escF, mov: !!p.mov });
       const aro = g.getObjectByName('aro'); aro.visible = !!p.mov; aro.material.color.set(p.mov ? '#FFFFFF' : '#000');
     }
     for (const [k, g] of fichas) if (!vistas.has(k)) { piezasG.remove(g); fichas.delete(k); }
@@ -143,6 +144,15 @@ export async function crearParchis3D(cont, o = {}) {
       cs.turno.visible = tTurno === c; cs.turno.material.color.set(col[c] || '#fff');
       if (cs.etq !== inf.etq) { cs.etq = inf.etq; const x = cs.lc.getContext('2d'); x.clearRect(0, 0, 320, 72); x.fillStyle = col.tinta || '#17214A'; x.font = '800 40px Nunito, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(inf.etq || '', 160, 38, 300); cs.lt.needsUpdate = true; }
     }
+    E.marcar();
+  };
+  // ----- apariencia de las fichas: textura y tamaño (js/core/fichas.js) -----
+  let escF = 1, kF = '';
+  V.fichas = e => {
+    const k = (e.tex || '') + '|' + e.esc; if (k === kF) return; kF = k; escF = e.esc;
+    const mapa = e.tex ? textura(lienzoTextura('#FFFFFF', { tex: e.tex, forma: null }, 128)) : null;
+    for (const c of PC) { if (mFicha[c].map) mFicha[c].map.dispose(); mFicha[c].map = mapa; mFicha[c].needsUpdate = true; }
+    for (const g of fichas.values()) g.userData.ts = (g.userData.ts0 || 1) * escF;
     E.marcar();
   };
   // ----- colores -----

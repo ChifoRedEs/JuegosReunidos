@@ -1,6 +1,7 @@
 import { $, esc } from '../../core/dom.js';
 import { hacerOrdenable, ordenarMano } from '../../core/arrastrar.js';
 import * as R from './motor.js';
+import { gruposFichas, estilo, oscuro, claro, luz } from '../../core/fichas.js';
 import { grupoMesa } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, arr = null;
@@ -32,7 +33,9 @@ export async function mount(r, a) {
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     grupoMesa(),
     { clave: 'fichas', titulo: 'Fichas', def: 'marfil', opciones: [{ id: 'marfil', nombre: 'Marfil', sw: ['#FFF8E7'] }, { id: 'blanco', nombre: 'Blanco', sw: ['#FFFFFF'] }, { id: 'oscuro', nombre: 'Oscuras', sw: ['#26304F'] }] },
-  ], () => { if (S && $('#rmMesa')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else { if (V3) V3.recolor(); pintar(); } } });
+    ...gruposFichas({ titulo: 'Fichas · personalizar', icono: '🀫', formas: false, tamano: ['pequeno', 'normal'] }),
+  ], () => { aplicarFichas(); if (S && $('#rmMesa')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else { if (V3) V3.recolor(); pintar(); } } });
+  await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./rummy.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [1, 2, 3].includes(c0.rivales) && R.NIVEL[c0.nivel]) cfg = { ...c0 };
   ord = { modo: MODOS.includes(api.pref('orden', 'color')) ? api.pref('orden', 'color') : 'color', ids: [] };
@@ -78,6 +81,16 @@ function armar() {
   arr = hacerOrdenable($('#rmAtril'), { sel: '.rmf', clave: el => +el.dataset.id, alSoltar: ids => { ord = { modo: 'libre', ids }; pintar(); guardar(); } });
   if (modo3d) iniciar3D();
 }
+// 🀫 Fichas: color del cuerpo (--fz/--fz2/--fb; si es oscuro se aclaran los números), tamaño y textura (js/core/fichas.js)
+function aplicarFichas() {
+  const r = root; if (!r) return; const e = estilo(asp.valores), P = ['--fz', '--fz2', '--fb', '--k0', '--k1', '--k2', '--k3'];
+  if (!e.hex) { for (const n of P) r.style.removeProperty(n); } else {
+    r.style.setProperty('--fz', claro(e.hex, .12)); r.style.setProperty('--fz2', oscuro(e.hex, .12)); r.style.setProperty('--fb', oscuro(e.hex, .38));
+    const K = luz(e.hex) < .6 ? ['#FFC2C9', '#A9CCFF', '#FFD9A0', '#FFFFFF'] : null;       // fichas oscuras o intensas: números claros para que se lean
+    ['--k0', '--k1', '--k2', '--k3'].forEach((n, i) => K ? r.style.setProperty(n, K[i]) : r.style.removeProperty(n));
+  }
+  r.style.setProperty('--fx-esc', e.esc);
+}
 function cerrar3D() { tok3++; if (V3) { V3.destruir(); V3 = null; } }
 async function iniciar3D() {
   const t = ++tok3, host = $('#rmMesa'); if (!host) return;
@@ -100,7 +113,7 @@ function empezarTurno() { W = S && S.fase === 'jugar' && S.turno === 0 ? { mesa:
 const cambiado = () => W && W.mano.length !== S.jug[0].fichas.length;
 
 /* ---------- pintado ---------- */
-const fichaHTML = (id, extra = '') => `<button type="button" class="rmf ${R.esComodin(id) ? 'jk' : 'c' + R.color(id)} ${extra}" data-id="${id}" aria-label="${R.esComodin(id) ? 'Comodín' : `${R.numero(id)} ${R.COLORES[R.color(id)]}`}">${R.esComodin(id) ? '★' : R.numero(id)}</button>`;
+const fichaHTML = (id, extra = '') => `<button type="button" class="rmf fx ${R.esComodin(id) ? 'jk' : 'c' + R.color(id)} ${extra}" data-id="${id}" aria-label="${R.esComodin(id) ? 'Comodín' : `${R.numero(id)} ${R.COLORES[R.color(id)]}`}">${R.esComodin(id) ? '★' : R.numero(id)}</button>`;
 const ordenAtril = m => ordenarMano(m, ord, { palo: x => (R.esComodin(x) ? 9 : R.color(x)), num: x => (R.esComodin(x) ? 99 : R.numero(x)) });
 function pintar() {
   if (!S || !$('#rmMesa')) return;
@@ -109,6 +122,7 @@ function pintar() {
   $('#rmRiv').innerHTML = S.jug.map((j, k) => k === 0 ? '' : `<div class="rmriv ${S.turno === k && S.fase === 'jugar' ? 'turno' : ''}"><b>${esc(j.nombre)}</b><span>${j.fichas.length} 🀫</span><small>${j.bajado ? '✓ bajado' : 'sin bajar'}</small></div>`).join('') + `<div class="rmriv bolsa"><b>Bolsa</b><span>${S.bolsa.length}</span><small>fichas</small></div>`;
   // mesa
   const editable = id => miTurno && (yo.bajado || W.inicio.has(id));
+  aplicarFichas(); if (modo3d && V3) V3.fichas(estilo(asp.valores));
   if (modo3d) { if (V3) V3.pintar({ mesa, validas: mesa.map(R.valida), sel, recientes, mias: W ? W.inicio : new Set(), editable, conMas: !!(miTurno && sel.size) }); }
   else $('#rmMesa').innerHTML = mesa.length ? mesa.map((s, k) => {
     const ok = R.valida(s);

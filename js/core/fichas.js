@@ -17,10 +17,10 @@ export const FORMAS = { original: 'Original', redonda: 'Esquinas redondeadas', c
 export const TAMANOS = { pequeno: ['Pequeño', .82], normal: ['Normal', 1], grande: ['Grande', 1.14] };
 
 /* ---------- grupos de 🎨 Apariencia ---------- */
-// o: { clave:'f', titulo:'Cajas', icono:'📦', formas:true|false|[ids], tamano:true|false|[ids], textura:true|false, color:true|false }
+// o: { clave:'f', titulo:'Cajas', icono:'📦', lados:['Rojo','Amarillo'] (un grupo de color por bando: fcolor, fcolor2…), formas:true|false|[ids], tamano:true|false|[ids], textura:true|false, color:true|false }
 export function gruposFichas(o = {}) {
   const k = o.clave || 'f', t = o.titulo || 'Fichas', out = [];
-  if (o.color !== false) out.push({ clave: k + 'color', titulo: `${t} · Color`, icono: o.icono || '🎨', def: 'original', opciones: [{ id: 'original', nombre: 'Original', emoji: '↩️' }, ...COLORES.map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] }))] });
+  if (o.color !== false) (o.lados || [null]).forEach((lado, i) => out.push({ clave: k + 'color' + (i ? i + 1 : ''), titulo: `${t} · Color${lado ? ` (${lado})` : ''}`, icono: o.icono || '🎨', def: 'original', opciones: [{ id: 'original', nombre: 'Original', emoji: '↩️' }, ...COLORES.map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] }))] }));
   if (o.textura !== false) out.push({ clave: k + 'tex', titulo: `${t} · Textura`, icono: '✨', def: 'original', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) });
   if (o.formas !== false) { const ids = Array.isArray(o.formas) ? o.formas : Object.keys(FORMAS); out.push({ clave: k + 'forma', titulo: `${t} · Forma`, icono: '📐', def: 'original', opciones: ids.map(id => ({ id, nombre: FORMAS[id] })) }); }
   if (o.tamano !== false) out.push({ clave: k + 'tam', titulo: `${t} · Tamaño`, icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).filter(([id]) => !Array.isArray(o.tamano) || o.tamano.includes(id)).map(([id, [nombre]]) => ({ id, nombre })) });
@@ -30,7 +30,8 @@ export function gruposFichas(o = {}) {
 export function estilo(v = {}, k = 'f') {
   const c = COLORES.find(x => x.id === v[k + 'color']), tex = TEXTURAS[v[k + 'tex']] && v[k + 'tex'] !== 'original' ? v[k + 'tex'] : null,
     forma = FORMAS[v[k + 'forma']] && v[k + 'forma'] !== 'original' ? v[k + 'forma'] : null, esc = (TAMANOS[v[k + 'tam']] || TAMANOS.normal)[1];
-  return { hex: c ? c.hex : null, tex, forma, esc, hay: !!(c || tex || forma || esc !== 1), clave: [c && c.id, tex, forma, esc].join('|') };
+  const c2 = COLORES.find(x => x.id === v[k + 'color2']), c3 = COLORES.find(x => x.id === v[k + 'color3']), c4 = COLORES.find(x => x.id === v[k + 'color4']);
+  return { hex: c ? c.hex : null, hex2: c2 ? c2.hex : null, hex3: c3 ? c3.hex : null, hex4: c4 ? c4.hex : null, tex, forma, esc, hay: !!(c || c2 || c3 || c4 || tex || forma || esc !== 1), clave: [c && c.id, c2 && c2.id, c3 && c3.id, c4 && c4.id, tex, forma, esc].join('|') };
 }
 
 /* ---------- color ---------- */

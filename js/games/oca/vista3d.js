@@ -1,6 +1,7 @@
 // Vista 3D del Juego de la Oca (Three.js): tablero en espiral 8×8 con casillas en relieve y fichas con forma de peón.
 //   const V = await crearOca3D(contenedor, { espiral, casillas })   (espiral[n] = [fila, col]; casillas[n] = { tipo, ico, nombre })
 //   V.pintar({ fichas: [{ j, color, f, c, dx, dz, emoji, turno, mueve }] }) · V.recolor() (lee las variables --o-* del contenedor) · V.camara(modo) · V.destruir()
+import { lienzoTextura } from '../../core/fichas.js';
 import { T, crearEscena, lienzo, textura, emojiTextura, EMOJI_FUENTE } from '../../core/escena3d.js';
 
 const PERFIL = [[0, 0], [.38, 0], [.4, .05], [.32, .13], [.22, .28], [.13, .46], [.21, .5], [.19, .56], [.1, .6], [0, .6]];
@@ -31,7 +32,14 @@ export async function crearOca3D(cont, o) {
   };
   // ----- fichas -----
   const gPeon = new T.LatheGeometry(PERFIL.map(([r, y]) => new T.Vector2(r, y)), 24), piezas = new T.Group(); E.escena.add(piezas);
-  let mapa = new Map();
+  let mapa = new Map(), estF = { tex: null, esc: 1 }, mapaF = null;
+  const matsF = () => { const r = []; for (const g of mapa.values()) g.traverse(o => { if (o.material && o.material.isMeshStandardMaterial && !r.includes(o.material)) r.push(o.material); }); return r; };
+  V.fichas = e => {                                                      // 🪿 Apariencia: textura y tamaño de las fichas
+    if (e.tex === estF.tex && e.esc === estF.esc) return; const nt = e.tex !== estF.tex; estF = { tex: e.tex, esc: e.esc };
+    if (nt) { if (mapaF) mapaF.dispose(); mapaF = e.tex ? textura(lienzoTextura('#FFFFFF', { tex: e.tex, forma: null }, 128)) : null; for (const m of matsF()) { m.map = mapaF; m.needsUpdate = true; } }
+    for (const g of mapa.values()) g.scale.setScalar(e.esc);
+    E.marcar();
+  };
   V.pintar = S => {
     const vistas = new Set();
     for (const p of S.fichas) {
@@ -47,6 +55,7 @@ export async function crearOca3D(cont, o) {
           const cu = new T.Mesh(gPeon, new T.MeshStandardMaterial({ color: p.color, roughness: .3, metalness: .08 })); cu.castShadow = true; cu.scale.setScalar(.95); g.add(cu);
           const cabeza = new T.Mesh(new T.SphereGeometry(.2, 20, 14), cu.material); cabeza.position.y = .72; cabeza.castShadow = true; g.add(cabeza);
         }
+        g.scale.setScalar(estF.esc); if (mapaF) g.traverse(o => { if (o.material && o.material.isMeshStandardMaterial) o.material.map = mapaF; });
         g.position.set(tx, Y, tz); g.userData = { emoji: p.emoji || '', color: p.color }; piezas.add(g); mapa.set(p.j, g);
       }
       Object.assign(g.userData, { tx, tz, turno: !!p.turno, mueve: !!p.mueve });

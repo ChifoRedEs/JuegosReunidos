@@ -40,3 +40,4 @@
 .octirar[hidden]{display:none}
 .oclog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .oclog li:first-child{color:var(--ink);font-weight:800}
+[data-ftex]:not([data-ftex="original"]) .ocf{background-color:var(--c)}

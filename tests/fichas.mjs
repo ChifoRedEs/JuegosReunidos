@@ -8,6 +8,10 @@ t('gruposFichas: claves, valores por defecto y opciones', () => {
   aser(F.gruposFichas({ formas: false, tamano: false }).length === 2, 'sin forma ni tamaño'); aser(F.gruposFichas({ tamano: ['pequeno', 'normal'] }).at(-1).opciones.length === 2, 'tamaño limitado');
   aser(F.gruposFichas({ clave: 'x' })[0].clave === 'xcolor', 'prefijo');
 });
+t('lados: un grupo de color por bando', () => {
+  const g = F.gruposFichas({ titulo: 'Fichas', lados: ['Rojo', 'Amarillo'], formas: false }); aser(g.map(x => x.clave).join() === 'fcolor,fcolor2,ftex,ftam', 'claves ' + g.map(x => x.clave));
+  const e = F.estilo({ fcolor: 'rojo-m', fcolor2: 'azul-m' }); aser(e.hex && e.hex2 && e.hex !== e.hex2 && e.hex3 === null, 'hex y hex2');
+});
 t('estilo: original por defecto y lectura de lo elegido', () => {
   const e0 = F.estilo({}); aser(!e0.hay && e0.hex === null && e0.tex === null && e0.forma === null && e0.esc === 1, 'original');
   const e = F.estilo({ fcolor: 'rojo-m', ftex: 'marmol', fforma: 'pildora', ftam: 'pequeno' }); aser(e.hay && /^#/.test(e.hex) && e.tex === 'marmol' && e.forma === 'pildora' && e.esc < 1, 'elegido');

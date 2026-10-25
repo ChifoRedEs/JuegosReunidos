@@ -3,6 +3,7 @@
 // crearVista(contenedor, { estilo, grupos: {clave: {color}}, titulo, subtitulo, iconos: {impuesto, suerte, imprevisto} })
 // Estado esperado: G = { jug: [{color, ficha, pos, fuera}], c: [{tipo: 'destino'|'aero'|'serv'|'impuesto'|'suerte'|'imprevisto'|'esquina', g, nombre, precio, importe, ico, corto, dueno, nivel, hip}] }
 import * as T from '../vendor/three.module.min.js';
+import { lienzoTextura } from './fichas.js';
 
 // ---------- geometría del tablero: 11×11 casillas, esquinas de 1,5 y 9 casillas de 1 por lado ----------
 const CE = 1.5, MITAD = 6;                       // tamaño de esquina y semilado del tablero (12 en total)
@@ -220,14 +221,21 @@ export async function crearVista(cont, opciones = {}) {
   }
 
   // ---------- fichas ----------
-  const fichas = [];
+  const fichas = []; let estF = { tex: null, esc: 1 }, mapaF = null;
+  V.fichas = e => {                                                      // 🎩 Apariencia: textura y tamaño de las fichas (el color llega en p.color)
+    if (e.tex === estF.tex && e.esc === estF.esc) return; const nt = e.tex !== estF.tex; estF = { tex: e.tex, esc: e.esc };
+    if (nt) { if (mapaF) mapaF.dispose(); mapaF = e.tex ? textura(lienzoTextura('#FFFFFF', { tex: e.tex, forma: null }, 128)) : null; for (const f of fichas) if (f) { f.disco.material.map = mapaF; f.disco.material.needsUpdate = true; } }
+    for (const f of fichas) if (f) f.g.scale.setScalar(e.esc);
+    marcar();
+  };
   const texEmoji = (e) => { const c = lienzo(128, 128), x = c.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(e, 64, 70); return textura(c); };
   const geoDisco = new T.CylinderGeometry(.17, .2, .07, 20), geoPie = new T.CylinderGeometry(.045, .07, .3, 8).translate(0, .15, 0);
   function crearFicha(p, i) {
     const g = new T.Group();
     const disco = new T.Mesh(geoDisco, new T.MeshLambertMaterial({ color: p.color })); disco.position.y = .035; disco.castShadow = true; g.add(disco);
     const sp = new T.Sprite(new T.SpriteMaterial({ map: texEmoji(p.ficha), transparent: true, depthWrite: false })); sp.scale.set(.62, .62, 1); sp.position.y = .4; g.add(sp);
-    escena.add(g); fichas[i] = { g, sp, pos: p.pos, x: 0, z: 0, ficha: p.ficha };
+    g.scale.setScalar(estF.esc); if (mapaF) disco.material.map = mapaF;
+    escena.add(g); fichas[i] = { g, sp, disco, pos: p.pos, x: 0, z: 0, ficha: p.ficha };
   }
   // posición de una ficha dentro de su casilla (varias fichas en la misma casilla se reparten)
   function destinoFicha(i, pos, G) {
@@ -335,7 +343,7 @@ export async function crearVista(cont, opciones = {}) {
     });
     G.jug.forEach((p, i) => {
       if (!fichas[i]) return; const f = fichas[i];
-      f.g.visible = !p.fuera;
+      f.g.visible = !p.fuera; if (f.disco.material.color.getStyle() !== p.color && !f.disco.material.color.equals(new T.Color(p.color))) f.disco.material.color.set(p.color);
       if (f.ficha !== p.ficha) { f.ficha = p.ficha; f.sp.material.map.dispose(); f.sp.material.map = texEmoji(p.ficha); f.sp.material.needsUpdate = true; }
       if (forzar || (f.pos !== p.pos && !f.anim)) { const d = destinoFicha(i, p.pos, G); f.g.position.set(d.x, .08, d.z); f.pos = p.pos; }
     });

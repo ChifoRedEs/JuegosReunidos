@@ -25,3 +25,5 @@
 .tc.p{box-shadow:inset 0 0 0 4px var(--ok);animation:pul 1s ease-in-out infinite}
 @keyframes pul{50%{background:var(--tb-soft)}}
 .trb.fin .tc:not(.g) .mk,.trb.fin .tc:not(.g) .em{opacity:.5}
+/* 🎨 Marcas · Tamaño (--fx-esc lo pone index.js) */
+.mk,.tc .em{scale:var(--fx-esc,1)}

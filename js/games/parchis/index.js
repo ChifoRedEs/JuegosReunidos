@@ -1,6 +1,7 @@
 import { $, esc, rnd } from '../../core/dom.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
 import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, mejorJugada, fichasDe, equipo, nombreEquipo, COMPANERO } from './reglas.js';
+import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 const VEL = { rapida: .5, normal: 1, lenta: 1.7 };
@@ -56,18 +57,21 @@ const DEFS_ASPECTO = [
   { clave: 'tablero', titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
   { clave: 'colores', titulo: 'Colores de los jugadores', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicos', sw: ['#FFC21A', '#2F6BFF', '#FF4757', '#0FB56A'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#FFD76A', '#7FA8FF', '#FF8FA0', '#7FDDA8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FFE600', '#00C8FF', '#FF2E88', '#39E614'] }, { id: 'accesible', nombre: 'Daltonismo', sw: ['#F0E442', '#0072B2', '#D55E00', '#009E73'] }] },
   { clave: 'fichas', titulo: 'Forma de las fichas', def: 'canica', opciones: [{ id: 'canica', nombre: '● Canica' }, { id: 'peon', nombre: '♟ Peón' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }] },
+  ...gruposFichas({ titulo: 'Color, textura y tamaño', icono: '🎲', lados: ['Amarillo', 'Azul', 'Rojo', 'Verde'], formas: false }),
   { clave: 'zoom', titulo: 'Tamaño del tablero (vista 2D, se desplaza solo)', def: '1.4', opciones: [{ id: '1', nombre: 'Todo' }, { id: '1.4', nombre: 'Grande' }, { id: '1.8', nombre: 'Muy grande' }] },
 ];
 export async function mount(root, a) {
   api = a; rootEl = root; rodando = false; ultFoco = ''; forzar2d = false; modo3d = false;
   try { const b3 = await import('../../core/escena3d.js'); hay3d = b3.hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto(DEFS_ASPECTO, () => {
+    aplicarFichas();
     if (modo === 'setup' || !P) { if (rootEl) rSetup(); return; }
     if (modo3d !== quiere3D()) { rJuego(); ultFoco = ''; pintarJuego(); return; }
     if (modo3d) { if (V3) V3.recolor(); ultFoco = ''; pintarJuego(); return; }
     const t = $('#pzTab'); if (t) t.style.width = zoom() * 100 + '%';
     ultFoco = ''; pintarJuego();
   });
+  await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./parchis.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && PC.every(c => ['h', 'c', null].includes(c0[c] ?? null)) && PC.filter(c => c0[c]).length >= 2) cfgSetup = { am: c0.am ?? null, az: c0.az ?? null, ro: c0.ro ?? null, ve: c0.ve ?? null };
@@ -219,6 +223,7 @@ function tocarPieza(c, i) { if (!humanoMueve()) return; const m = P.moves.find(m
 function tocarDest(to) { if (!humanoMueve()) return; const m = P.moves.find(m => m.to === +to); if (m) jugarMov(m); }
 function pintar3D() {
   if (!V3 || !P) return;
+  V3.fichas(estilo(asp.valores));
   const cur = P.phase !== 'over' ? actual(P) : null, human = !!cur && humanoMueve(), emo = emojiPersonaje(asp);
   ptsMov = [];
   const mv = new Set(human ? P.moves.map(m => m.c + m.i) : []), dest = [], vistos = new Set();
@@ -245,6 +250,7 @@ function pintarDado(v, c, roda) {
 }
 function pintarJuego() {
   if (modo !== 'juego' || !P || !$('#pzTab')) return;
+  aplicarFichas();
   if (!P.anim) { if (modo3d) pintar3D(); else $('#pzTab').innerHTML = pBoard(); }
   const over = P.phase === 'over', c = over ? P.winner : actual(P), who = nombre(P, c) + (esCPU(P, c) ? ' (CPU)' : '');
   const humano = !over && !esCPU(P, c);
@@ -267,7 +273,14 @@ function pintarJuego() {
 /* ---------- tablero SVG ---------- */
 const posVis = (c, i) => (P.ov && P.ov[c + ',' + i] !== undefined ? P.ov[c + ',' + i] : P.pieces[c][i]);
 const estrellaPts = (x, y, R, r) => Array.from({ length: 10 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? r : R; return (x + Math.cos(a) * q).toFixed(2) + ',' + (y + Math.sin(a) * q).toFixed(2); }).join(' ');
+// 🎲 Fichas: color de cada jugador (variables --pz-am/az/ro/ve), tamaño (2D y 3D) y textura (3D)
+const ESC_FX = () => estilo(asp.valores).esc;
+function aplicarFichas() {
+  const r = rootEl; if (!r || !asp) return; const e = estilo(asp.valores);
+  [['am', e.hex], ['az', e.hex2], ['ro', e.hex3], ['ve', e.hex4]].forEach(([c, h]) => h ? r.style.setProperty('--pz-' + c, h) : r.style.removeProperty('--pz-' + c));
+}
 function ficha(f, c, x, y, r) {
+  r *= ESC_FX();
   const col = `style="fill:var(--pz-${c})"`, st = 'stroke="rgba(0,0,0,.55)" stroke-width=".8" stroke-linejoin="round"';
   const emo = emojiPersonaje(asp);     // «Personajes»: tus fichas (las de los jugadores humanos) llevan el emoji sobre su color
   if (emo && P && !esCPU(P, c)) return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/><text x="${x}" y="${y + r * .04}" font-size="${(r * 1.5).toFixed(2)}" text-anchor="middle" dominant-baseline="central" style="pointer-events:none">${emo}</text>`;

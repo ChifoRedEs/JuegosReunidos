@@ -1,6 +1,7 @@
 // Hotel · reglas del juego de mesa «Hotel» (Milton Bradley): compra terrenos, pide permisos de obras, levanta hoteles por fases,
 // abre entradas en el Ayuntamiento y cobra las noches de los rivales. Gana el último jugador en pie. Tablero 3D (Three.js) con respaldo SVG.
 import { $, esc, esperar } from '../../core/dom.js';
+import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, EXTRA_LEYENDA, TIPO, LADOS } from './datos.js';
 import * as M from './motor.js';
@@ -30,8 +31,9 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; bloqueado = false; V = null; sel = null; plan = {}; forzar2d = false; modo3d = false; ses++;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   if (!vivo) return;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), grupoTablero()],
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), grupoTablero(), ...gruposFichas({ titulo: 'Coches de los jugadores', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
     () => { if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
+  await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./hotel.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', nivel: [1, 2, 3].includes(c0.nivel) ? c0.nivel : 2, jug: c0.jug.map(([n, t], i) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
@@ -61,7 +63,7 @@ function setup() {
   S = null; cerrarVista(); sel = null; plan = {};
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra los terrenos junto al camino, pide <b>permisos de obras</b> y levanta tus hoteles fase a fase. Abre <b>entradas</b> al pasar por el Ayuntamiento: cada vez que un rival cae en una, te paga las noches. Gana el último jugador que no se arruine${cfg.limite ? ` (o quien tenga más patrimonio tras ${cfg.limite} rondas)` : ''}.</p>
-    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${COLORES_JUGADOR[i]}"><span class="htfichab" aria-hidden="true">${COCHES[i]}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="htfichab" aria-hidden="true">${COCHES[i]}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [40, '40 rondas'], [80, '80 rondas']].map(([v, l]) => `<button class="btn ${cfg.limite === v ? 'on' : ''}" data-limite="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel de la CPU</span><div class="seg">${[1, 2, 3].map(k => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-nivel="${k}">${NIVELES[k]}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
@@ -111,19 +113,23 @@ async function iniciarVista() {
 const txtFase = {
   tirar: 'Tira el dado', ayto: 'Ayuntamiento: puedes comprar entradas', compra: 'Casilla de compra', obras: 'Permiso de obras', entLibre: '¡Entrada libre!', faseLibre: '¡Construye una fase gratis!', deuda: 'Deuda: hay que vender', subasta: 'Subasta', fin: 'Fin de la partida',
 };
+// 🚗 Coches: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
+const cj = c => { const e = estilo(asp.valores), k = COLORES_JUGADOR.indexOf(c); return [e.hex, e.hex2, e.hex3, e.hex4][k] || c; };
+const estadoV = () => ({ ...S, jug: S.jug.map(p => ({ ...p, color: cj(p.color) })) });
+const pintarV = () => { V.fichas(estilo(asp.valores)); V.pintar(estadoV()); };
 function pintar() {
   if (!S || !$('#htJug')) return;
   const j = M.actor(S), tj = S.turno;
   if ((S.fase === 'ayto' || S.fase === 'entLibre') && !(sel && sel.h) && !S.jug[j].cpu) { const hs = [...new Set(M.legales(S).entradas.map(o => o.h))]; if (hs.length === 1) sel = { h: hs[0] }; }
-  $('#htJug').innerHTML = S.jug.map((p, i) => `<div class="htj ${i === tj && S.fase !== 'fin' ? 'turno' : ''} ${p.vivo ? '' : 'fuera'} ${i === S.ganador ? 'gana' : ''}" style="--c:${p.color}" data-j="${i}"><span class="htji">${p.coche}</span><b>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</b><span class="htdin">${eur(p.dinero)}</span>
+  $('#htJug').innerHTML = S.jug.map((p, i) => `<div class="htj ${i === tj && S.fase !== 'fin' ? 'turno' : ''} ${p.vivo ? '' : 'fuera'} ${i === S.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="htji">${p.coche}</span><b>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</b><span class="htdin">${eur(p.dinero)}</span>
     <small>${p.vivo ? M.titulos(S, i).map(h => `${HOTELES[h].nombre} ${estrellas(h)}`).join(' · ') || 'Sin hoteles' : 'Eliminado'}</small>
     <span class="htchips">${M.titulos(S, i).map(h => `<i style="background:${HOTELES[h].color}" title="${HOTELES[h].nombre}"></i>`).join('')}</span></div>`).join('');
   const p = S.jug[tj];
   $('#htTurno').innerHTML = S.fase === 'fin' ? `🏆 <b>${esc(S.jug[S.ganador].nombre)}</b> gana la partida<br><small>${esc(S.motivo)}</small>`
-    : `<span style="color:${p.color}">${p.coche} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
+    : `<span style="color:${cj(p.color)}">${p.coche} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
   $('#htAcc').innerHTML = accionesHTML(j);
   const L = S.log.slice(-60).reverse(); $('#htLog').innerHTML = L.map(t => `<li>${esc(t)}</li>`).join(''); const m = $('#htMsg'); if (m && S.log.length) m.textContent = S.log[S.log.length - 1];
-  if (V) { V.pintar(S); V.resaltar(resaltados()); }
+  if (V) { pintarV(); V.resaltar(resaltados()); }
 }
 function resaltados() {
   if (S.fase === 'fin' || bloqueado) return {};
@@ -183,7 +189,7 @@ async function animar(evs) {
       case 'paga': flash(e.j, '−' + eur(e.cant), 'neg'); if (e.a >= 0) flash(e.a, '+' + eur(e.cant), 'pos'); api.sonido('click'); await pausa(v.paso * 3); break;
       case 'permiso': api.sonido(e.cara === 'rojo' ? 'error' : 'ok'); aviso(`Dado de permiso: ${{ verde: '🟢 concedido', rojo: '🔴 DENEGADO', H: '🅷 concedido y GRATIS', x2: '✖️2 concedido a doble precio' }[e.cara]}`); await pausa(v.paso * 6); break;
       case 'estancia': aviso(`${S.jug[e.j].nombre} se aloja ${e.noches} noche${e.noches > 1 ? 's' : ''} en ${HOTELES[e.h].nombre}: ${eur(e.coste)}`); await pausa(v.paso * 4); break;
-      case 'compra': case 'obra': case 'inst': case 'entrada': case 'vendido': api.sonido('ok'); if (V) V.pintar(S); await pausa(v.paso * 3); break;
+      case 'compra': case 'obra': case 'inst': case 'entrada': case 'vendido': api.sonido('ok'); if (V) pintarV(); await pausa(v.paso * 3); break;
       case 'demolido': case 'quiebra': api.sonido('perder'); await pausa(v.paso * 4); break;
       case 'extra': aviso('¡Un 6! Vuelve a tirar.'); break;
       case 'fin': api.sonido('ganar'); break;

@@ -1,5 +1,6 @@
 import { $, esc } from '../../core/dom.js';
 import * as F from './motor.js';
+import { gruposFichas, estilo, oscuro } from '../../core/fichas.js';
 import { grupoFondo } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, onKey = null;
@@ -32,7 +33,9 @@ export async function mount(r, a) {
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#flCuerpo'), 
     { clave: 'mar', titulo: 'Color del mar', def: 'oceano', opciones: [{ id: 'oceano', nombre: 'Océano', sw: ['#2F80ED', '#1B4FA8'] }, { id: 'tropical', nombre: 'Tropical', sw: ['#16C1C8', '#0B8A9A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3A78', '#141C40'] }, { id: 'papel', nombre: 'Papel', sw: ['#EEF2FB', '#9DB0D8'] }] },
     { clave: 'barcos', titulo: 'Color de los barcos', def: 'gris', opciones: [{ id: 'gris', nombre: 'Gris naval', sw: ['#6B7A90'] }, { id: 'verde', nombre: 'Verde militar', sw: ['#5F7A3A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#F07B22'] }] },
-  ], () => { if (!S) return; if (quiere3D() && !V3) iniciar3D(); else if (V3 && !quiere3D()) cerrar3D(); else if (V3) V3.recolor(); pintar(); });
+    ...gruposFichas({ titulo: 'Barcos', icono: '🚢', formas: false, tamano: ['pequeno', 'normal'] }),
+  ], () => { aplicarFichas(); if (!S) return; if (quiere3D() && !V3) iniciar3D(); else if (V3 && !quiere3D()) cerrar3D(); else if (V3) V3.recolor(); pintar(); });
+  await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./flota.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && ['cpu', 'dos'].includes(c0.modo) && F.NIVEL[c0.nivel] && F.FLOTAS[c0.flota]) cfg = { ...cfg, ...c0, tocar: !!c0.tocar, repetir: c0.repetir !== false };
@@ -89,7 +92,7 @@ function datos3D(tipo, p, opts = {}) {
 }
 function adoptar3D(tipo, p, opts) {
   const ph = $('#fl3dph'); if (!ph || !hostEl) return;
-  ph.replaceWith(hostEl); V3.recolor(); V3.pintar(datos3D(tipo, p, opts)); V3.E.redimensionar(); V3.E.marcar();
+  ph.replaceWith(hostEl); V3.recolor(); V3.fichas(estilo(asp.valores)); V3.pintar(datos3D(tipo, p, opts)); V3.E.redimensionar(); V3.E.marcar();
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
@@ -111,7 +114,7 @@ function tablero(id, p, tipo, opts = {}) {
     for (let c = 0; c < n; c++) {
       const i = f * n + c, t = tiros[i], b = enBarco.get(i);
       const cls = ['cel'];
-      if (b) { cls.push('barco', b.v ? 'v' : 'h'); if (b.j === 0) cls.push('ini'); if (b.j === b.len - 1) cls.push('fin'); if (b.len === 1) cls.push('uno'); if (opts.marcado === b.k) cls.push('marcado'); if (tipo === 'rival') cls.push('revelado'); }
+      if (b) { cls.push('barco', 'fxb', b.v ? 'v' : 'h'); if (b.j === 0) cls.push('ini'); if (b.j === b.len - 1) cls.push('fin'); if (b.len === 1) cls.push('uno'); if (opts.marcado === b.k) cls.push('marcado'); if (tipo === 'rival') cls.push('revelado'); }
       cls.push(['', 'agua', 'tocado', 'hundido', 'deducida'][t]);
       if (i === ult) cls.push('ult'); if (i === pista && tipo === 'rival') cls.push('pista');
       if (efecto && efecto.i === i && efecto.tablero === id) cls.push('fx-' + efecto.res);
@@ -124,7 +127,14 @@ function tablero(id, p, tipo, opts = {}) {
 const listaBarcos = (p, de) => `<div class="flrest">${S.barcos[de].map(b => { const hund = S.fase === 'colocar' ? false : F.hundido(S, de, b); return `<span class="${hund ? 'hund' : ''}" title="${b.nombre}">${'<i></i>'.repeat(b.len)}</span>`; }).join('')}</div>`;
 
 /* ---------- pintado ---------- */
+// 🚢 Barcos: color del casco (--bc/--bc2, también en 3D), tamaño y textura (js/core/fichas.js)
+function aplicarFichas() {
+  const r = root; if (!r || !asp) return; const e = estilo(asp.valores);
+  if (e.hex) { r.style.setProperty('--bc', e.hex); r.style.setProperty('--bc2', oscuro(e.hex, .3)); } else { r.style.removeProperty('--bc'); r.style.removeProperty('--bc2'); }
+  r.style.setProperty('--fx-esc', e.esc);
+}
 function pintar() {
+  aplicarFichas();
   if (!S || !$('#flCuerpo')) return;
   const nom = F.nombres(S), cuerpo = $('#flCuerpo'), msg = $('#flMsg');
   if (S.fase === 'colocar') {

@@ -63,7 +63,7 @@ export function crearDuelo(def) {
   /* ---------- ciclo de vida ---------- */
   async function mount(r, a) {
     api = a; root = r; pensando = false;
-    await api.css(def.css);
+    for (const h of [].concat(def.css)) await api.css(h);
     const g = api.cargar();
     if (g) S = { ...g, hist: g.hist.slice() };
     else {

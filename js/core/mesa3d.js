@@ -4,6 +4,7 @@
 //   t (ajedrez) = 'P' 'N' 'B' 'R' 'Q' 'K' · t (damas) = 'man' | 'rey' · col = 0 (blancas, abajo) | 1 (negras)
 //   M.colores({ claro, oscuro, marco, p0, p1 }) · M.camara(modo) · M.destruir()
 import { T, crearEscena, suave, textura, lienzo, emojiTextura } from './escena3d.js';
+import { lienzoTextura } from './fichas.js';
 
 const lathe = (pts, seg = 28) => new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), seg);
 const BASE = [[0, 0], [.38, 0], [.4, .04], [.4, .09], [.34, .14], [.3, .17]];
@@ -58,11 +59,12 @@ export async function crearMesa3D(cont, o) {
   // ----- piezas -----
   const piezasG = new T.Group(); E.escena.add(piezasG);
   const mats = [new T.MeshStandardMaterial({ color: col.p0, roughness: .38, metalness: .06 }), new T.MeshStandardMaterial({ color: col.p1, roughness: .38, metalness: .1 })];
+  let estF = { tex: null, esc: 1 }, estK = '';       // 🎨 Fichas: textura y tamaño de las piezas
   const cacheGeo = {};
   const geos = t => cacheGeo[t] || (cacheGeo[t] = geoPieza(t));
   const matOro = new T.MeshStandardMaterial({ color: '#E8B923', roughness: .3, metalness: .5 });
   function crearPieza(p) {
-    const g = new T.Group(); g.userData.t = p.t; g.userData.col = p.col; g.userData.emoji = p.emoji || '';
+    const g = new T.Group(); g.scale.setScalar(estF.esc); g.userData.t = p.t; g.userData.col = p.col; g.userData.emoji = p.emoji || '';
     if (ajedrez) {
       for (const [geo, x = 0, y = 0, z = 0, ex] of geos(p.t)) {
         const m = new T.Mesh(geo, mats[p.col]); m.castShadow = true; m.position.set(x, y, z);
@@ -135,6 +137,13 @@ export async function crearMesa3D(cont, o) {
   function disponer(g) { g.traverse(x => { if (x.userData && x.userData.cabeza) { /* geometría compartida: no se libera */ } }); }
   M.colores = c => {
     Object.assign(col, c); matC.color.set(col.claro); matO.color.set(col.oscuro); marco.material.color.set(col.marco); mats[0].color.set(col.p0); mats[1].color.set(col.p1); E.marcar();
+  };
+  M.fichas = e => {
+    const k = (e.tex || '') + '|' + e.esc; if (k === estK) return; estK = k; estF = { tex: e.tex, esc: e.esc };
+    const mapa = e.tex ? textura(lienzoTextura('#FFFFFF', { tex: e.tex, forma: null }, 128)) : null;
+    for (const m of mats) { if (m.map) m.map.dispose(); m.map = mapa; m.needsUpdate = true; }
+    for (const g of actuales.values()) g.scale.setScalar(e.esc);
+    E.marcar();
   };
   M.camara = E.camara;
   E.tocables = [squares, piezasG];

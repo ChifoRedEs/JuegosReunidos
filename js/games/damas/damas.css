@@ -34,3 +34,6 @@
 
 .ck[hidden]{display:none}
 #dm3d{width:min(100%,440px)}
+/* 🎨 Fichas · Textura: conservar el color bajo la textura */
+[data-ftex]:not([data-ftex="original"]) .pc.w{background-color:var(--pw2)}
+[data-ftex]:not([data-ftex="original"]) .pc.b{background-color:var(--pb2)}

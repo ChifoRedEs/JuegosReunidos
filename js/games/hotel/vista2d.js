@@ -59,10 +59,11 @@ export function crearHotel2D(cont) {
     g.dataset.anim = '';
   };
   V.dado = () => Promise.resolve(); V.quitarDado = () => {};
+  let escF = 1; V.fichas = e => { escF = e.esc; };                       // 🚗 Apariencia: tamaño de los coches (el color llega en p.color)
   V.pintar = S => {
     S.jug.forEach((p, j) => {
       if (!coches[j]) { const g = el('g'); g.append(el('circle', { r: 11, fill: p.color, stroke: '#fff', 'stroke-width': 2.5 }), el('text', { y: 5, 'text-anchor': 'middle', 'font-size': 13 }, p.coche)); capaCoche.append(g); coches[j] = g; }
-      const g = coches[j]; g.style.display = p.vivo ? '' : 'none'; if (!g.dataset.anim) { const [x, y] = posCoche(j, p.pos); ponCoche(j, x, y); }
+      const g = coches[j]; g.firstChild.setAttribute('fill', p.color); g.firstChild.setAttribute('r', 11 * escF); g.lastChild.setAttribute('font-size', 13 * escF); g.lastChild.setAttribute('y', 5 * escF); g.style.display = p.vivo ? '' : 'none'; if (!g.dataset.anim) { const [x, y] = posCoche(j, p.pos); ponCoche(j, x, y); }
     });
     for (const id of IDS_HOTEL) {
       const Hh = S.hot[id], D = HOTELES[id], sig = Hh.dueno + '|' + Hh.etapa + '|' + Hh.inst;

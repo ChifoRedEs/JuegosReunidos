@@ -1,5 +1,6 @@
 import { $, esc, esperar } from '../../core/dom.js';
 import * as O from './motor.js';
+import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 let animJ = -1;
@@ -8,6 +9,8 @@ let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } }
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, anim = false, vis = {}, dadosVis = null, msgEvento = '';
+// 🪿 Fichas: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
+const colF = k => [estilo(asp.valores).hex, estilo(asp.valores).hex2, estilo(asp.valores).hex3, estilo(asp.valores).hex4][k] || O.COLORES[k];
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'n'], ['CPU 3', 'n']], dados: 1, pozo: 'rescate' };
 
 /* ---------- validación / resumen ---------- */
@@ -24,7 +27,8 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; anim = false; vis = {}; dadosVis = null; msgEvento = ''; forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), ...gruposFichas({ titulo: 'Fichas', icono: '🪿', lados: ['Rojo', 'Azul', 'Verde', 'Amarillo'], formas: false }), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
+  await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./oca.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4 && [1, 2].includes(c0.dados)) cfg = { ...cfg, ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
@@ -46,7 +50,7 @@ function setup() {
   S = null; clearTimeout(timer); cerrar3D(); modo3d = false;
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">El clásico de toda la vida: tira el dado, salta de oca a oca, cruza puentes y evita la posada, el pozo, el laberinto, la cárcel y la muerte. Gana quien llegue <b>justo</b> a la casilla 63.</p>
-    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${O.COLORES[i]}"><span class="jf-dot"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${colF(i)}"><span class="jf-dot"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Dados</span><div class="seg"><button class="btn ${cfg.dados === 1 ? 'on' : ''}" data-dados="1">1 dado</button><button class="btn ${cfg.dados === 2 ? 'on' : ''}" data-dados="2">2 dados</button></div></div>
     <div class="bar"><span class="lbl">Pozo</span><div class="seg"><button class="btn ${cfg.pozo === 'rescate' ? 'on' : ''}" data-pozo="rescate">Hasta que te rescaten</button><button class="btn ${cfg.pozo === 'turnos' ? 'on' : ''}" data-pozo="turnos">2 turnos</button></div></div>
     <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
@@ -77,11 +81,12 @@ async function iniciar3D() {
 }
 function pintar3D() {
   if (!V3 || !S) return;
+  V3.fichas(estilo(asp.valores));
   const porCasilla = {}; S.jug.forEach((_, j) => { const p = posDe(j); (porCasilla[p] = porCasilla[p] || []).push(j); });
   const emo = emojiPersonaje(asp);
   V3.pintar({ fichas: S.jug.map((J, j) => {
     const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
-    return { j, color: O.COLORES[J.color], f, c, dx: m > 1 ? (k % 2 ? .22 : -.22) : 0, dz: m > 2 ? (k < 2 ? -.2 : .2) : 0, emoji: emo && !J.cpu ? emo : '',
+    return { j, color: colF(J.color), f, c, dx: m > 1 ? (k % 2 ? .22 : -.22) : 0, dz: m > 2 ? (k < 2 ? -.2 : .2) : 0, emoji: emo && !J.cpu ? emo : '',
       turno: j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim), mueve: vis[j] != null };
   }) });
 }
@@ -101,11 +106,11 @@ function colocarFichas() {
   if (modo3d) return pintar3D();
   const el = $('#ocFichas'); if (!el) return;
   const porCasilla = {}; S.jug.forEach((_, j) => { const p = posDe(j); (porCasilla[p] = porCasilla[p] || []).push(j); });
-  if (!el.children.length) el.innerHTML = S.jug.map((J, j) => `<span class="ocf" data-f="${j}" style="--c:${O.COLORES[J.color]}"></span>`).join('');
+  if (!el.children.length) el.innerHTML = S.jug.map((J, j) => `<span class="ocf fx" data-f="${j}" style="--c:${colF(J.color)}"></span>`).join('');
   S.jug.forEach((J, j) => {
     const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
     const dx = m > 1 ? (k % 2 ? .22 : -.22) : 0, dy = m > 2 ? (k < 2 ? -.2 : .2) : m === 2 ? 0 : 0;
-    const f0 = el.querySelector(`[data-f="${j}"]`);
+    const f0 = el.querySelector(`[data-f="${j}"]`); f0.style.setProperty('--c', colF(J.color));
     const emo = emojiPersonaje(asp), pj = !!emo && !J.cpu; f0.textContent = pj ? emo : ''; f0.classList.toggle('pj', pj);      // «Personajes»: tu ficha lleva el emoji
     f0.style.left = `${(c + .5 + dx) * 12.5}%`; f0.style.top = `${(f + .58 + dy) * 12.5}%`;
     f0.classList.toggle('turno', j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim)); f0.classList.toggle('mueve', vis[j] != null);
@@ -114,7 +119,7 @@ function colocarFichas() {
 function pintar() {
   if (!S || !$('#ocTab')) return;
   const tj = anim ? animJ : S.turno;
-  $('#ocJug').innerHTML = S.jug.map((J, j) => `<div class="ocj ${j === tj && (S.fase === 'tirar' || anim) ? 'turno' : ''} ${S.fase === 'fin' && j === S.ganador ? 'gana' : ''}" style="--c:${O.COLORES[J.color]}"><i></i><b>${esc(J.nombre)}${J.cpu ? ' 🤖' : ''}</b><span>${posDe(j) === 0 ? 'Salida' : `Casilla ${posDe(j)}`}</span>${J.pozo ? '<small>🕳️ en el pozo</small>' : J.pierde ? `<small>${J.pierde} turno${J.pierde > 1 ? 's' : ''} sin tirar</small>` : ''}</div>`).join('');
+  $('#ocJug').innerHTML = S.jug.map((J, j) => `<div class="ocj ${j === tj && (S.fase === 'tirar' || anim) ? 'turno' : ''} ${S.fase === 'fin' && j === S.ganador ? 'gana' : ''}" style="--c:${colF(J.color)}"><i></i><b>${esc(J.nombre)}${J.cpu ? ' 🤖' : ''}</b><span>${posDe(j) === 0 ? 'Salida' : `Casilla ${posDe(j)}`}</span>${J.pozo ? '<small>🕳️ en el pozo</small>' : J.pierde ? `<small>${J.pierde} turno${J.pierde > 1 ? 's' : ''} sin tirar</small>` : ''}</div>`).join('');
   colocarFichas();
   const J = S.jug[anim ? animJ : S.turno], humano = !J.cpu;
   const d = dadosVis || (S.ultima ? S.ultima.dados : Array(S.dados).fill(1));
@@ -122,11 +127,11 @@ function pintar() {
   $('#ocDados').classList.toggle('rodando', !!dadosVis);
   const btn = $('#ocTirar'); btn.disabled = anim || S.fase !== 'tirar' || !humano; btn.hidden = S.fase === 'fin';
   btn.textContent = S.fase === 'tirar' ? `🎲 Tirar · ${J.nombre}` : '🎲 Tirar';
-  btn.style.setProperty('--c', O.COLORES[J.color]);
+  btn.style.setProperty('--c', colF(J.color));
   const m = $('#ocMsg');
   if (S.fase === 'fin') m.innerHTML = `🏆 <b>¡${esc(S.jug[S.ganador].nombre)} ${S.jug[S.ganador].nombre === 'Tú' ? 'llegas al jardín de la Oca y ganas' : 'llega al jardín de la Oca y gana'}!</b>`;
   else if (msgEvento) m.innerHTML = msgEvento;
-  else m.innerHTML = humano ? `Turno de <b style="color:${O.COLORES[J.color]}">${esc(J.nombre)}</b>: ¡tira el dado!` : `${esc(J.nombre)} va a tirar…`;
+  else m.innerHTML = humano ? `Turno de <b style="color:${colF(J.color)}">${esc(J.nombre)}</b>: ¡tira el dado!` : `${esc(J.nombre)} va a tirar…`;
   $('#ocFin').innerHTML = S.fase === 'fin' ? `<div class="bar" style="justify-content:center"><button class="btn on" data-ac="otra">🔁 Otra partida</button><button class="btn" data-ac="setup">Cambiar jugadores</button></div>` : '';
   $('#ocLog').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
 }

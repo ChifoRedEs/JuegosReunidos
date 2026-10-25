@@ -1,5 +1,6 @@
 // Magnate Tecnológico · juego de compraventa de empresas tecnológicas (2 a 4 jugadores, personas o CPU).
 import { $, esc, esperar } from '../../core/dom.js';
+import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { FICHAS as PERSONAJES, opcionesPersonajes } from '../../core/personajes.js';
 import { GRUPOS, CASILLAS, NUBE, RED, SALARIO, FIANZA, OFICINAS, SEDES, COLORES_JUGADOR, FICHAS } from './datos.js';
@@ -17,7 +18,9 @@ const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550, dado: 900 }
 // Vista 3D opcional (Three.js): tablero en anillo compartido con Hotel (js/core/anillo3d.js). Los edificios son las oficinas (pisos) y la sede (5.º piso con corona).
 let vista = null, mod3d = null, botones3d = null, hay3d = false, tok3 = 0, forzar2d = false, modo3d = false;
 const TIPO3 = { empresa: 'destino', nube: 'aero', red: 'serv', noticias: 'suerte', tendencias: 'imprevisto' };
-const estado3D = () => ({ jug: G.jug, c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
+// 🧑 Fichas: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
+const cj = c => { const e = estilo(asp.valores), k = COLORES_JUGADOR.indexOf(c); return [e.hex, e.hex2, e.hex3, e.hex4][k] || c; };
+const estado3D = () => ({ jug: G.jug.map(p => ({ ...p, color: cj(p.color) })), c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
 const quiere3D = () => hay3d && !forzar2d && asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (vista) { vista.destruir(); vista = null; } }
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0;
@@ -42,13 +45,15 @@ export async function mount(r, a) {
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#mtTab'), grupoTablero(),
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
     { clave: 'edif', titulo: 'Iconos de oficinas y sede (vista 2D)', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) },
-    { clave: 'estilo', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) }],
+    { clave: 'estilo', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) },
+    ...gruposFichas({ titulo: 'Fichas de los jugadores', icono: '🎩', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
   () => {
     if (G && root.querySelector('#mtJug')) {
       if (modo3d !== quiere3D()) { armar(); pintar(); return; }
       aplicarPersonaje(); if (vista) { vista.estiloHotel(asp.valores.estilo || 'rascacielos'); vista.tema(); } pintar();
     }
   });
+  await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./magnate.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', jug: c0.jug.map(([n, t, f], i) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n', Number.isInteger(f) && FICHAS[f] ? f : i]) };
@@ -85,7 +90,7 @@ function setup() {
   G = null; jugando = false; cerrar3D();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra empresas tecnológicas, completa sectores, abre oficinas y cobra alquiler a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
-    ${cfg.jug.map(([nom, t, f], i) => `<div class="jugfila" style="--c:${COLORES_JUGADOR[i]}"><button class="mtfichab" data-ficha="${i}" aria-label="Cambiar ficha del jugador ${i + 1}">${FICHAS[f]}</button><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${cfg.jug.map(([nom, t, f], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><button class="mtfichab" data-ficha="${i}" aria-label="Cambiar ficha del jugador ${i + 1}">${FICHAS[f]}</button><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Dinero</span><div class="seg">${[1200, 1600, 2000].map(v => `<button class="btn ${cfg.dinero === v ? 'on' : ''}" data-dinero="${v}">${v}M</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [20, '20 rondas'], [40, '40 rondas']].map(([v, l]) => `<button class="btn ${cfg.rondas === v ? 'on' : ''}" data-rondas="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
@@ -167,14 +172,15 @@ function colocar(i) {
   if (modo3d) return;
   const p = G.jug[i], cel = root.querySelector(`.mtc[data-c="${p.pos}"] .mttk`); if (!cel) return;
   let t = root.querySelector(`.mtficha[data-j="${i}"]`);
-  if (!t) { t = document.createElement('span'); t.className = 'mtficha'; t.dataset.j = i; t.style.setProperty('--c', p.color); t.textContent = p.ficha; }
+  if (!t) { t = document.createElement('span'); t.className = 'mtficha fx'; t.dataset.j = i; t.textContent = p.ficha; }
+  t.style.setProperty('--c', cj(p.color));
   cel.append(t); t.classList.remove('salta'); void t.offsetWidth; t.classList.add('salta');
 }
 function pintar() {
   if (!G || !$('#mtTab')) return;
   if (!modo3d) G.c.forEach((s, i) => {
     const d = root.querySelector(`.mtc[data-c="${i}"]`), o = s.dueno === null ? null : G.jug[s.dueno];
-    d.style.setProperty('--dueno', o ? o.color : 'transparent'); d.classList.toggle('propia', !!o); d.classList.toggle('hip', s.hip);
+    d.style.setProperty('--dueno', o ? cj(o.color) : 'transparent'); d.classList.toggle('propia', !!o); d.classList.toggle('hip', s.hip);
     const b = d.querySelector('.mtbanda'), ed = EDIFICIOS[asp.valores.edif] || EDIFICIOS.casas;
     if (b) { d.classList.toggle('con', s.of > 0); b.innerHTML = s.of === 5 ? `<i class="mtsede">${ed.sede}</i>` : [1, 2, 3, 4].map(k => `<i class="${k <= s.of ? 'on' : ''}">${k <= s.of ? ed.of : ''}</i>`).join(''); }
     d.setAttribute('aria-label', `${s.nombre}${s.precio ? ` · ${s.precio}M` : ''}${o ? ` · de ${o.nombre}` : ''}${s.hip ? ' · hipotecada' : ''}${s.of ? ` · ${s.of === 5 ? 'sede central' : s.of + ' oficinas'}` : ''}`);
@@ -182,17 +188,17 @@ function pintar() {
   const act = G.terminada ? -1 : G.turno;
   $('#mtJug').innerHTML = G.jug.map((p, i) => {
     const mias = G.propias(i);
-    return `<div class="mtj ${i === act ? 'turno' : ''} ${p.fuera ? 'fuera' : ''} ${i === G.ganador ? 'gana' : ''}" style="--c:${p.color}" data-j="${i}"><span class="mtji">${esc(p.ficha)}</span><b>${esc(p.nombre)}</b><span class="mtdin">${p.fuera ? 'Quiebra' : p.dinero + 'M'}</span>
+    return `<div class="mtj ${i === act ? 'turno' : ''} ${p.fuera ? 'fuera' : ''} ${i === G.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="mtji">${esc(p.ficha)}</span><b>${esc(p.nombre)}</b><span class="mtdin">${p.fuera ? 'Quiebra' : p.dinero + 'M'}</span>
       <small>${p.fuera ? '' : `Patrimonio ${G.patrimonio(p)}M${p.bot ? ' · CPU' : ''}${p.espera ? ' · 🕵️' : ''}${p.pases.length ? ' · 🎫' + (p.pases.length > 1 ? '×2' : '') : ''}`}</small>
       <span class="mtchips">${mias.map(s => `<i class="${s.hip ? 'h' : ''}" style="background:${s.g ? GRUPOS[s.g].color : 'var(--mut)'}" title="${esc(s.nombre)}"></i>`).join('')}</span></div>`;
   }).join('');
   const p = G.p(), humano = !p.bot && !p.fuera && !G.terminada, libre = humano && !jugando;
-  $('#mtTurno').innerHTML = G.terminada ? `🏆 Gana <b>${esc(G.jug[G.ganador].nombre)}</b>` : `Turno de <b style="color:${p.color}">${esc(p.ficha)} ${esc(p.nombre)}</b>${p.espera ? '<br><small>retenido en la Auditoría</small>' : ''}`;
+  $('#mtTurno').innerHTML = G.terminada ? `🏆 Gana <b>${esc(G.jug[G.ganador].nombre)}</b>` : `Turno de <b style="color:${cj(p.color)}">${esc(p.ficha)} ${esc(p.nombre)}</b>${p.espera ? '<br><small>retenido en la Auditoría</small>' : ''}`;
   $('#mtBote').textContent = `${G.reglas.bote ? `Bote: ${G.bote}M · ` : ''}Ronda ${G.ronda}${G.reglas.rondas ? ` de ${G.reglas.rondas}` : ''}`;
   $('#mtTirar').disabled = !libre; $('#mtGes').disabled = !libre; $('#mtTrato').disabled = !libre || G.jug.filter(q => !q.fuera).length < 2;
-  $('#mtTirar').style.setProperty('--c', p.color);
+  $('#mtTirar').style.setProperty('--c', cj(p.color));
   $('#mtTirar').hidden = G.terminada;
-  if (vista) { vista.actualizar(estado3D()); vista.resaltar(G.terminada ? -1 : p.pos, p.color); }
+  if (vista) { vista.fichas(estilo(asp.valores)); vista.actualizar(estado3D()); vista.resaltar(G.terminada ? -1 : p.pos, cj(p.color)); }
 }
 function log(html, clase = '') {
   const L = $('#mtLog'); if (!L) return;

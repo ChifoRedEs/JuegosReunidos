@@ -3,6 +3,7 @@
 //   const V = await crearFlota3D(contenedor, { alCelda(i) })
 //   V.pintar({ n, barcos: [{ k, celdas, len, v, hundido, marcado }], tiros: [0 libre|1 agua|2 tocado|3 hundido|4 deducida], ult, pista, etiquetas })
 //   V.recolor() (lee --m1 --m2 --ml --bc --bc2 del contenedor) · V.camara(modo) · V.destruir()
+import { lienzoTextura } from '../../core/fichas.js';
 import { T, crearEscena, lienzo, textura, emojiTextura, suave } from '../../core/escena3d.js';
 
 export async function crearFlota3D(cont, o = {}) {
@@ -54,7 +55,7 @@ export async function crearFlota3D(cont, o = {}) {
       g.position.set((x0 + x1) / 2, .02, (z0 + z1) / 2); if (b.v) g.rotation.y = -Math.PI / 2;
       if (b.hundido) { g.position.y = -.12; g.rotation.z = .22; }
       if (b.marcado) { const a = new T.Mesh(new T.RingGeometry(.1, .14, 4), new T.MeshBasicMaterial({ color: '#FFD93D', side: T.DoubleSide })); a.visible = false; g.add(a); g.position.y += .12; const l = new T.Mesh(new T.BoxGeometry(Math.max(.7, b.len - .1) + .3, .03, .9), new T.MeshBasicMaterial({ color: '#FFD93D', transparent: true, opacity: .35 })); l.position.y = -.16; g.add(l); }
-      barcosG.add(g);
+      g.scale.setScalar(estF.esc); barcosG.add(g);
     }
     const nuevos = [];
     S.tiros.forEach((t, i) => {
@@ -69,6 +70,13 @@ export async function crearFlota3D(cont, o = {}) {
     tirosPrev = S.tiros.slice();
     const sob = (i, color, op) => { if (i == null || i < 0) return; const [x, z] = pos(i); const m = new T.Mesh(gAro, new T.MeshBasicMaterial({ color, transparent: true, opacity: op, side: T.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, .045, z); marcasG.add(m); };
     sob(S.ult, '#FFD93D', .9); sob(S.pista, '#4DA3FF', .95);
+    E.marcar();
+  };
+  let estF = { tex: null, esc: 1 }, mapaF = null;
+  V.fichas = e => {                                                      // 🚢 Apariencia: textura y tamaño de los barcos (el color llega en --bc/--bc2)
+    if (e.tex === estF.tex && e.esc === estF.esc) return; const nt = e.tex !== estF.tex; estF = { tex: e.tex, esc: e.esc };
+    if (nt) { if (mapaF) mapaF.dispose(); mapaF = e.tex ? textura(lienzoTextura('#FFFFFF', { tex: e.tex, forma: null }, 128)) : null; mCasco.map = mapaF; mCasco.needsUpdate = true; mCabina.map = mapaF; mCabina.needsUpdate = true; }
+    for (const g of barcosG.children) g.scale.setScalar(e.esc);
     E.marcar();
   };
   V.recolor = () => {

@@ -43,3 +43,5 @@
 .juego-conecta4[data-forma="corazon"] .d.p1,.juego-conecta4[data-forma="corazon"] .d.p2{clip-path:polygon(50% 92%,10% 55%,2% 35%,10% 14%,28% 6%,42% 12%,50% 24%,58% 12%,72% 6%,90% 14%,98% 35%,90% 55%);inset:8%;box-shadow:none}
 .juego-conecta4[data-forma="estrella"] .ch,.juego-conecta4[data-forma="diamante"] .ch,.juego-conecta4[data-forma="corazon"] .ch{border-radius:4px}
 .juego-conecta4 .ch.c41{background:var(--r);box-shadow:inset 0 0 0 2px rgba(0,0,0,.2)}.juego-conecta4 .ch.c42{background:var(--y);box-shadow:inset 0 0 0 2px rgba(0,0,0,.2)}
+/* 🎨 Fichas · Textura: conservar el color bajo la textura */
+[data-ftex]:not([data-ftex="original"]) .d.p1,[data-ftex]:not([data-ftex="original"]) .d.p2{background-color:var(--dc)}

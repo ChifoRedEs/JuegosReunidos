@@ -3,6 +3,7 @@ import { REGLAS, tableroInicial, jugadas, aplicar, contar, clavePos, esRey, duen
 import { elegirPorRegla } from './ia.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+import { gruposFichas, estilo, claro, oscuro, luz } from '../../core/fichas.js';
 // Vista 3D (Three.js, opcional en 🎨 Apariencia): solo dibuja; los toques vuelven a `tocar`
 let m3 = null, tok3 = 0, forma3 = '', tn3 = 0;
 const TABLEROS = { madera: ['#8A5A34', '#F3DDB6'], esmeralda: ['#1F9D68', '#E7F6E2'], hielo: ['#4F8DF0', '#EAF4FF'], caramelo: ['#E0409B', '#FFE9F4'], noche: ['#141A3D', '#39447A'] };
@@ -56,9 +57,10 @@ export async function mount(root, a) {
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#dmTab'), grupoPersonaje('Personajes (tus fichas)'), 
     { clave: 'tablero', titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
     { clave: 'colores', titulo: 'Colores de las fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Marfil / Rojo', sw: ['#FFFDF6', '#C21F2A'] }, { id: 'oceano', nombre: 'Celeste / Naranja', sw: ['#52C7F0', '#E26A00'] }, { id: 'bosque', nombre: 'Verde / Morado', sw: ['#56C94A', '#6B2FD1'] }, { id: 'oro', nombre: 'Oro / Negro', sw: ['#E0A800', '#161B33'] }] },
+    ...gruposFichas({ titulo: 'Fichas', icono: '⚪', lados: ['Tuyas', 'CPU'], formas: false }),
     { clave: 'fichas', titulo: 'Forma de las fichas', def: 'disco', opciones: [{ id: 'disco', nombre: '● Disco' }, { id: 'anillo', nombre: '◎ Anillo' }, { id: 'gema', nombre: '⬢ Gema' }, { id: 'cuadrada', nombre: '▢ Cuadrada' }] },
   ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '2d') !== '3d') || (m3 && forma3 !== (asp.valores.fichas || 'disco')))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
-  await api.css(new URL('./damas.css', import.meta.url));
+  await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
   api.barra({
     nueva: () => nueva(C.regla, C.nivel, true),
@@ -207,7 +209,14 @@ function mensaje() {
   return cap ? `Tu turno: captura obligatoria${R().mayoria && cap > 1 ? ` (debes comer ${cap})` : ''}.` : 'Tu turno.';
 }
 function pintarMsg() { const m = $('#dmMsg'); if (m) { m.textContent = mensaje(); m.className = 'msg' + (C.over && C.res === 'w' ? ' win' : C.over && C.res === 'b' ? ' err' : ''); } }
+// 🎨 Fichas: color de cada bando (variables --pw1/--pw2/--pwi y --pb1/--pb2/--pbi), tamaño y textura (css/fichas.css)
+function aplicarFichas() {
+  const e = estilo(asp.valores), r = rootEl; if (!r) return;
+  const par = (h, a, b, i) => { if (!h) { for (const n of [a, b, i]) r.style.removeProperty(n); return; } r.style.setProperty(a, claro(h, .45)); r.style.setProperty(b, h); r.style.setProperty(i, luz(h) > .55 ? oscuro(h, .55) : claro(h, .85)); };
+  par(e.hex, '--pw1', '--pw2', '--pwi'); par(e.hex2, '--pb1', '--pb2', '--pbi'); r.style.setProperty('--fx-esc', e.esc);
+}
 function pintar() {
+  aplicarFichas();
   if (!C) return;
   const ult = new Set(C.ultimo ? C.ultimo.path.map(pos) : []);
   const rutaS = new Set(C.ruta ? C.ruta.map(pos) : []), sig = new Set();
@@ -220,7 +229,7 @@ function pintar() {
     if (s.dataset.k === key) continue;
     s.dataset.k = key;
     s.className = 'sq' + ((r + c) % 2 ? ' d' : '') + [...fl].map(x => ' ' + x).join('');
-    s.innerHTML = p ? `<div class="pc ${dueno(p)}${pj ? ' pj' : ''}">${pj ? `${emo}${esRey(p) ? '<b class="cr">♛\uFE0E</b>' : ''}` : esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
+    s.innerHTML = p ? `<div class="pc fx ${dueno(p)}${pj ? ' pj' : ''}">${pj ? `${emo}${esRey(p) ? '<b class="cr">♛\uFE0E</b>' : ''}` : esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
     if ((r + c) % 2) s.setAttribute('aria-label', `Fila ${r + 1}, columna ${c + 1}, ${p ? (dueno(p) === 'w' ? 'ficha blanca' : 'ficha roja') + (esRey(p) ? ' dama' : '') : 'vacía'}`);
   }
   if (anim) {
@@ -231,8 +240,8 @@ function pintar() {
   if (m3) {
     const piezas = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) { const p = C.b[r][c]; if (p) piezas.push({ r, c, t: esRey(p) ? 'rey' : 'man', col: dueno(p) === 'w' ? 0 : 1, emoji: emo && dueno(p) === 'w' ? emo : '' }); }
-    const tb = TABLEROS[asp.valores.tablero] || TABLEROS.madera, fc = FICHAS_COL[asp.valores.colores] || FICHAS_COL.clasico;
-    m3.colores({ oscuro: tb[0], claro: tb[1], marco: oscurecer(tb[0], .55), p0: fc[0], p1: fc[1] });
+    const tb = TABLEROS[asp.valores.tablero] || TABLEROS.madera, fc = FICHAS_COL[asp.valores.colores] || FICHAS_COL.clasico, ef = estilo(asp.valores);
+    m3.fichas(ef); m3.colores({ oscuro: tb[0], claro: tb[1], marco: oscurecer(tb[0], .55), p0: ef.hex || fc[0], p1: ef.hex2 || fc[1] });
     m3.pintar({ piezas, ult: C.ultimo ? C.ultimo.path : [], sel: C.ruta ? [C.ruta[0]] : [], ruta: C.ruta ? C.ruta.slice(1) : [], dest: [...sig].map(k => k.split(',').map(Number)), marcas: true });
   }
   const cn = contar(C.b), ini = fichasIniciales(R());

@@ -71,3 +71,4 @@
 .flpasa p{color:var(--mut);margin:0 0 16px}
 .fllog{list-style:none;padding:0;margin:10px 0;font-size:13px;color:var(--mut)}
 .fllog li:first-child{color:var(--ink);font-weight:800}
+[data-ftex]:not([data-ftex="original"]) .fltab .cel.barco::before{background-color:var(--bc)}

@@ -1,6 +1,7 @@
 // Vista 3D de Hotel (Three.js): camino con casillas, terrenos con hoteles de 8 estilos, entradas, coches, dados, Banco y Ayuntamiento.
 //   const V = await crearHotel3D(contenedor)
 //   V.pintar(S) · V.mover(j, camino, ms) · V.dado(v, ms) · V.resaltar({ casillas:[], lotes:[] }) · V.alTocar = ({tipo:'casilla'|'lote', id}) => … · V.recolor() · V.camara(modo) · V.destruir()
+import { lienzoTextura } from '../../core/fichas.js';
 import { T, crearEscena, lienzo, textura, emojiTextura, EMOJI_FUENTE } from '../../core/escena3d.js';
 import { INFO_TIPO, CAJA, MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
 
@@ -136,11 +137,18 @@ export async function crearHotel3D(cont) {
 
   // ----- coches -----
   const coches = [];
+  let estF = { tex: null, esc: 1 }, mapaF = null;
+  V.fichas = e => {                                                      // 🚗 Apariencia: textura y tamaño de los coches (el color llega en p.color)
+    if (e.tex === estF.tex && e.esc === estF.esc) return; const nt = e.tex !== estF.tex; estF = { tex: e.tex, esc: e.esc };
+    if (nt) { if (mapaF) mapaF.dispose(); mapaF = e.tex ? textura(lienzoTextura('#FFFFFF', { tex: e.tex, forma: null }, 128)) : null; for (const g of coches) if (g) { g.userData.cm.map = mapaF; g.userData.cm.needsUpdate = true; } }
+    for (const g of coches) if (g) g.scale.setScalar(.92 * e.esc);
+    E.marcar();
+  };
   function crearCoche(color) {
-    const g = new T.Group(), cm = mat(color, { roughness: .3, metalness: .2 });
+    const g = new T.Group(), cm = new T.MeshStandardMaterial({ color, roughness: .3, metalness: .2, map: mapaF }); g.userData.cm = cm;
     g.add(caja(.56, .16, .3, cm, 0, .17, 0)); g.add(caja(.28, .15, .26, mat('#DDEEFF', { roughness: .15 }), -.04, .32, 0)); g.add(caja(.1, .06, .22, cm, -.04, .41, 0));
     for (const [x, z] of [[-.18, -.16], [.18, -.16], [-.18, .16], [.18, .16]]) { const w = new T.Mesh(new T.CylinderGeometry(.07, .07, .06, 10), mat('#222')); w.rotation.x = Math.PI / 2; w.position.set(x, .08, z); g.add(w); }
-    g.scale.setScalar(.92); S3.add(g); return g;
+    g.scale.setScalar(.92 * estF.esc); S3.add(g); return g;
   }
   const rumbo = (a, b) => Math.atan2(-(b.z - a.z), b.x - a.x);
   function colocar(j, g, pos) {
@@ -185,7 +193,7 @@ export async function crearHotel3D(cont) {
   V.pintar = S => {
     S.jug.forEach((p, j) => {
       if (!coches[j]) { coches[j] = crearCoche(p.color); colocar(j, coches[j], p.pos); }
-      const g = coches[j]; g.visible = p.vivo; if (!g.userData.anim) colocar(j, g, p.pos);
+      const g = coches[j]; g.userData.cm.color.set(p.color); g.visible = p.vivo; if (!g.userData.anim) colocar(j, g, p.pos);
     });
     for (const id of IDS_HOTEL) {
       const Hh = S.hot[id], st = estado[id], D = HOTELES[id], n = nEdif(id), objetivo = Hh.etapa + (Hh.inst ? 1 : 0);

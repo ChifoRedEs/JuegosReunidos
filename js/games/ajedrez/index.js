@@ -1,5 +1,6 @@
 import { crearDuelo } from '../../core/duelo.js';
 import { esc } from '../../core/dom.js';
+import { gruposFichas, estilo, claro, oscuro, luz } from '../../core/fichas.js';
 import { VARIANTES, estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML, rendirse, jaque, de, a, coronacion, NOMBRE_PIEZA, aPGN, dePGN } from './reglas.js';
 import { grupoFondo } from '../../core/aspectos.js';
 
@@ -224,9 +225,13 @@ function pintar(eReal, ctx) {
     c.setAttribute('aria-label', `${'abcdefgh'[f]}${8 - r}${p ? ', ' + NOMBRE_PIEZA[p & 7] + (p >> 3 ? ' negro' : ' blanco') : ''}${sq === jq ? ', en jaque' : ''}`);
   });
   cont.querySelector('#axTab').classList.toggle('on', puede);
+  { // 🎨 Piezas: color de cada bando (--pzb/--pzn y su contorno), tamaño y textura
+    const ef = estilo(ctx.valores()), r = cont.closest('.juego-ajedrez') || cont, par = (h, a, l) => { if (h) { r.style.setProperty(a, h); r.style.setProperty(l, luz(h) > .5 ? oscuro(h, .6) : claro(h, .8)); } else { r.style.removeProperty(a); r.style.removeProperty(l); } };
+    par(ef.hex, '--pzb', '--pzb-l'); par(ef.hex2, '--pzn', '--pzn-l'); r.style.setProperty('--fx-esc', ef.esc);
+  }
   if (m3) {
     const xy = q => [q >> 3, q & 7], tp = ctx.valores().tablero || 'madera', pz = PIEZAS[ctx.valores().piezas] || PIEZAS.clasicas, tb = TABLEROS[tp] || TABLEROS.madera;
-    m3.colores({ claro: tb[0], oscuro: tb[1], marco: MARCOS[tp] || '#5A3A22', p0: pz[0], p1: pz[1] });
+    const ef = estilo(ctx.valores()); m3.fichas(ef); m3.colores({ claro: tb[0], oscuro: tb[1], marco: MARCOS[tp] || '#5A3A22', p0: ef.hex || pz[0], p1: ef.hex2 || pz[1] });
     m3.pintar({ piezas: e.b.map((p, q) => (p ? { r: q >> 3, c: q & 7, t: 'PNBRQK'[(p & 7) - 1], col: p >> 3 } : null)).filter(Boolean),
       ult: ult.map(xy), sel: sel != null ? [xy(sel)] : [], dest: [...destinos.keys()].map(q => [...xy(q), !!e.b[q] || (e.ep === q && (e.b[sel] & 7) === 1)]),
       jaque: jq >= 0 ? xy(jq) : null, pista: pd >= 0 ? [xy(pd), xy(pa)] : [], marcas, flip });
@@ -262,11 +267,12 @@ function pintar(eReal, ctx) {
 }
 
 const duelo = crearDuelo({
-  id: 'ajedrez', css: new URL('./ajedrez.css', import.meta.url), iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Blancas', 'Negras'],
+  id: 'ajedrez', css: [new URL('../../../css/fichas.css', import.meta.url), new URL('./ajedrez.css', import.meta.url)], iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Blancas', 'Negras'],
   chip: n => `<i class="ch axch${n}">${GLIFO[6]}</i>`,
   aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#duTab'), 
     { clave: 'tablero', titulo: 'Colores del tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#F0D9B5', '#B58863'] }, { id: 'torneo', nombre: 'Torneo', sw: ['#EEEED2', '#769656'] }, { id: 'oceano', nombre: 'Océano', sw: ['#E4EDFF', '#5B7FD6'] }, { id: 'uva', nombre: 'Uva', sw: ['#F3E8FF', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#4A5486', '#232A55'] }] },
     { clave: 'piezas', titulo: 'Colores de las piezas', def: 'clasicas', opciones: [{ id: 'clasicas', nombre: 'Blancas y negras', sw: ['#FFFFFF', '#1E1E24'] }, { id: 'marfil', nombre: 'Marfil y ébano', sw: ['#FFF4DC', '#4A2E17'] }, { id: 'colores', nombre: 'Oro y morado', sw: ['#FFD43B', '#5B2DD4'] }] },
+    ...gruposFichas({ titulo: 'Piezas', icono: '♟️', lados: ['Blancas', 'Negras'], formas: false }),
     { clave: 'marcas', titulo: 'Marcar las casillas posibles', def: 'si', opciones: [{ id: 'si', nombre: 'Sí' }, { id: 'no', nombre: 'No' }] },
   ],
   cfgExtra: {
