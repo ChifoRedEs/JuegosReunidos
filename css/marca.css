@@ -88,7 +88,7 @@ button.ficha{display:flex}
 .eleg > i{font-style:normal;font-size:28px;font-weight:800;opacity:.85}
 
 /* marca en la cabecera de Inicio */
-.top h1 .logo{width:30px;height:30px;border-radius:9px;vertical-align:-8px;margin-right:6px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.top h1 .logo{width:30px;height:30px;border-radius:9px;vertical-align:-8px;margin:0 6px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 
 /* ---------- vistas 3D (Three.js): contenedor y botones de cámara comunes ---------- */
 .e3d{position:relative;width:min(calc(100vw - 28px),620px);aspect-ratio:1/1;margin:6px auto;border-radius:var(--r-l);overflow:hidden;box-shadow:var(--sombra-m);
@@ -124,3 +124,4 @@ button.ficha{display:flex}
 .ap-det[open]>summary.ap-link::after{transform:rotate(90deg);color:var(--purple)}
 .ap-cuerpo{padding:4px 12px 12px}
 .ap-cuerpo.ap-rej{margin:0}
+@media(max-width:375px){.top h1{font-size:19px}.top h1 .logo{width:24px;height:24px;border-radius:7px;margin:0 4px;vertical-align:-6px}}

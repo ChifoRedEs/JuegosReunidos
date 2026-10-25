@@ -10,7 +10,8 @@ import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION, FECHA } from './version.js';
 
-const app = $('#app'), tit = $('#titulo'), btnAtras = $('#atras'), nav = $('#nav');
+let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
+const app = $('#app'), btnAtras = $('#atras'), nav = $('#nav');
 const RUTAS = [
   ['cat-logica', '🧠', 'Lógica', '#/cat/logica'],
   ['cat-tablero', '🎲', 'Tablero', '#/cat/tablero'],
@@ -87,7 +88,7 @@ function abrirMenu(lista) {
   if (!lista || !lista.length) return;
   let cerrar;
   const items = lista.map(it => el('button', { class: 'item' + (it.peligro ? ' danger' : ''), 'aria-pressed': it.activo == null ? false : String(!!it.activo), onclick: () => { cerrar(); it.accion(); } }, it.texto));
-  cerrar = hoja([el('h2', {}, tit.textContent), ...items]);
+  cerrar = hoja([el('h2', {}, nombreVista), ...items]);
 }
 btnAtras.addEventListener('click', () => { const r = ruta(); location.hash = r.cat ? '#/cat/' + r.cat : '#/'; });   // vuelve a la categoría del juego
 
@@ -170,7 +171,7 @@ function crearApi(j, ent, mod, root) {
     confirmar: txt => window.confirm(txt),
     aviso, modal, pedirTexto,
     compartir: texto => compartir(texto),
-    titulo: t => { tit.textContent = t; },
+    titulo: t => { nombreVista = t; },
     // El menú de cada juego lleva al final «Compartir resultado» (texto del resumen de la partida guardada).
     menu(items) {
       menuItems = (items || []).slice();
@@ -328,7 +329,7 @@ async function render() {
 }
 async function abrirJuego(id, t) {
   const j = JUEGOS.find(x => x.id === id);
-  tit.textContent = j.nombre; btnAtras.hidden = false;
+  nombreVista = j.nombre; btnAtras.hidden = false;
   app.innerHTML = '<p class="note">Cargando…</p>';
   let mod;
   await cargarBarajas();                       // índice de barajas/dorsos de imagen (no falla: sin él solo salen las cartas dibujadas)
@@ -371,13 +372,13 @@ function elegirJuego(gid) {
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio(filtro = null) {
   const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
-  if (nombreFiltro) tit.textContent = nombreFiltro; else tit.innerHTML = '<img class="logo" src="icons/icon-192.png" alt="" width="30" height="30"> Juegos Reunidos';
+  nombreVista = nombreFiltro || 'Juegos Reunidos';
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
   const grupos = cats.map(([k, n]) => {
     const es = entradas(k), js = JUEGOS.filter(j => j.categoria === k);
     const enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
     return `<section class="cat-seccion" data-cat="${k}">
-      <h2 class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}<span class="cnum">${es.length}</span></h2>
+      <h2 class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}</h2>
       <div class="rejilla">${es.map(x => x.tipo === 'grupo' ? fichaGrupo(x.g, x.js) : ficha(x.j)).join('')}</div></section>`;
   }).join('');
   app.innerHTML = grupos + (!filtro && PROXIMAMENTE.length ? `<div class="soon">Próximamente: ${PROXIMAMENTE.map(esc).join(' · ')}.</div>` : '');
@@ -385,13 +386,13 @@ function vInicio(filtro = null) {
 
 /* ---------- estadísticas ---------- */
 function vStats() {
-  tit.textContent = 'Estadísticas';
+  nombreVista = 'Estadísticas';
   const T = stats.todas();
   revisarLogros();
   const G = logros.conseguidos(), defs = logros.definiciones(CAT_IDS), nG = defs.filter(d => G[d.id]).length;
   const R = logros.todosRetos(), diasR = Object.values(R).filter(l => Array.isArray(l) && l.length).length, totR = Object.values(R).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0);
   const retosHoy = (R[hoy()] || []).map(id => JUEGOS.find(j => j.id === id)).filter(Boolean);
-  const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => d.icono).join('') || '<small>Toca para ver los 20 logros</small>'}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span>${G[d.id] ? d.icono : '🔒'}</span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
+  const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => d.icono).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span>${G[d.id] ? d.icono : '🔒'}</span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
     <div class="panel"><h3>📅 Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Buscaminas, KenKen, Kakuro, Sokoban, Sopa de letras, Crucigramas y Cifras y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
   const solicitada = new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
@@ -441,7 +442,7 @@ async function estadoSinConexion() {
   } catch { el.textContent = '⚠️ No se pudo comprobar el modo sin conexión.'; }
 }
 function vAjustes() {
-  tit.textContent = 'Ajustes';
+  nombreVista = 'Ajustes';
   const A = aj.ajustes();
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="btn ${A[k] === v ? 'on' : ''}" data-set="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   app.innerHTML = `

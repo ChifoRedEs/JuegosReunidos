@@ -27,7 +27,7 @@ Además: el minimax poda más cuando no hay ruido; el Inicio lee un índice lige
 Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (kenken), `todoArriba` (klondike), `PCOL` y `PINK` (parchís), `sonPares` (sudoku), `tamano` (trivial). Doce imports que no se usaban.
 
 ## Mejoras de funcionalidad
-- **Toda la app**: 🏅 20 logros, 📅 Reto del día (Sudoku, Nonogram, Buscaminas, KenKen, Sopa, Crucigrama), 📤 compartir resultado en todos los juegos, 🏆 podio de los 10 mejores en los arcade, deshacer que se guarda con la partida (Sudoku, KenKen, Nonogram). La copia de seguridad incluye logros, retos y podios, y suma las palabras aprendidas de Encadenadas.
+- **Toda la app**: 🏅 50 logros, 📅 Reto del día (Sudoku, Nonogram, Buscaminas, KenKen, Sopa, Crucigrama), 📤 compartir resultado en todos los juegos, 🏆 podio de los 10 mejores en los arcade, deshacer que se guarda con la partida (Sudoku, KenKen, Nonogram). La copia de seguridad incluye logros, retos y podios, y suma las palabras aprendidas de Encadenadas.
 - **Sudoku**: nivel Experto; los niveles se califican por las técnicas que exigen.
 - **Nonogram**: dibujos de 15×15 y 20×20.
 - **Buscaminas**: tableros «sin adivinar» y tablero personalizado.
