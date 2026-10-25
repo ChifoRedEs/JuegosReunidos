@@ -122,3 +122,8 @@
 
 ## Global
 Inicio por categorías con estado de la partida en curso («Continuar · Medio · 32/81»), cabecera con atrás y menú ⋯, rutas por hash (el botón atrás de Android funciona), estadísticas por juego, ajustes (tema, sonidos Web Audio, vibración), copia de seguridad v2 compatible con v1, PWA instalable sin conexión.
+
+## Actualización 3.26: Vuela Alto (Arcade)
+- Juego estilo Flappy Bird: mantener pulsado = subir, soltar = bajar. 24 niveles de 700 a ~2.800 m, 8 escenarios, tubos móviles, pájaros, dobles huecos y hélices; estrellas por monedas, desbloqueo progresivo y modo Infinito con podio.
+- Opciones: dificultad, afluencia de obstáculos, velocidad, control (suave/normal/ágil) y peligros. Apariencia: Personaje (de Sokoban), Escenario, Fondo y Fondo de pantalla.
+- Motor sin DOM (`motor.js`) con mundo generado de forma repetible; `tests/vuelaalto.mjs` comprueba los 24 niveles con un piloto automático.

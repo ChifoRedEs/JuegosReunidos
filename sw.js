@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-543fbe1bef';
+const VERSION = 'jr-af642750bd';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -237,6 +237,9 @@ const ARCHIVOS = [
 './js/games/trivial/index.js',
 './js/games/trivial/motor.js',
 './js/games/trivial/trivial.css',
+'./js/games/vuelaalto/index.js',
+'./js/games/vuelaalto/motor.js',
+'./js/games/vuelaalto/vuelaalto.css',
 './js/games/worms/ia.js',
 './js/games/worms/index.js',
 './js/games/worms/motor.js',
