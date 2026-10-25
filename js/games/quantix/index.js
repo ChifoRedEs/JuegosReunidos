@@ -23,22 +23,22 @@ export async function mount(r, a) {
   await api.css(new URL('./quantix.css', import.meta.url));
   const c0 = M.cfgValida({ ...M.CFG_DEF, ...api.pref('cfg', null) }); if (c0) cfg = c0;
   const p0 = api.pref('prog', null); if (p0 && Number.isInteger(p0.max)) prog = { max: Math.min(M.N_NIVELES, Math.max(1, p0.max)), est: p0.est && typeof p0.est === 'object' ? p0.est : {} };
+  if (cfg.nivel > prog.max) cfg.nivel = prog.max;
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   onUp = e => soltarDedo(e); addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp);
-  onRes = () => { if (cv && S) { ajustarTamano(); dibujar(); } }; addEventListener('resize', onRes);
+  onRes = () => { if (cv && S) { encajar(); ajustarTamano(); dibujar(); } }; addEventListener('resize', onRes);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   api.barra({ nueva: () => empezar(),
     salir: () => { pausar(); setup(); },
     pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
     config: { valores: () => ({ ...cfg }), grupos: () => [
-      { clave: 'nivel', titulo: 'Nivel', opciones: Array.from({ length: M.N_NIVELES }, (_, i) => [i + 1, `${i + 1}`]) },
+      { clave: 'nivel', titulo: 'Nivel', visible: prog.max > 1, opciones: Array.from({ length: prog.max }, (_, i) => [i + 1, `${i + 1}`]) },
       { clave: 'ia', titulo: 'IA del jefe', opciones: Object.entries(M.IA).map(([x, v]) => [x, v.nombre]) },
       { clave: 'obj', titulo: 'Objetivo', opciones: Object.entries(M.OBJ).map(([x, v]) => [x, v.nombre]) },
       { clave: 'vidas', titulo: 'Vidas', opciones: [[3, '3'], [5, '5'], [7, '7']] },
-      { clave: 'trazo', titulo: 'Crecimiento del cuadrado', opciones: Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]) },
-      { clave: 'abiertos', titulo: 'Niveles', opciones: [[false, 'Se desbloquean'], [true, 'Todos abiertos']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
+      { clave: 'trazo', titulo: 'Crecimiento del cuadrado', opciones: Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin' && S.fase !== 'meta') { armar(); dibujar(); } else setup();
 }
@@ -49,7 +49,7 @@ export function unmount() {
   if (root) root.removeEventListener('click', clic); S = null; cv = null; asp = null; capas = null;
 }
 function guardar() { if (!S) return; const d = { s: M.serializar(S), reg }; const r = resumen({ s: S }); api.guardar(d, r.texto, r.fin); }
-const libre = n => cfg.abiertos || n <= prog.max;
+const libre = n => n <= prog.max;
 const estrellasDe = n => '★'.repeat(prog.est[n] || 0) + '☆'.repeat(3 - (prog.est[n] || 0));
 const imgDe = n => { const e = asp && asp.valores.esc; return ESCENARIOS_WORMS.includes(e) ? e : ESCENARIOS_WORMS[(n - 1) % ESCENARIOS_WORMS.length]; };
 const nombreImg = id => ({ 't-bosque': 'Bosque', 't-ciudad': 'Ciudad', 't-deportivo': 'Deportivo', 't-desierto': 'Desierto', 't-espacio': 'Espacio', 't-infierno': 'Infierno', 't-lago': 'Lago', 't-medieval': 'Medieval' })[id] || '';
@@ -59,7 +59,7 @@ function setup() {
   cancelAnimationFrame(raf); raf = 0;
   if (S && S.fase === 'pausa') guardar();
   const seg = (c, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[c] === v ? 'on' : ''}" data-cfg="${c}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  const grid = Array.from({ length: M.N_NIVELES }, (_, i) => { const n = i + 1, ok = libre(n); return `<button class="btn qxnv ${cfg.nivel === n ? 'on' : ''}" data-niv="${n}" ${ok ? '' : 'disabled'} aria-label="Nivel ${n}"><b>${ok ? n : '🔒'}</b><small>${ok ? estrellasDe(n) : ''}</small></button>`; }).join('');
+  const grid = Array.from({ length: prog.max }, (_, i) => { const n = i + 1; return `<button class="btn qxnv ${cfg.nivel === n ? 'on' : ''}" data-niv="${n}" aria-label="Nivel ${n}"><b>${n}</b><small>${estrellasDe(n)}</small></button>`; }).join('');
   const d = M.NIVELES[cfg.nivel - 1], n = d.j.length;
   root.innerHTML = `<p class="note">Pulsa junto a una zona ya descubierta y <b>desliza</b> para crear un cuadrado. Mientras crece, ¡que el jefe no lo toque! Descubre el objetivo de la imagen para ganar.</p>
     <div class="bar"><span class="lbl">Nivel</span></div><div class="qxgrid">${grid}</div>
@@ -69,14 +69,12 @@ function setup() {
     <div class="bar"><span class="lbl">Vidas</span>${seg('vidas', [[3, '3'], [5, '5'], [7, '7']])}</div>
     <div class="bar"><span class="lbl">Crecimiento</span>${seg('trazo', Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]))}</div>
     <p class="note">IA: velocidad del jefe y lo bien que persigue el cuadrado que estás creando. Crecimiento lento = más tiempo expuesto.</p>
-    <div class="bar"><span class="lbl">Niveles</span>${seg('abiertos', [[false, 'Se desbloquean'], [true, 'Todos abiertos']])}</div>
     <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">💠 Jugar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
 }
 function armar() {
   root.innerHTML = `<div class="qxhud"><span class="vi" id="qxVid"></span><span class="pts"><b id="qxPts">0</b> puntos</span><span id="qxNiv"></span><button class="btn qxpausa" data-ac="pausa" aria-label="Pausa">⏸️</button></div>
     <div class="qxprog"><i id="qxBar"></i><u id="qxObj"></u><span id="qxPct">0 %</span></div>
     <div class="qxzona" id="qxZona"><canvas id="qxCv" aria-label="Panel de juego"></canvas><div class="qxover" id="qxOver"></div></div>
-    <p class="note qxayuda">Pulsa junto a una zona descubierta y desliza: el cuadrado crece hacia tu dedo. Suelta para descubrirlo.</p>
     ${api.barraHtml()}`;
   cv = $('#qxCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3); hudAnt = ''; sucio = true; capas = null;
   const zona = $('#qxZona');
@@ -90,9 +88,16 @@ function armar() {
   });
   zona.addEventListener('pointermove', e => { if (activo === e.pointerId && S && S.rect) { const [cx, cy] = celda(e); M.apuntar(S, cx, cy); } });
   zona.addEventListener('contextmenu', e => e.preventDefault());
-  ajustarTamano(); pintarOver(); pintarHud();
+  zona.addEventListener('gesturestart', e => e.preventDefault()); zona.addEventListener('dblclick', e => e.preventDefault());
+  encajar(); ajustarTamano(); pintarOver(); pintarHud();
 }
 function celda(e) { const r = cv.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / r.width * M.COLS), Math.floor((e.clientY - r.top) / r.height * M.ROWS)]; }
+function encajar() {            // tablero fijo: ocupa todo el ancho y todo el alto que quede libre (sin hacer scroll)
+  const z = $('#qxZona'); if (!z) return;
+  z.style.width = '100%'; const pw = z.parentElement.getBoundingClientRect().width, zr = z.getBoundingClientRect(), ult = (root.closest('main') || root).getBoundingClientRect();
+  const top = zr.top + scrollY, extra = ult.bottom - zr.bottom, h = innerHeight - top - extra - 2;
+  z.style.width = Math.floor(Math.max(220, Math.min(pw, h * M.W / M.H))) + 'px';
+}
 function ajustarTamano() {
   if (!cv) return;
   const w = Math.floor(cv.parentElement.getBoundingClientRect().width);
@@ -160,7 +165,7 @@ function cubrir(g, im, w, h, espejo) {
 }
 function lienzo(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 function reconstruir() {
-  const w = cv.width, h = cv.height, c = k * M.CELDA, im = imagenNivel(), esp = S.nivel > 8, E = ESTILOS[asp.valores.est] || ESTILOS.neon;
+  const w = cv.width, h = cv.height, c = k * M.CELDA, im = imagenNivel(), esp = Math.floor((S.nivel - 1) / 8) % 2 === 1, E = ESTILOS[asp.valores.est] || ESTILOS.neon;
   // 1) imagen descubierta (solo donde hay celdas descubiertas)
   const img = lienzo(w, h), gi = img.getContext('2d');
   cubrir(gi, im, w, h, esp); gi.globalCompositeOperation = 'destination-in';
@@ -196,7 +201,7 @@ function dibujar() {
   const gl = efectos.find(e => e.tipo === 'golpe' && ahora - e.t < 400); if (gl) { const f = (1 - (ahora - gl.t) / 400) * 5; ctx.translate((Math.random() - .5) * f, (Math.random() - .5) * f); }
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(capas.pa, 0, 0); ctx.drawImage(capas.img, 0, 0);
   if (S.fase === 'meta') {                       // victoria: se desvela toda la imagen
-    const f = Math.min(1, (ahora - tFin) / 800), e = Math.min(1, f); ctx.globalAlpha = e; const t2 = lienzo(cv.width, cv.height); cubrir(t2.getContext('2d'), capas.im, cv.width, cv.height, S.nivel > 8); ctx.drawImage(t2, 0, 0); ctx.globalAlpha = 1;
+    const f = Math.min(1, (ahora - tFin) / 800), e = Math.min(1, f); ctx.globalAlpha = e; const t2 = lienzo(cv.width, cv.height); cubrir(t2.getContext('2d'), capas.im, cv.width, cv.height, Math.floor((S.nivel - 1) / 8) % 2 === 1); ctx.drawImage(t2, 0, 0); ctx.globalAlpha = 1;
   } else ctx.drawImage(capas.ne, 0, 0);
   ctx.restore();
   // destello de lo recién descubierto
@@ -241,7 +246,7 @@ function pintarHud() {
 function pintarOver() {
   const o = $('#qxOver'); if (!o || !S) return;
   o.hidden = S.fase === 'jugar'; const def = M.NIVELES[S.nivel - 1], nom = `Nivel ${S.nivel}: ${def.n}`;
-  if (S.fase === 'listo') o.innerHTML = `<div><b>💠 ¡Preparado!</b><span>${esc(nom)}</span><span>Descubre el ${S.obj} % de la imagen</span><span>Toca para empezar</span></div>`;
+  if (S.fase === 'listo') o.innerHTML = `<div><b>💠 ¡Preparado!</b><span>${esc(nom)}</span><span>Descubre el ${S.obj} % de la imagen</span><span>Pulsa junto a lo descubierto y desliza</span><span>Toca para empezar</span></div>`;
   else if (S.fase === 'pausa') o.innerHTML = `<div><b>⏸️ Pausa</b><span>${esc(nom)} · ${Math.floor(M.pct(S))} %</span><span>Toca para seguir</span></div>`;
   else if (S.fase === 'meta') {
     const sig = S.nivel < M.N_NIVELES;
@@ -273,5 +278,5 @@ function reglas() {
     <li>Si tus cuadrados encierran una zona sin jefes, esa zona se descubre sola.</li>
     <li><b>Jefes</b>: <span style="color:#FF4FD8">rebotadores</span> (en línea recta), <span style="color:#FFB020">errantes</span> (giran al azar) y <span style="color:#FF3B3B">cazadores</span> (persiguen tu cuadrado).</li>
     <li><b>IA del jefe</b>: Dócil, Normal, Astuto o Maestro cambia su velocidad y cuánto te persigue. <b>Objetivo</b>, <b>vidas</b> y <b>crecimiento</b> (velocidad del cuadrado) también se ajustan.</li>
-    <li>12 niveles con imágenes de los escenarios de Worms. Puntos por celdas (más si el cuadrado es grande), vidas sobrantes y estrellas (3 ★ sin perder vidas).</li></ul>`);
+    <li>Niveles cada vez más difíciles (más jefes y más rápidos), con imágenes de los escenarios de Worms. Puntos por celdas (más si el cuadrado es grande), vidas sobrantes y estrellas (3 ★ sin perder vidas).</li></ul>`);
 }

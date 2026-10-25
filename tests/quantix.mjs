@@ -1,9 +1,9 @@
 // Pruebas del motor de «Quantix»: node tests/quantix.mjs
 import * as M from '../js/games/quantix/motor.js';
 let fallos = 0; const t = (n, c) => { if (!c) { fallos++; console.log('✗', n); } else console.log('✓', n); };
-t('12 niveles', M.N_NIVELES === 12 && M.NIVELES.every(n => n.j.length >= 1 && n.obj >= 60));
+t('20 niveles: 4 grupos de jefes × 5 velocidades', M.N_NIVELES === 20 && M.NIVELES.map(n => n.j.length).join('') === '1'.repeat(5) + '2'.repeat(5) + '3'.repeat(5) + '4'.repeat(5) && M.NIVELES[0].j[0][1] < M.NIVELES[2].j[0][1] && M.NIVELES[2].j[0][1] < M.NIVELES[4].j[0][1] && M.NIVELES[5].j[0][1] === M.NIVELES[0].j[0][1] && M.NIVELES[12].j.length === 3 && M.NIVELES[15].j.length === 4);
 t('cfg inválida rechazada', M.cfgValida({ ...M.CFG_DEF, nivel: 99 }) === null && M.cfgValida({ ...M.CFG_DEF, vidas: 4 }) === null && M.cfgValida(null) === null);
-const S0 = M.crear({ ...M.CFG_DEF, nivel: 12 }, 7); S0.fase = 'jugar';
+const S0 = M.crear({ ...M.CFG_DEF, nivel: 13 }, 7); S0.fase = 'jugar';
 t('jefes en zona libre', S0.jefes.length === 3 && S0.jefes.every(b => !S0.g[Math.floor(b.y) * M.COLS + Math.floor(b.x)]));
 t('empieza en 0 %', M.pct(S0) === 0);
 t('sin anclaje en medio', M.anclaje(S0, 18, 24) === null && M.anclaje(S0, 2, 24) && M.anclaje(S0, 2, 24).x === 1);
@@ -43,6 +43,6 @@ function juega(cfg, seed) {
   return S;
 }
 const mal = [];
-for (let n = 1; n <= 12; n++) { const S = juega({ ...M.CFG_DEF, nivel: n, ia: 'maestro', vidas: 3 }, 100 + n); if (S.fase !== 'meta') mal.push(n + ':' + Math.round(M.pct(S)) + '%'); }
-t('los 12 niveles se superan con IA Maestro' + (mal.length ? ' fallan ' + mal : ''), mal.length === 0);
+for (let n = 1; n <= 20; n++) { const S = juega({ ...M.CFG_DEF, nivel: n, ia: 'maestro', vidas: 3 }, 100 + n); if (S.fase !== 'meta') mal.push(n + ':' + Math.round(M.pct(S)) + '%'); }
+t('los 20 niveles se superan con IA Maestro' + (mal.length ? ' fallan ' + mal : ''), mal.length === 0);
 console.log(fallos ? `${fallos} FALLOS` : 'Todo OK'); process.exit(fallos ? 1 : 0);

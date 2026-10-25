@@ -32,11 +32,12 @@ export async function mount(r, a) {
   await api.css(new URL('./vuelaalto.css', import.meta.url));
   const c0 = M.cfgValida({ ...M.CFG_DEF, ...api.pref('cfg', null) }); if (c0) cfg = c0;
   const p0 = api.pref('prog', null); if (p0 && Number.isInteger(p0.max)) prog = { max: Math.min(M.N_NIVELES, Math.max(1, p0.max)), est: p0.est && typeof p0.est === 'object' ? p0.est : {} };
+  if (cfg.nivel > prog.max) cfg.nivel = prog.max;
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   onKeyUp = e => { if (['arrowup', ' ', 'w'].includes(e.key.toLowerCase())) hold = false; }; document.addEventListener('keyup', onKeyUp);
   onUp = () => { hold = false; }; addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp); addEventListener('blur', onUp);
-  onRes = () => { if (cv && S) { ajustarTamano(); dibujar(); } }; addEventListener('resize', onRes);
+  onRes = () => { if (cv && S) { encajar(); ajustarTamano(); dibujar(); } }; addEventListener('resize', onRes);
   onVis = () => { if (document.hidden) { hold = false; pausar(); } }; document.addEventListener('visibilitychange', onVis);
   api.barra({ nueva: () => empezar(),
     salir: () => { pausar(); setup(); },
@@ -44,13 +45,12 @@ export async function mount(r, a) {
     reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [
       { clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS) },
-      { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'niveles', opciones: Array.from({ length: M.N_NIVELES }, (_, i) => [i + 1, `${i + 1}`]) },
+      { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'niveles' && prog.max > 1, opciones: Array.from({ length: prog.max }, (_, i) => [i + 1, `${i + 1}`]) },
       { clave: 'dif', titulo: 'Dificultad', opciones: Object.entries(M.DIF).map(([k2, x]) => [k2, x.nombre]) },
       { clave: 'afl', titulo: 'Obstáculos', opciones: Object.entries(M.AFL).map(([k2, x]) => [k2, x.nombre]) },
       { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(M.VEL).map(([k2, x]) => [k2, x.nombre]) },
       { clave: 'ctl', titulo: 'Control', opciones: Object.entries(M.CTL).map(([k2, x]) => [k2, x.nombre]) },
-      { clave: 'ext', titulo: 'Peligros', opciones: Object.entries(M.EXT) },
-      { clave: 'abiertos', titulo: 'Niveles', visible: v.modo === 'niveles', opciones: [[false, 'Se desbloquean'], [true, 'Todos abiertos']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
+      { clave: 'ext', titulo: 'Peligros', opciones: Object.entries(M.EXT) },], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (Infinito)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin' && S.fase !== 'meta') { Mu = new M.Mundo(S); armar(); dibujar(); } else setup();
 }
@@ -61,7 +61,7 @@ export function unmount() {
   if (root) root.removeEventListener('click', clic); S = null; Mu = null; cv = null; asp = null;
 }
 function guardar() { if (!S) return; const d = { s: { ...S }, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
-const libre = n => cfg.abiertos || n <= prog.max;
+const libre = n => n <= prog.max;
 const estrellasDe = n => '★'.repeat(prog.est[n] || 0) + '☆'.repeat(3 - (prog.est[n] || 0));
 
 /* ---------- pantallas ---------- */
@@ -69,7 +69,7 @@ function setup() {
   cancelAnimationFrame(raf); raf = 0;
   if (S && (S.fase === 'pausa' || S.fase === 'jugar')) guardar();
   const seg = (c, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[c] === v ? 'on' : ''}" data-cfg="${c}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  const grid = Array.from({ length: M.N_NIVELES }, (_, i) => { const n = i + 1, ok = libre(n); return `<button class="btn vanv ${cfg.nivel === n ? 'on' : ''}" data-niv="${n}" ${ok ? '' : 'disabled'} aria-label="Nivel ${n}"><b>${ok ? n : '🔒'}</b><small>${ok ? estrellasDe(n) : ''}</small></button>`; }).join('');
+  const grid = Array.from({ length: prog.max }, (_, i) => { const n = i + 1; return `<button class="btn vanv ${cfg.nivel === n ? 'on' : ''}" data-niv="${n}" aria-label="Nivel ${n}"><b>${n}</b><small>${estrellasDe(n)}</small></button>`; }).join('');
   const rec = api.record('Infinito · ' + M.DIF[cfg.dif].nombre);
   const m = cfg.modo === 'niveles';
   root.innerHTML = `<p class="note">Mantén pulsada la pantalla para <b>subir</b> y suéltala para <b>bajar</b>. Pasa entre los obstáculos, recoge 🪙 y llega a la meta.</p>
@@ -82,14 +82,12 @@ function setup() {
     <div class="bar"><span class="lbl">Control</span>${seg('ctl', Object.entries(M.CTL).map(([x, v]) => [x, v.nombre]))}</div>
     <div class="bar"><span class="lbl">Peligros</span>${seg('ext', Object.entries(M.EXT))}</div>
     <p class="note">Dificultad: tamaño del hueco y velocidad. Obstáculos: cuánto tardan en aparecer. Peligros: añade tubos móviles, pájaros, dobles huecos y hélices.</p>
-    ${m ? `<div class="bar"><span class="lbl">Niveles</span>${seg('abiertos', [[false, 'Se desbloquean'], [true, 'Todos abiertos']])}</div>` : ''}
     <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">🐦 Jugar</button><button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
 }
 function armar() {
   root.innerHTML = `<div class="vahud"><span>🪙 <b id="vaMon">0</b></span><span class="pts"><b id="vaPts">0</b> puntos</span><span id="vaDist">0 m</span><button class="btn vapausa" data-ac="pausa" aria-label="Pausa">⏸️</button></div>
     <div class="vaprog" id="vaProg"><i id="vaBar"></i></div>
     <div class="vazona" id="vaZona"><canvas id="vaCv" aria-label="Zona de vuelo"></canvas><div class="vaover" id="vaOver"></div></div>
-    <p class="note vaayuda">Mantén pulsado para subir · suelta para bajar. También con Espacio o ↑. Tecla P = pausa.</p>
     ${api.barraHtml()}`;
   cv = $('#vaCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3); hudAnt = '';
   recordAct = S && S.modo === 'infinito' ? api.record(M.variante(S)) : 0;
@@ -100,7 +98,14 @@ function armar() {
     if (S && (S.fase === 'listo' || S.fase === 'pausa')) jugarYa();
   });
   zona.addEventListener('contextmenu', e => e.preventDefault());
-  ajustarTamano(); pintarOver();
+  zona.addEventListener('gesturestart', e => e.preventDefault()); zona.addEventListener('dblclick', e => e.preventDefault());
+  encajar(); ajustarTamano(); pintarOver();
+}
+function encajar() {            // tablero fijo: ocupa todo el ancho y todo el alto que quede libre (sin hacer scroll)
+  const z = $('#vaZona'); if (!z) return;
+  z.style.width = '100%'; const pw = z.parentElement.getBoundingClientRect().width, zr = z.getBoundingClientRect(), ult = (root.closest('main') || root).getBoundingClientRect();
+  const top = zr.top + scrollY, extra = ult.bottom - zr.bottom, h = innerHeight - top - extra - 2;
+  z.style.width = Math.floor(Math.max(220, Math.min(pw, h * M.W / M.H))) + 'px';
 }
 function ajustarTamano() {
   if (!cv) return;
@@ -305,7 +310,7 @@ function clic(e) {
 function reglas() {
   api.modal('Vuela Alto', `<ul><li><b>Mantén pulsada</b> la pantalla (o la tecla Espacio / ↑) para que tu personaje <b>suba</b>; <b>suelta</b> para que baje. No hace falta pulsar repetidamente.</li>
     <li>Cruza los huecos entre los obstáculos sin tocarlos ni caer al suelo. Cada puerta superada suma 10 puntos y cada 🪙 recogida, 25.</li>
-    <li><b>Niveles</b>: ${M.N_NIVELES} niveles, cada vez más largos y difíciles, con 8 escenarios distintos. Al llegar a la meta ganas hasta 3 ★ según las monedas recogidas (⅓ de ★ por llegar, 2 con la mitad, 3 con el 90 %). Superar un nivel desbloquea el siguiente.</li>
+    <li><b>Niveles</b>: cada vez más largos y difíciles, con escenarios distintos. Al llegar a la meta ganas hasta 3 ★ según las monedas recogidas (⅓ de ★ por llegar, 2 con la mitad, 3 con el 90 %). Superar un nivel desbloquea el siguiente.</li>
     <li><b>Infinito</b>: sin meta; el recorrido se endurece poco a poco y entras en el podio con tu puntuación.</li>
     <li><b>Peligros</b>: tubos que se mueven, pájaros 🦅, dobles huecos y hélices giratorias (según el nivel o la opción «Peligros»).</li>
     <li><b>Ajustes</b>: dificultad (tamaño de los huecos y velocidad), obstáculos (cada cuánto aparecen), velocidad general y tipo de control (suave, normal o ágil).</li>

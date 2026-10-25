@@ -131,3 +131,7 @@ Inicio por categorías con estado de la partida en curso («Continuar · Medio �
 ## Actualización 3.27: Quantix (Arcade)
 - Estilo Qix/Volfied con cuadrados que se arrastran desde una zona ya descubierta; 12 niveles, 3 tipos de jefe (rebotador, errante, cazador) y 4 niveles de IA. Imágenes: escenarios de Worms.
 - Motor sin DOM (`motor.js`); `tests/quantix.mjs` comprueba reglas, guardado y que los 12 niveles se superan con un piloto con mirada hacia delante.
+
+## Actualización 3.28: ajustes de Vuela Alto y Quantix
+- Niveles siempre progresivos y ocultos hasta desbloquearlos; tablero encajado al espacio disponible (`encajar()`), fijo y sin zoom.
+- Quantix: 20 niveles = 4 grupos de jefes × 5 velocidades (6 a 16 celdas/s antes de la IA).

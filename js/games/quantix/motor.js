@@ -6,21 +6,14 @@ export const IA = { docil: { nombre: 'Dócil', v: .75, caza: 0 }, normal: { nomb
 export const OBJ = { facil: { nombre: 'Fácil', d: -10 }, normal: { nombre: 'Normal', d: 0 }, dificil: { nombre: 'Exigente', d: 5 } };
 export const VIDAS = { 3: '3', 5: '5', 7: '7' };
 export const TRAZO = { lento: { nombre: 'Lento', v: 14 }, normal: { nombre: 'Normal', v: 22 }, rapido: { nombre: 'Rápido', v: 34 } };
-export const CFG_DEF = { nivel: 1, ia: 'normal', obj: 'normal', vidas: 5, trazo: 'normal', abiertos: false };
-export const NIVELES = [
-  { n: 'Calentamiento', obj: 60, j: [['rebote', 5]] },
-  { n: 'Cuadrados', obj: 65, j: [['errante', 5.5]] },
-  { n: 'Rebotes', obj: 70, j: [['rebote', 6.5]] },
-  { n: 'Cazador', obj: 70, j: [['cazador', 6]] },
-  { n: 'Doble amenaza', obj: 70, j: [['rebote', 5.5], ['rebote', 5.5]] },
-  { n: 'Dos caras', obj: 72, j: [['errante', 6], ['rebote', 6]] },
-  { n: 'Instinto', obj: 75, j: [['cazador', 7]] },
-  { n: 'Caos', obj: 75, j: [['errante', 6.5], ['errante', 6.5]] },
-  { n: 'Persecución', obj: 75, j: [['cazador', 6.5], ['rebote', 7]] },
-  { n: 'Tormenta', obj: 78, j: [['cazador', 7], ['errante', 7]] },
-  { n: 'Trío', obj: 78, j: [['rebote', 6.5], ['errante', 6.5], ['cazador', 6.5]] },
-  { n: 'Quantix', obj: 80, j: [['cazador', 7.5], ['cazador', 7.5], ['rebote', 7.5]] },
-];
+export const CFG_DEF = { nivel: 1, ia: 'normal', obj: 'normal', vidas: 5, trazo: 'normal' };
+// 20 niveles = 4 grupos de jefes (1 a 4) × 5 velocidades. Nivel n → jefes = ⌈n/5⌉, velocidad = (n-1) % 5.
+export const VELOCIDADES = [['Lenta', 6], ['Moderada', 8.5], ['Media', 11], ['Rápida', 13.5], ['Muy rápida', 16]];
+const TIPOS = [['rebote', 'errante', 'rebote', 'errante'], ['errante', 'rebote', 'errante', 'rebote'], ['errante', 'cazador', 'rebote', 'errante'], ['cazador', 'rebote', 'cazador', 'errante'], ['cazador', 'cazador', 'rebote', 'cazador']];
+export const NIVELES = Array.from({ length: 20 }, (_, i) => {
+  const nj = Math.floor(i / 5) + 1, vi = i % 5, [vn, v] = VELOCIDADES[vi];
+  return { n: `${nj} jefe${nj > 1 ? 's' : ''} · ${vn.toLowerCase()}`, obj: 60 + Math.floor(i * .6), j: TIPOS[vi].slice(0, nj).map(t => [t, v]) };
+});
 export const N_NIVELES = NIVELES.length;
 const cl = (v, a, b) => Math.min(b, Math.max(a, v));
 export function rnd(S) { S.rs = (S.rs + 0x6D2B79F5) | 0; let t = Math.imul(S.rs ^ (S.rs >>> 15), 1 | S.rs); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
@@ -28,7 +21,7 @@ export function cfgValida(c) {
   if (!c || typeof c !== 'object') return null;
   const nivel = Number(c.nivel), vidas = Number(c.vidas);
   if (!Number.isInteger(nivel) || nivel < 1 || nivel > N_NIVELES || !Object.hasOwn(IA, c.ia) || !Object.hasOwn(OBJ, c.obj) || !Object.hasOwn(TRAZO, c.trazo) || !Object.hasOwn(VIDAS, vidas)) return null;
-  return { nivel, ia: c.ia, obj: c.obj, vidas, trazo: c.trazo, abiertos: !!c.abiertos };
+  return { nivel, ia: c.ia, obj: c.obj, vidas, trazo: c.trazo };
 }
 export const objetivoDe = (nivel, obj) => cl(NIVELES[nivel - 1].obj + OBJ[obj].d, 40, 95);
 const idx = (x, y) => y * COLS + x;
@@ -90,8 +83,14 @@ function moverJefes(S, dt) {
     const ny = b.y + b.vy * sp * dt;
     if (bloq(S.g, b.x, ny)) { b.vy = -b.vy; rebote = true; } else b.y = ny;
     if (rebote && b.t === 'rebote') { const a = Math.atan2(b.vy, b.vx) + (rnd(S) - .5) * .22; b.vx = Math.cos(a); b.vy = Math.sin(a); }
-    if (bloq(S.g, b.x, b.y)) { b.x = Math.floor(b.x) + .5; b.y = Math.floor(b.y) + .5; }
+    if (!Number.isFinite(b.x + b.y + b.vx + b.vy)) { b.x = COLS / 2; b.y = ROWS / 2; b.vx = 1; b.vy = .7; }
+    if (bloq(S.g, b.x, b.y)) { b.x = Math.floor(b.x) + .5; b.y = Math.floor(b.y) + .5; if (S.g[idx(Math.floor(b.x), Math.floor(b.y))]) recolocar(S, b); }
   }
+}
+function recolocar(S, b) {                     // por seguridad: si un jefe quedara dentro de lo descubierto, vuelve a la casilla libre más cercana
+  let m = 1e9, bx = 0, by = 0;
+  for (let y = 1; y < ROWS - 1; y++) for (let x = 1; x < COLS - 1; x++) if (!S.g[idx(x, y)]) { const d = (x + .5 - b.x) ** 2 + (y + .5 - b.y) ** 2; if (d < m) { m = d; bx = x + .5; by = y + .5; } }
+  if (m < 1e9) { b.x = bx; b.y = by; }
 }
 function toca(S) {
   const c = cuadro(S); if (!c) return false;

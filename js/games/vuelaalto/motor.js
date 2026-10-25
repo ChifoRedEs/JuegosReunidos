@@ -8,7 +8,7 @@ export const VEL = { lenta: { nombre: 'Lenta', k: .8 }, normal: { nombre: 'Norma
 // Control: aceleración al soltar (G) y al mantener (T), y velocidades máximas de subida y bajada (unidades por segundo)
 export const CTL = { suave: { nombre: 'Suave', G: 820, T: 1150, up: 210, down: 300 }, normal: { nombre: 'Normal', G: 1000, T: 1400, up: 240, down: 340 }, agil: { nombre: 'Ágil', G: 1200, T: 1700, up: 280, down: 400 } };
 export const EXT = { solo: 'Solo tubos', nivel: 'Los del nivel', mas: 'Más peligros' };
-export const CFG_DEF = { modo: 'niveles', nivel: 1, dif: 'normal', afl: 'media', vel: 'normal', ctl: 'normal', ext: 'nivel', abiertos: false };
+export const CFG_DEF = { modo: 'niveles', nivel: 1, dif: 'normal', afl: 'media', vel: 'normal', ctl: 'normal', ext: 'nivel' };
 
 /* ---------- los 24 niveles ---------- */
 export const NOMBRES = ['Primer vuelo', 'Brisa suave', 'Entre nubes', 'Viento del oeste', 'Hora dorada', 'Aves curiosas', 'Luna llena', 'Luciérnagas', 'Noche de estrellas', 'Primera nevada', 'Ventisca', 'Cumbre helada',
@@ -39,7 +39,7 @@ export function cfgValida(c) {
   if (!c || typeof c !== 'object') return null;
   const nivel = Number(c.nivel);
   if (!Object.hasOwn(MODOS, c.modo) || !Object.hasOwn(DIF, c.dif) || !Object.hasOwn(AFL, c.afl) || !Object.hasOwn(VEL, c.vel) || !Object.hasOwn(CTL, c.ctl) || !Object.hasOwn(EXT, c.ext) || !Number.isInteger(nivel) || nivel < 1 || nivel > N_NIVELES) return null;
-  return { modo: c.modo, nivel, dif: c.dif, afl: c.afl, vel: c.vel, ctl: c.ctl, ext: c.ext, abiertos: !!c.abiertos };
+  return { modo: c.modo, nivel, dif: c.dif, afl: c.afl, vel: c.vel, ctl: c.ctl, ext: c.ext };
 }
 export function crear(cfg, rnd = Math.random) {
   const c = cfgValida(cfg) || { ...CFG_DEF };
