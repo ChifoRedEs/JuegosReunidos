@@ -44,6 +44,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0)) cfg = { modo: c0.modo, tema: c0.tema, tam: c0.tam, nivel: c0.nivel };
   S = api.cargar();
   root.addEventListener('click', clic);
+  root.addEventListener('change', e => { const sel = e.target.closest('select[data-cfgsel]'); if (sel) { cfg[sel.dataset.cfgsel] = sel.value; api.setPref('cfg', cfg); setup(); } });
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
   api.barra({
     nueva: () => jugar(),
@@ -55,7 +56,7 @@ export async function mount(r, a) {
       valores: () => ({ modo: cfg.modo, tema: cfg.tema, tam: cfg.tam, nivel: cfg.nivel }),
       grupos: v => [
         { clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'solo' ? '👤 ' : k === 'dos' ? '👥 ' : '🤖 ') + l]) },
-        { clave: 'tema', titulo: 'Imágenes', opciones: Object.entries(M.TEMAS).map(([k, l]) => [k, (BANCOS[k] ? BANCOS[k].icono + ' ' : '🎲 ') + l]) },
+        { clave: 'tema', titulo: 'Imágenes', desplegable: true, opciones: Object.entries(M.TEMAS).map(([k, l]) => [k, (BANCOS[k] ? BANCOS[k].icono + ' ' : '🎲 ') + l]) },
         { clave: 'tam', titulo: 'Tamaño del tablero', opciones: Object.entries(M.TAMANOS).map(([k, t]) => [k, `${t.nombre} ${t.cols}×${t.filas}`]) },
         { clave: 'nivel', titulo: 'Memoria de la máquina', visible: v.modo === 'cpu', opciones: Object.entries(M.NIVELES) },
       ],
@@ -82,7 +83,7 @@ function setup() {
     cpu: 'Turnos contra la máquina. Cuanto mejor sea su <b>memoria</b>, menos se le escapan las cartas que ya ha visto.' }[cfg.modo];
   root.innerHTML = `<p class="note">${nota}</p>
     <div class="bar"><span class="lbl">Modo</span>${seg('modo', Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'solo' ? '👤 ' : k === 'dos' ? '👥 ' : '🤖 ') + l]))}</div>
-    <div class="bar"><span class="lbl">Imágenes</span>${seg('tema', Object.entries(M.TEMAS).map(([k, l]) => [k, (BANCOS[k] ? BANCOS[k].icono + ' ' : '🎲 ') + l]))}</div>
+    <div class="bar"><span class="lbl">Imágenes</span><select class="desplegable" data-cfgsel="tema" aria-label="Imágenes">${Object.entries(M.TEMAS).map(([k, l]) => `<option value="${k}"${cfg.tema === k ? ' selected' : ''}>${(BANCOS[k] ? BANCOS[k].icono + ' ' : '🎲 ') + l}</option>`).join('')}</select></div>
     <div class="bar"><span class="lbl">Tablero</span>${seg('tam', Object.entries(M.TAMANOS).map(([k, t]) => [k, `${t.nombre} ${t.cols}×${t.filas}`]))}</div>
     <p class="note">${M.pares(cfg.tam)} parejas · ${M.TAMANOS[cfg.tam].cols * M.TAMANOS[cfg.tam].filas} cartas</p>
     ${cfg.modo === 'cpu' ? `<div class="bar"><span class="lbl">Memoria de la máquina</span>${seg('nivel', Object.entries(M.NIVELES))}</div>` : ''}

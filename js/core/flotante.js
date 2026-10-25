@@ -21,15 +21,27 @@ export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot
     panel.style.left = x + 'px'; panel.style.top = y + 'px';
   }
   const asa = panel.querySelector('.flasa');
-  asa.addEventListener('pointerdown', e => {
-    if (e.button > 0) return; e.preventDefault();
-    const r = panel.getBoundingClientRect(); arr = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
-    try { asa.setPointerCapture(e.pointerId); } catch { /* ignorar */ }
-    panel.classList.add('mov');
+  // Se arrastra desde cualquier punto del menú (también sobre los botones): un toque corto sigue siendo un clic; al mover más de 6 px se arrastra
+  let arrastro = false;
+  panel.addEventListener('pointerdown', e => {
+    if (e.button > 0) return;
+    const r = panel.getBoundingClientRect(); arr = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId, x0: e.clientX, y0: e.clientY, mueve: false };
   });
-  asa.addEventListener('pointermove', e => { if (!arr || e.pointerId !== arr.id) return; pos = { x: e.clientX - arr.dx, y: e.clientY - arr.dy }; colocar(); });
-  const suelta = e => { if (!arr || e.pointerId !== arr.id) return; arr = null; panel.classList.remove('mov'); api.setPref(clave, pos); };
-  asa.addEventListener('pointerup', suelta); asa.addEventListener('pointercancel', suelta);
+  panel.addEventListener('pointermove', e => {
+    if (!arr || e.pointerId !== arr.id) return;
+    if (!arr.mueve) {
+      if (Math.hypot(e.clientX - arr.x0, e.clientY - arr.y0) < 6) return;
+      arr.mueve = true; panel.classList.add('mov'); try { panel.setPointerCapture(e.pointerId); } catch { /* ignorar */ }
+    }
+    pos = { x: e.clientX - arr.dx, y: e.clientY - arr.dy }; colocar();
+  });
+  const suelta = e => {
+    if (!arr || e.pointerId !== arr.id) return;
+    if (arr.mueve) { arrastro = true; setTimeout(() => { arrastro = false; }, 0); api.setPref(clave, pos); }
+    arr = null; panel.classList.remove('mov');
+  };
+  panel.addEventListener('pointerup', suelta); panel.addEventListener('pointercancel', suelta);
+  panel.addEventListener('click', e => { if (arrastro) { e.stopPropagation(); e.preventDefault(); } }, true);   // al soltar tras arrastrar no se pulsa ningún botón
   asa.addEventListener('dblclick', () => { pos = null; api.setPref(clave, null); colocar(); });     // doble toque en el asa: vuelve a su sitio
   panel.addEventListener('click', e => { const b = e.target.closest('[data-fl]'); if (b && !b.disabled) alClic(b.dataset.fl); });
   const on = () => colocar();

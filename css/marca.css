@@ -127,7 +127,7 @@ button.ficha{display:flex}
 @media(max-width:375px){.top h1{font-size:19px}.top h1 .logo{width:24px;height:24px;border-radius:7px;margin:0 4px;vertical-align:-6px}}
 
 /* ---------- menú flotante común (core/flotante.js) ---------- */
-.flotante{position:fixed;z-index:40;width:min(calc(100vw - 12px),420px);background:color-mix(in srgb,var(--card) 94%,transparent);border:2px solid var(--line);border-radius:18px;box-shadow:0 12px 30px rgba(20,15,60,.35);padding:0 8px 8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);user-select:none;-webkit-user-select:none;transition:opacity .2s}
+.flotante{position:fixed;z-index:40;width:min(calc(100vw - 12px),420px);background:color-mix(in srgb,var(--card) 94%,transparent);border:2px solid var(--line);border-radius:18px;box-shadow:0 12px 30px rgba(20,15,60,.35);padding:0 8px 8px;touch-action:none;cursor:grab;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);user-select:none;-webkit-user-select:none;transition:opacity .2s}
 .flotante.mov{box-shadow:0 20px 44px rgba(20,15,60,.5);opacity:.9}
 .flasa{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0 5px;cursor:grab;touch-action:none}
 .flotante.mov .flasa{cursor:grabbing}
@@ -138,3 +138,10 @@ button.ficha{display:flex}
 .flbtns .btn.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
 .flbtns .btn:disabled{opacity:.4}
 .flhueco{width:100%}
+
+/* Cabecera: logos fijos; el texto ocupa siempre el ancho de «Palabras Cruzadas» (--wtit lo mide app.js) */
+.top h1{display:flex;justify-content:center;align-items:center;gap:8px}
+.top h1 .logo{margin:0;flex:none}
+.top h1 #titulotxt{display:block;flex:none;width:var(--wtit,auto);max-width:calc(100% - 80px);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desplegable{width:100%;min-height:48px;padding:8px 38px 8px 12px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:800 16px Nunito,system-ui,sans-serif;appearance:auto}
+.bar:has(> .lbl) > .desplegable{flex:1 1 100%}

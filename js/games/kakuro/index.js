@@ -8,7 +8,7 @@ import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { TAMANOS, DIFICULTADES, tiras, combinaciones, cifras, generarTrabajo } from './generador.js';
 
 const GEN = new URL('./generador.js', import.meta.url).href, RETO = { n: 8, dif: 'medio' };
-let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], ocupado = false, notasOn = false, onKey = null, ts = [], runsDe = [], malas = new Set(), serie = 0;
+let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], ocupado = false, notasOn = false, onKey = null, ts = [], runsDe = [], malas = new Set(), serie = 0, altoComb = 0;
 
 /* ---------- validación / resumen ---------- */
 const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
@@ -105,6 +105,7 @@ async function nueva(n, dif, forzar = false, cerrar = false, reto = false) {
   }
 function guardar() { if (!S) return; const d = { n: S.n, dif: S.dif, negra: S.negra, pista: S.pista, sol: S.sol, cur: S.cur, notas: S.notas, t: S.t, pistas: S.pistas, reto: S.reto || null, hist: hist ? hist.toJSON().slice(-60) : [] }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 function preparar() {
+  altoComb = 0;
   ts = tiras(S.n, S.negra).map(t => ({ ...t, suma: S.pista[t.pista][t.dir === 'h' ? 'derecha' : 'abajo'] }));
   runsDe = Array.from({ length: S.n * S.n }, () => []); ts.forEach((t, k) => t.celdas.forEach(i => runsDe[i].push(k)));
 }
@@ -168,13 +169,26 @@ function pintar() {
   m.textContent = hecho ? `¡Panel resuelto en ${fmtTiempo(S.t)}!` : notasOn ? 'Modo notas: los números se anotan a lápiz.' : 'Cada tira suma el número de su pista, con cifras del 1 al 9 sin repetir.';
 }
 // Ayuda propia del Kakuro: las combinaciones posibles de las dos sumas de la casilla elegida (tachadas las que ya no encajan)
-function pintarCombinaciones() {
-  const c = $('#kaComb'); if (!c) return;
-  if (!api.pref('combos', true) || !S || completo(S) || S.negra[S.sel]) { c.innerHTML = ''; return; }
-  c.innerHTML = runsDe[S.sel].map(k => {
-    const t = ts[k], puestos = t.celdas.map(i => S.cur[i]).filter(Boolean), lista = combinaciones(t.suma, t.celdas.length);
+function combHtml(i, marcar) {
+  return runsDe[i].map(k => {
+    const t = ts[k], puestos = marcar ? t.celdas.map(j => S.cur[j]).filter(Boolean) : [], lista = combinaciones(t.suma, t.celdas.length);
     return `<div><b>${t.dir === 'h' ? '→' : '↓'} ${t.suma} en ${t.celdas.length}</b>${lista.map(m => { const ds = cifras(m), vale = puestos.every(v => ds.includes(v)); return `<span class="${vale ? '' : 'no'}">${ds.join('')}</span>`; }).join('')}</div>`;
   }).join('');
+}
+// Altura de la caja = la que necesita la casilla con más combinaciones de este panel: así caben todas sin scroll y nada se mueve
+function medirCombinaciones(c) {
+  const m = document.createElement('div'); m.className = 'kacomb'; m.style.cssText = `position:absolute;visibility:hidden;height:auto;overflow:visible;left:0;top:0;width:${c.clientWidth}px`;
+  const hs = []; S.negra.forEach((neg, i) => { if (!neg) { const w = document.createElement('div'); w.style.cssText = 'display:flex;flex-direction:column;gap:4px'; w.innerHTML = combHtml(i, false); m.append(w); hs.push(w); } });
+  c.parentNode.append(m); const alto = Math.max(...hs.map(w => w.offsetHeight), 0); m.remove(); return alto + 2;
+}
+function pintarCombinaciones() {
+  const c = $('#kaComb'); if (!c) return;
+  if (!api.pref('combos', true)) { c.innerHTML = ''; c.style.height = '0px'; c.style.margin = '0'; return; }
+  c.style.margin = '';
+  if (!S || completo(S) || S.negra[S.sel]) { c.innerHTML = ''; return; }
+  if (!altoComb || altoComb.w !== c.clientWidth) altoComb = { w: c.clientWidth, h: medirCombinaciones(c) };
+  c.style.height = altoComb.h + 'px';
+  c.innerHTML = combHtml(S.sel, true);
 }
 
 /* ---------- entrada ---------- */

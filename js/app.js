@@ -10,6 +10,16 @@ import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION, FECHA } from './version.js';
 
+// Ancho fijo del texto de la cabecera = el del nombre más largo («Palabras Cruzadas»): los logos no se mueven al cambiar de juego
+function medirCabecera() {
+  const t = document.getElementById('titulotxt'), h = document.getElementById('titulo'); if (!t || !h) return;
+  const m = document.createElement('span'), cs = getComputedStyle(t);
+  m.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;font:${cs.font};letter-spacing:${cs.letterSpacing}`; m.textContent = 'Palabras Cruzadas';
+  document.body.appendChild(m); const w = Math.ceil(m.getBoundingClientRect().width) + 2; m.remove();
+  h.style.setProperty('--wtit', w + 'px');
+}
+window.addEventListener('resize', medirCabecera); medirCabecera();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(medirCabecera);
 const cabTxt = t => { const e = document.getElementById('titulotxt'); if (e) e.textContent = t; };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), btnAtras = $('#atras'), nav = $('#nav');
@@ -123,13 +133,16 @@ function crearApi(j, ent, mod, root) {
       let aplicado = false, cerrar;
       const pintar = () => {
         cont.replaceChildren(...c.grupos(vals).filter(g => g.visible !== false).map(g => el('div', { class: 'cfg-g' }, el('span', { class: 'lbl' }, g.titulo),
-          el('div', { class: 'seg' }, ...g.opciones.map(([v, l]) => el('button', { type: 'button', class: 'btn' + (String(vals[g.clave]) === String(v) ? ' on' : ''), 'data-k': g.clave, 'data-v': JSON.stringify(v) }, l))),
+          g.desplegable
+            ? el('select', { class: 'desplegable', 'data-ks': g.clave, 'aria-label': g.titulo }, ...g.opciones.map(([v, l]) => el('option', { value: JSON.stringify(v), selected: String(vals[g.clave]) === String(v) }, l)))
+            : el('div', { class: 'seg' }, ...g.opciones.map(([v, l]) => el('button', { type: 'button', class: 'btn' + (String(vals[g.clave]) === String(v) ? ' on' : ''), 'data-k': g.clave, 'data-v': JSON.stringify(v) }, l))),
           g.nota ? el('small', { class: 'note' }, g.nota) : null)));
       };
       cont.addEventListener('click', e => {
         const b = e.target.closest('button[data-k]'); if (!b) return;
         vals[b.dataset.k] = JSON.parse(b.dataset.v); if (c.alCambiar) c.alCambiar(vals, b.dataset.k); pintar();
       });
+      cont.addEventListener('change', e => { const sl = e.target.closest('select[data-ks]'); if (!sl) return; vals[sl.dataset.ks] = JSON.parse(sl.value); if (c.alCambiar) c.alCambiar(vals, sl.dataset.ks); pintar(); });
       pintar();
       const emp = el('button', { class: 'btn on', onclick: () => { aplicado = true; cerrar(); c.aplicar({ ...vals }); } }, '▶️ ' + etiquetaNueva());
       cerrar = hoja([el('h2', {}, '⚙️ Configurar partida'), el('p', { class: 'note' }, c.nota || 'Elige las opciones y empieza una partida nueva. La partida actual se abandona.'), cont,
