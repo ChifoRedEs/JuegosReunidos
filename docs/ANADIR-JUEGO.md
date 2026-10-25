@@ -36,6 +36,9 @@ Si tu juego necesita escribir letras en casillas, no pongas un teclado fijo bajo
 ## Juegos de cartas: baraja y dorso de imagen
 Si el juego usa `core/cartas.js`, añade a su `api.aspecto([...])` `grupoBarajaEs()` (baraja española, `cartaEsHTML`) o `grupoBarajaFr()` (francesa, `cartaHTML`), junto a `grupoMesa()` y `grupoDorso()` (este ya incluye los dorsos de `img/cartas/dorsos`). No hace falta tocar el HTML de las cartas: cada carta lleva `data-k` y el CSS de imagen se genera desde `img/cartas/barajas.json`.
 
+## Solitarios con baraja francesa o española
+Klondike, Spider y Carta Blanca usan `grupoBarajaSolitarios()` (clave `barajasol`: Fr 01, Fr 02, Esp 01, Esp 02) y `core/barajasol.js`: el estado de la partida guarda `baraja: 'fr' | 'es'` y los motores leen `de(S)` (rangos, palos, colores, símbolos y `html`). El callback de Apariencia puede devolver `{ volver: { clave: valor } }` para deshacer una elección (p. ej. si el jugador no confirma perder la partida) y `asp.elegir(clave, valor)` / `asp.elegida(clave)` permiten fijarla desde el juego.
+
 ## Funciones nuevas de la API (versión con logros y retos)
 - `api.reto`: Reto del día. `api.reto.generar(fn)` ejecuta tu generador con una semilla fija por día y juego (mismo tablero para todos); `generarAsync(fn)` si el generador es asíncrono. `api.reto.hecho()`, `api.reto.completar()` (cuenta para los 🏅 logros), `api.reto.fecha()` y `api.reto.texto(fecha)`. Guarda `reto: fecha` con la partida. La tarjeta visual usa las clases `.reto` / `.reto.hecho` de base.css.
 - `api.podio`: tabla local de los 10 mejores (arcade). `api.podio.entra(variante, valor, menos)`, `await api.podio.anotar(variante, valor, menos)` (pide el nombre) y `api.podio.html(variante)`. `menos = true` cuando gana el tiempo más bajo.

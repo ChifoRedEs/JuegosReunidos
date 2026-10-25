@@ -20,6 +20,9 @@ export const grupoDorso = () => ({ clave: 'dorso', titulo: 'Dorsos de Cartas', i
 export const grupoMesa = () => ({ clave: 'mesa', titulo: 'Tapete', icono: '🟩', ventana: true, forma: 'tapete', def: 'azar', opciones: [AZAR, ...BARAJAS.tapetes.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
 const grupoBaraja = (tipo, clave, titulo) => ({ clave, titulo, icono: '🃏', ventana: true, forma: 'carta', def: 'azar', opciones: [AZAR, ...BARAJAS[tipo].map(b => ({ id: b.id, nombre: b.nombre, img: urlMuestra(b) }))] });
 export const grupoBarajaEs = () => grupoBaraja('espanola', 'barajaes', 'Barajas');
+// Solitarios (Klondike, Spider, Carta Blanca): se puede jugar con las barajas francesas (52 cartas) o las españolas (40 cartas). «Aleatoria» solo sortea entre las francesas.
+export const grupoBarajaSolitarios = () => ({ clave: 'barajasol', titulo: 'Barajas', icono: '🃏', ventana: true, forma: 'carta', def: 'azar',
+  opciones: [{ ...AZAR, nombre: '🎲 Aleatoria (francesas)', solo: BARAJAS.francesa.map(b => b.id) }, ...BARAJAS.francesa.map(b => ({ id: b.id, nombre: b.nombre, img: urlMuestra(b) })), ...BARAJAS.espanola.map(b => ({ id: b.id, nombre: b.nombre, img: urlMuestra(b) }))] });
 export const grupoBarajaFr = () => grupoBaraja('francesa', 'barajafr', 'Barajas');
 
 // «Tapete» (todos los juegos que no son de cartas): una imagen de tapete detrás del tablero. `sel` = elemento del tablero (CSS);

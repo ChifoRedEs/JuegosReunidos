@@ -1,10 +1,11 @@
 // Carta Blanca (FreeCell) · 8 columnas, 4 casillas libres y 4 bases. Reglas en motor.js; solver.js da pistas y repartos con solución.
 import { $, fmtTiempo } from '../../core/dom.js';
-import { cartaHTML, PALOS } from '../../core/cartas.js';
+import { de, claveValida, asegurar as asegurarBaraja, familiaDe } from '../../core/barajasol.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaSolitarios } from '../../core/aspectos.js';
 import * as K from './motor.js';
 
+const cartaHTML = (id, o) => de(S).html(id, o);                   // baraja francesa o española según la partida
 const DY = .3;
 let S = null, hist = [], api = null, asp = null, root = null, crono = null, reg = false, pst = null, pstT = null, drag = null, auto = null, repartiendo = false, serie = 0, avisoBloq = false, pensando = false;
 
@@ -16,16 +17,17 @@ export function validar(d) {
 export const migrarV1 = d => d;
 export function resumen(d) {
   const f = d.s.fund.reduce((n, x) => n + x.length, 0);
-  return K.gana(d.s) ? { texto: '¡Ganada!', fin: true } : { texto: `${f}/52 en las bases`, fin: false };
+  return K.gana(d.s) ? { texto: '¡Ganada!', fin: true } : { texto: `${f}/${de(d.s).total} en las bases`, fin: false };
 }
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; pst = null; drag = null; auto = null; avisoBloq = false; repartiendo = false; pensando = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaSolitarios()], alCambiarAsp);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./freecell.css', import.meta.url));
   const g = api.cargar();
-  if (g) { S = g.s; hist = g.hist; reg = g.reg; } else { S = K.nuevo(); hist = []; reg = false; }
+  if (g) { S = g.s; hist = g.hist; reg = g.reg; } else { S = K.nuevo(familiaDe(asp)); hist = []; reg = false; }
+  alinearBaraja(); barSel = asp.elegida('barajasol');
   root.innerHTML = `
     <div class="info"><span class="mut" id="fcInfo"></span><span id="fcCrono" aria-label="Tiempo">0:00</span></div>
     <div class="mesa fc" id="fcBoard"></div>
@@ -54,6 +56,20 @@ export function unmount() {
 }
 function guardar() { if (!S) return; const d = { s: S, hist: hist.slice(-40), t: crono ? crono.s : 0, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
+/* ---------- baraja: francesa (52) o española (40), se elige en 🎨 Apariencia ---------- */
+let barSel = '';
+function alinearBaraja() {                                              // partida guardada de una baraja distinta a la elegida: manda la partida
+  asegurarBaraja(); if (S && familiaDe(asp) !== claveValida(S.baraja)) asp.elegir('barajasol', S.baraja === 'es' ? 'esp-01' : 'azar');
+}
+function alCambiarAsp() {
+  if (!S || !crono) return;
+  if (familiaDe(asp) !== claveValida(S.baraja)) {
+    if (hayProgreso() && !api.confirmar('Cambiar entre baraja francesa y española empieza una partida nueva y perderás la actual. ¿Continuar?')) return { volver: { barajasol: barSel } };
+    asegurarBaraja(); nueva(true);
+  }
+  barSel = asp.elegida('barajasol');
+}
+
 /* ---------- trabajo en segundo plano ---------- */
 function trabajo(msg, ms) {
   return new Promise(res => {
@@ -72,11 +88,11 @@ async function nueva(forzar = false) {
   let nuevoS = null;
   if (api.pref('garantizada', true)) {
     const tok = ++serie; repartiendo = true; $('#fcMsg').className = 'msg'; $('#fcMsg').textContent = '🔀 Barajando una partida con solución…';
-    const r = await trabajo({ tipo: 'repartir', ms: 9000 }, 15000); nuevoS = r && r.S ? K.validar(r.S) : null;
+    const r = await trabajo({ tipo: 'repartir', baraja: familiaDe(asp), ms: 9000 }, 15000); nuevoS = r && r.S ? K.validar(r.S) : null;
     if (tok !== serie) return; repartiendo = false; if (!S || !crono) return;
     if (!nuevoS) api.aviso('No encontré a tiempo una partida con solución: esta es al azar');
   }
-  S = nuevoS || K.nuevo(); hist = []; reg = false; pst = null; avisoBloq = false;
+  S = nuevoS || K.nuevo(familiaDe(asp)); hist = []; reg = false; pst = null; avisoBloq = false;
   pintar(); guardar();
 }
 function antes() { hist.push(K.copia(S)); if (hist.length > 80) hist.shift(); if (S.mov === 0) crono.iniciar(); pst = null; }
@@ -127,7 +143,7 @@ function pintar() {
   });
   for (let p = 0; p < 4; p++) {
     const f = S.fund[p], top = f[f.length - 1];
-    h += `<div class="fcpile base ${pst && pst.a && pst.a.t === 'fund' && K.cartaDe(S, pst.o) !== undefined && Math.floor(K.cartaDe(S, pst.o) / 13) === p ? 'pst' : ''}" data-drop="fund">${top === undefined ? `<span class="fcp">${PALOS[p].s}</span>` : cartaHTML(top, { estilo: '--x:0;--y:0' })}</div>`;
+    h += `<div class="fcpile base ${pst && pst.a && pst.a.t === 'fund' && K.cartaDe(S, pst.o) !== undefined && de(S).palo(K.cartaDe(S, pst.o)) === p ? 'pst' : ''}" data-drop="fund">${top === undefined ? `<span class="fcp">${de(S).simbolo(p)}</span>` : cartaHTML(top, { estilo: '--x:0;--y:0' })}</div>`;
   }
   h += '</div><div class="fcrow">';
   for (let col = 0; col < K.COLS; col++) {
@@ -141,7 +157,7 @@ function pintar() {
   }
   $('#fcBoard').innerHTML = h + '</div>' + (win ? '<div class="fcwin">🎉 ¡Solitario completado!</div>' : '');
   const f = S.fund.reduce((n, x) => n + x.length, 0);
-  $('#fcInfo').textContent = `${S.mov} movimientos · ${f}/52 en las bases`;
+  $('#fcInfo').textContent = `${S.mov} movimientos · ${f}/${de(S).total} en las bases`;
   $('#fcCrono').textContent = fmtTiempo(crono.s);
   $('#fcUndo').disabled = !hist.length || win; $('#fcPista').disabled = win;
   if (!repartiendo) { $('#fcMsg').className = 'msg' + (win ? ' win' : ''); $('#fcMsg').textContent = win ? `¡Ganada en ${fmtTiempo(crono.s)} y ${S.mov} movimientos!` : ''; }
@@ -198,7 +214,8 @@ function clic(e) {
   if (a === 'nueva') nueva(); else if (a === 'undo') deshacer(); else if (a === 'pista') pista(); else if (a === 'aspecto') asp.abrir();
 }
 function reglas() {
-  api.modal('Carta Blanca (FreeCell)', `<ul><li>Lleva las 52 cartas a las <b>4 bases</b> de arriba a la derecha, de la A a la K y por palos. Todas las cartas están boca arriba.</li>
+  api.modal('Carta Blanca (FreeCell)', `<ul><li>Lleva todas las cartas a las <b>4 bases</b> de arriba a la derecha, de la A a la K y por palos. Todas las cartas están boca arriba.</li>
+    <li>🃏 En 🎨 Apariencia > Barajas puedes jugar con baraja <b>francesa</b> (52 cartas) o <b>española</b> (40 cartas: de la A al 7, sota, caballo y rey; oros y copas cuentan como un color, espadas y bastos como el otro). Cambiar de familia empieza una partida nueva.</li>
     <li>En las columnas se apila en <b>orden descendente alternando colores</b> (un 6 negro sobre un 7 rojo).</li>
     <li>Las <b>4 casillas libres</b> de arriba a la izquierda guardan <b>una carta cada una</b> de forma temporal.</li>
     <li>Puedes mover una <b>fila ordenada</b> de golpe: cuantas más casillas libres y columnas vacías tengas, más cartas caben ((casillas libres + 1) × 2 por cada columna vacía). Una columna vacía admite cualquier carta o fila.</li>

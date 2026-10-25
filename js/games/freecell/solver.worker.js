@@ -4,10 +4,10 @@ import { nuevo } from './motor.js';
 self.onmessage = e => {
   const { id, tipo } = e.data;
   if (tipo === 'repartir') {
-    const { ms = 9000 } = e.data, t0 = performance.now(); let intentos = 0;
+    const { ms = 9000, baraja } = e.data, t0 = performance.now(); let intentos = 0;
     while (performance.now() - t0 < ms) {
       intentos++;
-      const S = nuevo(), r = resolver(S, { ms: 1500 });
+      const S = nuevo(baraja), r = resolver(S, { ms: 1500 });
       if (r.r === 'ganable') { self.postMessage({ id, tipo, S, intentos }); return; }
     }
     self.postMessage({ id, tipo, S: null, intentos });

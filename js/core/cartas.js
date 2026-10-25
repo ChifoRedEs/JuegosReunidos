@@ -65,12 +65,12 @@ const urlJoker = b => urlImg(`${b.ruta}/00.${EXT_OK.includes(b.joker) ? b.joker 
 function cssBarajas() {
   const r = [], ESP = 'background-size:100% 100%', RAD = 'border-radius:calc(var(--cw) * .09)';
   for (const b of BARAJAS.espanola) {
-    const sel = `.juego[data-barajaes="${b.id}"]`;
+    const sel = `.juego:is([data-barajaes="${b.id}"],[data-barajasol="${b.id}"])`;
     for (const rg of RANGOS_ES) for (const l of ESP_L) r.push(`${sel} .carta.es[data-k="${l}${n2(rg)}"]{background-image:url("${urlCarta(b, l + n2(rg))}")}`);
     if (b.joker) r.push(`${sel} .carta.es.comodin{background:url("${urlJoker(b)}") center/100% 100% no-repeat;border:0;${RAD}}${sel} .carta.es.comodin>*{display:none}`);
   }
   for (const b of BARAJAS.francesa) {
-    const sel = `.juego[data-barajafr="${b.id}"]`;
+    const sel = `.juego:is([data-barajafr="${b.id}"],[data-barajasol="${b.id}"])`;
     for (let rg = 1; rg <= 13; rg++) for (const l of FR_L) r.push(`${sel} .carta:not(.es)[data-k="${l}${n2(rg)}"]{background-image:url("${urlCarta(b, l + n2(rg))}")}`);
     if (b.joker) r.push(`${sel} .carta.comodin{background:url("${urlJoker(b)}") center/100% 100% no-repeat;border:0;${RAD}}${sel} .carta.comodin>*{display:none}`);
   }
@@ -103,7 +103,7 @@ export function cargarBarajas() {
 const precargadas = new Set();
 export function precargarSeleccion(vals) {
   const lanzar = u => { if (!precargadas.has(u)) { precargadas.add(u); new Image().src = u; } };
-  const b = (vals.barajaes && BARAJAS.espanola.find(x => x.id === vals.barajaes)) || (vals.barajafr && BARAJAS.francesa.find(x => x.id === vals.barajafr));
+  const b = (vals.barajaes && BARAJAS.espanola.find(x => x.id === vals.barajaes)) || (vals.barajafr && BARAJAS.francesa.find(x => x.id === vals.barajafr)) || (vals.barajasol && (BARAJAS.espanola.find(x => x.id === vals.barajasol) || BARAJAS.francesa.find(x => x.id === vals.barajasol)));
   if (b) {
     const es = BARAJAS.espanola.includes(b);
     if (es) RANGOS_ES.forEach(rg => ESP_L.forEach(l => lanzar(urlCarta(b, l + n2(rg)))));

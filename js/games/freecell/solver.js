@@ -1,14 +1,16 @@
 // Buscador de soluciones de Carta Blanca (mejor primero, mueve de carta en carta). Sin DOM.
 // resolver(S, { ms, max }) → { r: 'ganable'|'incierto', pasos: [{o,a}] } (los pasos son jugadas válidas de una sola carta, en orden)
-import { paloDe, rangoDe, esRoja } from '../../core/cartas.js';
+import { de } from '../../core/barajasol.js';
 const COLS = 8;
-const encaja = (id, sobre) => esRoja(id) !== esRoja(sobre) && rangoDe(sobre) === rangoDe(id) + 1;
+let B = de(null);                                   // baraja de la partida (se fija en resolver)
+const paloDe = id => B.palo(id), rangoDe = id => B.rango(id);
+const encaja = (id, sobre) => B.roja(id) !== B.roja(sobre) && B.rango(sobre) === B.rango(id) + 1;
 function clave(t, cells, f) {
   const a = t.map(c => c.join(',')).sort().join('|');
   return a + '#' + cells.filter(x => x !== null).sort((x, y) => x - y).join(',') + '#' + f.join(',');
 }
 function heur(t, cells, f) {
-  let h = (52 - (f[0] + f[1] + f[2] + f[3])) * 4;
+  let h = (B.total - (f[0] + f[1] + f[2] + f[3])) * 4;
   h += cells.filter(c => c !== null).length;
   for (const c of t) {
     for (let i = 0; i < c.length; i++) {
@@ -20,7 +22,7 @@ function heur(t, cells, f) {
   return h;
 }
 export function resolver(S, { ms = 1500, max = 120000 } = {}) {
-  const t0 = Date.now();
+  B = de(S); const t0 = Date.now(), TOTAL = B.total;
   const t = S.tab.map(c => c.slice()), cells = S.cells.slice(), f = S.fund.map(x => x.length);
   const ini = { t, cells, f, padre: null, mov: null, h: heur(t, cells, f), g: 0 };
   const visto = new Set([clave(t, cells, f)]), abierta = [ini];                          // montículo mínimo por h
@@ -30,7 +32,7 @@ export function resolver(S, { ms = 1500, max = 120000 } = {}) {
   while (abierta.length && n < max) {
     if ((n & 255) === 0 && Date.now() - t0 > ms) break;
     const e = pop(); n++;
-    if (e.f[0] + e.f[1] + e.f[2] + e.f[3] === 52) return { r: 'ganable', pasos: reconstruir(e) };
+    if (e.f[0] + e.f[1] + e.f[2] + e.f[3] === TOTAL) return { r: 'ganable', pasos: reconstruir(e) };
     if (e.h < mejor.h) mejor = e;
     const hijos = [];
     const orig = [];

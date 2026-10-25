@@ -1,24 +1,26 @@
 // Motor del Solitario Klondike (sin DOM, probable con Node).
 // Estado: { tab: [{d:[ids boca abajo], u:[ids boca arriba]} ×8 (la 0 es la casilla extra, solo si extra)], extra: bool, fund: [[ids] ×4 (por palo)], stock: [ids] (el siguiente se saca con pop), waste: [ids], robar: 1|3, mov }
-import { nuevaBaraja, barajar, paloDe, rangoDe, esRoja, RANGOS, PALOS } from '../../core/cartas.js';
+import { barajar } from '../../core/cartas.js';
+import { de, claveValida } from '../../core/barajasol.js';
 
 // vegas: puntuación de Las Vegas (se paga 52 $ por partida, cada carta en las bases vale 5 $) y pasadas limitadas por el mazo
 export const PASADAS_VEGAS = { 1: 1, 3: 3 };
-export const puntosVegas = S => -52 + 5 * S.fund.reduce((n, f) => n + f.length, 0);
-export function nuevo(robar = 1, extra = true, vegas = false) {
-  const m = barajar(nuevaBaraja(1)), tab = [{ d: [], u: [] }];           // columna 0: la casilla extra «libre» (admite cualquier carta cuando está vacía)
+export const puntosVegas = S => -de(S).total + 5 * S.fund.reduce((n, f) => n + f.length, 0);
+export function nuevo(robar = 1, extra = true, vegas = false, baraja = 'fr') {
+  baraja = claveValida(baraja); const B = de({ baraja }), m = barajar(Array.from({ length: B.total }, (_, i) => i)), tab = [{ d: [], u: [] }];           // columna 0: la casilla extra «libre» (admite cualquier carta cuando está vacía)
   for (let i = 0; i < 7; i++) { const cs = m.splice(0, i + 1); tab.push({ d: cs.slice(0, i), u: [cs[i]] }); }
-  return { tab, fund: [[], [], [], []], stock: m, waste: [], robar: robar === 3 ? 3 : 1, mov: 0, extra: !!extra, vegas: !!vegas, pasada: 1 };
+  return { tab, fund: [[], [], [], []], stock: m, waste: [], robar: robar === 3 ? 3 : 1, mov: 0, extra: !!extra, vegas: !!vegas, pasada: 1, baraja };
 }
 export const copia = S => JSON.parse(JSON.stringify(S));
-export const gana = S => S.fund.every(f => f.length === 13);
+export const gana = S => S.fund.every(f => f.length === de(S).n);
 export const cabeTab = (S, id, col) => {
+  const B = de(S), rangoDe = B.rango, esRoja = B.roja;
   if (col === 0 && !S.extra) return false;
   const c = S.tab[col], top = c.u[c.u.length - 1];
-  if (top === undefined) return col === 0 ? true : !c.d.length && rangoDe(id) === 12;
+  if (top === undefined) return col === 0 ? true : !c.d.length && rangoDe(id) === B.rey;
   return esRoja(top) !== esRoja(id) && rangoDe(top) === rangoDe(id) + 1;
 };
-export const cabeFund = (S, id) => S.fund[paloDe(id)].length === rangoDe(id);
+export const cabeFund = (S, id) => { const B = de(S); return S.fund[B.palo(id)].length === B.rango(id); };
 export const cartaDe = (S, o) => o.t === 'waste' ? S.waste[S.waste.length - 1] : o.t === 'tab' ? S.tab[o.col].u[o.idx] : S.fund[o.p][S.fund[o.p].length - 1];
 export const secuencia = (S, o) => o.t === 'tab' ? S.tab[o.col].u.slice(o.idx) : [cartaDe(S, o)];
 
@@ -38,7 +40,7 @@ export function puede(S, o, a) {                                        // a: {t
 export function mover(S, o, a) {
   if (!puede(S, o, a)) return false;
   const cs = quitar(S, o);
-  if (a.t === 'fund') S.fund[paloDe(cs[0])].push(cs[0]); else S.tab[a.col].u.push(...cs);
+  if (a.t === 'fund') S.fund[de(S).palo(cs[0])].push(cs[0]); else S.tab[a.col].u.push(...cs);
   S.mov++; return true;
 }
 export function robarStock(S) {
@@ -107,23 +109,22 @@ export function pista(S) {
     }
   }
   c.sort((x, y) => y.p - x.p);
-  if (c.length) return { ...c[0], txt: `${nombre(cartaDe(S, c[0].o))} → ${c[0].a.t === 'fund' ? 'a la base' : `columna ${c[0].a.col + 1}`}` };
+  if (c.length) return { ...c[0], txt: `${de(S).nombre(cartaDe(S, c[0].o))} → ${c[0].a.t === 'fund' ? 'a la base' : `columna ${c[0].a.col + 1}`}` };
   if (S.stock.length || (S.waste.length && !(S.vegas && (S.pasada || 1) >= PASADAS_VEGAS[S.robar]))) return { o: { t: 'stock' }, a: null, txt: S.stock.length ? 'Roba del mazo' : 'Vuelve a pasar el mazo' };
   return null;
 }
-const nombre = id => RANGOS[rangoDe(id)] + PALOS[paloDe(id)].s;
 export function validar(d) {
   if (!d || typeof d !== 'object') return null;
-  const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b, vistos = new Set();
-  const lista = (a, max) => Array.isArray(a) && a.length <= max && a.every(v => ent(v, 0, 51) && !vistos.has(v) && vistos.add(v));
+  const B = de({ baraja: claveValida(d.baraja) }), ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b, vistos = new Set();
+  const lista = (a, max) => Array.isArray(a) && a.length <= max && a.every(v => ent(v, 0, B.total - 1) && !vistos.has(v) && vistos.add(v));
   if (!Array.isArray(d.tab) || (d.tab.length !== 7 && d.tab.length !== 8) || !Array.isArray(d.fund) || d.fund.length !== 4) return null;
   const antigua = d.tab.length === 7, tab = [];       // partidas guardadas de la versión anterior: se añade la casilla extra apagada
   if (antigua) tab.push({ d: [], u: [] });
   for (const c of d.tab) { if (!c || !lista(c.d, 6) || !lista(c.u, 19)) return null; if (c.d.length && !c.u.length) return null; tab.push({ d: c.d.slice(), u: c.u.slice() }); }
   if (tab[0].d.length) return null;
   const fund = [];
-  for (let p = 0; p < 4; p++) { const f = d.fund[p]; if (!lista(f, 13) || f.some((id, i) => id !== p * 13 + i)) return null; fund.push(f.slice()); }
-  if (!lista(d.stock, 24) || !lista(d.waste, 24) || vistos.size !== 52) return null;
+  for (let p = 0; p < 4; p++) { const f = d.fund[p]; if (!lista(f, B.n) || f.some((id, i) => id !== p * B.n + i)) return null; fund.push(f.slice()); }
+  if (!lista(d.stock, 24) || !lista(d.waste, 24) || vistos.size !== B.total) return null;
   return { tab, fund, stock: d.stock.slice(), waste: d.waste.slice(), robar: d.robar === 3 ? 3 : 1, mov: ent(d.mov, 0, 1e6) ? d.mov : 0, extra: antigua ? false : !!d.extra,
-    vegas: !!d.vegas, pasada: ent(d.pasada, 1, 999) ? d.pasada : 1, cobrado: !!d.cobrado };
+    vegas: !!d.vegas, pasada: ent(d.pasada, 1, 999) ? d.pasada : 1, cobrado: !!d.cobrado, baraja: B.clave };
 }

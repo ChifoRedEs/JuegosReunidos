@@ -705,4 +705,15 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   assert.ok(res >= n - 2, 'el solver resuelve casi todos los repartos');
   ok(`Carta Blanca: 52 cartas en 8 columnas, tamaño de grupo, subida segura, y el solver resuelve ${res}/${n} repartos con pasos válidos`); }
 
+// ---- Solitarios con baraja española (40 cartas) ----
+{ const KE = KL.nuevo(1, true, false, 'es'); assert.equal(KE.stock.length, 12); assert.ok(KL.validar(JSON.parse(JSON.stringify(KE)))); assert.equal(KL.validar(Object.assign(JSON.parse(JSON.stringify(KE)), { baraja: 'fr' })), null, 'baraja distinta: no vale');
+  let gk = 0; for (let k = 0; k < 6; k++) if (resolverKl(KL.nuevo(1, true, false, 'es'), { ms: 1200 }).r === 'ganable') gk++; assert.ok(gk >= 2);
+  for (let k = 0; k < 40; k++) { const S = KL.nuevo(k % 2 ? 3 : 1, true, false, 'es'); let p = 0, sin = 0; while (p++ < 1500 && !KL.gana(S)) { const q = KL.pasoAuto(S, sin); if (!q) break; if (q.o) { assert.ok(KL.mover(S, q.o, q.a)); sin = 0; } else { KL.robarStock(S); sin++; } assert.ok(KL.validar(JSON.parse(JSON.stringify(S)))); } }
+  const SE = SP.nuevo(2, 'es'); assert.equal(SE.stock.length, 40); assert.equal(SE.tab.reduce((n, c) => n + c.d.length + c.u.length, 0), 40); assert.ok(SP.validar(JSON.parse(JSON.stringify(SE))));
+  let gs = 0; for (let k = 0; k < 40; k++) { const V = SP.nuevo(k % 2 ? 2 : 1, 'es'); let n = 0; while (!SP.gana(V) && n++ < 2500) { const p = SP.pista(V); if (!p || p.tipo === 'vacia') break; if (p.tipo === 'mover') assert.ok(SP.mover(V, p.col, p.idx, p.dest)); else assert.ok(SP.repartir(V)); assert.ok(SP.validar(JSON.parse(JSON.stringify(V)))); } if (SP.gana(V)) gs++; }
+  const FE = FC.nuevo('es'); assert.equal(FE.tab.map(c => c.length).join(','), '5,5,5,5,5,5,5,5'); assert.ok(FC.validar(JSON.parse(JSON.stringify(FE))));
+  let gf = 0; for (let k = 0; k < 10; k++) { const V = FC.nuevo('es'), r = resolverFc(V, { ms: 3000 }); if (r.r === 'ganable') { gf++; for (const p of r.pasos) assert.ok(FC.mover(V, p.o, p.a)); assert.ok(FC.gana(V)); } }
+  assert.ok(gf >= 8);
+  ok(`Solitarios con baraja española: Klondike (${gk}/6 con solución), Spider (80 cartas, ${gs}/40 ganadas con la pista) y Carta Blanca (${gf}/10 resueltas)`); }
+
 console.log(`\n${n} pruebas correctas`);

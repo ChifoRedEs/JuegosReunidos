@@ -1,9 +1,10 @@
 import { $, fmtTiempo } from '../../core/dom.js';
-import { cartaHTML, PALOS } from '../../core/cartas.js';
+import { de, claveValida, asegurar as asegurarBaraja, familiaDe } from '../../core/barajasol.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaSolitarios } from '../../core/aspectos.js';
 import * as K from './motor.js';
 
+const cartaHTML = (id, o) => de(S).html(id, o);                   // baraja francesa o española según la partida
 const DY_ABAJO = .2, DY_ARRIBA = .38;
 let S = null, hist = [], api = null, asp = null, root = null, crono = null, reg = false, pst = null, pstT = null, drag = null, auto = null;
 let worker = null, jobId = 0, estadoAn = 'calc', pendiente = false, estadoAntes = null, ac = { b: 0, m: 0 }, feedback = '', tAn = null, sinWorker = false;
@@ -19,19 +20,19 @@ export const migrarV1 = d => d;
 export function resumen(d) {
   const f = d.s.fund.reduce((n, x) => n + x.length, 0);
   const v = d.s.vegas ? ` · Vegas ${dolares(K.puntosVegas(d.s))}` : '';
-  return K.gana(d.s) ? { texto: `Robar ${d.s.robar} · ¡Ganada!${v}`, fin: true } : { texto: `Robar ${d.s.robar} · ${f}/52 en las bases${v}`, fin: false };
+  return K.gana(d.s) ? { texto: `Robar ${d.s.robar} · ¡Ganada!${v}`, fin: true } : { texto: `Robar ${d.s.robar} · ${f}/${de(d.s).total} en las bases${v}`, fin: false };
 }
 
 const dolares = n => `${n < 0 ? '−' : '+'}${Math.abs(n)} $`;
 let repartiendo = false, serieReparto = 0;
 // Reparto con solución garantizada: un Worker baraja hasta que el analizador encuentra cómo ganar
-function repartirGanable(robar, extra, vegas) {
+function repartirGanable(robar, extra, vegas, baraja) {
   return new Promise(res => {
     let w; try { w = new Worker(new URL('./solver.worker.js', import.meta.url), { type: 'module' }); } catch { res(null); return; }
     const fin = S => { clearTimeout(t); w.terminate(); res(S); }, t = setTimeout(() => fin(null), 15000);
     w.onmessage = e => fin(e.data && e.data.S ? K.validar(e.data.S) : null);
     w.onerror = () => fin(null);
-    w.postMessage({ id: 1, tipo: 'repartir', robar, extra, vegas, ms: 9000 });
+    w.postMessage({ id: 1, tipo: 'repartir', robar, extra, vegas, baraja, ms: 9000 });
   });
 }
 // Vegas: lo ganado o perdido en cada partida se suma a una banca acumulada (una sola vez por partida)
@@ -40,13 +41,28 @@ function cobrarVegas() {
   S.cobrado = true; api.setPref('banca', (api.pref('banca', 0) | 0) + K.puntosVegas(S));
 }
 
+/* ---------- baraja: francesa (52) o española (40), se elige en 🎨 Apariencia ---------- */
+let barSel = '';
+function alinearBaraja() {                                              // partida guardada de una baraja distinta a la elegida: manda la partida
+  asegurarBaraja(); if (S && familiaDe(asp) !== claveValida(S.baraja)) asp.elegir('barajasol', S.baraja === 'es' ? 'esp-01' : 'azar');
+}
+function alCambiarAsp() {
+  if (!S || !crono) return;
+  if (familiaDe(asp) !== claveValida(S.baraja)) {
+    if (hayProgreso() && !api.confirmar('Cambiar entre baraja francesa y española empieza una partida nueva y perderás la actual. ¿Continuar?')) return { volver: { barajasol: barSel } };
+    asegurarBaraja(); nueva(S.robar, S.extra, true);
+  }
+  barSel = asp.elegida('barajasol');
+}
+
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; pst = null; drag = null; auto = null; popAn = null; tAuto = null; estadoBurb = null; worker = null; jobId = 0; estadoAn = 'calc'; pendiente = false; feedback = ''; sinWorker = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaSolitarios()], alCambiarAsp);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./klondike.css', import.meta.url));
   const g = api.cargar();
-  if (g) { S = g.s; hist = g.hist; reg = g.reg; ac = g.ac; } else { S = K.nuevo(api.pref('robar', 1), api.pref('extra', true), api.pref('vegas', false)); hist = []; reg = false; ac = { b: 0, m: 0 }; }
+  if (g) { S = g.s; hist = g.hist; reg = g.reg; ac = g.ac; } else { S = K.nuevo(api.pref('robar', 1), api.pref('extra', true), api.pref('vegas', false), familiaDe(asp)); hist = []; reg = false; ac = { b: 0, m: 0 }; }
+  alinearBaraja(); barSel = asp.elegida('barajasol');
   root.innerHTML = `
     <div class="info"><span class="mut" id="klInfo"></span><span id="klCrono" aria-label="Tiempo">0:00</span></div>
     <button type="button" class="klburb calc" id="klBurb" data-ac="analizador" aria-label="Abrir el analizador de la partida"></button>
@@ -59,7 +75,7 @@ export async function mount(r, a) {
     salir: () => { location.hash = '#/cat/cartas'; },
     pausar: () => { if (crono) crono.pausar(); },
     reanudar: () => { if (crono && S && !K.gana(S) && S.mov > 0) crono.iniciar(); },
-    config: { valores: () => ({ robar: S.robar, extra: S.extra, gar: api.pref('garantizada', true), vegas: !!S.vegas, autor: autoAuto() }), grupos: v => [{ clave: 'robar', titulo: 'Robar', opciones: [[1, '1 carta'], [3, '3 cartas']] }, { clave: 'extra', titulo: 'Casilla extra', opciones: [[true, 'Con casilla libre'], [false, 'Sin ella']] }, { clave: 'gar', titulo: 'Reparto', opciones: [[true, '✅ Siempre con solución'], [false, '🎲 Al azar']] }, { clave: 'vegas', titulo: 'Puntuación', opciones: [[false, 'Normal'], [true, '💰 Vegas']], nota: v.vegas ? `Vegas: cada partida cuesta 52 $ y cada carta que subes a las bases te da 5 $. Solo puedes pasar el mazo ${K.PASADAS_VEGAS[v.robar] === 1 ? 'una vez' : K.PASADAS_VEGAS[v.robar] + ' veces'}.` : null }, { clave: 'autor', titulo: 'Auto-relleno', opciones: [[true, 'Automático'], [false, 'Solo con botón']], nota: 'Cuando no quedan cartas boca abajo y el resto puede subir solo a las bases, las cartas se colocan solas.' }], aplicar: v => { api.setPref('garantizada', v.gar); api.setPref('autorrelleno', v.autor); nueva(v.robar, v.extra, true, v.vegas); } } });
+    config: { valores: () => ({ robar: S.robar, extra: S.extra, gar: api.pref('garantizada', true), vegas: !!S.vegas, autor: autoAuto() }), grupos: v => [{ clave: 'robar', titulo: 'Robar', opciones: [[1, '1 carta'], [3, '3 cartas']] }, { clave: 'extra', titulo: 'Casilla extra', opciones: [[true, 'Con casilla libre'], [false, 'Sin ella']] }, { clave: 'gar', titulo: 'Reparto', opciones: [[true, '✅ Siempre con solución'], [false, '🎲 Al azar']] }, { clave: 'vegas', titulo: 'Puntuación', opciones: [[false, 'Normal'], [true, '💰 Vegas']], nota: v.vegas ? `Vegas: cada partida cuesta tantos $ como cartas tiene la baraja (52 o 40) y cada carta que subes a las bases te da 5 $. Solo puedes pasar el mazo ${K.PASADAS_VEGAS[v.robar] === 1 ? 'una vez' : K.PASADAS_VEGAS[v.robar] + ' veces'}.` : null }, { clave: 'autor', titulo: 'Auto-relleno', opciones: [[true, 'Automático'], [false, 'Solo con botón']], nota: 'Cuando no quedan cartas boca abajo y el resto puede subir solo a las bases, las cartas se colocan solas.' }], aplicar: v => { api.setPref('garantizada', v.gar); api.setPref('autorrelleno', v.autor); nueva(v.robar, v.extra, true, v.vegas); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.robar, S.extra) }, { texto: '💰 Poner a cero la banca Vegas', accion: () => { if (api.confirmar('¿Poner la banca de Vegas a 0 $?')) { api.setPref('banca', 0); pintar(); } }, peligro: true }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🔍 Analizador', accion: abrirAnalizador }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { $('#klCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } }, g ? g.t : 0);
   if (S.mov > 0 && !K.gana(S)) crono.iniciar();
@@ -146,11 +162,11 @@ async function nueva(robar, extra, forzar = false, vegas = S ? S.vegas : api.pre
   let nuevoS = null;
   if (api.pref('garantizada', true) && !sinWorker) {
     const tok = ++serieReparto; repartiendo = true; $('#klMsg').className = 'msg'; $('#klMsg').textContent = '🔀 Barajando una partida con solución…';
-    nuevoS = await repartirGanable(robar, extra, !!vegas);
+    nuevoS = await repartirGanable(robar, extra, !!vegas, familiaDe(asp));
     if (tok !== serieReparto) return; repartiendo = false; if (!S || !crono) return;
     if (!nuevoS) api.aviso('No encontré a tiempo una partida con solución: esta es al azar');
   }
-  S = nuevoS || K.nuevo(robar, extra, vegas); hist = []; reg = false; pst = null; ac = { b: 0, m: 0 }; feedback = ''; pendiente = false; estadoAntes = null;
+  S = nuevoS || K.nuevo(robar, extra, vegas, familiaDe(asp)); hist = []; reg = false; pst = null; ac = { b: 0, m: 0 }; feedback = ''; pendiente = false; estadoAntes = null;
   pintar(); guardar(); analizar();
 }
 function antes() { hist.push(K.copia(S)); if (hist.length > 60) hist.shift(); if (S.mov === 0) crono.iniciar(); pst = null; estadoAntes = estadoAn; pendiente = true; feedback = ''; }
@@ -204,7 +220,7 @@ function pintar() {
   if (S.extra) h += '<div></div>';
   for (let p = 0; p < 4; p++) {
     const f = S.fund[p], top = f[f.length - 1];
-    h += `<div class="kpile ${pst && pst.a && pst.a.t === 'fund' && K.cartaDe(S, pst.o) !== undefined && Math.floor(K.cartaDe(S, pst.o) / 13) === p ? 'pst' : ''}" data-drop="fund" data-p="${p}">${top === undefined ? PALOS[p].s : etiqueta(cartaHTML(top, { clase: ocu && ocu.o.t === 'fund' && ocu.o.p === p ? 'ocu' : '', estilo: '--x:0;--y:0' }), `data-t="fund" data-p="${p}"`)}</div>`;
+    h += `<div class="kpile ${pst && pst.a && pst.a.t === 'fund' && K.cartaDe(S, pst.o) !== undefined && de(S).palo(K.cartaDe(S, pst.o)) === p ? 'pst' : ''}" data-drop="fund" data-p="${p}">${top === undefined ? de(S).simbolo(p) : etiqueta(cartaHTML(top, { clase: ocu && ocu.o.t === 'fund' && ocu.o.p === p ? 'ocu' : '', estilo: '--x:0;--y:0' }), `data-t="fund" data-p="${p}"`)}</div>`;
   }
   h += '</div><div class="klrow">';
   for (let col = ini; col < 8; col++) {
@@ -220,7 +236,7 @@ function pintar() {
   $('#klBoard').innerHTML = h + '</div>' + (win ? '<div class="kwin">🎉 ¡Solitario completado!</div>' : '');
   const f = S.fund.reduce((n, x) => n + x.length, 0);
   const banca = (api.pref('banca', 0) | 0) + (S.vegas && !S.cobrado && (S.mov || K.gana(S)) ? K.puntosVegas(S) : 0);
-  $('#klInfo').textContent = S.vegas ? `💰 ${dolares(K.puntosVegas(S))} · banca ${dolares(banca)} · pasada ${S.pasada || 1}/${K.PASADAS_VEGAS[S.robar]}` : `${S.mov} movimientos · ${f}/52 en las bases`;
+  $('#klInfo').textContent = S.vegas ? `💰 ${dolares(K.puntosVegas(S))} · banca ${dolares(banca)} · pasada ${S.pasada || 1}/${K.PASADAS_VEGAS[S.robar]}` : `${S.mov} movimientos · ${f}/${de(S).total} en las bases`;
   $('#klCrono').textContent = fmtTiempo(crono.s);
   $('#klUndo').disabled = !hist.length || win; $('#klAuto').hidden = win || !!auto || !K.autoResoluble(S);
   $('#klMsg').className = 'msg' + (win ? ' win' : ''); $('#klMsg').textContent = win ? `¡Ganada en ${fmtTiempo(crono.s)} y ${S.mov} movimientos!` : '';
@@ -281,7 +297,8 @@ function clic(e) {
   if (a === 'nueva') nueva(S.robar, S.extra); else if (a === 'undo') deshacer(); else if (a === 'pista') pista(); else if (a === 'auto') autocompletar(); else if (a === 'analizador') abrirAnalizador(); else if (a === 'aspecto') asp.abrir();
 }
 function reglas() {
-  api.modal('Solitario Klondike', `<ul><li>Lleva las 52 cartas a las <b>4 bases</b> de arriba, de la A a la K y por palos.</li>
+  api.modal('Solitario Klondike', `<ul><li>Lleva todas las cartas a las <b>4 bases</b> de arriba, de la A a la K y por palos.</li>
+    <li>🃏 En 🎨 Apariencia > Barajas puedes jugar con baraja <b>francesa</b> (52 cartas) o <b>española</b> (40 cartas: de la A al 7, sota, caballo y rey; oros y copas cuentan como un color, espadas y bastos como el otro). Cambiar de familia empieza una partida nueva.</li>
     <li>En las columnas se apila en <b>orden descendente alternando colores</b> (un 6 negro sobre un 7 rojo). Solo un rey puede ocupar una columna vacía.</li>
     <li><b>Casilla extra «Libre»</b> (a la izquierda): empieza vacía y admite <b>cualquier carta o grupo</b>; después sigue las reglas normales. Úsala para desatascar columnas. Se puede desactivar en las opciones.</li>
     <li><b>Arrastra</b> una carta (o un grupo) para moverla. <b>Toca</b> una carta y se envía sola a donde mejor encaje (primero a las bases; la casilla Libre solo se usa arrastrando).</li>

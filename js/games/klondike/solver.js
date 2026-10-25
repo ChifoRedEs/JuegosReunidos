@@ -1,13 +1,13 @@
 // Analizador de Klondike: busca (con las cartas ocultas que conoce el programa) si desde la posición actual
 // existe alguna forma de ganar. Devuelve 'ganable' (hay solución), 'cerrado' (se agotó la búsqueda: no hay) o 'incierto' (se acabó el tiempo).
 import * as K from './motor.js';
-import { rangoDe, esRoja } from '../../core/cartas.js';
+import { de } from '../../core/barajasol.js';
 
-const clon = S => ({ tab: S.tab.map(c => ({ d: c.d.slice(), u: c.u.slice() })), fund: S.fund.map(f => f.slice()), stock: S.stock.slice(), waste: S.waste.slice(), robar: S.robar, mov: 0, extra: S.extra });
+const clon = S => ({ tab: S.tab.map(c => ({ d: c.d.slice(), u: c.u.slice() })), fund: S.fund.map(f => f.slice()), stock: S.stock.slice(), waste: S.waste.slice(), robar: S.robar, baraja: S.baraja, mov: 0, extra: S.extra });
 const clave = S => { const cs = []; for (let i = 1; i < 8; i++) cs.push(S.tab[i].d.length + ':' + S.tab[i].u.join('.')); cs.sort(); return S.tab[0].u.join('.') + '|' + cs.join('|') + '#' + S.fund.map(f => f.length).join('') + '#' + S.stock.join('.') + '#' + S.waste.join('.'); };
 function seguro(S, id) {                       // subir a la base sin perder nada: ninguna carta de color opuesto del rango anterior lo necesita
-  const r = rangoDe(id); if (r <= 1) return true;
-  const [a, b] = esRoja(id) ? [0, 3] : [1, 2];
+  const B = de(S), r = B.rango(id); if (r <= 1) return true;
+  const ps = [0, 1, 2, 3].filter(p => B.rojaPalo(p) !== B.roja(id)), [a, b] = ps;
   return S.fund[a].length >= r && S.fund[b].length >= r;
 }
 function movimientosSeguros(S) {

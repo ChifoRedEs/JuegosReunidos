@@ -1,26 +1,28 @@
 // Motor de Carta Blanca (FreeCell), sin DOM, probable con Node.
 // 52 cartas boca arriba en 8 columnas, 4 casillas libres y 4 bases (por palo, de A a K).
 // En las columnas se apila en orden descendente alternando colores. Se mueven grupos si hay casillas libres y columnas vacías suficientes.
-// Estado: { tab: [[ids] ×8], cells: [id|null ×4], fund: [[ids] ×4 (por palo)], mov }
-import { nuevaBaraja, barajar, paloDe, rangoDe, esRoja, RANGOS, PALOS } from '../../core/cartas.js';
+// Con la baraja española (40 cartas) las columnas son de 5 cartas y las bases de 10. S.baraja = 'fr' | 'es'.
+// Estado: { tab: [[ids] ×8], cells: [id|null ×4], fund: [[ids] ×4 (por palo)], mov, baraja }
+import { barajar } from '../../core/cartas.js';
+import { de, claveValida } from '../../core/barajasol.js';
 
 export const COLS = 8, CELDAS = 4;
-export function nuevo() {
-  const m = barajar(nuevaBaraja(1)), tab = Array.from({ length: COLS }, () => []);
-  m.forEach((id, i) => tab[i % COLS].push(id));                    // 7,7,7,7,6,6,6,6
-  return { tab, cells: Array(CELDAS).fill(null), fund: [[], [], [], []], mov: 0 };
+export function nuevo(baraja = 'fr') {
+  baraja = claveValida(baraja); const B = de({ baraja }), m = barajar(Array.from({ length: B.total }, (_, i) => i)), tab = Array.from({ length: COLS }, () => []);
+  m.forEach((id, i) => tab[i % COLS].push(id));                    // francesa: 7,7,7,7,6,6,6,6 · española: 5 en cada columna
+  return { tab, cells: Array(CELDAS).fill(null), fund: [[], [], [], []], mov: 0, baraja };
 }
 export const copia = S => JSON.parse(JSON.stringify(S));
-export const gana = S => S.fund.every(f => f.length === 13);
+export const gana = S => S.fund.every(f => f.length === de(S).n);
 export const libres = S => S.cells.filter(c => c === null).length;
 export const vacias = S => S.tab.filter(c => !c.length).length;
-export const encaja = (id, sobre) => esRoja(id) !== esRoja(sobre) && rangoDe(sobre) === rangoDe(id) + 1;
-export const cabeFund = (S, id) => S.fund[paloDe(id)].length === rangoDe(id);
+export const encaja = (S, id, sobre) => { const B = de(S); return B.roja(id) !== B.roja(sobre) && B.rango(sobre) === B.rango(id) + 1; };
+export const cabeFund = (S, id) => { const B = de(S); return S.fund[B.palo(id)].length === B.rango(id); };
 // Cuántas cartas se pueden mover de golpe a una columna (con o sin ser vacía)
 export const maxGrupo = (S, haciaVacia) => (libres(S) + 1) * 2 ** (vacias(S) - (haciaVacia ? 1 : 0));
 export const grupoValido = (S, col, idx) => {
   const t = S.tab[col]; if (idx < 0 || idx >= t.length) return false;
-  for (let i = idx; i < t.length - 1; i++) if (!encaja(t[i + 1], t[i])) return false;
+  for (let i = idx; i < t.length - 1; i++) if (!encaja(S, t[i + 1], t[i])) return false;
   return true;
 };
 export const cartaDe = (S, o) => o.t === 'cell' ? S.cells[o.i] : S.tab[o.col][o.idx];
@@ -36,13 +38,13 @@ export function puede(S, o, a) {
   if (o.t === 'tab' && o.col === a.col) return false;
   const d = S.tab[a.col];
   if (!d.length) return cs.length <= maxGrupo(S, true);
-  return encaja(id, d[d.length - 1]) && cs.length <= maxGrupo(S, false);
+  return encaja(S, id, d[d.length - 1]) && cs.length <= maxGrupo(S, false);
 }
 export function mover(S, o, a) {
   if (!puede(S, o, a)) return false;
   let cs;
   if (o.t === 'cell') { cs = [S.cells[o.i]]; S.cells[o.i] = null; } else cs = S.tab[o.col].splice(o.idx);
-  if (a.t === 'fund') S.fund[paloDe(cs[0])].push(cs[0]); else if (a.t === 'cell') S.cells[a.i] = cs[0]; else S.tab[a.col].push(...cs);
+  if (a.t === 'fund') S.fund[de(S).palo(cs[0])].push(cs[0]); else if (a.t === 'cell') S.cells[a.i] = cs[0]; else S.tab[a.col].push(...cs);
   S.mov++; return true;
 }
 // Destino para un toque: base > columna donde encaje (la que deja más larga la fila, antes que una vacía) > casilla libre
@@ -64,8 +66,8 @@ export function destinoAuto(S, o) {
 // Subida segura a las bases: una carta sube sola si ya no hará falta para apilar (las de color contrario inferiores ya están arriba)
 export function seguraParaSubir(S, id) {
   if (!cabeFund(S, id)) return false;
-  const r = rangoDe(id); if (r <= 1) return true;
-  const rojo = esRoja(id), ps = [0, 1, 2, 3].filter(p => (p === 1 || p === 2) !== rojo);
+  const B = de(S), r = B.rango(id); if (r <= 1) return true;
+  const rojo = B.roja(id), ps = [0, 1, 2, 3].filter(p => B.rojaPalo(p) !== rojo);
   return ps.every(p => S.fund[p].length >= r - 1);
 }
 export function autoSiguiente(S) {
@@ -84,7 +86,7 @@ export function pista(S) {
       if (!puede(S, o, { t: 'tab', col })) continue;
       const d = S.tab[col]; let p = d.length ? 60 : 25;
       if (!d.length && o.t === 'tab' && o.idx === 0) continue;
-      if (o.t === 'tab' && o.idx > 0 && encaja(S.tab[o.col][o.idx], S.tab[o.col][o.idx - 1])) continue;       // rompería una fila ya ordenada
+      if (o.t === 'tab' && o.idx > 0 && encaja(S, S.tab[o.col][o.idx], S.tab[o.col][o.idx - 1])) continue;       // rompería una fila ya ordenada
       if (o.t === 'cell') p += 20;
       if (o.t === 'tab' && o.idx === 0 && !d.length) continue;
       if (o.t === 'tab') p += Math.min(15, S.tab[o.col].length - o.idx);
@@ -92,15 +94,14 @@ export function pista(S) {
     }
   }
   c.sort((x, y) => y.p - x.p);
-  if (c.length) { const m = c[0]; return { ...m, txt: `${nombre(cartaDe(S, m.o))} → ${m.a.t === 'fund' ? 'a la base' : `columna ${m.a.col + 1}`}` }; }
+  if (c.length) { const m = c[0]; return { ...m, txt: `${de(S).nombre(cartaDe(S, m.o))} → ${m.a.t === 'fund' ? 'a la base' : `columna ${m.a.col + 1}`}` }; }
   const i = S.cells.indexOf(null);
   if (i >= 0) {                                                          // nada mejor: aparcar la última carta de la columna más corta en una casilla libre
     let mejor = null; S.tab.forEach((t, col) => { if (t.length && (!mejor || t.length < S.tab[mejor.col].length)) mejor = { col, idx: t.length - 1 }; });
-    if (mejor) return { o: { t: 'tab', ...mejor }, a: { t: 'cell', i }, p: 0, txt: `${nombre(S.tab[mejor.col][mejor.idx])} → casilla libre` };
+    if (mejor) return { o: { t: 'tab', ...mejor }, a: { t: 'cell', i }, p: 0, txt: `${de(S).nombre(S.tab[mejor.col][mejor.idx])} → casilla libre` };
   }
   return null;
 }
-export const nombre = id => RANGOS[rangoDe(id)] + PALOS[paloDe(id)].s;
 // ¿Hay alguna jugada que no sea solo mover cartas de sitio? (para avisar del bloqueo)
 export function hayJugadas(S) {
   if (libres(S) > 0) return true;
@@ -112,12 +113,12 @@ export function hayJugadas(S) {
 }
 export function validar(d) {
   if (!d || typeof d !== 'object') return null;
-  const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b, vistos = new Set();
-  const carta = v => ent(v, 0, 51) && !vistos.has(v) && vistos.add(v);
+  const B = de({ baraja: claveValida(d.baraja) }), ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b, vistos = new Set();
+  const carta = v => ent(v, 0, B.total - 1) && !vistos.has(v) && vistos.add(v);
   if (!Array.isArray(d.tab) || d.tab.length !== COLS || !Array.isArray(d.cells) || d.cells.length !== CELDAS || !Array.isArray(d.fund) || d.fund.length !== 4) return null;
   const tab = []; for (const t of d.tab) { if (!Array.isArray(t) || t.length > 52 || !t.every(carta)) return null; tab.push(t.slice()); }
   const cells = []; for (const c of d.cells) { if (c === null) cells.push(null); else if (carta(c)) cells.push(c); else return null; }
-  const fund = []; for (let p = 0; p < 4; p++) { const f = d.fund[p]; if (!Array.isArray(f) || f.length > 13 || f.some((id, i) => id !== p * 13 + i || !carta(id))) return null; fund.push(f.slice()); }
-  if (vistos.size !== 52) return null;
-  return { tab, cells, fund, mov: ent(d.mov, 0, 1e6) ? d.mov : 0 };
+  const fund = []; for (let p = 0; p < 4; p++) { const f = d.fund[p]; if (!Array.isArray(f) || f.length > B.n || f.some((id, i) => id !== p * B.n + i || !carta(id))) return null; fund.push(f.slice()); }
+  if (vistos.size !== B.total) return null;
+  return { tab, cells, fund, mov: ent(d.mov, 0, 1e6) ? d.mov : 0, baraja: B.clave };
 }

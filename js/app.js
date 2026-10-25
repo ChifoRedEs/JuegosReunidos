@@ -212,7 +212,7 @@ function crearApi(j, ent, mod, root) {
       const resolver = nuevo => defs.forEach(g => {
         if (elec[g.clave] !== 'azar') { vals[g.clave] = elec[g.clave]; return; }
         if (!nuevo && vals[g.clave]) return;
-        const l = g.opciones.filter(o => !o.azar && !o.nada), c = l.length > 1 ? l.filter(o => o.id !== vals[g.clave]) : l;   // distinta de la anterior
+        const az = g.opciones.find(o => o.azar), l = g.opciones.filter(o => !o.azar && !o.nada && (!az || !az.solo || az.solo.includes(o.id))), c = l.length > 1 ? l.filter(o => o.id !== vals[g.clave]) : l;   // distinta de la anterior
         vals[g.clave] = c[Math.random() * c.length | 0].id;
       });
       // Grupo con `sel` («Fondo de Tablero»): la imagen elegida va a --tapete-url y una regla de <style> la pone detrás del tablero del juego.
@@ -245,7 +245,7 @@ function crearApi(j, ent, mod, root) {
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
           r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, g.soloColor && o.sw ? '' : o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
         };
-        const elegir = (g, idO) => { elec[g.clave] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); if (alCambiar) alCambiar({ ...vals }); };
+        const elegir = (g, idO) => { elec[g.clave] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); const r = alCambiar && alCambiar({ ...vals }); if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } };
         const cuerpoDe = g => {
           const imgs = g.opciones.some(o => o.img) && g.forma;
           if (imgs) return el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
@@ -260,7 +260,7 @@ function crearApi(j, ent, mod, root) {
           cuerpo.addEventListener('click', e => {
             const b = e.target.closest('.ap-o, .ap-ficha'); if (!b) return;
             const idO = b.dataset.o; if (idO == null) return;
-            elegir(g, idO); cuerpo.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === idO));
+            elegir(g, idO); cuerpo.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === elec[g.clave]));
           });
           det.append(sum, cuerpo);
           det.addEventListener('toggle', () => { if (det.open) secciones_.forEach(d => { if (d !== det) d.open = false; }); });
@@ -274,7 +274,7 @@ function crearApi(j, ent, mod, root) {
         cerrar = hoja([el('h2', {}, '🎨 Apariencia'), wrap, el('div', { class: 'bar', style: 'margin-top:14px' }, rest, ok)], typeof alCerrarV === 'function' ? alCerrarV : null);
       };
       abrirAsp = abrir;
-      return { valores: vals, abrir, sortear() { resolver(true); poner(); } };   // sortear(): nueva baraja/dorso al azar (partida nueva)
+      return { valores: vals, abrir, sortear() { resolver(true); poner(); }, elegida: c => elec[c], elegir(c, v) { elec[c] = v; delete vals[c]; resolver(false); poner(); guardar(); } };   // sortear(): nueva baraja/dorso al azar (partida nueva)
     },
     css(url) {
       const href = String(url);

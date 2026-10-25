@@ -3,22 +3,25 @@
 // Una carta se apila sobre otra de rango inmediatamente superior (de cualquier palo); solo se mueven grupos del mismo palo en orden.
 // Al formar K…A del mismo palo en una columna, la serie sale a las bases. Se gana con las 8 series.
 // Estado: { tab: [{d:[ids boca abajo], u:[ids boca arriba]} ×10], stock: [ids], base: [palo ×series completadas], palos: 1|2|4, mov, rep }
-// id de carta = palo*13 + rango (0..51); puede repetirse (hay dos mazos).
-import { barajar, paloDe, rangoDe, RANGOS, PALOS } from '../../core/cartas.js';
+// id de carta = palo*n + rango (francesa n=13, española n=10: ver core/barajasol.js); puede repetirse (hay dos mazos).
+// Con la baraja española (40 cartas por mazo, 80 en total) hay 8 series de 10 cartas y 4 repartos.
+import { barajar } from '../../core/cartas.js';
+import { de, claveValida } from '../../core/barajasol.js';
 
 export const COLS = 10, SERIES = 8;
+const enMesa = B => (B.n === 13 ? [6, 6, 6, 6, 5, 5, 5, 5, 5, 5] : Array(10).fill(4));       // cartas iniciales por columna
 export const PALOS_OPC = [1, 2, 4];
 // Mazo según el número de palos: 1 → solo picas; 2 → picas y corazones; 4 → los cuatro
-export function mazo(palos) {
-  const ps = palos === 1 ? [0] : palos === 2 ? [0, 1] : [0, 1, 2, 3], rep = 8 / ps.length, m = [];
-  for (let r = 0; r < rep; r++) for (const p of ps) for (let k = 0; k < 13; k++) m.push(p * 13 + k);
+export function mazo(palos, baraja = 'fr') {
+  const B = de({ baraja }), ps = palos === 1 ? [0] : palos === 2 ? [0, 1] : [0, 1, 2, 3], rep = 8 / ps.length, m = [];
+  for (let r = 0; r < rep; r++) for (const p of ps) for (let k = 0; k < B.n; k++) m.push(p * B.n + k);
   return m;
 }
-export function nuevo(palos = 1) {
-  palos = PALOS_OPC.includes(palos) ? palos : 1;
-  const m = barajar(mazo(palos)), tab = [];
-  for (let i = 0; i < COLS; i++) { const n = i < 4 ? 6 : 5, cs = m.splice(0, n); tab.push({ d: cs.slice(0, n - 1), u: [cs[n - 1]] }); }
-  return { tab, stock: m, base: [], palos, mov: 0, rep: 0 };
+export function nuevo(palos = 1, baraja = 'fr') {
+  palos = PALOS_OPC.includes(palos) ? palos : 1; baraja = claveValida(baraja);
+  const B = de({ baraja }), m = barajar(mazo(palos, baraja)), tab = [], ini = enMesa(B);
+  for (let i = 0; i < COLS; i++) { const n = ini[i], cs = m.splice(0, n); tab.push({ d: cs.slice(0, n - 1), u: [cs[n - 1]] }); }
+  return { tab, stock: m, base: [], palos, mov: 0, rep: 0, baraja };
 }
 export const copia = S => JSON.parse(JSON.stringify(S));
 export const gana = S => S.base.length === SERIES;
@@ -27,13 +30,13 @@ export const repartosRestantes = S => S.stock.length / COLS;
 
 // ¿Se puede coger la carta idx de la columna col? (ella y las de debajo forman una serie del mismo palo en orden descendente)
 export function puedeTomar(S, col, idx) {
-  const u = S.tab[col].u; if (idx < 0 || idx >= u.length) return false;
+  const { palo: paloDe, rango: rangoDe } = de(S), u = S.tab[col].u; if (idx < 0 || idx >= u.length) return false;
   for (let i = idx; i < u.length - 1; i++) if (paloDe(u[i]) !== paloDe(u[i + 1]) || rangoDe(u[i]) !== rangoDe(u[i + 1]) + 1) return false;
   return true;
 }
 export const secuencia = (S, col, idx) => S.tab[col].u.slice(idx);
 export function cabe(S, id, col) {
-  const u = S.tab[col].u; if (!u.length) return true;
+  const rangoDe = de(S).rango, u = S.tab[col].u; if (!u.length) return true;
   return rangoDe(u[u.length - 1]) === rangoDe(id) + 1;
 }
 export function puede(S, col, idx, dest) {
@@ -42,12 +45,12 @@ export function puede(S, col, idx, dest) {
 }
 // Si la columna acaba en K…A del mismo palo, la serie sale a las bases. Devuelve cuántas series salieron.
 function completar(S, col) {
-  const c = S.tab[col], u = c.u; let n = 0;
-  while (u.length >= 13) {
-    const t = u.slice(-13); let ok = rangoDe(t[0]) === 12;
-    for (let i = 0; ok && i < 12; i++) ok = paloDe(t[i]) === paloDe(t[i + 1]) && rangoDe(t[i]) === rangoDe(t[i + 1]) + 1;
+  const B = de(S), paloDe = B.palo, rangoDe = B.rango, c = S.tab[col], u = c.u; let n = 0;
+  while (u.length >= B.n) {
+    const t = u.slice(-B.n); let ok = rangoDe(t[0]) === B.rey;
+    for (let i = 0; ok && i < B.n - 1; i++) ok = paloDe(t[i]) === paloDe(t[i + 1]) && rangoDe(t[i]) === rangoDe(t[i + 1]) + 1;
     if (!ok) break;
-    u.splice(-13, 13); S.base.push(paloDe(t[0])); n++;
+    u.splice(-B.n, B.n); S.base.push(paloDe(t[0])); n++;
   }
   if (!u.length && c.d.length) u.push(c.d.pop());
   return n;
@@ -72,7 +75,7 @@ export function repartir(S) {
 // Mejor destino para un toque: columna con carta que continúe del mismo palo > otra con carta > columna vacía (solo si sirve de algo)
 export function destinoAuto(S, col, idx) {
   if (!puedeTomar(S, col, idx)) return -1;
-  const id = S.tab[col].u[idx], c = S.tab[col];
+  const { palo: paloDe } = de(S), id = S.tab[col].u[idx], c = S.tab[col];
   let mejor = -1, pm = -1;
   for (let d = 0; d < COLS; d++) {
     if (!puede(S, col, idx, d)) continue;
@@ -87,13 +90,13 @@ export function destinoAuto(S, col, idx) {
 }
 // longitud de la serie del mismo palo que acaba al final de la columna
 export function longitudSerie(S, col) {
-  const u = S.tab[col].u; let n = u.length ? 1 : 0;
+  const { palo: paloDe, rango: rangoDe } = de(S), u = S.tab[col].u; let n = u.length ? 1 : 0;
   for (let i = u.length - 2; i >= 0; i--) { if (paloDe(u[i]) === paloDe(u[i + 1]) && rangoDe(u[i]) === rangoDe(u[i + 1]) + 1) n++; else break; }
   return n;
 }
 // Pista: prioriza juntar cartas del mismo palo y descubrir cartas; evita deshacer series
 export function pista(S) {
-  const c = [];
+  const { palo: paloDe, rango: rangoDe } = de(S), c = [];
   for (let col = 0; col < COLS; col++) {
     const u = S.tab[col].u;
     for (let idx = 0; idx < u.length; idx++) {
@@ -112,12 +115,11 @@ export function pista(S) {
     }
   }
   c.sort((a, b) => b.p - a.p);
-  if (c.length) { const m = c[0]; return { tipo: 'mover', ...m, txt: `${nombre(S.tab[m.col].u[m.idx])} → columna ${m.dest + 1}` }; }
+  if (c.length) { const m = c[0]; return { tipo: 'mover', ...m, txt: `${de(S).nombre(S.tab[m.col].u[m.idx])} → columna ${m.dest + 1}` }; }
   if (puedeRepartir(S)) return { tipo: 'repartir', txt: 'Reparte una carta nueva a cada columna' };
   if (S.stock.length && S.tab.some(x => !x.u.length)) return { tipo: 'vacia', txt: 'Para repartir hay que llenar antes las columnas vacías' };
   return null;
 }
-export const nombre = id => RANGOS[rangoDe(id)] + PALOS[paloDe(id)].s;
 // ¿quedan jugadas? (para avisar de bloqueo)
 export function hayJugadas(S) {
   if (puedeRepartir(S)) return true;
@@ -129,19 +131,19 @@ export function hayJugadas(S) {
 }
 export function validar(d) {
   if (!d || typeof d !== 'object') return null;
-  const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
+  const B = de({ baraja: claveValida(d.baraja) }), ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
   if (!PALOS_OPC.includes(d.palos) || !Array.isArray(d.tab) || d.tab.length !== COLS || !Array.isArray(d.stock) || !Array.isArray(d.base)) return null;
-  const permitidos = new Set(mazo(d.palos).map(c => paloDe(c)));
-  const carta = v => ent(v, 0, 51) && permitidos.has(paloDe(v));
+  const permitidos = new Set(mazo(d.palos, B.clave).map(c => B.palo(c)));
+  const carta = v => ent(v, 0, B.total - 1) && permitidos.has(B.palo(v));
   const cuenta = new Map(); let total = 0;
   const lista = (a, max) => Array.isArray(a) && a.length <= max && a.every(v => { if (!carta(v)) return false; cuenta.set(v, (cuenta.get(v) || 0) + 1); total++; return true; });
   const tab = [];
   for (const c of d.tab) { if (!c || !lista(c.d, 60) || !lista(c.u, 104)) return null; if (c.d.length && !c.u.length) return null; tab.push({ d: c.d.slice(), u: c.u.slice() }); }
   if (!lista(d.stock, 50) || d.stock.length % COLS) return null;
   if (d.base.length > SERIES || !d.base.every(p => ent(p, 0, 3) && permitidos.has(p))) return null;
-  total += d.base.length * 13; for (const p of d.base) for (let k = 0; k < 13; k++) cuenta.set(p * 13 + k, (cuenta.get(p * 13 + k) || 0) + 1);
-  if (total !== 104) return null;
-  const esperado = new Map(); for (const v of mazo(d.palos)) esperado.set(v, (esperado.get(v) || 0) + 1);
+  total += d.base.length * B.n; for (const p of d.base) for (let k = 0; k < B.n; k++) cuenta.set(p * B.n + k, (cuenta.get(p * B.n + k) || 0) + 1);
+  if (total !== 8 * B.n) return null;
+  const esperado = new Map(); for (const v of mazo(d.palos, B.clave)) esperado.set(v, (esperado.get(v) || 0) + 1);
   for (const [k, n] of esperado) if (cuenta.get(k) !== n) return null;
-  return { tab, stock: d.stock.slice(), base: d.base.slice(), palos: d.palos, mov: ent(d.mov, 0, 1e6) ? d.mov : 0, rep: ent(d.rep, 0, 5) ? d.rep : 0 };
+  return { tab, stock: d.stock.slice(), base: d.base.slice(), palos: d.palos, baraja: B.clave, mov: ent(d.mov, 0, 1e6) ? d.mov : 0, rep: ent(d.rep, 0, 5) ? d.rep : 0 };
 }

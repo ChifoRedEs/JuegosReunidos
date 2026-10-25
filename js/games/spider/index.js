@@ -1,10 +1,11 @@
 // Solitario Spider · 104 cartas, 10 columnas, 1, 2 o 4 palos. Reglas en motor.js. Apariencia como el resto de juegos de Cartas.
 import { $, fmtTiempo } from '../../core/dom.js';
-import { cartaHTML, PALOS } from '../../core/cartas.js';
+import { de, claveValida, asegurar as asegurarBaraja, familiaDe } from '../../core/barajasol.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
+import { grupoMesa, grupoDorso, grupoBarajaSolitarios } from '../../core/aspectos.js';
 import * as K from './motor.js';
 
+const cartaHTML = (id, o) => de(S).html(id, o);                   // baraja francesa o española según la partida
 const DY_ABAJO = .12, DY_ARRIBA = .3;
 let S = null, hist = [], api = null, asp = null, root = null, crono = null, reg = false, pst = null, pstT = null, drag = null, avisoBloq = false;
 
@@ -20,13 +21,28 @@ export function resumen(d) {
   return K.gana(d.s) ? { texto: `${txtPalos(d.s.palos)} · ¡Ganada!`, fin: true } : { texto: `${txtPalos(d.s.palos)} · ${b}/8 series`, fin: false };
 }
 
+/* ---------- baraja: francesa (104 cartas) o española (80), se elige en 🎨 Apariencia ---------- */
+let barSel = '';
+function alinearBaraja() {                                              // partida guardada de una baraja distinta a la elegida: manda la partida
+  asegurarBaraja(); if (S && familiaDe(asp) !== claveValida(S.baraja)) asp.elegir('barajasol', S.baraja === 'es' ? 'esp-01' : 'azar');
+}
+function alCambiarAsp() {
+  if (!S || !crono) return;
+  if (familiaDe(asp) !== claveValida(S.baraja)) {
+    if (hayProgreso() && !api.confirmar('Cambiar entre baraja francesa y española empieza una partida nueva y perderás la actual. ¿Continuar?')) return { volver: { barajasol: barSel } };
+    asegurarBaraja(); nueva(S.palos, true);
+  }
+  barSel = asp.elegida('barajasol');
+}
+
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; pst = null; drag = null; avisoBloq = false;
-  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaFr()]);
+  asp = api.aspecto([grupoMesa(), grupoDorso(), grupoBarajaSolitarios()], alCambiarAsp);
   await api.css(new URL('../../../css/cartas.css', import.meta.url)); await api.css(new URL('./spider.css', import.meta.url));
   const g = api.cargar();
-  if (g) { S = g.s; hist = g.hist; reg = g.reg; } else { S = K.nuevo(api.pref('palos', 1)); hist = []; reg = false; }
+  if (g) { S = g.s; hist = g.hist; reg = g.reg; } else { S = K.nuevo(api.pref('palos', 1), familiaDe(asp)); hist = []; reg = false; }
+  alinearBaraja(); barSel = asp.elegida('barajasol');
   root.innerHTML = `
     <div class="info"><span class="mut" id="spInfo"></span><span id="spCrono" aria-label="Tiempo">0:00</span></div>
     <div class="mesa sp" id="spBoard"></div>
@@ -38,7 +54,7 @@ export async function mount(r, a) {
     salir: () => { location.hash = '#/cat/cartas'; },
     pausar: () => { if (crono) crono.pausar(); },
     reanudar: () => { if (crono && S && !K.gana(S) && S.mov > 0) crono.iniciar(); },
-    config: { valores: () => ({ palos: S.palos }), grupos: () => [{ clave: 'palos', titulo: 'Palos', opciones: [[1, '♠ 1 palo (fácil)'], [2, '♠♥ 2 palos'], [4, '♠♥♦♣ 4 palos (difícil)']] }], aplicar: v => nueva(v.palos, true) } });
+    config: { valores: () => ({ palos: S.palos }), grupos: () => [{ clave: 'palos', titulo: 'Palos', opciones: [[1, `${de(S).palosOpc[1]} 1 palo (fácil)`], [2, `${de(S).palosOpc[2]} 2 palos`], [4, `${de(S).palosOpc[4]} 4 palos (difícil)`]] }], aplicar: v => nueva(v.palos, true) } });
   api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.palos) }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { $('#spCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } }, g ? g.t : 0);
   if (S.mov > 0 && !K.gana(S)) crono.iniciar();
@@ -59,7 +75,7 @@ function nueva(palos, forzar = false) {
   if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   asp.sortear(); api.setPref('palos', palos);
   crono.detener(); crono = new Cronometro(crono.alTick, 0);
-  S = K.nuevo(palos); hist = []; reg = false; pst = null; avisoBloq = false;
+  S = K.nuevo(palos, familiaDe(asp)); hist = []; reg = false; pst = null; avisoBloq = false;
   pintar(); guardar();
 }
 function antes() { hist.push(K.copia(S)); if (hist.length > 60) hist.shift(); if (S.mov === 0) crono.iniciar(); pst = null; }
@@ -93,7 +109,7 @@ function pintar() {
   let h = '<div class="sprow spalto">';
   const quedan = K.repartosRestantes(S);
   h += `<div class="sppile stock ${quedan ? '' : 'vacio'} ${pst && pst.tipo === 'repartir' ? 'pst' : ''}" data-pile="stock" role="button" aria-label="${quedan ? `Repartir (quedan ${quedan})` : 'Sin cartas para repartir'}">${quedan ? cartaHTML(0, { oculta: true, estilo: '--x:0;--y:0' }) + `<span class="spn">${quedan}</span>` : ''}</div><div></div>`;
-  for (let i = 0; i < K.SERIES; i++) { const p = S.base[i]; h += `<div class="sppile base">${p === undefined ? '' : cartaHTML(p * 13 + 12, { estilo: '--x:0;--y:0' })}</div>`; }
+  for (let i = 0; i < K.SERIES; i++) { const p = S.base[i]; h += `<div class="sppile base">${p === undefined ? '' : cartaHTML(p * de(S).n + de(S).rey, { estilo: '--x:0;--y:0' })}</div>`; }
   h += '</div><div class="sprow">';
   for (let col = 0; col < K.COLS; col++) {
     const c = S.tab[col]; let y = 0, cards = '';
@@ -165,7 +181,8 @@ function reglas() {
     <li>Puedes poner una carta sobre otra <b>de rango inmediatamente superior</b> (un 6 sobre un 7), sea del palo que sea. Una columna vacía admite cualquier carta o grupo.</li>
     <li>Solo se pueden mover <b>grupos del mismo palo y en orden</b> (por ejemplo 9♠ 8♠ 7♠). Si mezclas palos, el grupo queda atascado hasta que lo desmontes.</li>
     <li><b>Arrastra</b> una carta o un grupo, o <b>tócalo</b> para que se envíe a donde mejor encaje.</li>
-    <li>Toca el mazo (o 🃏 Repartir) para colocar <b>una carta nueva en cada columna</b>. Hay 5 repartos y <b>no se puede repartir con una columna vacía</b>.</li>
+    <li>Toca el mazo (o 🃏 Repartir) para colocar <b>una carta nueva en cada columna</b>. Hay 5 repartos (4 con la baraja española) y <b>no se puede repartir con una columna vacía</b>.</li>
+    <li>🃏 En 🎨 Apariencia > Barajas puedes jugar con baraja <b>francesa</b> (104 cartas, series de 13) o <b>española</b> (80 cartas, series de 10: de la A al 7, sota, caballo y rey). Cambiar de familia empieza una partida nueva.</li>
     <li>Dificultad: <b>1 palo</b> (solo ♠), <b>2 palos</b> (♠♥) o <b>4 palos</b> (los cuatro), en ⚙️ Configurar partida.</li>
     <li>Puntos: empiezas con 500, pierdes 1 por movimiento y ganas 100 por cada serie completada.</li>
     <li>💡 <b>Pista</b> y ↶ <b>Deshacer</b> (todos los movimientos que quieras).</li></ul>`);

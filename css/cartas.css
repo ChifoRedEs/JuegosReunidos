@@ -32,8 +32,10 @@
 
 /* cartas de imagen (img/cartas): la regla con la imagen de cada carta la inyecta core/cartas.js; aquí, lo común */
 .juego[data-barajaes]:not([data-barajaes="css"]) .carta.es:not(.dorso):not(.comodin),
+.juego[data-barajasol] .carta.es:not(.dorso):not(.comodin),.juego[data-barajasol] .carta:not(.es):not(.dorso):not(.comodin),
 .juego[data-barajafr]:not([data-barajafr="css"]) .carta:not(.es):not(.dorso):not(.comodin){background-color:transparent;background-size:100% 100%;background-position:center;background-repeat:no-repeat;border:0;border-radius:calc(var(--cw) * .09)}
 .juego[data-barajaes]:not([data-barajaes="css"]) .carta.es:not(.dorso):not(.comodin)>*,
+.juego[data-barajasol] .carta.es:not(.dorso):not(.comodin)>*,.juego[data-barajasol] .carta:not(.es):not(.dorso):not(.comodin)>*,
 .juego[data-barajafr]:not([data-barajafr="css"]) .carta:not(.es):not(.dorso):not(.comodin)>*{display:none}
 /* comodín dibujado de la baraja española (Chinchón) */
 .carta.es.comodin{background:linear-gradient(135deg,#FFE27A,#FF8FB1 55%,#8FB8FF);border-color:#C9B27A;color:#4B1E7A}
