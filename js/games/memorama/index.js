@@ -203,6 +203,6 @@ function reglas() {
     <li><b>👤 Un jugador</b>: encuentra todas las parejas con los menos movimientos y el menor tiempo (⭐⭐⭐ si casi no fallas). Hay hasta 3 <b>👁️ vistazos</b> que enseñan todo el tablero un instante (no cuentan para el récord).</li>
     <li><b>👥 2 jugadores</b> y <b>🤖 contra la máquina</b>: si aciertas una pareja te la quedas y <b>repites turno</b>. Gana quien reúna más. La máquina solo recuerda lo que ha visto, y su memoria depende del nivel.</li>
     <li>Tras un fallo puedes tocar otra carta para no esperar. Teclado: flechas para moverte, Intro o espacio para destapar.</li>
-    <li>Imágenes: frutas y verduras, coches, Pokémon o todo mezclado. Tableros de 12 a 48 cartas.</li>
+    <li>Imágenes: frutas y verduras, animales, comida, banderas del mundo, transportes y más categorías, o todo mezclado. Tableros de 12 a 48 cartas.</li>
     <li>Con 🎨 Apariencia cambias el tapete, el dorso, el color y la forma de las cartas y si se ve el nombre.</li></ul>`);
 }

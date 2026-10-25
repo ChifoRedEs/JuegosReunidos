@@ -29,7 +29,6 @@
 .con-dorso .mrdorso i{display:none}
 .mrcara{transform:rotateY(180deg);background:var(--mr-cara);border:3px solid var(--mr-borde);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .mrcara img{width:100%;height:100%;object-fit:contain;display:block}
-.mrc[data-tema="coches"] .mrcara img{object-fit:cover}
 .mrcara b{position:absolute;left:0;right:0;bottom:0;padding:2px 3px 3px;text-align:center;font:800 clamp(8px,calc(100cqw / var(--c) * .13),12px)/1.1 var(--f-texto);color:#fff;background:linear-gradient(transparent,rgba(10,12,30,.82) 40%);text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .juego-memorama[data-nombres="no"] .mrcara b{display:none}
 .juego-memorama[data-forma="circulo"] .mrcara b{display:none}

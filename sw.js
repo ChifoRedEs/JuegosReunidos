@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-59d7a4fd47';
+const VERSION = 'jr-0d7b6528b7';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -20,7 +20,19 @@ const ARCHIVOS = [
 './img/cartas/dorsos/nombres.json',
 './img/cartas/fondos/nombres.json',
 './img/cartas/tapetes/nombres.json',
+'./img/memorama/animales/nombres.json',
+'./img/memorama/banderas/nombres.json',
+'./img/memorama/caras/nombres.json',
+'./img/memorama/comida/nombres.json',
+'./img/memorama/deportes/nombres.json',
+'./img/memorama/fiestas/nombres.json',
 './img/memorama/frutas/nombres.json',
+'./img/memorama/lugares/nombres.json',
+'./img/memorama/musica/nombres.json',
+'./img/memorama/naturaleza/nombres.json',
+'./img/memorama/objetos/nombres.json',
+'./img/memorama/ropa/nombres.json',
+'./img/memorama/transportes/nombres.json',
 './js/app.js',
 './js/registry.js',
 './js/version.js',

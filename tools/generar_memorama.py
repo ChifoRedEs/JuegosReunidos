@@ -6,7 +6,9 @@ Para añadir imágenes: copia los .webp a la carpeta del tema (o crea una carpet
 import json, os
 RAIZ = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 IMG = os.path.join(RAIZ, 'img', 'memorama')
-TEMAS = {'frutas': ('Frutas y verduras', '🍎'), 'coches': ('Coches', '🚗'), 'pokemon': ('Pokémon', '⚡')}
+TEMAS = {'frutas': ('Frutas y verduras', '🍎'), 'animales': ('Animales', '🐶'), 'banderas': ('Banderas del mundo', '🏳️'), 'comida': ('Comida y bebida', '🍔'),
+         'naturaleza': ('Naturaleza y clima', '🌳'), 'transportes': ('Transportes', '🚗'), 'lugares': ('Lugares y edificios', '🏰'), 'deportes': ('Deportes y juegos', '⚽'),
+         'musica': ('Música y espectáculos', '🎸'), 'objetos': ('Objetos y herramientas', '🔧'), 'ropa': ('Ropa y accesorios', '👕'), 'caras': ('Caritas', '😀'), 'fiestas': ('Fiestas y fantasía', '🎉')}
 out = {}
 for tema in sorted(os.listdir(IMG)):
     d = os.path.join(IMG, tema)

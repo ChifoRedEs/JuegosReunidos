@@ -46,11 +46,11 @@ t('la CPU difícil necesita menos movimientos que la fácil', () => {
   aser(media('dificil') < media('facil'), 'difícil ≥ fácil');
 });
 t('validar rechaza basura y acepta lo bueno', () => {
-  const S = M.crear(cfg('cpu', '4x4', 'coches', 'dificil'), 'e'); M.voltear(S, 0); const b = parejaDe(S, 0); M.voltear(S, b);
+  const S = M.crear(cfg('cpu', '4x4', 'animales', 'dificil'), 'e'); M.voltear(S, 0); const b = parejaDe(S, 0); M.voltear(S, b);
   aser(M.validar(JSON.parse(JSON.stringify(S))), 'bueno');
   const mal = [null, {}, { modo: 'solo' }, { ...S, v: 2 }, { ...S, modo: '__proto__' }, { ...S, tema: 'constructor' }, { ...S, tam: 'toString' }, { ...S, deck: S.deck.slice(1) }, { ...S, deck: S.deck.map(() => 'frutas/ajo') }, { ...S, deck: S.deck.map((x, i) => i ? x : 'x/y') },
     { ...S, ok: S.ok.map((x, i) => i === 3 ? 1 : x) }, { ...S, ok: [1] }, { ...S, pts: [99, 0] }, { ...S, turno: 5 }, { ...S, movs: -1 }, { ...S, vz: 9 }];
   for (const x of mal) aser(M.validar(x) === null, 'aceptó ' + JSON.stringify(x).slice(0, 60));
-  const r = M.validar({ ...S, done: true, ganador: 1, ab: [3, 4, 4], mem: { 0: 'coches/zzz', 1: 'otra', 99: 'x' } }); aser(r && !r.done && r.ab.length === 0 && Object.keys(r.mem).length === 0, 'normaliza');
+  const r = M.validar({ ...S, done: true, ganador: 1, ab: [3, 4, 4], mem: { 0: 'animales/zzz', 1: 'otra', 99: 'x' } }); aser(r && !r.done && r.ab.length === 0 && Object.keys(r.mem).length === 0, 'normaliza');
 });
 console.log(ok + ' pruebas correctas');
