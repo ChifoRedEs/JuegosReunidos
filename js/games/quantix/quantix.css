@@ -1,0 +1,28 @@
+/* Quantix */
+.qxgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:4px 0 8px}
+.qxnv{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 2px;min-height:48px;line-height:1.1}
+.qxnv b{font:800 16px 'Baloo 2',system-ui,sans-serif}
+.qxnv small{font-size:9px;letter-spacing:-1px;color:#E0A100}
+.qxnv.on small{color:inherit}
+.qxhud{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;font-weight:700;font-size:14px}
+.qxhud .vi{font-size:15px;letter-spacing:1px}
+.qxhud .pts{font-size:15px}
+.qxhud .pts b{font:800 22px 'Baloo 2',system-ui,sans-serif;color:var(--purple)}
+.qxhud b{font-variant-numeric:tabular-nums}
+.qxpausa{padding:6px 12px;min-height:36px}
+.qxprog{position:relative;height:16px;border-radius:9px;background:var(--line);overflow:hidden;margin:0 auto 8px;width:min(100%,420px)}
+.qxprog i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#22E5FF,var(--purple));transition:width .2s}
+.qxprog u{position:absolute;top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.4);text-decoration:none;transform:translateX(-1px)}
+.qxprog span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 10px system-ui,sans-serif;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.8)}
+.qxzona{position:relative;width:min(100%,420px,calc((100dvh - 400px) * .75));min-width:240px;margin:0 auto;aspect-ratio:3/4;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border-radius:14px;overflow:hidden;box-shadow:0 10px 24px rgba(20,25,70,.4)}
+.qxzona canvas{display:block;width:100%;height:100%}
+.qxover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,15,40,.42);animation:qxaparece .25s ease-out}
+.qxover[hidden]{display:none}
+@keyframes qxaparece{from{opacity:0}}
+.qxover>div{background:var(--card);color:var(--ink);border-radius:18px;padding:14px 20px;text-align:center;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 26px rgba(0,0,0,.35);max-width:86%}
+.qxover b{font:800 21px 'Baloo 2',system-ui,sans-serif}
+.qxover span{font-size:13.5px;font-weight:700;color:var(--mut)}
+.qxover .g{font:800 18px 'Baloo 2',system-ui,sans-serif;color:var(--purple)}
+.qxover .est{font-size:30px;color:#E0A100;letter-spacing:4px}
+.qxover .bts{display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.qxayuda{text-align:center}
