@@ -1,5 +1,5 @@
-// Scrabble en español (sin DOM: se usa en la página, en el Worker de la CPU y en las pruebas con Node).
-// Tablero de 15 × 15 (índice = fila * 15 + columna), 100 fichas como el Scrabble español: CH, LL, RR y Ñ son una ficha
+// Palabras Cruzadas en español (sin DOM: se usa en la página, en el Worker de la CPU y en las pruebas con Node).
+// Tablero de 15 × 15 (índice = fila * 15 + columna), 100 fichas como el Palabras Cruzadas español: CH, LL, RR y Ñ son una ficha
 // y no hay K ni W. Dentro del motor cada ficha es un carácter: 'a'…'z', 'ñ', '1' = CH, '2' = LL, '3' = RR y '?' = comodín.
 // El tablero es una cadena de 225 caracteres ('.' = vacía); `bl` guarda las casillas donde hay un comodín (valen 0).
 export const N = 15, CENTRO = 112;

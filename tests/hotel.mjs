@@ -20,7 +20,7 @@ await t('datos: 8 hoteles con tablas de la edición 1986 y todos con casillas de
   for (let i = 0; i < D.N; i++) if (D.TIPO[i] === 'C') assert.ok(D.ADYACENTES[i].length > 0, 'C sin terreno ' + i);
 });
 await t('crear: dinero inicial y estado válido', () => {
-  const S = nueva(4); assert.equal(S.jug.length, 4); assert.ok(S.jug.every(p => p.dinero === 12000)); assert.ok(M.validar(S));
+  const S = nueva(4); assert.equal(S.jug.length, 4); assert.ok(S.jug.every(p => p.dinero === 18000)); assert.ok(M.validar(S));
   assert.ok(M.validar(JSON.parse(JSON.stringify(S))));
 });
 await t('tirar: el coche avanza, nunca comparte casilla y el 6 repite turno', () => {
@@ -41,12 +41,12 @@ await t('salario al cruzar el Banco y entradas en el Ayuntamiento', () => {
   // forzamos dado sacando una semilla que dé ≥2
   let r; do { S.sem++; const c = JSON.parse(JSON.stringify(S)); M.decidir(c, { t: 'tirar' }); if (c.dado >= 2) break; } while (true);
   const d0 = S.jug[0].dinero; r = M.decidir(S, { t: 'tirar' }); assert.ok(S.dado >= 2);
-  assert.ok(S.jug[0].dinero >= d0 + 2000 - 3000, 'cobro'); assert.ok(r.ev.some(e => e.t === 'cobra'));
+  assert.ok(S.jug[0].dinero >= d0 + 3000 - 3000, 'cobro'); assert.ok(r.ev.some(e => e.t === 'cobra'));
 });
 await t('comprar terreno, no dos por turno, y compra obligatoria a mitad de precio', () => {
   const S = nueva(2); const sq = D.CASILLAS_DE.fuji.find(i => D.TIPO[i] === 'C'); S.jug[0].pos = sq; S.fase = 'compra';
-  const L = M.legales(S); assert.ok(L.lotes.some(x => x.h === 'fuji' && x.precio === 1000));
-  assert.ok(M.decidir(S, { t: 'comprar', h: 'fuji' }).ok); assert.equal(S.hot.fuji.dueno, 0); assert.equal(S.jug[0].dinero, 11000);
+  const L = M.legales(S); assert.ok(L.lotes.some(x => x.h === 'fuji' && x.precio === 1500));
+  assert.ok(M.decidir(S, { t: 'comprar', h: 'fuji' }).ok); assert.equal(S.hot.fuji.dueno, 0); assert.equal(S.jug[0].dinero, 16500);
   // ahora un rival cae junto a un terreno vacío ajeno
   S.fase = 'compra'; S.turno = 1; S.compro = false; S.jug[1].pos = sq;
   const L2 = M.legales(S); const o = L2.lotes.find(x => x.h === 'fuji'); assert.ok(o && o.forzosa && o.precio === 500);
@@ -89,7 +89,7 @@ await t('deuda: subasta, venta al mejor postor y demolición si nadie puja', () 
   assert.ok(S.deuda.cant > 0);
   M.decidir(S, { t: 'vender', h: 'pres' }); assert.equal(S.fase, 'subasta');
   const q = S.sub.pend[S.sub.cur]; assert.notEqual(q, 0);
-  M.decidir(S, { t: 'pujar', cant: 1000 }); while (S.fase === 'subasta') M.decidir(S, { t: 'retirar' });
+  M.decidir(S, { t: 'pujar', cant: 1500 }); while (S.fase === 'subasta') M.decidir(S, { t: 'retirar' });
   assert.notEqual(S.hot.pres.dueno, 0); assert.ok(S.jug[0].dinero >= 0);
   // demolición
   const T = nueva(2); T.hot.safari = { dueno: 0, etapa: 1, inst: false, desde: 0, ents: [46] }; T.entDe[46] = 'safari'; T.jug[0].dinero = 0;

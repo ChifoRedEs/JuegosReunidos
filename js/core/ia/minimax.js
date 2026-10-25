@@ -1,5 +1,5 @@
 // Búsqueda minimax (negamax) con poda alfa-beta, profundización iterativa y límite de tiempo.
-// Reutilizable por Damas, Conecta 4, 3 en raya, Reversi, etc.
+// Reutilizable por Damas, Cuatro en Línea, 3 en raya, Reversi, etc.
 //
 //   mejorJugada({ estado, jugadas, aplicar, evaluar, profundidad, tiempoMs, ruido, extender })
 //   - jugadas(estado)         -> array de jugadas legales del jugador que mueve

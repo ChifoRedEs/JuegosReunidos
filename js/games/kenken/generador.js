@@ -1,4 +1,4 @@
-// Generador y resolvedor de KenKen (sin DOM, probable con Node).
+// Generador y resolvedor de Calcudoku (sin DOM, probable con Node).
 // Un panel es: { n, sol: [n*n], cages: [{ cells:[idx…], op:'=' | '+' | '-' | 'x' | '/', t:objetivo }] } con solución ÚNICA garantizada.
 import { shuffle, rnd } from '../../core/dom.js';
 
@@ -137,7 +137,7 @@ export function generar(n, dif) {
       if (!hecho) break;
     }
   }
-  throw new Error('No se pudo generar el KenKen');
+  throw new Error('No se pudo generar el Calcudoku');
 }
 // colores de jaula: ninguna jaula vecina comparte color
 export const simbolo = op => ({ '+': '+', '-': '−', 'x': '×', '/': '÷', '=': '' }[op]);

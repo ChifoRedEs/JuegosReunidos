@@ -284,5 +284,5 @@ function reglas() {
     <li>Si tus cuadrados encierran una zona sin jefes, esa zona se descubre sola.</li>
     <li><b>Jefes</b>: <span style="color:#FF4FD8">rebotadores</span> (en línea recta), <span style="color:#FFB020">errantes</span> (giran al azar) y <span style="color:#FF3B3B">cazadores</span> (persiguen tu cuadrado).</li>
     <li><b>IA del jefe</b>: Dócil (rebota al azar), Normal (rebota y empieza a perseguir tu cuadrado), Astuto (te persigue bastante) y Maestro (sabe con precisión dónde estás y te persigue sin descanso). <b>Velocidad</b>: Lenta, Media (+20 %), Rápida (+40 %) o Supersónica (+60 %). <b>Objetivo</b>: 60, 75 o 90 %. <b>Crecimiento del cuadrado</b>: Pequeño, Mediano o Grande.</li>
-    <li>Niveles cada vez más difíciles (más jefes y más rápidos), con imágenes de los escenarios de Worms. Puntos por celdas (más si el cuadrado es grande), vidas sobrantes y estrellas (3 ★ sin perder vidas).</li></ul>`);
+    <li>Niveles cada vez más difíciles (más jefes y más rápidos), con imágenes de los escenarios de Guerra de Orugas. Puntos por celdas (más si el cuadrado es grande), vidas sobrantes y estrellas (3 ★ sin perder vidas).</li></ul>`);
 }

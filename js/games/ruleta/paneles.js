@@ -1,4 +1,4 @@
-// Paneles de la Ruleta de la Suerte: [pista, frase]. Las tildes se muestran pero no cuentan al pedir letras.
+// Paneles de la Ruleta Millonaria: [pista, frase]. Las tildes se muestran pero no cuentan al pedir letras.
 // Para añadir más, escribe nuevas líneas en la categoría que quieras (frases de 2 a 48 caracteres, solo letras, espacios y , . ¡! ¿?).
 export const CATEGORIAS = {
   refran: 'Refrán',

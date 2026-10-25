@@ -1,4 +1,4 @@
-// Niveles de la campaña del Sokoban: originales de Juegos Reunidos (unos diseñados a mano y otros creados con el
+// Niveles de la campaña del Encajados: originales de Juegos Reunidos (unos diseñados a mano y otros creados con el
 // generador del juego con semillas fijas y elegidos por dificultad). No son copia de ninguna colección publicada.
 // Van de menos a más: los primeros enseñan las reglas y los últimos piden planear varios empujes por delante.
 // Para añadir uno: copia el formato (# muro · . meta · $ caja · * caja en meta · @ jugador · + jugador en meta)

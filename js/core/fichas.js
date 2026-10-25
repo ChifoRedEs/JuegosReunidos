@@ -17,7 +17,7 @@ export const FORMAS = { original: 'Original', redonda: 'Esquinas redondeadas', c
 export const TAMANOS = { pequeno: ['Pequeño', .82], normal: ['Normal', 1], grande: ['Grande', 1.14] };
 
 /* ---------- grupos de 🎨 Apariencia ---------- */
-// Paleta reducida (se muestra solo con el color, sin nombre): para juegos donde el color de la pieza no condiciona el juego (Dominó, Worms)
+// Paleta reducida (se muestra solo con el color, sin nombre): para juegos donde el color de la pieza no condiciona el juego (Dominó, Guerra de Orugas)
 export const IDS_POCOS = ['marfil', 'blanco', 'plata', 'gris', 'negro', 'dorado', 'rojo-m', 'naranja-m', 'amarillo-m', 'lima-m', 'verde-m', 'turquesa-m', 'azul-m', 'violeta-m', 'rosa-m', 'azul-o', 'verde-o', 'rojo-o'];
 // o: { clave:'f', titulo:'Cajas', icono:'📦', lados:['Rojo','Amarillo'] (un grupo de color por bando: fcolor, fcolor2…), formas:true|false|[ids], tamano:true|false|[ids], textura:true|false, color:true|false, pocos:true (paleta reducida, solo color sin nombre) }
 export function gruposFichas(o = {}) {
@@ -137,7 +137,7 @@ export function geoCaja(T, w, h, d, forma) {
   g.attributes.position.needsUpdate = true; g.attributes.normal.needsUpdate = true; return g;
 }
 
-/* ---------- textura por píxel (terrenos pintados píxel a píxel, como el de Worms) ---------- */
+/* ---------- textura por píxel (terrenos pintados píxel a píxel, como el de Guerra de Orugas) ---------- */
 // Devuelve un ajuste de brillo (≈ −0,5…+0,5) para el píxel (x, y): color_final = color × (1 + ajuste)
 export function pixelTextura(tex, x, y) {
   switch (tex) {

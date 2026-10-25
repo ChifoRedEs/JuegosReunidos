@@ -1,4 +1,4 @@
-// Worker del Scrabble: carga el diccionario (core/diccionario.js), lo pasa a fichas (diccio.js) y responde a la página
+// Worker del Palabras Cruzadas: carga el diccionario (core/diccionario.js), lo pasa a fichas (diccio.js) y responde a la página
 // sin congelar la pantalla: comprobar palabras, la jugada de la CPU y la 💡 pista. El diccionario se prepara una vez y se queda.
 import * as D from '../../core/diccionario.js';
 import { construir } from './diccio.js';

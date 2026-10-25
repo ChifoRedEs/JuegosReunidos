@@ -1,4 +1,4 @@
-// Reglas e IA del Conecta 4 y sus tableros (sin DOM, probable con Node).
+// Reglas e IA del Cuatro en Línea y sus tableros (sin DOM, probable con Node).
 // Casilla i = fila * cols + columna; la fila 0 es la de arriba. Jugador 1 = rojo (empieza), 2 = amarillo.
 // Un movimiento es el número de columna (0..cols-1).
 import { mejorJugada } from '../../core/ia/minimax.js';
@@ -7,7 +7,7 @@ export const VARIANTES = {
   mini:    { nombre: 'Mini 6×5',         corto: 'Mini',      cols: 6,  filas: 5, k: 4 },
   clasico: { nombre: 'Clásico 7×6',      corto: 'Clásico',   cols: 7,  filas: 6, k: 4 },
   grande:  { nombre: 'Grande 9×7',       corto: 'Grande',    cols: 9,  filas: 7, k: 4 },
-  cinco:   { nombre: 'Conecta 5 · 10×8', corto: 'Conecta 5', cols: 10, filas: 8, k: 5 },
+  cinco:   { nombre: 'Cinco en Línea · 10×8', corto: 'Cinco en Línea', cols: 10, filas: 8, k: 5 },
 };
 const DIRS = [[0, 1], [1, 0], [1, 1], [1, -1]];
 const CACHE = {};

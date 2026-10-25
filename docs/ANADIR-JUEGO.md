@@ -31,7 +31,7 @@ Cualquier juego puede ofrecer 🎨 Apariencia con una línea: `asp = api.aspecto
 ## Teclado emergente para juegos de letras
 Si tu juego necesita escribir letras en casillas, no pongas un teclado fijo bajo el tablero: usa `core/teclado.js`.
 `const tk = crearTeclado({ filas: ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM'], borrar: true, alPulsar: l => …, titulo: '…' })`.
-Ábrelo con `tk.abrir()` al tocar una casilla; se arrastra desde su barra y se cierra con ✕. Con `tk.actualizar((letra, boton) => …)` marcas teclas usadas o desactivadas, `tk.titulo(texto)` cambia el rótulo y `tk.destruir()` va en `unmount`. Modelos: Crucigrama, El Ahorcado y Ruleta de la Suerte.
+Ábrelo con `tk.abrir()` al tocar una casilla; se arrastra desde su barra y se cierra con ✕. Con `tk.actualizar((letra, boton) => …)` marcas teclas usadas o desactivadas, `tk.titulo(texto)` cambia el rótulo y `tk.destruir()` va en `unmount`. Modelos: Crucigrama, El Ahorcado y Ruleta Millonaria.
 
 ## Juegos de cartas: baraja y dorso de imagen
 Si el juego usa `core/cartas.js`, añade a su `api.aspecto([...])` `grupoBarajaEs()` (baraja española, `cartaEsHTML`) o `grupoBarajaFr()` (francesa, `cartaHTML`), junto a `grupoMesa()` y `grupoDorso()` (este ya incluye los dorsos de `img/cartas/dorsos`). No hace falta tocar el HTML de las cartas: cada carta lleva `data-k` y el CSS de imagen se genera desde `img/cartas/barajas.json`.
@@ -58,7 +58,7 @@ Los juegos nuevos deben seguir `docs/MARCA.md`: pantalla de partida con `<p clas
 
 ## Agrupar juegos
 Para que dos juegos salgan como una sola ficha en Inicio, añade un grupo a `GRUPOS` en `js/registry.js`:
-`{ id: 'parchis-oca', nombre: 'Parchís y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
+`{ id: 'parchis-oca', nombre: 'Party’s y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
 Cada juego conserva su id, su partida guardada y sus estadísticas.
 
 ## Juegos en 3D (Three.js)
@@ -122,7 +122,7 @@ Color (más de 45), textura (8), forma (5) y tamaño de las piezas, común a var
    - **HTML/CSS**: carga `css/fichas.css` (`api.css(new URL('../../../css/fichas.css', import.meta.url))`), pon la clase `.fx` en la pieza (o `.fxb` si el dibujo está en su `::before`) y llama a `aplicarVars(elemento, est)`; el color llega en `--fx-c` / `--fx-c2`. Si la textura tapa el color de fondo, añade `background-color` en el CSS del juego.
    - **Canvas 2D**: `spriteFicha(colorBase, est, w, h, radio)` devuelve un lienzo con color, textura y forma (con caché) para `drawImage`; `variantes(est.hex, n)` reparte un color en n tonos si las piezas deben distinguirse. Para terrenos pintados píxel a píxel: `pixelTextura(est.tex, x, y)`.
    - **Three.js**: `geoCaja(T, w, h, d, est.forma)` (caja redondeada/biselada con UV) y `capaTextura(ctx, 0, 0, w, h, est.tex)` sobre el lienzo del mapa; `est.esc` escala la pieza.
-Opciones útiles: `color:false` (si las piezas necesitan sus colores para jugar: Sokoban, Klotski, Bloques, Rompe-Ladrillos) y `pocos:true` (paleta de 18 colores, solo muestras sin nombre: Worms; Dominó usa su propia lista). Juegos que ya lo usan: Sokoban, Klotski, Bloques, Rompe-Ladrillos, Worms (terreno), Ajedrez, Damas, 3 en raya, Conecta 4, Parchís, Oca, Rummy, Magnate, Hotel y Batalla Naval. Los juegos de dos bandos o varios jugadores usan `lados:[…]` (un color por bando) y sobrescriben sus propias variables CSS o el color que pasan a la vista 3D (ver `damas`, `parchis`, `hotel`).
+Opciones útiles: `color:false` (si las piezas necesitan sus colores para jugar: Encajados, Klotski, Bloques, Rompe-Ladrillos) y `pocos:true` (paleta de 18 colores, solo muestras sin nombre: Guerra de Orugas; Dominó usa su propia lista). Juegos que ya lo usan: Encajados, Klotski, Bloques, Rompe-Ladrillos, Guerra de Orugas (terreno), Ajedrez, Damas, 3 en raya, Cuatro en Línea, Party’s, Oca, Rummy, Magnate, Hotel y Batalla Naval. Los juegos de dos bandos o varios jugadores usan `lados:[…]` (un color por bando) y sobrescriben sus propias variables CSS o el color que pasan a la vista 3D (ver `damas`, `parchis`, `hotel`).
 
 ## Caras de «¿Qué cara tienes?» (avatares)
 `js/games/quecara/avatar.js` compone una cara como un SVG a partir de piezas por capas (`piezas.js`, generado con `python tools/generar_piezas.py` desde `tools/avatares/<pieza>/<forma>.svg`; el marcador `$fillColor` se sustituye por el color). Una cara es un objeto pequeño (`nm, sx, pi, pe, pc, …`); `caraValida(f)` la normaliza, `svgDe(f)` devuelve el SVG (con ids únicos) y `generarCaras(n, semilla, vectorDe)` crea un tablero repartido y repetible. Para añadir una pieza: dibuja el SVG en `tools/avatares/<pieza>/` (coordenadas absolutas de la cara, 4 px de contorno negro), añade la forma al catálogo de `avatar.js` y, si se puede preguntar por ella, una pregunta en `preguntas.js`. Las 30 caras por defecto se regeneran con `node tools/generar_caras_quecara.mjs`. Crédito obligatorio (licencia MIT): Vue Color Avatar, de LeoKu.

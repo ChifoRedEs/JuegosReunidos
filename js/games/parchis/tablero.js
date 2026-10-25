@@ -1,4 +1,4 @@
-// Geometría y constantes del tablero de Parchís (sin DOM).
+// Geometría y constantes del tablero de Party’s (sin DOM).
 // Posición de cada ficha (relativa a su color): -1 casa · 0 salida · 0..63 vuelta de 68 casillas · 64..70 pasillo · 71 meta
 export const PC = ['am', 'az', 'ro', 've'];
 export const PNAME = { am: 'Amarillo', az: 'Azul', ro: 'Rojo', ve: 'Verde' };

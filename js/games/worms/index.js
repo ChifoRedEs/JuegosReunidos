@@ -1,4 +1,4 @@
-// Worms (Arcade) · vista: pantalla de ajustes, canvas, controles táctiles/teclado, cámara, efectos y guardado.
+// Guerra de Orugas (Arcade) · vista: pantalla de ajustes, canvas, controles táctiles/teclado, cámara, efectos y guardado.
 // La lógica está en motor.js (físicas, armas, turnos) e ia.js (CPU), ambos sin DOM.
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
@@ -99,7 +99,7 @@ function ajustes() {
   const hay = api.cargar(), sigue = hay && hay.s.ganador === null;
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   const fila = (t, k, ops) => `<div class="bar"><span class="lbl">${t}</span>${seg(k, ops)}</div>`;
-  root.innerHTML = `<p class="note">Worms: dos ejércitos de gusanos se turnan para disparar, balancearse con la cuerda ninja y volar el terreno por los aires. Gana el último equipo en pie.</p>
+  root.innerHTML = `<p class="note">Guerra de Orugas: dos ejércitos de gusanos se turnan para disparar, balancearse con la cuerda gancho y volar el terreno por los aires. Gana el último equipo en pie.</p>
     ${fila('Modo', 'modo', [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']])}
     ${cfg.modo === 'cpu' ? fila('Nivel', 'nivel', M.NIVELES.map((n, i) => [i, n])) : ''}
     ${fila('Gusanos por equipo', 'n', M.TAMANOS.map(n => [n, String(n)]))}
@@ -296,8 +296,8 @@ function reglas() {
   api.modal('Cómo se juega', `<p>Dos equipos de gusanos se turnan. En cada turno juega un gusano: muévelo, apunta y dispara. Gana el equipo que deje sin gusanos al otro.</p>
   <p><b>Moverse:</b> ◀ ▶ andar (sube cuestas y baja pendientes), ⤴️ salto hacia delante y ⤒ salto alto (recto hacia arriba; si mantienes ◀ o ▶ sale inclinado). En el aire, ◀ ▶ te empujan hacia un lado. Caer de muy alto hace daño y el agua o el borde del mapa matan.</p>
   <p><b>Disparar:</b> ▲ ▼ mueven la mira. En <i>Lanzamisiles</i> y las granadas mantén FUEGO para dar potencia y suéltalo. Las granadas rebotan y explotan a los segundos que elijas con ⏱. El viento (arriba) empuja los misiles.</p>
-  <p><b>Armas:</b> Escopeta (2 disparos), Lanzamisiles, Granada Explosiva, de Racimo (5 bombitas) y Sagrada (enorme), Dinamita (5 s), Ataque Aéreo y Teletransporte (toca el mapa y pulsa ¡YA!; hay pocos).</p>
-  <p><b>Cuerda Ninja:</b> lánzala hacia arriba para engancharte al terreno (las rocas flotantes sirven). ◀ ▶ te balancean, ▲ ▼ la acortan o alargan, ⤴️ te suelta y FUEGO la vuelve a lanzar.</p>
+  <p><b>Armas:</b> Escopeta (2 disparos), Lanzamisiles, Granada Explosiva, de Racimo (5 bombitas) y Nuclear (enorme), Dinamita (5 s), Ataque Aéreo y Teletransporte (toca el mapa y pulsa ¡YA!; hay pocos).</p>
+  <p><b>Cuerda Gancho:</b> lánzala hacia arriba para engancharte al terreno (las rocas flotantes sirven). ◀ ▶ te balancean, ▲ ▼ la acortan o alargan, ⤴️ te suelta y FUEGO la vuelve a lanzar.</p>
   <p><b>Después de atacar</b> tienes unos segundos para ponerte a salvo. Los gusanos muertos dejan una <b>tumba</b> (también se destruye). Las <b>cajas</b> que caen con paracaídas dan vida o armas. Tras unas rondas <b>sube el agua</b>.</p>
   <p>Arrastra el mapa con el dedo para mirar; con dos dedos (o ➖ ➕) haces zoom; 🎯 vuelve a tu gusano.</p>`);
 }

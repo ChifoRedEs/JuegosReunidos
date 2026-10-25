@@ -1,4 +1,4 @@
-/* Worms (Arcade) */
+/* Guerra de Orugas (Arcade) */
 .juego-worms .wmfondo{border-radius:14px;padding:8px;background:linear-gradient(180deg,#8ecbff,#e8f6ff)}
 .juego-worms .wmjuego{display:flex;flex-direction:column;gap:6px;padding:6px;background-position:center;background-size:cover}
 /* HUD */

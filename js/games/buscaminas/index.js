@@ -206,7 +206,7 @@ function clic(e) {
   else if (d.ac === 'aspecto') asp.abrir();
 }
 function reglas() {
-  api.modal('Buscaminas', `<ul><li>Abre todas las casillas que no tienen mina. Cada número indica cuántas minas hay en las 8 casillas de alrededor.</li>
+  api.modal('Bombardeo', `<ul><li>Abre todas las casillas que no tienen mina. Cada número indica cuántas minas hay en las 8 casillas de alrededor.</li>
     <li>Tu <b>primer toque nunca es una mina</b>.</li>
     <li>Con <b>🧠 Sin adivinar</b> (por defecto) cada tablero se puede despejar entero por lógica desde tu primer toque; con <b>🎲 Clásicos</b> a veces toca arriesgar.</li>
     <li><b>Personalizado</b>: elige ancho, alto y número de minas. <b>Reto del día</b>: el mismo campo para todo el mundo, con un solo intento.</li>

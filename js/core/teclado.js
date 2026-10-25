@@ -1,4 +1,4 @@
-// Teclado emergente compartido por los juegos de letras (Crucigrama, El Ahorcado, Ruleta de la Suerte…).
+// Teclado emergente compartido por los juegos de letras (Crucigrama, El Ahorcado, Ruleta Millonaria…).
 // Sale al tocar una casilla de letras, se puede arrastrar por la pantalla desde la barra superior y se cierra con ✕.
 // La posición elegida se recuerda (una sola para todos los juegos) y siempre se mantiene dentro de la pantalla.
 //

@@ -1,4 +1,4 @@
-// Mastermind · vista 3D (Three.js): tablero con agujeros, bolas de colores, clavijas negras/blancas y bandeja de colores. Solo dibuja: index.js manda el estado con V.pintar().
+// Código Cifrado · vista 3D (Three.js): tablero con agujeros, bolas de colores, clavijas negras/blancas y bandeja de colores. Solo dibuja: index.js manda el estado con V.pintar().
 import { crearEscena, T, lienzo, textura } from '../../core/escena3d.js';
 
 const css = (el, v, d) => getComputedStyle(el).getPropertyValue(v).trim() || d;
@@ -7,7 +7,7 @@ const RAD = .4, PEG = .13;
 
 export function crearMastermind3D(cont, { pos, col, max }) {
   const W = Math.max(pos + 2.6, col + .6), Z0 = 0, ZR = 1.7, ZP = ZR + max + .9, H = ZP + 1.4;
-  const E = crearEscena(cont, { fov: 36, az: 0, pol: .6, polMin: .18, polMax: 1.2, radio: Math.max(W * 1.15, H * .8) * .5 + .3, margen: .4, objetivo: [0, 0, H / 2 - .6], distMin: 5, distMax: 40, sombraRadio: Math.max(W, H) + 3, sombraTam: 1536, sol: { pos: [-4, 12, 5], int: 2.1 }, etiqueta: 'Tablero de Mastermind' });
+  const E = crearEscena(cont, { fov: 36, az: 0, pol: .6, polMin: .18, polMax: 1.2, radio: Math.max(W * 1.15, H * .8) * .5 + .3, margen: .4, objetivo: [0, 0, H / 2 - .6], distMin: 5, distMax: 40, sombraRadio: Math.max(W, H) + 3, sombraTam: 1536, sol: { pos: [-4, 12, 5], int: 2.1 }, etiqueta: 'Tablero de Código Cifrado' });
   const esc = E.escena, V = { alColor: null, alSlot: null };
   let C = {}, estilo = 'bola', tex = new Map();
   const leer = () => { const j = cont.closest('.juego') || cont; estilo = j.dataset.estilo || 'bola'; C = { m1: css(cont, '--mm-marco', '#8A5A2B'), m2: css(cont, '--mm-marco2', '#5E3B1A'), hueco: css(cont, '--mm-hueco', '#2B1D12'), k: Array.from({ length: 8 }, (_, i) => css(cont, '--m' + i, '#888')) }; };

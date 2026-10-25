@@ -1,4 +1,4 @@
-/* Kakuro · mismo estilo que KenKen (variables --tb-* de la paleta del tablero) */
+/* Kakuro · mismo estilo que Calcudoku (variables --tb-* de la paleta del tablero) */
 .juego-kakuro{--ka-font:'Baloo 2',system-ui,sans-serif;--ka-negra:#1B2340;--ka-negra-txt:#fff;--ka-l:min(88vw,440px)}
 .juego-kakuro[data-numeros="clasico"]{--ka-font:Georgia,'Times New Roman',serif}
 .juego-kakuro[data-negras="tablero"]{--ka-negra:var(--tb-strong);--ka-negra-txt:#fff}
@@ -27,7 +27,7 @@
 .kacomb b{color:var(--tb-strong);margin-right:2px;white-space:nowrap}
 .kacomb span{padding:1px 7px;border-radius:99px;background:var(--card);border:1.5px solid var(--tb-line);font-weight:800;letter-spacing:.06em}
 .kacomb span.no{opacity:.4;text-decoration:line-through}
-/* teclado y acciones (como KenKen) */
+/* teclado y acciones (como Calcudoku) */
 .juego-kakuro .kpad{display:grid;grid-template-columns:repeat(var(--n2),1fr);gap:7px;width:min(100%,440px);margin:7px auto}
 .juego-kakuro .kpad button{position:relative;padding:10px 0 8px;font:800 21px 'Baloo 2',system-ui,sans-serif;background:var(--card);border:2px solid var(--tb-line);border-radius:14px;min-height:50px;color:var(--tb-acc);box-shadow:0 3px 0 var(--tb-line)}
 .juego-kakuro .kpad button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tb-line)}

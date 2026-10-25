@@ -1,15 +1,15 @@
-// Vista 3D del Sokoban (Three.js): almacén con muros de ladrillo, suelo ajedrezado, metas brillantes, cajas con relieve y el personaje elegido (solo el avatar).
-//   const V = await crearSokoban3D(contenedor, L, { cajas: 'madera' })
+// Vista 3D del Encajados (Three.js): almacén con muros de ladrillo, suelo ajedrezado, metas brillantes, cajas con relieve y el personaje elegido (solo el avatar).
+//   const V = await crearEncajados3D(contenedor, L, { cajas: 'madera' })
 //   V.pintar({ cajas: [celda…], jugador, emoji, volteo, nuevo }) · V.alCasilla(i) · V.alDeslizar(dir) · V.recolor() · V.camara(modo) · V.celebrar() · V.destruir()
 import { T, crearEscena, lienzo, textura, emojiTextura } from '../../core/escena3d.js';
 import { estilo, capaTextura, oscuro, geoCaja } from '../../core/fichas.js';
 
 const ALTO_MURO = .46, TAM_CAJA = .84;
 
-export async function crearSokoban3D(cont, L, o = {}) {
+export async function crearEncajados3D(cont, L, o = {}) {
   const W = L.w, H = L.h, M = Math.max(W, H);
   const E = crearEscena(cont, { fov: 36, az: 0, pol: .62, polMin: .25, polMax: 1.3, radio: M * .52 + .6, margen: .6, distMin: 5, distMax: 40, sombraRadio: M * .8 + 2, sombraTam: 2048, sol: { pos: [-M * .5, M * 1.5, M * .9], int: 2.3 }, hemi: { int: 1.9 }, sueloY: -.01,
-    etiqueta: 'Almacén de Sokoban en 3D: desliza el dedo para mover al personaje' });
+    etiqueta: 'Almacén de Encajados en 3D: desliza el dedo para mover al personaje' });
   const V = { E, alCasilla: null, alDeslizar: null }, S3 = E.escena;
   const X = i => (i % W) - W / 2 + .5, Z = i => ((i / W) | 0) - H / 2 + .5;
   let C = { muro: '#6B7A99', muro2: '#56637F', suelo: '#EFE6D8', suelo2: '#E6DBC9', caja: '#C98A4B', caja2: '#9C6230', meta: '#FF4757' };

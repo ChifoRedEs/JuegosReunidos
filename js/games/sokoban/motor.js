@@ -1,4 +1,4 @@
-// Motor del Sokoban (sin DOM: se usa en la página, en un Worker para generar niveles y en las pruebas con Node).
+// Motor del Encajados (sin DOM: se usa en la página, en un Worker para generar niveles y en las pruebas con Node).
 // Formato de nivel estándar: # muro · espacio suelo · . meta · $ caja · * caja en meta · @ jugador · + jugador en meta.
 import { mulberry32, hashTexto } from '../../core/semilla.js';
 

@@ -39,7 +39,7 @@
 .seg > .btn{min-width:0}
 .bar:has(> .lbl) > .note{flex:1 1 100%;margin:0}
 
-/* fila de jugador del menú (Parchís, Oca, Ruleta, Trivial, Magnate…): color + nombre + Persona / CPU / Nadie */
+/* fila de jugador del menú (Party’s, Oca, Ruleta, Trivia Quesitos, Magnate…): color + nombre + Persona / CPU / Nadie */
 .jugfila{--c:var(--purple);display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:8px 0;padding:10px 12px;background:var(--card);border:2px solid var(--line);
   border-left:7px solid var(--c);border-radius:var(--r-l);box-shadow:var(--sombra-s)}
 .jf-dot{flex:none;width:18px;height:18px;border-radius:50%;background:var(--c);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
@@ -74,7 +74,7 @@
 .hoja{border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:0 -10px 40px rgba(20,10,80,.3)}
 .hoja h2{font-family:var(--f-titulo)}
 
-/* ventana «elige a qué jugar» de las fichas de grupo (Parchís y Oca, Ajedrez y Damas…) */
+/* ventana «elige a qué jugar» de las fichas de grupo (Party’s y Oca, Ajedrez y Damas…) */
 .ficha{font:inherit;text-align:left;border:0;cursor:pointer;width:100%}
 button.ficha{display:flex}
 .elegir{display:grid;gap:10px;margin:10px 0 4px}

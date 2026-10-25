@@ -1,4 +1,4 @@
-// Mastermind: descubre el código de colores con las pistas (negras y blancas), o pon tú el código y mira cómo lo descifra la máquina.
+// Código Cifrado: descubre el código de colores con las pistas (negras y blancas), o pon tú el código y mira cómo lo descifra la máquina.
 // Vista 2D (HTML) o 3D (Three.js). Reglas y lógica en motor.js.
 import { $, esc } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
@@ -92,7 +92,7 @@ function jugar() {
 function armar() {
   cerrar3D(); modo3d = quiere3D(); parar();
   root.innerHTML = `<div class="mmcab"><b id="mmTit">${esc(M.MODOS[S.modo])}</b><span id="mmInfo"></span></div>
-    <div id="mmTab" ${modo3d ? 'class="e3d mm3"' : 'class="mmtab"'} style="--p:${S.pos}" role="application" aria-label="Tablero de Mastermind"></div>
+    <div id="mmTab" ${modo3d ? 'class="e3d mm3"' : 'class="mmtab"'} style="--p:${S.pos}" role="application" aria-label="Tablero de Código Cifrado"></div>
     <p class="mmmsg" id="mmMsg" role="status" aria-live="polite"></p>
 ${api.barraHtml()}`;
   crearPanel();
@@ -259,7 +259,7 @@ function clic(e) {
   else if (a === 'nueva') { if (S && !S.done && S.jug.length && !api.confirmar('¿Abandonar esta partida?')) return; parar(); setup(); }
 }
 function reglas() {
-  api.modal('Mastermind', `<ul><li>Hay un <b>código secreto</b> de 3 a 6 bolas de colores. En <b>🔍 Tú adivinas</b> lo esconde la máquina y tienes un número limitado de intentos para descubrirlo.</li>
+  api.modal('Código Cifrado', `<ul><li>Hay un <b>código secreto</b> de 3 a 6 bolas de colores. En <b>🔍 Tú adivinas</b> lo esconde la máquina y tienes un número limitado de intentos para descubrirlo.</li>
     <li>Rellena una fila con los colores (toca un color; toca una bola de la fila para borrarla o para elegir su sitio) y pulsa <b>✔ Comprobar</b>.</li>
     <li>Cada <b>clavija negra</b> ⚫ = una bola con el color <i>y</i> el sitio correctos. Cada <b>blanca</b> ⚪ = un color que está en el código pero en otro sitio. Las clavijas no dicen cuál es cuál.</li>
     <li>Niveles: <b>Fácil</b> (4 bolas, 5 colores, sin repetir), <b>Clásico</b> (4 bolas, 6 colores), <b>Súper</b> (5 bolas, 8 colores), <b>Experto</b> (6 bolas, 8 colores) o <b>A tu gusto</b>.</li>

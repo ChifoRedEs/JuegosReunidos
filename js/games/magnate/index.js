@@ -8,7 +8,7 @@ import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
 const ICONO = { nube: '☁️', noticias: '📰', tendencias: '📈', impuesto: '💸' };
-// Iconos de las oficinas (hasta 4 por casilla) y de la sede central, a elegir en 🎨 Apariencia. Los personajes y cajas son los de Sokoban.
+// Iconos de las oficinas (hasta 4 por casilla) y de la sede central, a elegir en 🎨 Apariencia. Los personajes y cajas son los de Encajados.
 const EDIFICIOS = {
   casas: { nombre: '🏠 + 🏨 Casas y hotel', of: '🏠', sede: '🏨' }, oficinas: { nombre: '🏢 + 🏙️ Oficinas y rascacielos', of: '🏢', sede: '🏙️' },
   obreros: { nombre: '👷 + 🏗️ Obreros y grúa', of: '👷', sede: '🏗️' }, tecnicos: { nombre: '👨‍🔧 + 🏭 Técnicos y fábrica', of: '👨‍🔧', sede: '🏭' },

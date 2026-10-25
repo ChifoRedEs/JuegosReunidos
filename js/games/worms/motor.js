@@ -1,4 +1,4 @@
-// Worms (Arcade) · motor sin DOM (se prueba con Node: tests/worms.mjs).
+// Guerra de Orugas (Arcade) · motor sin DOM (se prueba con Node: tests/worms.mjs).
 // Mundo en «píxeles de mundo»; y crece hacia abajo. El terreno es una máscara (1 = tierra) que las explosiones agujerean.
 // El estado guardable NO incluye la máscara: se regenera con la semilla y la lista de cráteres.
 
@@ -18,10 +18,10 @@ export const ARMAS = {
   escopeta: { id: 'escopeta', nombre: 'Escopeta',          icono: 'escopeta',          tipo: 'rafaga',   desc: 'Dos disparos directos por turno.' },
   granada:  { id: 'granada',  nombre: 'Granada Explosiva', icono: 'granada-explosiva', tipo: 'carga',    temp: true, desc: 'Rebota y explota a los 1–5 s que elijas.' },
   racimo:   { id: 'racimo',   nombre: 'Granada de Racimo', icono: 'granada-racimo',    tipo: 'carga',    temp: true, desc: 'Al explotar suelta 5 bombitas.' },
-  sagrada:  { id: 'sagrada',  nombre: 'Granada Sagrada',   icono: 'granada-sagrada',   tipo: 'carga',    temp: true, desc: 'Explosión enorme. ¡Aleluya!' },
+  sagrada:  { id: 'sagrada',  nombre: 'Granada Nuclear',   icono: 'granada-sagrada',   tipo: 'carga',    temp: true, desc: 'Explosión enorme. ¡Cuidado, es enorme!' },
   dinamita: { id: 'dinamita', nombre: 'Dinamita',          icono: 'dinamita',          tipo: 'suelta',   desc: 'Se deja a tus pies y explota a los 5 s.' },
   aereo:    { id: 'aereo',    nombre: 'Ataque Aéreo',      icono: 'ataque-aereo',      tipo: 'objetivo', desc: 'Toca el mapa: un avión lanza 5 bombas.' },
-  cuerda:   { id: 'cuerda',   nombre: 'Cuerda Ninja',      icono: 'cuerda',            tipo: 'cuerda',   desc: 'Cuélgate, balancéate y sube. ▲▼ acorta y alarga.' },
+  cuerda:   { id: 'cuerda',   nombre: 'Cuerda Gancho',      icono: 'cuerda',            tipo: 'cuerda',   desc: 'Cuélgate, balancéate y sube. ▲▼ acorta y alarga.' },
   tele:     { id: 'tele',     nombre: 'Teletransporte',    icono: 'teletransporte',    tipo: 'objetivo', desc: 'Toca el mapa y el gusano aparece allí.' },
 };
 export const ORDEN = ['misil', 'escopeta', 'granada', 'racimo', 'sagrada', 'dinamita', 'aereo', 'cuerda', 'tele'];
@@ -304,7 +304,7 @@ export function saltar(S, tipo = 'adelante', dir = 0) {
 export function apuntar(S, delta) { const T = S.turno; T.ang = clamp(T.ang + delta, -80, 88); const w = activo(S); if (w) w.ang = T.ang; }
 export function dirigir(S, dir) { const w = activo(S); if (w && w.vivo && !w.vuela) w.dir = dir < 0 ? -1 : 1; else if (w && w.est === 'cuerda') w.dir = dir < 0 ? -1 : 1; }
 
-/* ---------- cuerda ninja ---------- */
+/* ---------- cuerda gancho ---------- */
 export function soltarCuerda(S, w) {
   if (w.est !== 'cuerda') return; w.cuerda = null; w.est = 'vuelo'; w.vuela = true; w.sinCaida = false; w.rebote = 0;
   const v = Math.hypot(w.vx, w.vy); if (v > 760) { w.vx *= 760 / v; w.vy *= 760 / v; }

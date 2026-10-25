@@ -86,7 +86,7 @@ assert.deepEqual(jugadas(b, 'w', REGLAS.espanola).map(m => m.caps.length), [2]);
 
 for (const cfg of [{ am: 'c', az: 'c' }, { am: 'c', az: 'c', ro: 'c', ve: 'c' }]) {
   for (let g = 0; g < 20; g++) { const P = nuevaPartida(cfg); let s = 0; while (P.phase !== 'over' && s++ < 20000) { if (P.phase === 'roll') tirar(P, 1 + Math.random() * 6 | 0); else if (P.phase === 'move') mover(P, mejorJugada(P)); else siguiente(P); } assert.equal(P.phase, 'over'); }
-  ok(`Parchís ${Object.keys(cfg).length} jugadores: las partidas terminan`);
+  ok(`Party’s ${Object.keys(cfg).length} jugadores: las partidas terminan`);
 }
 
 // ---- 3 en raya ----
@@ -114,22 +114,22 @@ for (let i = 0; i < 6; i++) assert.equal(jugarDuelo(TR, 'clasico', 'dificil', 'd
 for (const v of ['infinito', 'cuatro', 'cinco']) { let mx = 0, gan = 0; for (let i = 0; i < 6; i++) { const r = jugarDuelo(TR, v, 'dificil', 'azar'); mx = Math.max(mx, r.maxms); if (r.w === 1) gan++; assert.notEqual(r.w, 2); }
   assert.ok(mx < 2500); ok(`3 en raya ${v}: Difícil gana ${gan}/6 al azar y nunca pierde (máx ${mx.toFixed(0)} ms/jugada)`); }
 { const r = [jugarDuelo(TR, 'cinco', 'facil', 'azar'), jugarDuelo(TR, 'cinco', 'medio', 'azar')]; assert.ok(r.every(x => x.w >= 0)); ok('3 en raya: niveles Fácil y Medio terminan la partida'); }
-// ---- Conecta 4 ----
-{ let e = C4.estadoInicial('clasico'); for (const c of [0, 1, 0, 1, 0, 1, 0]) e = C4.aplicar(e, c, 'clasico'); assert.equal(e.fin.w, 1); assert.equal(e.fin.linea.length, 4); ok('Conecta 4: vertical'); }
-{ let e = C4.estadoInicial('clasico'); for (const c of [0, 1, 2, 3, 4]) { e = C4.aplicar(e, c, 'clasico'); e = c < 4 ? C4.aplicar(e, c, 'clasico') : e; } assert.ok(e.fin == null || e.fin.w >= 0); ok('Conecta 4: partidas válidas con apilado'); }
-{ let e = C4.estadoInicial('clasico'); for (const c of [0, 1, 1, 2, 3, 2, 2, 3, 3, 6, 3]) e = C4.aplicar(e, c, 'clasico'); assert.equal(e.fin && e.fin.w, 1); ok('Conecta 4: diagonal'); }
-{ let e = C4.estadoInicial('mini'); for (let i = 0; i < 3; i++) e = C4.aplicar(e, 0, 'mini'); for (let i = 0; i < 2; i++) e = C4.aplicar(e, 0, 'mini'); assert.equal(C4.jugadas(e, 'mini').includes(0), false); ok('Conecta 4: columna llena no es jugable'); }
+// ---- Cuatro en Línea ----
+{ let e = C4.estadoInicial('clasico'); for (const c of [0, 1, 0, 1, 0, 1, 0]) e = C4.aplicar(e, c, 'clasico'); assert.equal(e.fin.w, 1); assert.equal(e.fin.linea.length, 4); ok('Cuatro en Línea: vertical'); }
+{ let e = C4.estadoInicial('clasico'); for (const c of [0, 1, 2, 3, 4]) { e = C4.aplicar(e, c, 'clasico'); e = c < 4 ? C4.aplicar(e, c, 'clasico') : e; } assert.ok(e.fin == null || e.fin.w >= 0); ok('Cuatro en Línea: partidas válidas con apilado'); }
+{ let e = C4.estadoInicial('clasico'); for (const c of [0, 1, 1, 2, 3, 2, 2, 3, 3, 6, 3]) e = C4.aplicar(e, c, 'clasico'); assert.equal(e.fin && e.fin.w, 1); ok('Cuatro en Línea: diagonal'); }
+{ let e = C4.estadoInicial('mini'); for (let i = 0; i < 3; i++) e = C4.aplicar(e, 0, 'mini'); for (let i = 0; i < 2; i++) e = C4.aplicar(e, 0, 'mini'); assert.equal(C4.jugadas(e, 'mini').includes(0), false); ok('Cuatro en Línea: columna llena no es jugable'); }
 for (const v of Object.keys(C4.VARIANTES)) { let mx = 0, gan = 0; const N = v === 'clasico' ? 10 : 4; for (let i = 0; i < N; i++) { const r = jugarDuelo(C4, v, 'dificil', 'azar'); mx = Math.max(mx, r.maxms); if (r.w === 1) gan++; }
-  assert.ok(gan >= N - 1 && mx < 2600); ok(`Conecta 4 ${v}: Difícil gana ${gan}/${N} al azar (máx ${mx.toFixed(0)} ms/jugada)`); }
-{ let g = 0; for (let i = 0; i < 8; i++) if (jugarDuelo(C4, 'clasico', 'dificil', 'medio').w === 1) g++; ok(`Conecta 4 clásico: Difícil gana ${g}/8 a Medio`); assert.ok(g >= 5); }
+  assert.ok(gan >= N - 1 && mx < 2600); ok(`Cuatro en Línea ${v}: Difícil gana ${gan}/${N} al azar (máx ${mx.toFixed(0)} ms/jugada)`); }
+{ let g = 0; for (let i = 0; i < 8; i++) if (jugarDuelo(C4, 'clasico', 'dificil', 'medio').w === 1) g++; ok(`Cuatro en Línea clásico: Difícil gana ${g}/8 a Medio`); assert.ok(g >= 5); }
 // ---- Sopa de letras ----
 for (const tema of [...Object.keys(TEMAS), 'mezcla']) for (const nv of Object.keys(NSopa)) { const g = generarSopa(tema, nv); assert.equal(g.palabras.length, NSopa[nv].palabras);
   for (const w of g.palabras) { const r0 = w.f / g.n | 0, c0 = w.f % g.n; for (let k = 0; k < w.p.length; k++) assert.equal(g.grid[(r0 + w.d[0] * k) * g.n + c0 + w.d[1] * k], w.p[k]); } }
 ok('Sopa de letras: 7 temas × 3 niveles generan tableros con todas las palabras');
-// ---- Buscaminas ----
+// ---- Bombardeo ----
 for (const nv of Object.keys(BM.NIVELES)) { let gana = 0; for (let g = 0; g < 60; g++) { const S = BM.nuevo(nv), N = BM.crearCache(), c = (S.h >> 1) * S.w + (S.w >> 1); BM.abrir(S, c, N); assert.notEqual(S.fin, 'pierde');
   assert.ok(!S.minas.includes(c)); let k = 0; while (!S.fin && k++ < 3000) { const p = BM.pista(S, N); if (!p) break; if (p.tipo === 'seguro') BM.abrir(S, p.i, N); else BM.bandera(S, p.i); } if (S.fin === 'gana') gana++; }
-  assert.equal(gana, 60); ok(`Buscaminas ${nv}: primer toque seguro y la pista resuelve el tablero (60/60)`); }
+  assert.equal(gana, 60); ok(`Bombardeo ${nv}: primer toque seguro y la pista resuelve el tablero (60/60)`); }
 // ---- Crucigrama ----
 for (const tema of [...Object.keys(BCw), 'mezcla']) for (const nv of Object.keys(NCw)) { const g = generarCw(tema, nv); assert.ok(g.palabras.length >= Math.min(NCw[nv].pal, 20) - 4);
   for (const x of g.palabras) celdasDe(g.w, x).forEach((c, i) => assert.equal(g.sol[c], x.p[i])); const cub = new Set(g.palabras.flatMap(x => celdasDe(g.w, x))); assert.ok(g.sol.every((l, i) => !l || cub.has(i))); }
@@ -162,11 +162,11 @@ for (let g = 0; g < 4; g++) { const S = HE.crear(2 + g % 4, 'facil'); S.jug.forE
   while (S.fase !== 'terminado' && guardia++ < 4000) { if (S.fase === 'fin') { HE.nuevaMano(S); continue; } const i = S.turno; assert.ok(i >= 0); let a = HE.decidir(S, i); if (!HE.actuar(S, i, a)) assert.ok(HE.actuar(S, i, HE.legal(S, i).pasar ? { t: 'check' } : { t: 'call' })); if (S.fase === 'fin') assert.equal(S.jug.reduce((s, p) => s + p.stack, 0), S.total); }
   assert.equal(S.fase, 'terminado'); }
 ok('Hold\'em: torneos completos solo de bots, con conservación de fichas');
-// ---- Parchís: salida libre ----
+// ---- Party’s: salida libre ----
 { const P = nuevaPz({ am: 'c', az: 'c' }, {}); P.turn = 0; tirarPz(P, 3); assert.equal(P.phase, 'pass'); }
 for (const v of [1, 2, 3, 4, 6]) { const P = nuevaPz({ am: 'c', az: 'c' }, {}, { salidaLibre: true }); P.turn = 0; tirarPz(P, v); assert.equal(P.kind, 'libre'); moverPz(P, P.moves[0]); assert.equal(P.pieces.am.filter(p => p === 0).length, 1); }
 { const P = nuevaPz({ am: 'c', az: 'c' }, {}, { salidaLibre: true }); P.turn = 0; tirarPz(P, 5); moverPz(P, P.moves[0]); assert.equal(P.kind, 'libre'); moverPz(P, P.moves[0]); assert.equal(P.pieces.am.filter(p => p === 0).length, 2); assert.equal(actualPz(P), 'az'); }
-ok('Parchís salida libre: cualquier número saca ficha sin fichas en juego y un 5 en la primera tirada saca dos');
+ok('Party’s salida libre: cualquier número saca ficha sin fichas en juego y un 5 en la primera tirada saca dos');
 // ---- BlackJack: pago del blackjack (+150 %) frente a victoria normal (+100 %) ----
 { const mesa = (cartas, ap = 100) => { const S = BJ.nuevoEstado(); S.fichas = 1000; S.apuesta = ap; S.zapato = [...Array(100).fill(20), ...cartas.slice().reverse()]; BJ.repartir(S); return S; };
   let S = mesa([0, 4, 12, 5]); assert.equal(S.manos[0].res, 'bj'); assert.equal(S.resultado.neto, 150);
@@ -184,26 +184,26 @@ ok('Parchís salida libre: cualquier número saca ficha sin fichas en juego y un
   assert.ok(n >= 10); ok(`Klondike: auto-relleno completa las partidas sin cartas ocultas (${n}/${n})`); }
 // ---- Banco de definiciones del PDF ----
 assert.equal(BLOQUES.length, 9); assert.ok(BLOQUES.every(b => b.fichas.length === 50)); ok('Banco de definiciones: 9 bloques × 50 fichas = 450');
-// ---- KenKen ----
+// ---- Calcudoku ----
 for (const dif of Object.keys(DKk)) for (const t of [3, 4, 5, 6]) { const p = generarKk(t, dif); assert.equal(contarKk(t, p.cages, 2, 4000), 1); }
-ok('KenKen: paneles de 3×3 a 6×6 en 4 dificultades con solución única');
+ok('Calcudoku: paneles de 3×3 a 6×6 en 4 dificultades con solución única');
 // ---- Brisca ----
 for (const nj of [2, 3, 4]) for (let i = 0; i < 25; i++) { const S = BR.nueva(nj, 'medio', i % 2 === 0); let g = 0; while (S.fase !== 'fin' && g++ < 500) { if (S.fase === 'baza') { BR.cerrarBaza(S); continue; } const j = S.turno; if (S.cambio && BR.puedeCambiar(S, j) && Math.random() < .5) BR.cambiar(S, j); assert.ok(BR.jugar(S, j, j === 0 ? S.manos[0][0] : elegirBr(S, j, i % 3 === 0 ? 'dificil' : 'medio'))); }
   assert.equal(S.fase, 'fin'); assert.equal(BR.puntosEquipo(S).reduce((a, b) => a + b, 0), 120); }
 ok('Brisca: partidas de 2, 3 y 4 jugadores (con cambio del 7 y las tres IA) suman siempre 120 puntos');
-// ---- Trivial ----
+// ---- Trivia Quesitos ----
 for (const [nj, nc, modo] of [[4, 6, 'opciones'], [3, 9, 'escribir']]) { const S = TV.crear({ nCat: nc, modo, nivel: 'dificil', jugadores: Array.from({ length: nj }, (_, k) => ({ nombre: 'J' + k, cpu: true })) }); let g = 0;
   while (S.fase !== 'fin' && g++ < 20000) { if (S.fase === 'tirar') TV.tirar(S); else if (S.fase === 'mover') TV.mover(S, TV.cpuSentido(S)); else if (S.fase === 'pregunta') TV.responder(S, TV.cpuRespuesta(S)); else TV.continuar(S); } assert.equal(S.fase, 'fin'); }
-assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas completas de 3 y 4 jugadores y respuestas escritas tolerantes');
-// ---- Trivial: ronda final (una pregunta de cada categoría seguidas; si falla, empieza de nuevo en su siguiente turno) ----
+assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivia Quesitos: partidas completas de 3 y 4 jugadores y respuestas escritas tolerantes');
+// ---- Trivia Quesitos: ronda final (una pregunta de cada categoría seguidas; si falla, empieza de nuevo en su siguiente turno) ----
 { const S = TV.crear({ nCat: 6, modo: 'opciones', nivel: 'medio', jugadores: [{ nombre: 'A' }, { nombre: 'B' }] }); const p = S.jug[0]; p.q.fill(true); p.centro = true;
   TV.tirar(S); assert.equal(S.fase, 'pregunta'); assert.ok(S.pregunta.final);
   const vistas = new Set();
   for (let k = 0; k < 5; k++) { vistas.add(S.pregunta.cat); TV.responder(S, S.pregunta.correcta); TV.continuar(S); assert.equal(S.fase, 'pregunta'); assert.equal(S.turno, 0); assert.equal(p.final.length, k + 1); assert.ok(!vistas.has(S.pregunta.cat)); }
   TV.responder(S, (S.pregunta.correcta + 1) % 4); TV.continuar(S); assert.equal(S.turno, 1); assert.equal(p.final.length, 0); assert.equal(S.ganador, -1);
   S.turno = 0; S.fase = 'tirar'; TV.tirar(S); for (let k = 0; k < 6; k++) { TV.responder(S, S.pregunta.correcta); TV.continuar(S); } assert.equal(S.fase, 'fin'); assert.equal(S.ganador, 0);
-  assert.ok(TV.validar(JSON.parse(JSON.stringify(S)))); ok('Trivial: ronda final de 6 preguntas sin fallar y reintento en el siguiente turno'); }
-// ---- Ruleta de la Suerte ----
+  assert.ok(TV.validar(JSON.parse(JSON.stringify(S)))); ok('Trivia Quesitos: ronda final de 6 preguntas sin fallar y reintento en el siguiente turno'); }
+// ---- Ruleta Millonaria ----
 { assert.ok(PRL.length >= 100); assert.ok(PRL.every(p => /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ,.¡!¿?]{2,48}$/.test(p.t)));
   for (let i = 0; i < 300; i++) { const S = RL.crear({ jugadores: [{ nombre: 'A', cpu: true }, { nombre: 'B', cpu: true }, { nombre: 'C', cpu: true }], rondas: 3, nivel: ['facil', 'medio', 'dificil'][i % 3] }); let g = 0;
     while (S.fase !== 'fin' && g++ < 5000) {
@@ -413,16 +413,16 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
 // ---- Sudoku: niveles calificados por técnica ----
 { for (const [nv, t] of [['medio', 1], ['dificil', 2], ['experto', 3]]) { let bien = 0; for (let k = 0; k < 4; k++) { const g = generar(nv); assert.equal(contarSoluciones(g.cur, 2), 1); if (calificar(g.cur) === t) bien++; } assert.ok(bien >= 3, `${nv}: ${bien}/4`); }
   ok('Sudoku: Medio se resuelve con únicos, Difícil pide técnicas intermedias y Experto avanzadas'); }
-// ---- KenKen: cuadrados latinos variados y 7×7 ----
+// ---- Calcudoku: cuadrados latinos variados y 7×7 ----
 { const vistos = new Set(); for (let k = 0; k < 2500; k++) { const q = cuadradoLatino(4); for (let i = 0; i < 4; i++) { assert.equal(new Set(q.slice(i * 4, i * 4 + 4)).size, 4); assert.equal(new Set([0, 1, 2, 3].map(f => q[f * 4 + i])).size, 4); } vistos.add(q.join('')); }
   assert.ok(vistos.size > 432, 'cuadrados 4×4 distintos: ' + vistos.size);      // el generador anterior nunca pasaba de 432
   for (const d of Object.keys(DKk)) { const p = generarKk(7, d); assert.equal(contarKk(7, p.cages, 2, 20000), 1); }
-  ok('KenKen: cuadrados latinos realmente aleatorios (más de los 432 a los que llegaba el anterior en 4×4) y 7×7 con solución única'); }
-// ---- Buscaminas: tableros sin adivinar y personalizado ----
+  ok('Calcudoku: cuadrados latinos realmente aleatorios (más de los 432 a los que llegaba el anterior en 4×4) y 7×7 con solución única'); }
+// ---- Bombardeo: tableros sin adivinar y personalizado ----
 { for (const nv of Object.keys(BM.NIVELES)) { const c = BM.NIVELES[nv], ini = (c.h >> 1) * c.w + (c.w >> 1); const r = BM.crearMinasLogicas(c.w, c.h, c.m, ini, 5000); assert.ok(r.ok); assert.ok(BM.resolublePorLogica(c.w, c.h, r.minas, ini)); }
   const S = BM.nuevo('personal', { w: 7, h: 9, m: 12 }); assert.equal(S.rev.length, 63); assert.equal(S.m, 12);
   assert.equal(BM.medidas('personal', { w: 99, h: 9, m: 999 }).w, 10);
-  ok('Buscaminas: generador sin adivinar en los 3 niveles y tablero personalizado'); }
+  ok('Bombardeo: generador sin adivinar en los 3 niveles y tablero personalizado'); }
 // ---- Damas: brasileñas e internacionales 10×10 ----
 { const R = REGLAS.internacional, b = tableroInicial(R); assert.equal(b.length, 10); assert.equal(b.flat().filter(x => x === 'w').length, 20);
   const t = Array.from({ length: 8 }, () => Array(8).fill(0)); t[4][3] = 'w'; t[5][4] = 'b';           // peón que captura hacia atrás
@@ -430,17 +430,17 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   for (const regla of ['brasilena', 'internacional']) { let e = { b: tableroInicial(REGLAS[regla]), t: 'w' }, k = 0;
     while (k++ < 300) { const js = jugadas(e.b, e.t, REGLAS[regla]); if (!js.length) break; const m = e.t === 'w' ? elegirPorRegla(e.b, 'w', regla, 'facil') : js[Math.floor(Math.random() * js.length)]; assert.ok(js.some(x => JSON.stringify(x.path) === JSON.stringify(m.path))); e = { b: aplicar(e.b, m), t: e.t === 'w' ? 'b' : 'w' }; } }
   ok('Damas: brasileñas e internacionales 10×10 (captura hacia atrás, partidas completas con la IA)'); }
-// ---- Parchís por parejas ----
+// ---- Party’s por parejas ----
 { for (let g = 0; g < 10; g++) { const P = PZ.nuevaPartida({ am: 'c', az: 'c', ro: 'c', ve: 'c' }, {}, { parejas: true }); let t = 0;
     while (P.phase !== 'over' && t++ < 30000) { if (P.phase === 'roll') PZ.tirar(P, 1 + Math.floor(Math.random() * 6)); else if (P.phase === 'move') { const m = PZ.mejorJugada(P); assert.ok(!m.cap || !PZ.amigos(P, m.cap.c, m.c)); PZ.mover(P, m); } else PZ.siguiente(P); }
     assert.equal(P.phase, 'over'); assert.ok(P.pieces[P.winner].every(p => p === 71) && P.pieces[PZ.COMPANERO[P.winner]].every(p => p === 71)); }
-  ok('Parchís por parejas: nunca se come al compañero y gana la pareja con sus 8 fichas en meta'); }
-// ---- Trivial: preguntas clásicas ----
+  ok('Party’s por parejas: nunca se come al compañero y gana la pareja con sus 8 fichas en meta'); }
+// ---- Trivia Quesitos: preguntas clásicas ----
 { for (const b of BLOQUES) { const l = CLASICAS[b.id]; assert.ok(l && l.length >= 15); for (const q of l) assert.ok(q.length === 5 && new Set(q.slice(1)).size === 4); }
   for (const banco of ['cla', 'mix']) for (const modo of ['opciones', 'escribir']) { const S = TV.crear({ nCat: 9, modo, nivel: 'medio', banco, jugadores: [{ nombre: 'A', cpu: true }, { nombre: 'B', cpu: true }] }); let k = 0;
     while (S.fase !== 'fin' && k++ < 6000) { if (S.fase === 'tirar') TV.tirar(S); else if (S.fase === 'mover') TV.mover(S, TV.cpuSentido(S)); else if (S.fase === 'pregunta') { TV.responder(S, TV.cpuRespuesta(S)); assert.ok(TV.validar(JSON.parse(JSON.stringify(S)))); } else TV.continuar(S); }
     assert.equal(S.fase, 'fin'); }
-  ok('Trivial: 15 preguntas clásicas por categoría y partidas completas con clásicas y mezcla'); }
+  ok('Trivia Quesitos: 15 preguntas clásicas por categoría y partidas completas con clásicas y mezcla'); }
 // ---- Klondike: Vegas y repartos con solución ----
 { const S = KL.nuevo(1, true, true); assert.equal(KL.puntosVegas(S), -52); while (S.stock.length) KL.robarStock(S); assert.ok(!KL.robarStock(S), 'Vegas robando de 1: una sola pasada');
   const T = KL.nuevo(3, true, true); for (let k = 0; k < 3; k++) { while (T.stock.length) KL.robarStock(T); if (k < 2) assert.ok(KL.robarStock(T)); } assert.ok(!KL.robarStock(T), 'Vegas robando de 3: tres pasadas');
@@ -551,7 +551,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   S.fase = 'juego'; assert.equal(AH.validar(JSON.parse(JSON.stringify(S))), null, 'marcador terminado pero partido en juego');
   ok('Air Hockey: física sin escapes, cada mazo en su mitad, la CPU difícil gana a la fácil y guardado válido'); }
 
-// ---- Sokoban ----
+// ---- Encajados ----
 { for (const n of SKN) { const L = SK.leer(n.mapa); assert.equal(L.cajas.length, L.meta.filter(Boolean).length, n.nombre); const s = SK.resolver(L, L.cajas, L.jugador, 400000); assert.ok(s, 'sin solución: ' + n.nombre);
     let cs = L.cajas, j = L.jugador; for (const d of s.pasos) { const r = SK.mover(L, cs, j, d); assert.ok(r); cs = r.cajas; j = r.jugador; } assert.ok(SK.resuelto(L, cs), 'la solución no resuelve ' + n.nombre); }
   const L = SK.leer('#######\n#@$$ .#\n#######');
@@ -560,7 +560,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   const a = SK.generar('pequeno', 'prueba-1'), b = SK.generar('pequeno', 'prueba-1');
   assert.ok(a && a.texto === b.texto, 'la misma semilla da el mismo nivel (reto del día)');
   for (const t of ['pequeno', 'mediano']) { const g = SK.generar(t, 'prueba-' + t); const G = SK.leer(g.texto); assert.equal(G.cajas.length, SK.TAMANOS[t].cajas); assert.ok(SK.resolver(G, G.cajas, G.jugador, 200000)); assert.ok(G.cajas.every(c => !G.meta[c])); }
-  ok(`Sokoban: los ${SKN.length} niveles de la campaña tienen solución, reglas de empuje y niveles generados (y repetibles con semilla) resolubles`); }
+  ok(`Encajados: los ${SKN.length} niveles de la campaña tienen solución, reglas de empuje y niveles generados (y repetibles con semilla) resolubles`); }
 
 // ---- Kakuro ----
 { assert.deepEqual(KA.combinaciones(4, 2).map(KA.cifras), [[1, 3]]); assert.deepEqual(KA.combinaciones(45, 9).map(KA.cifras), [[1, 2, 3, 4, 5, 6, 7, 8, 9]]);
@@ -627,7 +627,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   const sinEf = tiro(0, 0); assert.equal(sinEf.sp, 0); ok('Billar: efectos de la blanca (alto, bajo y lateral en banda)'); }
   ok('Billar: Pool 8, Pool 9 y Snooker entre CPU hasta el final, sin bolas fuera de la mesa y con guardado válido'); }
 
-// ---- Cifras y Letras ----
+// ---- Números y Letras ----
 { let exactas = 0;
   for (let k = 0; k < 60; k++) {
     const { numeros, objetivo } = CY.numerosAlAzar(); assert.equal(numeros.length, 6); assert.ok(objetivo >= 101 && objetivo <= 999);
@@ -646,9 +646,9 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   const S = CY.crear({ rival: 'cpu' }); S.objetivo = 500;
   assert.deepEqual(CY.puntuar(S, 'cifras', { valor: 500 }, { valor: 498 }), [10, 0], 'solo puntúa la mejor');
   assert.deepEqual(CY.puntuar(S, 'letras', { palabra: 'CASA', valida: true }, { palabra: 'COSA', valida: true }), [4, 4], 'empate: los dos');
-  ok('Cifras y Letras: soluciones de cifras correctas (y casi siempre exactas), letras con 3 vocales y 3 consonantes, puntos como en el concurso'); }
+  ok('Números y Letras: soluciones de cifras correctas (y casi siempre exactas), letras con 3 vocales y 3 consonantes, puntos como en el concurso'); }
 
-// ---- Scrabble ----
+// ---- Palabras Cruzadas ----
 { // el diccionario (DIC) ya está cargado más arriba
   const dic = construirSC(DIC);
   assert.ok(dic.existe(aFichas('calle')) && dic.existe(aFichas('perro')) && dic.existe(aFichas('chico')) && dic.existe('casa'));
@@ -676,7 +676,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
     assert.equal(S.fase, 'fin', nivel + ': la partida termina');
   }
   const T = SC.crear(); T.bolsa.pop(); assert.equal(SC.validar(JSON.parse(JSON.stringify(T))), null, 'faltan fichas: no vale');
-  ok('Scrabble: 100 fichas con CH/LL/RR, tablero de premios, colocación y puntos, y partidas completas entre CPU de los 3 niveles'); }
+  ok('Palabras Cruzadas: 100 fichas con CH/LL/RR, tablero de premios, colocación y puntos, y partidas completas entre CPU de los 3 niveles'); }
 // ---- Spider ----
 { for (const palos of [1, 2, 4]) { const S = SP.nuevo(palos); assert.equal(S.tab.map(c => c.d.length + c.u.length).join(','), '6,6,6,6,5,5,5,5,5,5'); assert.equal(S.stock.length, 50); assert.ok(SP.validar(JSON.parse(JSON.stringify(S))), palos + ' palos: guardado válido'); }
   const S = SP.nuevo(1); for (const c of S.tab) { c.d = []; c.u = []; } S.stock = S.stock.slice(0, 0);

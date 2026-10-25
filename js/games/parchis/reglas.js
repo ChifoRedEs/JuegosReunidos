@@ -1,4 +1,4 @@
-// Motor de reglas del Parchís (sin DOM, probable con Node). Opera sobre el estado P.
+// Motor de reglas del Party’s (sin DOM, probable con Node). Opera sobre el estado P.
 import { PC, PNAME, PSTART, PSAFE, absOf, pKey } from './tablero.js';
 
 export const nombre = (P, c) => (P.names && P.names[c]) || PNAME[c];

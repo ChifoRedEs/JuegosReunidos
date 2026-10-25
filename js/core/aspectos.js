@@ -32,7 +32,7 @@ export const grupoFondo = sel => ({ clave: 'tapete', titulo: 'Tapete', icono: '�
 // «Fondo de Pantalla» (solo juegos de Arcade y el Ahorcado): escenarios ambientados (img/cartas/fondos). Pasa por delante del Tapete si se elige.
 export const grupoPantalla = sel => ({ clave: 'pantalla', titulo: 'Fondo de Pantalla', icono: '🏞️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
   opciones: [{ id: 'ninguno', nombre: 'Sin fondo', icono: '🚫', nada: true }, AZAR, ...BARAJAS.fondos.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
-// «Personajes»: tu personaje (los de Sokoban) sustituye a la ficha, bola o cabeza del jugador. Valor 'auto' = el diseño de siempre.
+// «Personajes»: tu personaje (los de Encajados) sustituye a la ficha, bola o cabeza del jugador. Valor 'auto' = el diseño de siempre.
 export const grupoPersonaje = (titulo = 'Personajes') => ({ clave: 'pj', titulo, icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de siempre', sec: 'Por defecto' }, ...opcionesPersonajes()] });
 // Emoji del personaje elegido (o null)
 import { FICHAS as _PJ } from './personajes.js';
@@ -41,7 +41,7 @@ export const emojiPersonaje = asp => (_PJ[asp && asp.valores && asp.valores.pj] 
 // ¿Hay un tapete elegido? → id 't-…' o null
 export const tapeteElegido = asp => { const V = (asp && asp.valores) || {}; for (const v of [V.pantalla, V.tapete]) if (v && v.startsWith('t-')) return v; return null; };   // el fondo de pantalla pasa por delante del tapete
 
-// «Escenario» de Worms: solo los tapetes con ambientación de campo de batalla (el juego los pinta de fondo y colorea el terreno a juego).
+// «Escenario» de Guerra de Orugas: solo los tapetes con ambientación de campo de batalla (el juego los pinta de fondo y colorea el terreno a juego).
 export const ESCENARIOS_WORMS = ['t-bosque', 't-ciudad', 't-deportivo', 't-desierto', 't-espacio', 't-infierno', 't-lago', 't-medieval'];
 export const grupoEscenario = (sel, titulo = 'Fondo de Pantalla') => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
   opciones: [AZAR, ...BARAJAS.fondos.filter(t => ESCENARIOS_WORMS.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });

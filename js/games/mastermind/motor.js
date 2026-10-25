@@ -1,4 +1,4 @@
-// Mastermind · motor sin DOM (se prueba con Node).
+// Código Cifrado · motor sin DOM (se prueba con Node).
 // Un código secreto de `pos` bolas de `col` colores (con o sin repetidos). Cada intento recibe: negras = color y sitio correctos, blancas = color correcto en otro sitio.
 // Estado: { v:1, modo:'adivinar'|'codigo', pos, col, rep, max, sec:[…]|null, jug:[[…]], fb:[[negras,blancas]], cur:[…] (-1 = hueco), done, gano, t, pistas, ia?:bool }
 //  · «adivinar»: la máquina esconde el código y tú lo descubres.  · «codigo»: tú escondes el código (sec) y la máquina intenta adivinarlo (jug/fb los rellena ella).

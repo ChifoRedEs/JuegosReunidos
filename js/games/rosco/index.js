@@ -47,18 +47,18 @@ function guardar() { if (!S) return; const d = { s: S, marcador, reg }; const r 
 function setup() {
   S = null; parar(); if (tk) tk.cerrar();
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  root.innerHTML = `<p class="note">Una definición por cada letra del abecedario: «empieza por…» o «contiene la…». Responde o di <b>pasapalabra</b> para volver a ella en la siguiente vuelta, antes de que se acabe el tiempo.</p>
+  root.innerHTML = `<p class="note">Una definición por cada letra del abecedario: «empieza por…» o «contiene la…». Responde o di <b>paso la cabra</b> para volver a ella en la siguiente vuelta, antes de que se acabe el tiempo.</p>
     <div class="bar"><span class="lbl">Modo</span>${seg('modo', [['solo', 'Contrarreloj'], ['cpu', 'Duelo contra la CPU']])}</div>
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(R.NIVEL))}</div>
     <div class="bar"><span class="lbl">Tiempo</span>${seg('tiempo', R.TIEMPOS.map(t => [t, `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]))}</div>
-    <p class="note">${cfg.modo === 'cpu' ? 'Duelo: cada uno tiene su rosco y su reloj. Si fallas o dices pasapalabra, le toca a la CPU; gana quien más acierte. ' : ''}Fácil: palabras cotidianas · Normal: algo más variadas · Difícil: incluye las definiciones del Trivial.<br>Tu mejor marca: ${marcador.mejor} aciertos${marcador.g + marcador.p + marcador.e ? ` · Duelos: ${marcador.g} ganados, ${marcador.p} perdidos, ${marcador.e} empates` : ''}.</p>
+    <p class="note">${cfg.modo === 'cpu' ? 'Duelo: cada uno tiene su rosco y su reloj. Si fallas o dices paso la cabra, le toca a la CPU; gana quien más acierte. ' : ''}Fácil: palabras cotidianas · Normal: algo más variadas · Difícil: incluye las definiciones del Trivia Quesitos.<br>Tu mejor marca: ${marcador.mejor} aciertos${marcador.g + marcador.p + marcador.e ? ` · Duelos: ${marcador.g} ganados, ${marcador.p} perdidos, ${marcador.e} empates` : ''}.</p>
     <div class="bar"><button class="btn on" data-ac="start">¡Empezar el rosco!</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
 }
 function armar() {
   root.innerHTML = `<div class="rcpanel" id="rcRival"></div>
     <div class="rcdef" id="rcDef" aria-live="polite"></div>
     <div class="rcresp" id="rcResp" role="button" tabindex="0" data-ac="teclado" aria-label="Tu respuesta: toca para escribir"></div>
-    <div class="bar rcacc" id="rcAcc"><button class="btn on" data-ac="responder">✔ Responder</button><button class="btn rcpasa" data-ac="pasa">⏩ Pasapalabra</button><button class="btn tkabrir" data-ac="teclado" aria-label="Abrir teclado">⌨️</button></div>
+    <div class="bar rcacc" id="rcAcc"><button class="btn on" data-ac="responder">✔ Responder</button><button class="btn rcpasa" data-ac="pasa">⏩ Paso la Cabra</button><button class="btn tkabrir" data-ac="teclado" aria-label="Abrir teclado">⌨️</button></div>
     <div class="rcrosco" id="rcRosco">${R.LETRAS.map((L, i) => { const a = (i / R.LETRAS.length) * 2 * Math.PI - Math.PI / 2; return `<span class="rcl" data-i="${i}" style="left:${50 + 44 * Math.cos(a)}%;top:${50 + 44 * Math.sin(a)}%">${L}</span>`; }).join('')}
       <div class="rccentro"><div class="rctiempo" id="rcTiempo"></div><div class="rcac" id="rcAc"></div></div></div>
     <div id="rcFin"></div>
@@ -103,7 +103,7 @@ function cpuJuega() {
   cpuT = setTimeout(() => {
     if (!S || S.fase !== 'jugar' || !S.jug[S.turno].cpu) return;
     const l = R.actual(S);
-    if (d.tipo === 'pasa') { bocadillo = '⏩ ¡Pasapalabra!'; R.pasapalabra(S); api.sonido('click'); }
+    if (d.tipo === 'pasa') { bocadillo = '⏩ ¡Paso la cabra!'; R.pasapalabra(S); api.sonido('click'); }
     else { const r = R.responder(S, d.texto); bocadillo = r === 'ok' ? `✔ ${l.resp[0]}` : '✘ Falla'; flash = { j: 1, i: R.LETRAS.indexOf(l.L), ok: r === 'ok' }; api.sonido(r === 'ok' ? 'ok' : 'error'); }
     guardar();
     if (S.fase === 'fin') { pintar(); return cierre(); }
@@ -115,7 +115,7 @@ function cpuJuega() {
 const miTurno = () => S && S.fase === 'jugar' && !S.jug[S.turno].cpu;
 function responder() {
   if (!miTurno()) return;
-  if (!texto.trim()) { api.aviso('Escribe tu respuesta o di pasapalabra.'); return; }
+  if (!texto.trim()) { api.aviso('Escribe tu respuesta o di paso la cabra.'); return; }
   const l = R.actual(S), r = R.responder(S, texto);
   flash = { j: 0, i: R.LETRAS.indexOf(l.L), ok: r === 'ok' };
   if (r === 'ok') { api.sonido('ok'); api.vibrar(20); }
@@ -229,8 +229,8 @@ function clic(e) {
 function reglas() {
   api.modal('El Rosco', `<ul><li>Hay una definición por cada letra del abecedario (sin K ni W). Fíjate si la palabra <b>empieza por</b> esa letra o la <b>contiene</b>.</li>
     <li>Escribe la respuesta con el <b>teclado emergente</b> (toca la casilla de respuesta o ⌨️; puedes arrastrarlo y cerrarlo con ✕) y pulsa ✔. Las tildes no importan.</li>
-    <li>Si no la sabes, di <b>⏩ Pasapalabra</b>: volverás a esa letra en la siguiente vuelta.</li>
-    <li>El reloj solo corre en tu turno y se para si sales de la app. Con el teclado del ordenador: Intro responde, Tab es pasapalabra.</li>
-    <li><b>Duelo contra la CPU</b>: cada uno tiene su rosco y su reloj. Mientras aciertes sigues; si fallas o dices pasapalabra, le toca al rival. Gana quien más acierte (a igualdad, quien menos falle).</li>
+    <li>Si no la sabes, di <b>⏩ Paso la Cabra</b>: volverás a esa letra en la siguiente vuelta.</li>
+    <li>El reloj solo corre en tu turno y se para si sales de la app. Con el teclado del ordenador: Intro responde, Tab es paso la cabra.</li>
+    <li><b>Duelo contra la CPU</b>: cada uno tiene su rosco y su reloj. Mientras aciertes sigues; si fallas o dices paso la cabra, le toca al rival. Gana quien más acierte (a igualdad, quien menos falle).</li>
     <li>Al terminar verás las soluciones de las letras que fallaste o no contestaste.</li></ul>`);
 }

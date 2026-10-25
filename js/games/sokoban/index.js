@@ -1,4 +1,4 @@
-// Sokoban: empuja todas las cajas hasta las metas. Campaña de 20 niveles, niveles generados sin fin y reto del día.
+// Encajados: empuja todas las cajas hasta las metas. Campaña de 20 niveles, niveles generados sin fin y reto del día.
 import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import * as K from './motor.js';
@@ -118,8 +118,8 @@ function cerrar3D() { tok3++; if (V3) { V3.destruir(); V3 = null; } }
 async function iniciar3D() {
   const t = ++tok3, host = $('#skTab'); if (!host || !L) return; host.dataset.iniciando = '1';
   try {
-    const b3 = await import('../../core/escena3d.js'), { crearSokoban3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
-    const v = await crearSokoban3D(host, L, { cajas: asp.valores.cajas }); if (t !== tok3 || !root) { v.destruir(); return; }
+    const b3 = await import('../../core/escena3d.js'), { crearEncajados3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
+    const v = await crearEncajados3D(host, L, { cajas: asp.valores.cajas }); if (t !== tok3 || !root) { v.destruir(); return; }
     b3.botonesCamara(host, v.E); const g = host.querySelector('[data-cam="girar"]'); if (g) g.remove();       // girar cambiaría el sentido de los gestos
     v.alDeslizar = d => paso(d); v.alCasilla = i => irA(i); V3 = v; delete host.dataset.iniciando; v.recolor({ cajas: asp.valores.cajas, est: estilo(asp.valores) }); pintar(); V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: ficha().e, volteo: false, nuevo: true });
   } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); } }
@@ -264,7 +264,7 @@ function clic(e) {
   else if (a === 'siguiente') nivelCampana(S.nivel + 1); else if (a === 'aspecto') asp.abrir();
 }
 function reglas() {
-  api.modal('Sokoban', `<ul><li>Eres el mozo del almacén: <b>empuja todas las cajas</b> hasta las casillas marcadas.</li>
+  api.modal('Encajados', `<ul><li>Eres el mozo del almacén: <b>empuja todas las cajas</b> hasta las casillas marcadas.</li>
     <li>Solo puedes <b>empujar</b> (nunca tirar) y de una en una: dos cajas seguidas no se mueven.</li>
     <li>Cuidado con las esquinas: una caja arrinconada fuera de su meta ya no sale. Te avisaré si pasa.</li>
     <li>Muévete deslizando el dedo sobre el almacén, con las flechas de pantalla o del teclado (también WASD). <b>Toca una casilla</b> y el personaje irá andando hasta allí.</li>

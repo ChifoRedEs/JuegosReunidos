@@ -1,4 +1,4 @@
-// Vista 3D de la Ruleta de la Suerte (Three.js): rueda con grosor, clavos, puntero y sombra.
+// Vista 3D de la Ruleta Millonaria (Three.js): rueda con grosor, clavos, puntero y sombra.
 // El dibujo de la rueda (colores y premios) lo hace el juego en un canvas; aquí se pone como cara superior y se hace girar.
 //   const V = await crearRuleta3D(contenedor, { n, alTocar() })
 //   V.rueda(canvas) · V.girar(rot) (mismo ángulo en radianes que usa el juego, sentido horario) · V.camara(modo) · V.destruir()

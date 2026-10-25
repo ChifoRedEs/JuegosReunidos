@@ -1,4 +1,4 @@
-/* Scrabble · el fondo de .scmesa puede ser un tapete (🎨 Fondo de Tablero) */
+/* Palabras Cruzadas · el fondo de .scmesa puede ser un tapete (🎨 Fondo de Tablero) */
 .juego-scrabble{--sc-cel:#EFE6CF;--sc-lin:#B9AE93;--sc-T:#D9453B;--sc-Tt:#fff;--sc-D:#F2A1A8;--sc-Dt:#6B1D24;--sc-t:#2E7BC4;--sc-tt:#fff;--sc-d:#A9D3F2;--sc-dt:#123A5C;--sc-borde:#7A6A48;
   --sc-f:#F7E7BE;--sc-fb:#C9A86A;--sc-ft:#2A1C0B}
 .juego-scrabble[data-tabsc="torneo"]{--sc-cel:#1E7A4E;--sc-lin:#0F4F31;--sc-T:#C8372D;--sc-Tt:#fff;--sc-D:#E58A8A;--sc-Dt:#4A0F12;--sc-t:#2763B6;--sc-tt:#fff;--sc-d:#7FB7E3;--sc-dt:#0D2D4F;--sc-borde:#0A3A24}

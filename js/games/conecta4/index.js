@@ -7,7 +7,7 @@ let tab = null, cols = [], discos = [], holes = [], prevN = -1, vAct = null;
 
 function montar(cont, ctx, v) {
   const V = VARIANTES[v]; vAct = v; prevN = -1;
-  let h = `<div class="c4w t1" style="--cols:${V.cols}" role="group" aria-label="Tablero de Conecta, ${V.cols} columnas">`;
+  let h = `<div class="c4w t1" style="--cols:${V.cols}" role="group" aria-label="Tablero de Cuatro en Línea, ${V.cols} columnas">`;
   for (let c = 0; c < V.cols; c++) {
     h += `<button type="button" class="col" data-c="${c}" aria-label="Columna ${c + 1}"><span class="pre"></span><span class="cells">`;
     for (let r = 0; r < V.filas; r++) h += `<span class="hole${r === 0 && c === 0 ? ' tl' : ''}${r === 0 && c === V.cols - 1 ? ' tr' : ''}${r === V.filas - 1 && c === 0 ? ' bl' : ''}${r === V.filas - 1 && c === V.cols - 1 ? ' br' : ''}"><i class="d"></i></span>`;

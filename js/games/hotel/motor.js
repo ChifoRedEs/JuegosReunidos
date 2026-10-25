@@ -1,5 +1,5 @@
 // Hotel · motor de reglas (puro, sin DOM). Estado serializable en JSON.
-// Reglas basadas en el «Hotel» de Milton Bradley (1986): compra de terrenos, permisos de obras, edificios por fases,
+// Reglas propias de Hotel: compra de terrenos, licencias de obras, edificios por fases,
 // instalaciones de ocio, entradas (Ayuntamiento), estancias por noches, subastas por deudas y quiebra.
 import {
   HOTELES, IDS_HOTEL, nEdif, tarifa, DINERO_INICIAL, SALARIO, PRECIO_MIN_PUJA, MAX_ENTRADAS, DADO_PERMISO,
@@ -202,7 +202,7 @@ function mover(S, ev, j, d) {
   while (pos !== 0 && S.jug.some((q, i) => i !== j && q.vivo && q.pos === pos)) paso();
   p.pos = pos;
   ev.push({ t: 'mover', j, de, a: pos, camino: cam });
-  if (cobro) { p.dinero += cobro; ev.push({ t: 'cobra', j, cant: cobro }); lg(S, `${p.nombre} pasa por el Banco y cobra ${eur(cobro)}.`); }
+  if (cobro) { p.dinero += cobro; ev.push({ t: 'cobra', j, cant: cobro }); lg(S, `${p.nombre} pasa por la Caja y cobra ${eur(cobro)}.`); }
   S.pasos = [];
   if (cruzoAyto) { S.pasos.push('ayto'); lg(S, `${p.nombre} pasa por el Ayuntamiento.`); }
   S.pasos.push('estancia', 'casilla');
@@ -285,7 +285,7 @@ export function decidir(S, d) {
       avanzar(S, ev); break;
     }
     case 'obras': {
-      if (f !== 'obras') return err('Ahora no puedes pedir permiso de obras.');
+      if (f !== 'obras') return err('Ahora no puedes pedir licencia de obras.');
       const coste = costePlan(S, j, d.plan); if (coste < 0) return err('Plan de obras no válido.');
       if (coste > p.dinero) return err('No tienes dinero para ese plan.');
       const cara = DADO_PERMISO[Math.floor(rnd(S) * 6)]; ev.push({ t: 'permiso', j, cara });
@@ -322,7 +322,7 @@ export function decidir(S, d) {
 }
 
 // ---------- CPU ----------
-const RESERVA = [0, 300, 1000, 1600];
+const RESERVA = [0, 450, 1500, 2400];
 export function puntuaEntrada(S, j, sq) {
   let s = 0;
   for (let i = 0; i < S.n; i++) { if (i === j || !S.jug[i].vivo) continue; const dist = (sq - S.jug[i].pos + N) % N; if (dist >= 1 && dist <= 6) s += 1; else if (dist <= 12) s += 0.3; }

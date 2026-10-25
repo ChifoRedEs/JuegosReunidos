@@ -1,4 +1,4 @@
-// Vista 3D del Parchís (Three.js). Solo dibuja: el juego (index.js) le pasa el estado y recibe los toques.
+// Vista 3D del Party’s (Three.js). Solo dibuja: el juego (index.js) le pasa el estado y recibe los toques.
 //   const V = await crearParchis3D(contenedor, { alPieza(c, i), alDestino(to), alDado() })
 //   V.pintar({ piezas: [{ c, i, x, z, esc, mov, emoji }], dest: [{ x, z, c, to, cap }], turno: c|null, casas: { c: { on, etq } }, forma })
 //   V.dado(valor|null, rodando, color) · V.recolor() (lee las variables --pz-* del contenedor) · V.camara(modo) · V.destruir()

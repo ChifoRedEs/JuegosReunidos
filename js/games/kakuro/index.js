@@ -1,4 +1,4 @@
-// Kakuro: «crucigrama de sumas». Mismo formato que KenKen y Sudoku: tamaño y nivel, notas, deshacer guardado,
+// Kakuro: «crucigrama de sumas». Mismo formato que Calcudoku y Sudoku: tamaño y nivel, notas, deshacer guardado,
 // pista, comprobar, errores automáticos, reto del día y 🎨 Apariencia. Ayuda propia: las combinaciones de cada suma.
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';

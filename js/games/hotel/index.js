@@ -1,4 +1,4 @@
-// Hotel · reglas del juego de mesa «Hotel» (Milton Bradley): compra terrenos, pide permisos de obras, levanta hoteles por fases,
+// Hotel · juego de compra y construcción de hoteles: compra terrenos, pide licencias de obras, levanta hoteles por fases,
 // abre entradas en el Ayuntamiento y cobra las noches de los rivales. Gana el último jugador en pie. Tablero 3D (Three.js) con respaldo SVG.
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
@@ -62,7 +62,7 @@ function cerrarVista() { tok3++; if (V) { V.destruir(); V = null; } }
 function setup() {
   S = null; cerrarVista(); sel = null; plan = {};
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
-  root.innerHTML = `<p class="note">Compra los terrenos junto al camino, pide <b>permisos de obras</b> y levanta tus hoteles fase a fase. Abre <b>entradas</b> al pasar por el Ayuntamiento: cada vez que un rival cae en una, te paga las noches. Gana el último jugador que no se arruine${cfg.limite ? ` (o quien tenga más patrimonio tras ${cfg.limite} rondas)` : ''}.</p>
+  root.innerHTML = `<p class="note">Compra los terrenos junto al camino, pide <b>licencias de obras</b> y levanta tus hoteles fase a fase. Abre <b>entradas</b> al pasar por el Ayuntamiento: cada vez que un rival cae en una, te paga las noches. Gana el último jugador que no se arruine${cfg.limite ? ` (o quien tenga más patrimonio tras ${cfg.limite} rondas)` : ''}.</p>
     ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="htfichab" aria-hidden="true">${COCHES[i]}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [40, '40 rondas'], [80, '80 rondas']].map(([v, l]) => `<button class="btn ${cfg.limite === v ? 'on' : ''}" data-limite="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel de la CPU</span><div class="seg">${[1, 2, 3].map(k => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-nivel="${k}">${NIVELES[k]}</button>`).join('')}</div></div>
@@ -111,7 +111,7 @@ async function iniciarVista() {
 
 /* ---------- pintado ---------- */
 const txtFase = {
-  tirar: 'Tira el dado', ayto: 'Ayuntamiento: puedes comprar entradas', compra: 'Casilla de compra', obras: 'Permiso de obras', entLibre: '¡Entrada libre!', faseLibre: '¡Construye una fase gratis!', deuda: 'Deuda: hay que vender', subasta: 'Subasta', fin: 'Fin de la partida',
+  tirar: 'Tira el dado', ayto: 'Ayuntamiento: puedes comprar entradas', compra: 'Solar en venta', obras: 'Licencia de obras', entLibre: '¡Acceso gratuito!', faseLibre: '¡Construye una fase gratis!', deuda: 'Deuda: hay que vender', subasta: 'Subasta', fin: 'Fin de la partida',
 };
 // 🚗 Coches: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
 const cj = c => { const e = estilo(asp.valores), k = COLORES_JUGADOR.indexOf(c); return [e.hex, e.hex2, e.hex3, e.hex4][k] || c; };
@@ -314,9 +314,9 @@ function reglas() {
   api.modal('Hotel', `<ul>
     <li><b>Objetivo</b>: ser el último jugador en pie. Cada uno empieza con ${eur(DINERO_INICIAL)} y un coche en el aparcamiento.</li>
     <li>Tira el dado y avanza. Los coches no comparten casilla (si está ocupada, avanzas a la siguiente libre). Con un <b>6</b> vuelves a tirar al terminar.</li>
-    <li>Al pasar por el <b>Banco</b> 🏦 cobras ${eur(SALARIO)} (con 3-4 jugadores, deja de pagar cuando quedan dos).</li>
-    <li>🏷️ <b>Compra de terreno</b>: compras el terreno de un hotel pegado a esa casilla (uno por turno). No puedes construir en él hasta tu siguiente turno. Si el terreno de un rival sigue <b>vacío</b>, puedes quedártelo por la mitad del precio (compra obligatoria).</li>
-    <li>📋 <b>Permiso de obras</b>: necesitas algún terreno. Declaras lo que construyes (edificio principal, luego ampliaciones, en orden) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, <b>H</b> gratis, <b>×2</b> doble precio. Si te lo conceden, tienes que construir y pagar (si no llegas, subastas hoteles).</li>
+    <li>Al pasar por la <b>Caja</b> 🏦 cobras ${eur(SALARIO)} (con 3-4 jugadores, deja de pagar cuando quedan dos).</li>
+    <li>🏷️ <b>Solar en venta</b>: compras el terreno de un hotel pegado a esa casilla (uno por turno). No puedes construir en él hasta tu siguiente turno. Si el terreno de un rival sigue <b>vacío</b>, puedes quedártelo por la mitad del precio (compra obligatoria).</li>
+    <li>📋 <b>Licencia de obras</b>: necesitas algún terreno. Declaras lo que construyes (edificio principal, luego ampliaciones, en orden) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, <b>H</b> gratis, <b>×2</b> doble precio. Si te lo conceden, tienes que construir y pagar (si no llegas, subastas hoteles).</li>
     <li>🏊 <b>Instalaciones de ocio</b>: con el hotel completo, antes de tirar puedes comprar su instalación (sin permiso). Sube mucho la tarifa.</li>
     <li>🏛️ Al pasar por el <b>Ayuntamiento</b> compras una <b>entrada</b> por cada hotel con edificio principal (en una casilla del camino junto a su terreno; máximo ${MAX_ENTRADAS}, una por casilla). 🚪 En «entrada libre» la pones gratis; 🏗️ «fase libre» te regala un edificio.</li>
     <li><b>Estancias</b>: si caes en una entrada de un hotel ajeno, tiras el dado para saber las noches y pagas noches × tarifa por noche del hotel (según lo construido).</li>

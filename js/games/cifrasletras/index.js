@@ -1,4 +1,4 @@
-// Cifras y Letras: rondas alternas de Letras (la palabra más larga con 9 letras) y Cifras (llegar a un número con 6).
+// Números y Letras: rondas alternas de Letras (la palabra más larga con 9 letras) y Cifras (llegar a un número con 6).
 import { $, esc } from '../../core/dom.js';
 import { grupoFondo, grupoTablero } from '../../core/aspectos.js';
 import * as D from '../../core/diccionario.js';
@@ -225,7 +225,7 @@ function clic(e) {
   else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
 }
 function reglas() {
-  api.modal('Cifras y Letras', `<ul><li>La partida alterna rondas de <b>Letras</b> y de <b>Cifras</b>. Tienes ${S && S.tiempo ? S.tiempo + ' segundos' : 'el tiempo elegido'} para pensar (o sin límite).</li>
+  api.modal('Números y Letras', `<ul><li>La partida alterna rondas de <b>Letras</b> y de <b>Cifras</b>. Tienes ${S && S.tiempo ? S.tiempo + ' segundos' : 'el tiempo elegido'} para pensar (o sin límite).</li>
     <li>🔤 <b>Letras</b>: pide 9 letras eligiendo vocal o consonante (al menos 3 de cada) y forma la palabra más larga que puedas, usando cada letra una sola vez. Vale cualquier palabra del diccionario, también plurales, femeninos y verbos conjugados; las tildes no importan. Cada letra es un punto y una palabra de 9 letras vale 18.</li>
     <li>🔢 <b>Cifras</b>: con seis números y + − × ÷ acércate lo más posible al objetivo. Cada número se usa una vez como mucho, las divisiones tienen que ser exactas y no valen resultados negativos. Exacto: 10 puntos; a 5 o menos: 7; a 10 o menos: 5.</li>
     <li>Contra la CPU, en cada ronda solo puntúa la mejor respuesta (si empatáis, los dos). Al final de cada ronda ves las mejores palabras posibles o una solución.</li>

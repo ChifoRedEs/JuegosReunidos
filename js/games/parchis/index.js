@@ -372,4 +372,4 @@ function iniciarPartida() {
   clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false;
   P = nuevaPartida(cfgSetup, nm, { salidaLibre: libre, parejas: parejas && PC.every(c => cfgSetup[c]) }); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
 }
-function reglas() { api.modal('Parchís', listaReglas()); }
+function reglas() { api.modal('Party’s', listaReglas()); }

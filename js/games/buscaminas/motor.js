@@ -1,4 +1,4 @@
-// Motor del Buscaminas (sin DOM, probable con Node).
+// Motor del Bombardeo (sin DOM, probable con Node).
 // Estado: { w, h, m, minas: null | [índices], rev: [0 oculta | 1 abierta | 2 bandera], fin: null | 'gana' | 'pierde', boom: índice }
 import { shuffle } from '../../core/dom.js';
 

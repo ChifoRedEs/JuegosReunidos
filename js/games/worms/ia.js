@@ -1,4 +1,4 @@
-// Worms · CPU. Elige el disparo simulando la misma física que el juego (viento, rebotes, mecha) y lo ejecuta como una persona:
+// Guerra de Orugas · CPU. Elige el disparo simulando la misma física que el juego (viento, rebotes, mecha) y lo ejecuta como una persona:
 // mueve el gusano, gira el punto de mira, carga la potencia y dispara. Sin DOM (se prueba con Node).
 // La planificación es un generador: cada `yield` cede el control, así la CPU piensa por trozos sin congelar la pantalla.
 import * as M from './motor.js';

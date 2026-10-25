@@ -1,4 +1,4 @@
-// Cifras y Letras (sin DOM, probable con Node). Partida de varias rondas que alternan Letras y Cifras.
+// Números y Letras (sin DOM, probable con Node). Partida de varias rondas que alternan Letras y Cifras.
 // Letras: 9 letras (vocales y consonantes a elegir) → la palabra más larga del diccionario (core/diccionario.js).
 // Cifras: 6 números (del 1 al 10, 25, 50, 75 y 100) → acercarse lo más posible a un número de 3 cifras con + − × ÷.
 

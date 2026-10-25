@@ -1,4 +1,4 @@
-// Controlador reutilizable para juegos de dos jugadores por turnos (3 en raya, Conecta 4, y los que vengan).
+// Controlador reutilizable para juegos de dos jugadores por turnos (3 en raya, Cuatro en Línea, y los que vengan).
 // Gestiona: variantes de tablero, modo CPU / 2 jugadores, nivel, quién empieza, marcador, deshacer,
 // pista, guardado, estadísticas, sonido y turno de la CPU. Cada juego aporta solo sus reglas, su IA y su vista.
 //

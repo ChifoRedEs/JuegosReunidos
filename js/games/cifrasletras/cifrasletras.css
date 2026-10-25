@@ -1,4 +1,4 @@
-/* Cifras y Letras · fichas tipo concurso; el fondo de .cymesa puede ser un tapete (🎨 Fondo de Tablero) */
+/* Números y Letras · fichas tipo concurso; el fondo de .cymesa puede ser un tapete (🎨 Fondo de Tablero) */
 .juego-cifrasletras{--cy-f:#1D3A8A;--cy-t:#FFD23F;--cy-b:#0F2463}
 .juego-cifrasletras[data-fichas="madera"]{--cy-f:#E8C48A;--cy-t:#4A2E16;--cy-b:#B48A55}
 .juego-cifrasletras[data-fichas="pizarra"]{--cy-f:#25332B;--cy-t:#F3F1E7;--cy-b:#15201A}

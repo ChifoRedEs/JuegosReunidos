@@ -46,3 +46,7 @@ Ajedrez, Damas, Dominó, 3 en raya, Sopa de letras, Crucigramas, BlackJack, Klon
 - Juegos de **azar simulado** (Póker, BlackJack, Ruleta, Hold'em): sin dinero real; clasificación por edad adecuada y no usar «casino» en la ficha. 
 - No usar en la ficha ni capturas nombres/logos de terceros (Monopoly, Pokémon, Worms, Tetris, etc.).
 - Dejar constancia del origen de cada imagen (hoja «Créditos y licencias»).
+
+## ✅ Aplicado en 3.32.0 (25/10/2026)
+Calcudoku (KenKen), Guerra de Orugas (Worms; «Granada Nuclear», «Cuerda Gancho»), Código Cifrado (Mastermind), Cuatro en Línea (Conecta 4), Palabras Cruzadas (Scrabble), Trivia Quesitos (Trivial), Ruleta Millonaria, Números y Letras, «Paso la Cabra» (en El Rosco), Encajados (Sokoban), Party’s (Parchís) y Bombardeo (Buscaminas). Hotel: sin referencias a Milton Bradley, hoteles, casillas, dinero y tarifas propios.
+**Pendiente:** calles de Magnate Urbano (marcas reales), fondos de pantalla/«escenarios de Worms», barajas y tapetes (origen), iconos de armas de `img/worms/` (estilo Flaticon: confirmar licencia y atribución), texto «gusanos» en Guerra de Orugas, nombre «Hotel», créditos en Ajustes.

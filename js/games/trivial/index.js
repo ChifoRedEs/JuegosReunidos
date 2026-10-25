@@ -45,7 +45,7 @@ function setup() {
     <p class="note">${cfg.nCat === 6 ? 'Geografía, Historia, Ciencias, Arte y literatura, Espectáculos y Deportes.' : 'Añade Mitología y filosofía, Gastronomía y Cultura general (partidas más largas).'} Banco de 450 definiciones y ${cfg.nCat * 15} preguntas clásicas.</p>`;
 }
 function armar() {
-  root.innerHTML = `<div class="tvj" id="tvJ"></div><svg class="tvb" id="tvB" viewBox="0 0 320 320" role="img" aria-label="Tablero circular del Trivial"></svg><div class="tvpanel" id="tvP"></div><ul class="tvlog" id="tvL"></ul>
+  root.innerHTML = `<div class="tvj" id="tvJ"></div><svg class="tvb" id="tvB" viewBox="0 0 320 320" role="img" aria-label="Tablero circular del Trivia Quesitos"></svg><div class="tvpanel" id="tvP"></div><ul class="tvlog" id="tvL"></ul>
     <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
@@ -166,7 +166,7 @@ function clic(e) {
   else if (a === 'resp') responder(($('#tvTxt') && $('#tvTxt').value.trim()) || null); else if (a === 'nosé') responder(null);
 }
 function reglas() {
-  api.modal('Trivial', `<ul><li>De 2 a 4 jugadores (personas o CPU). En tu turno <b>tiras el dado</b> y mueves tu ficha esa cantidad de casillas en el sentido que prefieras.</li>
+  api.modal('Trivia Quesitos', `<ul><li>De 2 a 4 jugadores (personas o CPU). En tu turno <b>tiras el dado</b> y mueves tu ficha esa cantidad de casillas en el sentido que prefieras.</li>
     <li>La casilla donde caes decide la categoría de la pregunta (cada color es una categoría). Te dan una <b>definición</b> y tienes que decir de qué término se trata, eligiendo entre 4 opciones o escribiéndolo.</li>
     <li>Si <b>aciertas</b> vuelves a tirar; si fallas, pasa el turno. Las casillas <b>🎲</b> te dejan tirar otra vez sin pregunta.</li>
     <li>Si aciertas en una casilla de <b>quesito</b> (la marcada con un círculo blanco), ganas el quesito de esa categoría.</li>

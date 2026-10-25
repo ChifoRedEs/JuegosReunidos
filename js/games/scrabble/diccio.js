@@ -1,5 +1,5 @@
-// Diccionario del Scrabble (sin DOM: se usa en el Worker de la CPU, en la página si no hay Worker y en las pruebas con Node).
-// Parte del diccionario común (core/diccionario.js, ~590.000 formas sin tildes) y lo pasa a FICHAS: en el Scrabble en español
+// Diccionario del Palabras Cruzadas (sin DOM: se usa en el Worker de la CPU, en la página si no hay Worker y en las pruebas con Node).
+// Parte del diccionario común (core/diccionario.js, ~590.000 formas sin tildes) y lo pasa a FICHAS: en el Palabras Cruzadas en español
 // CH, LL y RR son una sola ficha, así que «calle» son 4 fichas (c·a·LL·e). Dentro del motor cada ficha es UN carácter:
 // las letras normales, la ñ y '1' = CH, '2' = LL, '3' = RR. No hay K ni W en la bolsa, así que esas palabras no se pueden jugar.
 //

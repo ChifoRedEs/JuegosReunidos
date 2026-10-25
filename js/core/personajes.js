@@ -1,4 +1,4 @@
-// Personajes (emojis) por secciones: los usan Sokoban y Magnate en 🎨 Apariencia.
+// Personajes (emojis) por secciones: los usan Encajados y Magnate en 🎨 Apariencia.
 export const PERSONAJES = {
   Hombres: ['👨', '👨🏻', '👨🏽', '👨🏿', '👨‍🦰', '👨‍🦱', '👨‍🦳', '👨‍🦲', '🧔', '👴', '👦'],
   Mujeres: ['👩', '👩🏻', '👩🏽', '👩🏿', '👩‍🦰', '👩‍🦱', '👩‍🦳', '👱‍♀️', '🧕', '👵', '👧'],

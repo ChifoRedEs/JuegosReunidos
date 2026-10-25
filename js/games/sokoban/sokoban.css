@@ -1,4 +1,4 @@
-/* Sokoban */
+/* Encajados */
 .juego-sokoban .skcab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
 .juego-sokoban .skcab b{font:800 18px 'Baloo 2',system-ui,sans-serif}
 .juego-sokoban .skcab span{font-size:13px;font-weight:800;color:var(--mut)}

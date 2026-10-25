@@ -1,5 +1,5 @@
 // Motor de El Rosco (prueba final de los concursos de palabras: una definición por cada letra). Sin DOM, probable con Node.
-// Modos: 'solo' (contra el reloj) y 'cpu' (duelo: dos roscos y dos relojes; al fallar o decir «pasapalabra» le toca al rival).
+// Modos: 'solo' (contra el reloj) y 'cpu' (duelo: dos roscos y dos relojes; al fallar o decir «paso la cabra» le toca al rival).
 import { LETRAS, BANCO } from './palabras.js';
 import { BANCOS } from '../crucigrama/pistas.js';
 import { BLOQUES, analizar, claveTexto } from '../../core/definiciones.js';

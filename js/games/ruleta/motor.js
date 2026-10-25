@@ -1,4 +1,4 @@
-// Motor de la Ruleta de la Suerte (sin DOM, probable con Node).
+// Motor de la Ruleta Millonaria (sin DOM, probable con Node).
 // Turno: girar la ruleta → si cae en premio, decir una consonante (cobras el premio por cada vez que aparece).
 // También puedes comprar una vocal (250 €) o resolver el panel. Fallar una letra, «Quiebra» o «Pierde turno» pasa el turno.
 // Quien resuelve el panel se lleva al marcador el dinero de la ronda; los demás lo pierden.

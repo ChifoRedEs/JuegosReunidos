@@ -1,4 +1,4 @@
-/* Mastermind · colores del tablero y de las bolas según 🎨 Apariencia (data-marco, data-paleta, data-estilo en .juego-mastermind) */
+/* Código Cifrado · colores del tablero y de las bolas según 🎨 Apariencia (data-marco, data-paleta, data-estilo en .juego-mastermind) */
 .juego-mastermind{--mm-marco:#8A5A2B;--mm-marco2:#5E3B1A;--mm-hueco:#2B1D12;--m0:#E53935;--m1:#1E88E5;--m2:#43A047;--m3:#FDD835;--m4:#8E24AA;--m5:#FB8C00;--m6:#00ACC1;--m7:#EC407A}
 .juego-mastermind[data-marco="nogal"]{--mm-marco:#5B3A29;--mm-marco2:#33200F;--mm-hueco:#1E1410}
 .juego-mastermind[data-marco="pizarra"]{--mm-marco:#5B6577;--mm-marco2:#323947;--mm-hueco:#1D222C}

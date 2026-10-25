@@ -1,4 +1,4 @@
-// Motor del Trivial para 2-4 jugadores (sin DOM, probable con Node).
+// Motor del Trivia Quesitos para 2-4 jugadores (sin DOM, probable con Node).
 // Tablero circular de 6 × categorías casillas. Cada 6 casillas: [quesito, normal, normal, tira otra vez, normal, normal].
 // Reglas: sacas un dado, eliges sentido, respondes la pregunta de la casilla; si aciertas sigues tirando; en la casilla de quesito
 // ganas el quesito de esa categoría; con todos los quesitos vas al centro y juegas la ronda final: una pregunta de cada

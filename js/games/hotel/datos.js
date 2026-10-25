@@ -1,5 +1,5 @@
 // Hotel · datos del tablero y de los 8 hoteles (sin DOM).
-// Basado en el juego de mesa «Hotel» (Milton Bradley, 1986): precios y tarifas de la edición 1986-1992.
+// Juego propio de compra y construcción de hoteles: nombres, precios y tarifas originales.
 // El trazado del camino y la posición de las casillas es propio (el tablero real no se publica con coordenadas).
 
 export const COLORES_JUGADOR = ['#E0243A', '#2F6BFF', '#12A05C', '#F2B600'];
@@ -7,9 +7,9 @@ export const NOMBRES_COLOR = ['Rojo', 'Azul', 'Verde', 'Amarillo'];
 export const COCHES = ['🚗', '🚕', '🚙', '🏎️'];
 
 // ---------- reglas generales ----------
-export const DINERO_INICIAL = 12000;
-export const SALARIO = 2000;           // al pasar por el Banco
-export const PRECIO_MIN_PUJA = 100;
+export const DINERO_INICIAL = 18000;
+export const SALARIO = 3000;           // al pasar por la Caja
+export const PRECIO_MIN_PUJA = 150;
 export const MAX_ENTRADAS = 8;         // tope de entradas por hotel
 // Dado de permiso de obras (6 caras): 3 verdes (concedido), 1 rojo (denegado), 1 «H» (gratis), 1 «×2» (doble coste)
 export const DADO_PERMISO = ['verde', 'verde', 'verde', 'rojo', 'H', 'x2'];
@@ -18,14 +18,14 @@ export const DADO_PERMISO = ['verde', 'verde', 'verde', 'rojo', 'H', 'x2'];
 // edif: [{ c: coste, r: tarifa por noche una vez construido }] en orden (el primero es el edificio principal)
 // inst: instalación de ocio (jardín / piscina), solo cuando el hotel está completo. Sin permiso de obras.
 export const HOTELES = {
-  fuji: { nombre: 'Fujiyama', tierra: 1000, entrada: 100, edif: [{ c: 2200, r: 100 }, { c: 1400, r: 100 }, { c: 1400, r: 200 }], inst: { c: 500, r: 400 }, color: '#E4573D', estilo: 'pagoda' },
-  boom: { nombre: 'Boomerang', tierra: 500, entrada: 100, edif: [{ c: 1800, r: 400 }], inst: { c: 250, r: 600 }, color: '#1FA2A6', estilo: 'boomerang' },
-  etoile: { nombre: "L'Etoile", tierra: 3000, entrada: 250, edif: [{ c: 3300, r: 150 }, { c: 2200, r: 300 }, { c: 1800, r: 300 }, { c: 1800, r: 300 }, { c: 1800, r: 450 }], inst: { c: 4000, r: 750 }, color: '#B8564B', estilo: 'clasico' },
-  pres: { nombre: 'President', tierra: 3500, entrada: 250, edif: [{ c: 5000, r: 200 }, { c: 3000, r: 400 }, { c: 2250, r: 600 }, { c: 1750, r: 800 }], inst: { c: 5000, r: 1200 }, color: '#3B7DD8', estilo: 'torre' },
-  royal: { nombre: 'Royal', tierra: 2500, entrada: 200, edif: [{ c: 3600, r: 150 }, { c: 2600, r: 300 }, { c: 1800, r: 300 }, { c: 1800, r: 450 }], inst: { c: 3000, r: 600 }, color: '#6C4DB8', estilo: 'hexagono' },
-  waik: { nombre: 'Waikiki', tierra: 2500, entrada: 200, edif: [{ c: 3500, r: 200 }, { c: 2500, r: 350 }, { c: 2500, r: 500 }, { c: 1750, r: 500 }, { c: 1750, r: 650 }], inst: { c: 2500, r: 1000 }, color: '#F08A24', estilo: 'playa' },
-  taj: { nombre: 'Taj Mahal', tierra: 1500, entrada: 100, edif: [{ c: 2400, r: 100 }, { c: 1000, r: 100 }, { c: 500, r: 200 }], inst: { c: 1000, r: 300 }, color: '#E0B84A', estilo: 'cupula' },
-  safari: { nombre: 'Safari', tierra: 2000, entrada: 150, edif: [{ c: 2600, r: 100 }, { c: 1200, r: 100 }, { c: 1200, r: 250 }], inst: { c: 2000, r: 500 }, color: '#7A8F3A', estilo: 'cabana' },
+  fuji: { nombre: 'Gran Pagoda', tierra: 1500, entrada: 150, edif: [{ c: 3300, r: 150 }, { c: 2100, r: 150 }, { c: 2100, r: 300 }], inst: { c: 750, r: 600 }, color: '#E4573D', estilo: 'pagoda' },
+  boom: { nombre: 'Curva Dorada', tierra: 750, entrada: 150, edif: [{ c: 2700, r: 600 }], inst: { c: 375, r: 900 }, color: '#1FA2A6', estilo: 'boomerang' },
+  etoile: { nombre: 'Palacio Mayor', tierra: 4500, entrada: 375, edif: [{ c: 4950, r: 225 }, { c: 3300, r: 450 }, { c: 2700, r: 450 }, { c: 2700, r: 450 }, { c: 2700, r: 675 }], inst: { c: 6000, r: 1125 }, color: '#B8564B', estilo: 'clasico' },
+  pres: { nombre: 'Torre Cielo', tierra: 5250, entrada: 375, edif: [{ c: 7500, r: 300 }, { c: 4500, r: 600 }, { c: 3400, r: 900 }, { c: 2600, r: 1200 }], inst: { c: 7500, r: 1800 }, color: '#3B7DD8', estilo: 'torre' },
+  royal: { nombre: 'Real Alameda', tierra: 3750, entrada: 300, edif: [{ c: 5400, r: 225 }, { c: 3900, r: 450 }, { c: 2700, r: 450 }, { c: 2700, r: 675 }], inst: { c: 4500, r: 900 }, color: '#6C4DB8', estilo: 'hexagono' },
+  waik: { nombre: 'Costa Sol', tierra: 3750, entrada: 300, edif: [{ c: 5250, r: 300 }, { c: 3750, r: 525 }, { c: 3750, r: 750 }, { c: 2600, r: 750 }, { c: 2600, r: 975 }], inst: { c: 3750, r: 1500 }, color: '#F08A24', estilo: 'playa' },
+  taj: { nombre: 'Cúpula Oriental', tierra: 2250, entrada: 150, edif: [{ c: 3600, r: 150 }, { c: 1500, r: 150 }, { c: 750, r: 300 }], inst: { c: 1500, r: 450 }, color: '#E0B84A', estilo: 'cupula' },
+  safari: { nombre: 'Cabañas del Valle', tierra: 3000, entrada: 225, edif: [{ c: 3900, r: 150 }, { c: 1800, r: 150 }, { c: 1800, r: 375 }], inst: { c: 3000, r: 750 }, color: '#7A8F3A', estilo: 'cabana' },
 };
 export const IDS_HOTEL = Object.keys(HOTELES);
 export const nEdif = id => HOTELES[id].edif.length;
@@ -53,20 +53,20 @@ export const N = CAMINO.length;
 const TIPOS = 'PCOCCECCFCO' + 'CNCCOCCCOCE' + 'CCNCOFNOCNCCOEN' + 'CCOFCNCCOCC';
 export const TIPO = TIPOS.slice(0, N).split('');
 export const INFO_TIPO = {
-  P: { nombre: 'Aparcamiento', corto: 'SALIDA', ico: '🅿️', color: '#3B6FD8', desc: 'Casilla de salida: aquí empiezan los coches. No pasa nada al caer.' },
-  C: { nombre: 'Compra de terreno', corto: 'COMPRA', ico: '🏷️', color: '#E5A100', desc: 'Puedes comprar el terreno de un hotel pegado a esta casilla (solo uno por turno). Si el terreno de un rival sigue vacío, puedes quedártelo por la mitad del precio. No puedes construir en él hasta tu siguiente turno.' },
-  O: { nombre: 'Permiso de obras', corto: 'OBRAS', ico: '📋', color: '#2F7DE1', desc: 'Si tienes algún terreno, declaras qué construyes (edificio principal, luego ampliaciones) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, H gratis, ×2 doble precio.' },
-  E: { nombre: 'Entrada libre', corto: 'ENTRADA', ico: '🚪', color: '#1E9E63', desc: 'Pones gratis una entrada en un hotel tuyo que ya tenga edificio principal, en una casilla del camino junto a su terreno.' },
-  F: { nombre: 'Fase libre', corto: 'FASE', ico: '🏗️', color: '#E8690F', desc: 'Construyes gratis una fase: el edificio principal de un terreno vacío tuyo, o la siguiente ampliación de un hotel en obras.' },
-  N: { nombre: 'Camino', corto: '', ico: '', color: '#C3C9D6', desc: 'Casilla normal. Si tiene una entrada de un hotel rival, pagas las noches (dado × tarifa por noche del hotel).' },
+  P: { nombre: 'Salida', corto: 'SALIDA', ico: '🅿️', color: '#3B6FD8', desc: 'Casilla de salida: aquí empiezan los coches. No pasa nada al caer.' },
+  C: { nombre: 'Solar en venta', corto: 'COMPRA', ico: '🏷️', color: '#E5A100', desc: 'Puedes comprar el terreno de un hotel pegado a esta casilla (solo uno por turno). Si el terreno de un rival sigue vacío, puedes quedártelo por la mitad del precio. No puedes construir en él hasta tu siguiente turno.' },
+  O: { nombre: 'Licencia de obras', corto: 'OBRAS', ico: '📋', color: '#2F7DE1', desc: 'Si tienes algún terreno, declaras qué construyes (edificio principal, luego ampliaciones) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, H gratis, ×2 doble precio.' },
+  E: { nombre: 'Acceso gratuito', corto: 'ENTRADA', ico: '🚪', color: '#1E9E63', desc: 'Pones gratis una entrada en un hotel tuyo que ya tenga edificio principal, en una casilla del camino junto a su terreno.' },
+  F: { nombre: 'Obra gratis', corto: 'FASE', ico: '🏗️', color: '#E8690F', desc: 'Construyes gratis una fase: el edificio principal de un terreno vacío tuyo, o la siguiente ampliación de un hotel en obras.' },
+  N: { nombre: 'Calle', corto: '', ico: '', color: '#C3C9D6', desc: 'Casilla normal. Si tiene una entrada de un hotel rival, pagas las noches (dado × tarifa por noche del hotel).' },
 };
 export const EXTRA_LEYENDA = [
-  { ico: '🏦', nombre: 'Línea del Banco', color: '#F2B600', desc: 'Cada vez que cruzas la línea dorada cobras 2.000 € (con 3-4 jugadores, deja de pagar cuando quedan dos).' },
-  { ico: '🏛️', nombre: 'Línea del Ayuntamiento', color: '#2F9BFF', desc: 'Al cruzar la línea azul puedes comprar una entrada por cada hotel tuyo con edificio principal (máximo 8 por hotel, una por casilla).' },
+  { ico: '🏦', nombre: 'Línea de Cobro', color: '#F2B600', desc: 'Cada vez que cruzas la línea dorada cobras 3.000 € (con 3-4 jugadores, deja de pagar cuando quedan dos).' },
+  { ico: '🏛️', nombre: 'Línea de Accesos', color: '#2F9BFF', desc: 'Al cruzar la línea azul puedes comprar una entrada por cada hotel tuyo con edificio principal (máximo 8 por hotel, una por casilla).' },
   { ico: '⛩️', nombre: 'Entrada de un hotel', color: '#888', desc: 'Pórtico del color del hotel en el borde del camino. Si un rival cae en esa casilla, tira el dado y te paga noches × tarifa del hotel.' },
   { ico: '🚩', nombre: 'Bandera del dueño', color: '#E0243A', desc: 'Marca de qué jugador es el propietario del hotel.' },
 ];
-// Líneas que se cruzan entre dos casillas consecutivas: el Banco (cobras 2000) y el Ayuntamiento (compras entradas)
+// Líneas que se cruzan entre dos casillas consecutivas: el Banco (cobras 3000) y el Ayuntamiento (compras entradas)
 export const LINEA_BANCO = 41;          // entre la casilla 41 y la 42
 export const LINEA_AYTO = 27;           // entre la 27 y la 28
 // Terrenos: celdas [fila, columna] de cada hotel

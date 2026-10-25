@@ -34,7 +34,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null);
   if (c0 && R.RONDAS.includes(c0.rondas) && R.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 3) cfg = { ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
-  tk = crearTeclado({ filas: FILAS, borrar: true, alPulsar: tecla, titulo: 'Ruleta de la Suerte' });
+  tk = crearTeclado({ filas: FILAS, borrar: true, alPulsar: tecla, titulo: 'Ruleta Millonaria' });
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', teclaPanel);
   onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
@@ -271,7 +271,7 @@ function pintar() {
 function refrescarTeclado() {
   if (!tk || !S) return;
   const ls = R.letrasPanel(S), modo = res ? 'res' : humano() ? S.fase : '';
-  tk.titulo(res ? 'Resolver el panel' : modo === 'consonante' ? `Elige una consonante · ${R.dinero(S.valor)}` : modo === 'vocal' ? 'Elige una vocal' : 'Ruleta de la Suerte');
+  tk.titulo(res ? 'Resolver el panel' : modo === 'consonante' ? `Elige una consonante · ${R.dinero(S.valor)}` : modo === 'vocal' ? 'Elige una vocal' : 'Ruleta Millonaria');
   tk.actualizar((l, b) => {
     const vocal = R.VOCALES.includes(l), usada = S.usadas.includes(l);
     if (l === '⌫') { b.disabled = modo !== 'res'; b.className = 'tkk tkdel'; return; }
@@ -341,7 +341,7 @@ function clic(e) {
   else if (a === 'ronda') { if (R.siguienteRonda(S)) { $('#rlVal').textContent = ''; api.sonido('click'); pintar(); guardar(); bucle(); } }
 }
 function reglas() {
-  api.modal('Ruleta de la Suerte', `<ul><li>De 1 a 3 jugadores (personas o CPU) por turnos. Hay que descubrir la frase oculta del panel; la <b>pista</b> dice de qué trata.</li>
+  api.modal('Ruleta Millonaria', `<ul><li>De 1 a 3 jugadores (personas o CPU) por turnos. Hay que descubrir la frase oculta del panel; la <b>pista</b> dice de qué trata.</li>
     <li>En tu turno <b>gira la ruleta</b>: si cae en un premio, di una <b>consonante</b> y ganas ese premio por cada vez que aparece. Si aciertas, sigues jugando.</li>
     <li><b>Quiebra</b> te deja sin el dinero de la ronda y <b>Pierde turno</b> pasa el turno. Si dices una letra que no está, también pasa el turno.</li>
     <li>Las <b>vocales</b> se compran por ${R.dinero(R.PRECIO_VOCAL)} del dinero de la ronda.</li>

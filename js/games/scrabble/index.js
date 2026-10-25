@@ -1,4 +1,4 @@
-// Scrabble en español: tablero de 15 × 15, 100 fichas (con CH, LL, RR y Ñ), contra la CPU (3 niveles) o entre 2-4 personas
+// Palabras Cruzadas en español: tablero de 15 × 15, 100 fichas (con CH, LL, RR y Ñ), contra la CPU (3 niveles) o entre 2-4 personas
 // en el mismo móvil. Las palabras se comprueban con el diccionario común (core/diccionario.js) en un Worker (trabajador.js).
 import { $, esc } from '../../core/dom.js';
 import { grupoFondo } from '../../core/aspectos.js';
@@ -187,7 +187,7 @@ function pintarPrevia() {
   const pal = ev.palabras.map(x => `<b class="${previa.malas && previa.malas.includes(x.w) ? 'no' : ''}">${M.verPalabra(x.w)}</b> ${x.pts}`).join(' · ');
   if (previa.estado === 'mirando') { p.className = 'scprev'; p.innerHTML = `${pal} · comprobando…`; return; }
   if (previa.estado === 'mal') { p.className = 'scprev mal'; p.innerHTML = `❌ ${pal} — ${previa.malas.map(M.verPalabra).join(', ')} no ${previa.malas.length > 1 ? 'están' : 'está'} en el diccionario`; return; }
-  p.className = 'scprev bien'; p.innerHTML = `✅ ${pal}${ev.bingo ? ' · <b>¡Scrabble! +50</b>' : ''} → <b>+${ev.pts}</b>`;
+  p.className = 'scprev bien'; p.innerHTML = `✅ ${pal}${ev.bingo ? ' · <b>¡Palabras Cruzadas! +50</b>' : ''} → <b>+${ev.pts}</b>`;
 }
 function pintarCtl() {
   const c = $('#scCtl'); if (!c) return;
@@ -324,7 +324,7 @@ function jugar() {
   const ev = previa.ev, coloc = previa.coloc, j = S.jug[S.turno];
   const palabra = M.verPalabra(ev.palabras[0].w);
   M.jugar(S, coloc, ev); temp = []; cursor = null; sel = -1; previa = null;
-  aviso = `${j.nombre === 'Tú' ? 'Juegas' : j.nombre + ' juega'} ${palabra} (+${ev.pts})${ev.bingo ? ' · ¡Scrabble! 🌟' : ''}`;
+  aviso = `${j.nombre === 'Tú' ? 'Juegas' : j.nombre + ' juega'} ${palabra} (+${ev.pts})${ev.bingo ? ' · ¡Palabras Cruzadas! 🌟' : ''}`;
   api.sonido(ev.bingo ? 'ganar' : 'ok'); if (ev.bingo) api.vibrar([40, 30, 40]);
   trasTurno();
 }
@@ -364,7 +364,7 @@ async function turnoCPU() {
   pensando = false;
   if (d.tipo === 'jugar') {
     const ev = M.evaluar(S.tab, S.bl, d.coloc);
-    M.jugar(S, d.coloc, ev); aviso = `${j.nombre} juega ${M.verPalabra(ev.palabras[0].w)} (+${ev.pts})${ev.bingo ? ' · ¡Scrabble! 🌟' : ''}`;
+    M.jugar(S, d.coloc, ev); aviso = `${j.nombre} juega ${M.verPalabra(ev.palabras[0].w)} (+${ev.pts})${ev.bingo ? ' · ¡Palabras Cruzadas! 🌟' : ''}`;
     api.sonido('mover');
   } else if (d.tipo === 'cambiar') { const n = d.fichas.length; M.cambiar(S, d.fichas); aviso = `${j.nombre} cambia ${n} ${n === 1 ? 'ficha' : 'fichas'}.`; }
   else { M.pasar(S); aviso = `${j.nombre} pasa.`; }
@@ -415,13 +415,13 @@ function tecla(e) {
   if (at[k] === '?') { temp.push({ i: cursor.i, t: l, b: true, k }); despuesDePoner(cursor.i); } else poner(k, cursor.i);
 }
 function reglas() {
-  api.modal('Scrabble', `<ul>
+  api.modal('Palabras Cruzadas', `<ul>
     <li><b>Objetivo</b>: sumar más puntos que los rivales formando palabras que se cruzan en el tablero, como en un crucigrama.</li>
     <li><b>Cómo jugar</b>: arrastra tus fichas al tablero o toca una ficha y después una casilla. También puedes tocar una casilla vacía (sale una flecha ➡; tócala otra vez para ⬇) y luego tus fichas, que se van poniendo seguidas. Toca una ficha puesta para devolverla. Con teclado: escribe las letras desde la flecha, ⌫ borra, Intro juega y Esc recoge.</li>
     <li>Las fichas de un turno van en <b>una sola fila o columna</b>, seguidas (pueden usar letras que ya están) y tocando alguna ficha del tablero. La primera palabra pasa por la <b>★</b>.</li>
     <li>Cuentan <b>todas las palabras nuevas</b> que se formen, también las que se cruzan. Debajo del tablero verás las palabras y los puntos antes de jugar.</li>
-    <li><b>Premios</b>: <b>2L</b> / <b>3L</b> doblan o triplican la letra; <b>2P</b> / <b>3P</b> la palabra entera. Solo cuentan la primera vez que se cubren. Usar las 7 fichas en un turno es un <b>¡Scrabble!</b>: +50 puntos.</li>
-    <li><b>Fichas</b>: 100, como el Scrabble en español. <b>CH</b>, <b>LL</b> y <b>RR</b> son una sola ficha (CALLE = C·A·LL·E) y no se pueden formar con dos fichas. No hay K ni W. Los 2 <b>comodines</b> valen 0 y hacen de cualquier letra.</li>
+    <li><b>Premios</b>: <b>2L</b> / <b>3L</b> doblan o triplican la letra; <b>2P</b> / <b>3P</b> la palabra entera. Solo cuentan la primera vez que se cubren. Usar las 7 fichas en un turno es un <b>¡Palabras Cruzadas!</b>: +50 puntos.</li>
+    <li><b>Fichas</b>: 100, como el Palabras Cruzadas en español. <b>CH</b>, <b>LL</b> y <b>RR</b> son una sola ficha (CALLE = C·A·LL·E) y no se pueden formar con dos fichas. No hay K ni W. Los 2 <b>comodines</b> valen 0 y hacen de cualquier letra.</li>
     <li><b>Cambiar</b> fichas o <b>pasar</b> gasta el turno. Solo se puede cambiar si quedan al menos 7 fichas en la bolsa. 💡 <b>Pista</b> pone en el tablero la jugada que más puntos da (luego puedes jugarla o recogerla).</li>
     <li><b>Final</b>: cuando la bolsa está vacía y alguien gasta todas sus fichas (o si todos pasan varias vueltas seguidas). Cada uno resta lo que le queda en el atril y quien cierra suma lo de los demás.</li>
     <li>Diccionario: unas 590.000 palabras (con plurales y verbos conjugados) del diccionario español de LibreOffice. En 🎨 Apariencia cambias el fondo, el tablero, las fichas y los rótulos de las casillas.</li></ul>`);

@@ -1,7 +1,7 @@
 {
   "name": "Juegos Reunidos",
   "short_name": "Juegos",
-  "description": "Sudoku, Nonogram, Damas, Parchís y más, sin conexión.",
+  "description": "Sudoku, Nonogram, Damas, Party’s y más, sin conexión.",
   "lang": "es",
   "start_url": "./index.html",
   "scope": "./",

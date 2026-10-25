@@ -1,4 +1,4 @@
-// Pruebas del motor de Worms (sin navegador):  node tests/worms.mjs
+// Pruebas del motor de Guerra de Orugas (sin navegador):  node tests/worms.mjs
 import assert from 'node:assert/strict';
 import * as M from '../js/games/worms/motor.js';
 import { planificar, crearPiloto } from '../js/games/worms/ia.js';
@@ -56,7 +56,7 @@ t('armas: misil, escopeta, granadas, dinamita, aéreo', () => {
     avanzar(S, 12); assert.ok(S.proy.length === 0, arma + ' termina'); assert.ok(['cambio', 'turno', 'fin'].includes(S.turno.fase));
   }
 });
-t('cuerda ninja: engancha y balancea', () => {
+t('cuerda gancho: engancha y balancea', () => {
   let eng = 0;
   for (const mapa of Object.keys(M.MAPAS)) for (let k = 0; k < 6; k++) {
     const S = M.crear(cfg({ modo: 'dos', mapa })); hastaTurno(S); M.elegirArma(S, 'cuerda'); S.turno.ang = 70; M.disparar(S);

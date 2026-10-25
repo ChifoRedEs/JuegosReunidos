@@ -4,7 +4,7 @@
 - **Comodín de la baraja española sin conexión**: el service worker no guardaba `00.webp` de las barajas españolas (Chinchón con comodines lo mostraba en blanco). También usaba la extensión equivocada para el comodín francés.
 - **Almacenamiento lleno**: si `localStorage` no tenía sitio, la partida dejaba de guardarse sin avisar. Ahora sale un aviso.
 - **Nonograma «Cara contenta»**: se descartaba porque obligaba a adivinar. Rediseñado: los 28 dibujos se resuelven por lógica.
-- **KenKen**: los tableros solo usaban permutaciones del cuadrado cíclico (en 4×4, 432 de las 576 soluciones posibles y nunca las de tipo «Klein»). Ahora los cuadrados latinos son aleatorios de verdad.
+- **Calcudoku**: los tableros solo usaban permutaciones del cuadrado cíclico (en 4×4, 432 de las 576 soluciones posibles y nunca las de tipo «Klein»). Ahora los cuadrados latinos son aleatorios de verdad.
 - **Estilos de los juegos**: las hojas de estilo se acumulaban en `<head>` y clases genéricas (`.pre`, `.seat`…) podían chocar. Ahora solo está activa la del juego abierto (y las comunes de `/css/`).
 - **Listeners `resize`** de Serpiente, Bloques y Rompe-Ladrillos: se registraban a nivel de módulo y nunca se quitaban.
 - **Tema «Auto»**: el color de la barra no cambiaba si el sistema pasaba a oscuro con la app abierta.
@@ -27,15 +27,15 @@ Además: el minimax poda más cuando no hay ruido; el Inicio lee un índice lige
 Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (kenken), `todoArriba` (klondike), `PCOL` y `PINK` (parchís), `sonPares` (sudoku), `tamano` (trivial). Doce imports que no se usaban.
 
 ## Mejoras de funcionalidad
-- **Toda la app**: 🏅 50 logros, 📅 Reto del día (Sudoku, Nonogram, Buscaminas, KenKen, Sopa, Crucigrama), 📤 compartir resultado en todos los juegos, 🏆 podio de los 10 mejores en los arcade, deshacer que se guarda con la partida (Sudoku, KenKen, Nonogram). La copia de seguridad incluye logros, retos y podios, y suma las palabras aprendidas de Encadenadas.
+- **Toda la app**: 🏅 50 logros, 📅 Reto del día (Sudoku, Nonogram, Bombardeo, Calcudoku, Sopa, Crucigrama), 📤 compartir resultado en todos los juegos, 🏆 podio de los 10 mejores en los arcade, deshacer que se guarda con la partida (Sudoku, Calcudoku, Nonogram). La copia de seguridad incluye logros, retos y podios, y suma las palabras aprendidas de Encadenadas.
 - **Sudoku**: nivel Experto; los niveles se califican por las técnicas que exigen.
 - **Nonogram**: dibujos de 15×15 y 20×20.
-- **Buscaminas**: tableros «sin adivinar» y tablero personalizado.
+- **Bombardeo**: tableros «sin adivinar» y tablero personalizado.
 - **Ajedrez**: reloj con incremento, PGN (exportar e importar, notación inglesa o española) y revisión jugada a jugada.
 - **Damas**: variantes brasileña e internacional 10×10.
-- **3 en raya, Conecta 4 y Ajedrez**: series al mejor de 3 o de 5.
-- **Parchís**: modo por parejas.
-- **Trivial**: 135 preguntas clásicas de tipo test (además de las 450 definiciones).
+- **3 en raya, Cuatro en Línea y Ajedrez**: series al mejor de 3 o de 5.
+- **Party’s**: modo por parejas.
+- **Trivia Quesitos**: 135 preguntas clásicas de tipo test (además de las 450 definiciones).
 - **Batalla Naval**: flotas Piratas, Gran armada (12×12) y Relámpago (6×6).
 - **Klondike**: repartos siempre con solución y puntuación Vegas con banca.
 - **Hold'em**: partida libre y estadísticas de tus manos.
@@ -75,7 +75,7 @@ Integrado en `js/games/magnate/` (datos.js · motor.js · index.js · magnate.cs
 - 42 palabras que faltaban (pingüino, quirófano, champiñón, tucán, ñu, eñe…) se añaden desde `tools/diccionario/extra.txt`.
 - `js/core/diccionario.js` lo carga bajo demanda (0,16 s la primera vez, 0,06 s desde la caché) y busca sin trocear el texto: 100.000 búsquedas en 70 ms.
 - El service worker no lo instala con la app: lo guarda en la caché `jr-diccionario` la primera vez que un juego lo pide y lo conserva entre actualizaciones.
-- Palabras base para los demás juegos (`lemas-<hash>.txt`, 0,45 MB): 36.895 sustantivos y adjetivos y 10.480 verbos en infinitivo, con tildes. Las usan **Encadenadas** (valida cualquier palabra real, conjugaciones incluidas, y la CPU elige entre 47.000 palabras), la **Sopa de letras** (tema 📚 Diccionario) y el **Ahorcado** (tema 📚 Diccionario, con pista de tipo de palabra y primera letra). Crucigramas, Rosco, Trivial y Ruleta necesitan definiciones o frases, que el diccionario no trae.
+- Palabras base para los demás juegos (`lemas-<hash>.txt`, 0,45 MB): 36.895 sustantivos y adjetivos y 10.480 verbos en infinitivo, con tildes. Las usan **Encadenadas** (valida cualquier palabra real, conjugaciones incluidas, y la CPU elige entre 47.000 palabras), la **Sopa de letras** (tema 📚 Diccionario) y el **Ahorcado** (tema 📚 Diccionario, con pista de tipo de palabra y primera letra). Crucigramas, Rosco, Trivia Quesitos y Ruleta necesitan definiciones o frases, que el diccionario no trae.
 
 ## Póker cubierto (juego nuevo, categoría Cartas)
 `js/games/pokercub/` (motor.js · index.js · pokercub.css). Póker de descarte de 5 cartas contra 1-5 bots: entrada (ante), primera ronda de apuestas, descarte de hasta 3 cartas (4 si te quedas con un as), segunda ronda y enfrentamiento. Sin límite, con all-in y botes secundarios. Torneo (la entrada sube cada 6 manos) o partida libre con recompras. Opción «jotas o mejor» para abrir: si nadie abre, se reparte de nuevo y el bote se acumula.
@@ -85,16 +85,16 @@ Reutiliza el evaluador de manos y los perfiles de bots del Texas Hold'em. Los bo
 `js/games/airhockey/` (motor.js · index.js · airhockey.css). Mesa vertical en canvas: contra la CPU (Fácil, Medio, Difícil) o 2 jugadores en el mismo móvil con multitáctil (cada uno mueve su mazo desde su mitad, a la vez). Partidos a 5, 7 o 10 goles; ratón y flechas también sirven.
 Física con subpasos (240 por segundo) para que el disco no atraviese mazos ni bandas, rebotes con la velocidad del mazo, roce suave y «colchón de aire» que evita que el disco se quede parado junto a un fondo. La CPU defiende prediciendo los rebotes, se coloca detrás del disco (rodeándolo si hace falta) y lo golpea hacia tu portería; cada nivel cambia su velocidad, puntería y tiempo de reacción. Pausa automática al salir de la app, partida guardada y tres mesas en 🎨 Apariencia.
 
-## Sokoban (juego nuevo, categoría Lógica)
+## Encajados (juego nuevo, categoría Lógica)
 `js/games/sokoban/` (motor.js · niveles.js · index.js · sokoban.css). Campaña de 20 niveles originales (8 diseñados a mano y 12 creados con el generador del juego con semillas fijas y elegidos por dificultad; ninguno copiado de colecciones publicadas), niveles generados sin fin en 3 tamaños (2, 3 o 4 cajas) y reto del día.
 El generador juega «al revés» (tira de las cajas desde las metas), así que todo nivel tiene solución; además lo confirma un resolvedor por anchura que busca la solución con menos empujes y descarta casillas muertas. El generador y la pista se ejecutan en un Worker. Controles: deslizar, tocar una casilla (camina hasta ella), flechas en pantalla, teclado (flechas o WASD, Z deshacer, R reiniciar). Deshacer sin límite y guardado, aviso de caja atascada, récord de movimientos por nivel, 3 escenarios y 4 personajes.
-- Apariencia del Sokoban: 8 escenarios (muros, suelo y color de las metas), 8 tipos de caja (madera, colores, metálicas, regalos, cartón…) y 92 personajes en 6 secciones (hombres, mujeres, oficios, fantasía, animales y vehículos); los animales y vehículos se giran al caminar hacia la derecha. La hoja de 🎨 Apariencia de la app admite ahora rejillas de iconos con secciones (opciones con `emoji` y `sec`), que podrán usar otros juegos.
+- Apariencia del Encajados: 8 escenarios (muros, suelo y color de las metas), 8 tipos de caja (madera, colores, metálicas, regalos, cartón…) y 92 personajes en 6 secciones (hombres, mujeres, oficios, fantasía, animales y vehículos); los animales y vehículos se giran al caminar hacia la derecha. La hoja de 🎨 Apariencia de la app admite ahora rejillas de iconos con secciones (opciones con `emoji` y `sec`), que podrán usar otros juegos.
 
 ## Kakuro (juego nuevo, categoría Lógica)
-`js/games/kakuro/` (generador.js · index.js · kakuro.css), con el mismo formato que KenKen y Sudoku: tamaño (6×6, 8×8, 10×10) y nivel, notas, deshacer guardado, pista, comprobar, errores automáticos, reto del día (8×8 medio) y 🎨 Apariencia (paleta del tablero, color de las casillas de las sumas y tipo de número). Ayuda propia: al elegir una casilla se muestran las combinaciones posibles de sus dos sumas y se tachan las que ya no encajan.
+`js/games/kakuro/` (generador.js · index.js · kakuro.css), con el mismo formato que Calcudoku y Sudoku: tamaño (6×6, 8×8, 10×10) y nivel, notas, deshacer guardado, pista, comprobar, errores automáticos, reto del día (8×8 medio) y 🎨 Apariencia (paleta del tablero, color de las casillas de las sumas y tipo de número). Ayuda propia: al elegir una casilla se muestran las combinaciones posibles de sus dos sumas y se tachan las que ya no encajan.
 Generador: dibujo con simetría central sin tiras de una casilla (y de 7 como mucho, 5 en 10×10), relleno que favorece 1, 2, 8 y 9 y, si hay dos soluciones, cambia una cifra donde difieren hasta que la solución es única; lo confirma un resolvedor por combinaciones con comprobación exacta de las tiras cortas. El nivel depende de si el resolvedor necesita probar valores. Se genera en un Worker (1-3 s en 10×10). El 12×12 se descartó: tardaba 10-20 s.
 
-**Error corregido en KenKen** (encontrado al pasar las pruebas): si la comprobación de «¿hay otra solución?» se quedaba sin tiempo (1,5 s), el generador daba el panel por bueno sin saber si era único. En móviles lentos un 7×7 podía salir con dos soluciones. Ahora ese panel se descarta y se genera otro.
+**Error corregido en Calcudoku** (encontrado al pasar las pruebas): si la comprobación de «¿hay otra solución?» se quedaba sin tiempo (1,5 s), el generador daba el panel por bueno sin saber si era único. En móviles lentos un 7×7 podía salir con dos soluciones. Ahora ese panel se descarta y se genera otro.
 
 ## Corazones (juego nuevo, categoría Cartas)
 `js/games/corazones/` (motor.js · index.js · corazones.css). Contra tres CPU (Oeste, Norte y Este) con baraja francesa: pase de 3 cartas (izquierda, derecha, enfrente y sin pase, por turnos), salida con el 2 de tréboles, obligación de servir, sin puntos en la primera baza, corazones rotos, dama de picas = 13 y tiro a la luna (los rivales +26 o tú −26). Partidas a 50 o 100 puntos; gana quien menos tenga.
@@ -117,7 +117,7 @@ Física con 400 subpasos por segundo, rozamiento del césped y de la arena, rebo
 - **CPU (3 niveles):** en un Worker calcula el golpe fantasma hacia cada tronera para cada bola legal, simula varias fuerzas y elige el mejor; el nivel cambia cuántos tiros prueba y lo que se desvía al tirar. Con bola en mano, prueba varios sitios.
 - **🎨 Apariencia:** color del tapete, tapete de imagen, bandas, bolas y taco.
 
-## Cifras y Letras (juego nuevo, categoría Palabras · versión 3.2.0)
+## Números y Letras (juego nuevo, categoría Palabras · versión 3.2.0)
 `js/games/cifrasletras/` (motor.js · index.js · cifrasletras.css). Partidas de 4, 6 o 10 rondas que alternan Letras y Cifras, con 30, 45 o 60 segundos (o sin límite), contra la CPU (3 niveles) o en solitario.
 - **Letras:** se piden 9 letras (vocal o consonante, al menos 3 de cada; o 🎲 al azar) con frecuencias del español y la Ñ. La palabra se forma tocando las fichas o con el teclado y se comprueba con el diccionario completo (`core/diccionario.js`: plurales, femeninos y conjugaciones; sin importar las tildes). Cada letra vale un punto y 9 letras, 18. Al final de la ronda se ven las palabras más largas posibles.
 - **Cifras:** 6 números (1-10 dos veces, 25, 50, 75 y 100) y un objetivo de 101 a 999. Se toca un número, una operación y otro número; el resultado pasa a ser una ficha nueva. Divisiones exactas y sin negativos. Exacto 10 puntos, a 5 o menos 7, a 10 o menos 5. Un resolvedor exhaustivo enseña una solución (exacta en ~97 % de los casos) en unos milisegundos.
@@ -125,5 +125,5 @@ Física con 400 subpasos por segundo, rozamiento del césped y de la arena, rebo
 - **Reto del día:** 4 rondas con las mismas letras y cifras para todo el mundo.
 - **🎨 Apariencia:** Fondo de Tablero con los tapetes de imagen (🎲 aleatorio por defecto en este juego), paleta del tablero y 4 estilos de fichas (Concurso, Madera, Pizarra y Del tablero).
 
-## Worms (versión 3.5.0)
+## Guerra de Orugas (versión 3.5.0)
 `js/games/worms/` (motor.js · ia.js · index.js · worms.css), pruebas en `tests/worms.mjs`. El motor no toca el DOM; el terreno es una máscara de bits generada desde una semilla y la partida guardada solo lleva la semilla y la lista de cráteres. Comprobado: 3/6/9/12 gusanos en los 4 mapas sin gusanos enterrados ni flotando, CPU contra CPU termina partidas completas, cuerda que engancha y suelta sin dejar gusanos en el aire, tumbas que se destruyen y guardado/carga validado.

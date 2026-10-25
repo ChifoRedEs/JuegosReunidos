@@ -47,7 +47,7 @@ export async function mount(r, a) {
   hist = new Pila(60, g ? g.hist : []);
   root.innerHTML = `<div id="kkReto"></div>
     <div class="info"><span class="mut" id="kkInfo"></span><span id="kkCrono" aria-label="Tiempo">0:00</span></div>
-    <div class="kk" id="kkTab" role="group" aria-label="Tablero de KenKen"></div>
+    <div class="kk" id="kkTab" role="group" aria-label="Tablero de Calcudoku"></div>
     <div class="msg" id="kkMsg" role="status" aria-live="polite"></div>
     <div class="kpad" id="kkPad"></div>
     <div class="kpad" id="kkAcc" style="--n2:4"><button class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button class="acc" data-ac="undo">↶ Deshacer</button><button class="acc" data-ac="pista">💡 Pista</button><button class="acc" data-ac="comprobar">✔ Comprobar</button></div>${api.barraHtml()}`;
@@ -173,7 +173,7 @@ function clic(e) {
   if (ac === 'notas') { notasOn = !notasOn; pintar(); } else if (ac === 'undo') deshacer(); else if (ac === 'pista') pista(); else if (ac === 'comprobar') comprobar(); else if (ac === 'nuevo') nueva(S.n, S.dif, false, true); else if (ac === 'reto') nueva(RETO.n, RETO.dif, false, true, true); else if (ac === 'aspecto') asp.abrir();
 }
 function reglas() {
-  api.modal('KenKen', `<ul><li>Rellena la cuadrícula con los números del <b>1 al ${S ? S.n : 'N'}</b> sin repetir ninguno en cada fila ni columna (como un Sudoku).</li>
+  api.modal('Calcudoku', `<ul><li>Rellena la cuadrícula con los números del <b>1 al ${S ? S.n : 'N'}</b> sin repetir ninguno en cada fila ni columna (como un Sudoku).</li>
     <li>Las <b>jaulas</b> (bordes gruesos) llevan un número y una operación: los números de la jaula, combinados con esa operación, deben dar ese resultado. En restas y divisiones el orden no importa (se resta el menor al mayor).</li>
     <li>Una jaula con un solo número es una casilla ya resuelta. Los números pueden repetirse dentro de una jaula si están en filas y columnas distintas.</li>
     <li>✏️ <b>Notas</b> para anotar candidatos, ✔ <b>Comprobar</b> marca los errores y 💡 <b>Pista</b> rellena una casilla (con pistas no cuenta el récord).</li>
