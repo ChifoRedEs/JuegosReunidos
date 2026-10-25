@@ -31,6 +31,7 @@ export const JUEGOS = [
   { id: 'ajedrez', nombre: 'Ajedrez', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Reloj, PGN, revisión y CPU de 3 niveles.', cargar: () => import('./games/ajedrez/index.js') },
   { id: 'chinchon', nombre: 'Chinchón', icono: '🀄', color: '#0E7C66', categoria: 'cartas', descripcion: 'Baraja española: liga, cierra y busca el chinchón.', cargar: () => import('./games/chinchon/index.js') },
   { id: 'mus', nombre: 'Mus', icono: '🤝', color: '#B3182B', categoria: 'cartas', descripcion: 'Por parejas: grande, chica, pares, juego y órdago.', cargar: () => import('./games/mus/index.js') },
+  { id: 'quecara', nombre: '¿Qué cara tienes?', icono: '🧐', color: '#E0553D', categoria: 'tablero', descripcion: 'Adivina la cara del rival. 30 caras, CPU o 2 jugadores.', cargar: () => import('./games/quecara/index.js') },
   { id: 'flota', nombre: 'Hundir la Flota', icono: '🚢', color: '#1B4FA8', categoria: 'tablero', descripcion: '6 flotas, de Relámpago 6×6 a Gran armada 12×12.', cargar: () => import('./games/flota/index.js') },
   { id: 'rummy', nombre: 'Rummy de fichas', icono: '🀄', color: '#E0243A', categoria: 'tablero', descripcion: 'Grupos y escaleras de fichas: reorganiza la mesa y quédate sin fichas.', cargar: () => import('./games/rummy/index.js') },
   { id: 'oca', nombre: 'Juego de la Oca', icono: '🦢', color: '#7CA83A', categoria: 'tablero', descripcion: 'De oca a oca y tiro porque me toca. De 2 a 4 jugadores.', cargar: () => import('./games/oca/index.js') },

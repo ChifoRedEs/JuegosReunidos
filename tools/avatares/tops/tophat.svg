@@ -1,0 +1,6 @@
+<svg width="240" height="340" viewBox="0 0 240 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g>
+<title>tops - tophat</title>
+<path d="M40 84L46 -34C46 -44 160 -44 160 -34L166 84Z" fill="$fillColor" stroke="black" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><ellipse cx="103" cy="-34" rx="57" ry="9" fill="black" fill-opacity=".25" stroke="black" stroke-width="4"/><path d="M42 62L166 62L166 84L40 84Z" fill="#D2EFF3" stroke="black" stroke-width="4" stroke-linejoin="round"/><path d="M8 94C8 84 50 78 104 78C158 78 200 84 200 94C200 104 158 108 104 108C50 108 8 104 8 94Z" fill="$fillColor" stroke="black" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+</svg>

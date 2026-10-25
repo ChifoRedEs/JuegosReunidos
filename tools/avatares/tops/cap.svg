@@ -1,0 +1,6 @@
+<svg width="240" height="340" viewBox="0 0 240 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g>
+<title>tops - cap</title>
+<path d="M14 96C8 44 46 14 100 16C150 18 178 52 178 98C150 90 56 92 14 96Z" fill="$fillColor" stroke="black" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M100 18C86 44 84 70 90 92M100 18C116 44 124 70 128 92" stroke="black" stroke-width="3" stroke-opacity=".5" fill="none"/><circle cx="100" cy="17" r="5" fill="$fillColor" stroke="black" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M104 96C130 100 172 100 212 118C204 134 150 118 104 106Z" fill="$fillColor" stroke="black" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M150 104C170 106 192 112 208 120" stroke="black" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+</g>
+</svg>

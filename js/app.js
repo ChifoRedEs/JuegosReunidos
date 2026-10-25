@@ -458,7 +458,8 @@ function vAjustes() {
       <button class="btn danger" id="gBor">Borrar partidas</button></div>
     <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
   <div class="panel"><h3>Sin conexión</h3><p class="note" id="gOff" role="status">Comprobando…</p><div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
-  <div class="panel"><h3>Acerca de</h3><p class="note">Juegos Reunidos · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p></div>
+  <div class="panel"><h3>Acerca de</h3><p class="note">Juegos Reunidos · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p>
+    <p class="note">Créditos: los dibujos de las caras de «¿Qué cara tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
   <p class="version">Juegos Reunidos · versión ${VERSION} · ${new Date(FECHA + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); vAjustes();

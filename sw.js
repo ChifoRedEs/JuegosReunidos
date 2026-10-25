@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-bde6c381a7';
+const VERSION = 'jr-543fbe1bef';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -185,6 +185,14 @@ const ARCHIVOS = [
 './js/games/pokercub/index.js',
 './js/games/pokercub/motor.js',
 './js/games/pokercub/pokercub.css',
+'./js/games/quecara/LICENSE-vue-color-avatar.txt',
+'./js/games/quecara/avatar.js',
+'./js/games/quecara/defecto.js',
+'./js/games/quecara/index.js',
+'./js/games/quecara/motor.js',
+'./js/games/quecara/piezas.js',
+'./js/games/quecara/preguntas.js',
+'./js/games/quecara/quecara.css',
 './js/games/rosco/index.js',
 './js/games/rosco/motor.js',
 './js/games/rosco/palabras.js',
