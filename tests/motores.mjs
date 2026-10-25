@@ -37,6 +37,7 @@ import { generar as generarCw, NIVELES as NCw, celdasDe } from '../js/games/cruc
 import { BANCOS as BCw } from '../js/games/crucigrama/pistas.js';
 import * as BJ from '../js/games/blackjack/motor.js';
 import * as KL from '../js/games/klondike/motor.js';
+import * as SP from '../js/games/spider/motor.js';
 import * as HE from '../js/games/holdem/motor.js';
 import { resolver as resolverKl } from '../js/games/klondike/solver.js';
 import { nuevaPartida as nuevaPz, tirar as tirarPz, mover as moverPz, actual as actualPz } from '../js/games/parchis/reglas.js';
@@ -674,4 +675,19 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   }
   const T = SC.crear(); T.bolsa.pop(); assert.equal(SC.validar(JSON.parse(JSON.stringify(T))), null, 'faltan fichas: no vale');
   ok('Scrabble: 100 fichas con CH/LL/RR, tablero de premios, colocación y puntos, y partidas completas entre CPU de los 3 niveles'); }
+// ---- Spider ----
+{ for (const palos of [1, 2, 4]) { const S = SP.nuevo(palos); assert.equal(S.tab.map(c => c.d.length + c.u.length).join(','), '6,6,6,6,5,5,5,5,5,5'); assert.equal(S.stock.length, 50); assert.ok(SP.validar(JSON.parse(JSON.stringify(S))), palos + ' palos: guardado válido'); }
+  const S = SP.nuevo(1); for (const c of S.tab) { c.d = []; c.u = []; } S.stock = S.stock.slice(0, 0);
+  assert.equal(SP.validar(JSON.parse(JSON.stringify(S))), null, 'faltan cartas: no vale');
+  // una serie K…A en una columna sale sola a las bases y descubre la carta de debajo
+  const T = SP.nuevo(1); T.tab[0] = { d: [], u: [] }; T.tab[1].u = [5]; T.tab[1].d = [];
+  const serie = []; for (let r = 12; r >= 1; r--) serie.push(r); T.tab[0].u = serie; T.tab[2].u = [0]; T.tab[2].d = [];
+  assert.ok(SP.puede(T, 2, 0, 0)); SP.mover(T, 2, 0, 0); assert.deepEqual(T.base, [0]); assert.equal(T.tab[0].u.length, 0);
+  // no se coge un grupo con palos mezclados, y no se reparte con una columna vacía
+  const U = SP.nuevo(2); U.tab[0].u = [12, 13 + 11]; assert.ok(!SP.puedeTomar(U, 0, 0)); assert.ok(SP.puedeTomar(U, 0, 1));
+  U.tab[3] = { d: [], u: [] }; assert.ok(!SP.puedeRepartir(U)); assert.ok(!SP.repartir(U));
+  // 40 partidas de 1 palo jugadas con la pista: el estado guardado siempre es válido y el reparto cuadra
+  let ganadas = 0; for (let k = 0; k < 40; k++) { const V = SP.nuevo(k % 2 ? 2 : 1); let n = 0; while (!SP.gana(V) && n++ < 2500) { const p = SP.pista(V); if (!p || p.tipo === 'vacia') break; if (p.tipo === 'mover') assert.ok(SP.mover(V, p.col, p.idx, p.dest)); else assert.ok(SP.repartir(V)); assert.ok(SP.validar(JSON.parse(JSON.stringify(V)))); } if (SP.gana(V)) ganadas++; }
+  ok(`Spider: 104 cartas, series que salen a las bases, reglas de movimiento y reparto, partidas con la pista siempre válidas (${ganadas} ganadas de 40)`); }
+
 console.log(`\n${n} pruebas correctas`);

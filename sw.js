@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-6e5790b0ee';
+const VERSION = 'jr-ed09e968be';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -210,6 +210,9 @@ const ARCHIVOS = [
 './js/games/sopa/index.js',
 './js/games/sopa/palabras.js',
 './js/games/sopa/sopa.css',
+'./js/games/spider/index.js',
+'./js/games/spider/motor.js',
+'./js/games/spider/spider.css',
 './js/games/sudoku/generador.js',
 './js/games/sudoku/index.js',
 './js/games/sudoku/sudoku.css',
