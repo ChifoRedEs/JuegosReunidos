@@ -1,4 +1,4 @@
-/* Hundir la Flota · colores por 🎨 Apariencia (data-mar, data-barcos en .juego-flota) */
+/* Batalla Naval · colores por 🎨 Apariencia (data-mar, data-barcos en .juego-flota) */
 .juego-flota{--m1:#2F80ED;--m2:#1B4FA8;--ml:rgba(255,255,255,.18);--bc:#6B7A90;--bc2:#46536A;--cabc:var(--mut)}
 .juego-flota[data-mar="tropical"]{--m1:#16C1C8;--m2:#0B8A9A}
 .juego-flota[data-mar="noche"]{--m1:#2A3A78;--m2:#141C40;--ml:rgba(255,255,255,.12)}

@@ -1,4 +1,4 @@
-/* Magnate Tecnológico · tablero 11×11 con los colores de la app (variables --tb-* de base.css según 🎨 Apariencia) */
+/* Magnate Urbano · tablero 11×11 con los colores de la app (variables --tb-* de base.css según 🎨 Apariencia) */
 .juego-magnate{--mt-l:min(calc(100vw - 28px),500px)}             /* ancho real del tablero (main tiene 14px de margen a cada lado) */
 .juego-magnate .mtfichab{width:44px;height:44px;border-radius:50%;border:3px solid var(--c);background:var(--card);font-size:24px;line-height:1;flex:none}
 

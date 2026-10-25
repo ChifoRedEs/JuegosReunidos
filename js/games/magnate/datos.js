@@ -1,4 +1,4 @@
-// Magnate Tecnológico · datos del tablero (fijos: no cambian durante la partida).
+// Magnate Urbano · datos del tablero (fijos: no cambian durante la partida).
 // Los NOMBRES de las casillas están en CASILLAS (más abajo); los textos de las cartas, en NOTICIAS y TENDENCIAS.
 // Las empresas son marcas reales usadas solo como referencia; el juego no tiene relación con ellas.
 // Economía propia: precios, alquileres, costes de oficina e importes de cartas no copian los de ningún otro juego.

@@ -36,7 +36,7 @@ Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (kenken), `tod
 - **3 en raya, Conecta 4 y Ajedrez**: series al mejor de 3 o de 5.
 - **Parchís**: modo por parejas.
 - **Trivial**: 135 preguntas clásicas de tipo test (además de las 450 definiciones).
-- **Hundir la Flota**: flotas Piratas, Gran armada (12×12) y Relámpago (6×6).
+- **Batalla Naval**: flotas Piratas, Gran armada (12×12) y Relámpago (6×6).
 - **Klondike**: repartos siempre con solución y puntuación Vegas con banca.
 - **Hold'em**: partida libre y estadísticas de tus manos.
 - **BlackJack**: contador de cartas Hi-Lo didáctico.
@@ -54,7 +54,7 @@ Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (kenken), `tod
 - Dorsos «(poker)»: el nombre se ha cambiado también en `img/cartas/dorsos/nombres.json`, que es de donde lo lee `tools/generar_barajas.py` (si no, GitHub Actions lo volvería a poner como «adamascado»).
 - Figuras nuevas de la baraja ESP-02 (10, 11 y 12), comprimidas como el resto (240 px, WebP 78).
 
-## Magnate Tecnológico (juego nuevo, categoría Tablero)
+## Magnate Urbano (juego nuevo, categoría Tablero)
 Integrado en `js/games/magnate/` (datos.js · motor.js · index.js · magnate.css) con la API de la app: guardado y validación de partidas, estadísticas, menú ⋯, 🎨 Apariencia (colores del tablero de la app), diálogos en hoja inferior, sonido y vibración globales, y tecla Espacio para tirar.
 
 **Para alejarlo de Monopoly** (ver la nota legal en la conversación): la economía es propia (precios, alquileres, multiplicadores, salario de 220M, fianza de 60M, 30 oficinas y 10 sedes en el banco), las casas y hoteles son «oficinas» y «sede central», y las cartas tienen textos y efectos propios.

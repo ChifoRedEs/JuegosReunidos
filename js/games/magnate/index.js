@@ -1,4 +1,4 @@
-// Magnate Tecnológico · juego de compraventa de empresas tecnológicas (2 a 4 jugadores, personas o CPU).
+// Magnate Urbano · juego de compraventa de empresas tecnológicas (2 a 4 jugadores, personas o CPU).
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
@@ -376,7 +376,7 @@ function textoCasilla(s) {
   return { 0: `Ronda de Inversión: cobras ${SALARIO}M cada vez que pasas.`, 10: 'Sala de Espera: de visita no pasa nada. Aquí esperan los retenidos por la Auditoría.', 20: 'Paraíso Fiscal: si el bote está activado, te lo llevas entero.', 30: 'Auditoría Fiscal: vas directamente a la Sala de Espera, retenido.' }[s.id] || s.nombre;
 }
 function reglas() {
-  api.modal('Magnate Tecnológico', `<ul>
+  api.modal('Magnate Urbano', `<ul>
     <li>Tira los dos dados y avanza. Si caes en una empresa, nube o red libre, puedes comprarla; si no la compras, se subasta (si las subastas están activadas).</li>
     <li>Si caes en una empresa de otro jugador, le pagas el alquiler. Con todo el <b>sector</b> (mismo color) el alquiler básico se duplica y puedes abrir <b>oficinas</b> (hasta 4) y luego la <b>🏢 sede central</b>, que lo multiplican.</li>
     <li>Las <b>nubes</b> ☁️ cobran según cuántas tenga su dueño (${NUBE.alquiler.join(', ')}M) y las <b>redes</b> 📡🛰️, ${RED.veces[0]} veces lo que saques en los dados (${RED.veces[1]} veces si tiene las dos).</li>

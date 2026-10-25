@@ -1,4 +1,4 @@
-// Magnate Tecnológico · reglas. No toca el DOM: habla con la interfaz mediante `h` (hooks, todos asíncronos).
+// Magnate Urbano · reglas. No toca el DOM: habla con la interfaz mediante `h` (hooks, todos asíncronos).
 // Hooks: render, log(html, clase), paso(jugador), dados(a, b), flash(jugador, importe), pregunta(titulo, html, botones) → botón,
 // carta(mazo, texto, auto), comprar(casilla, jugador) → bool, puja(casilla, jugador, actual) → importe, aceptar(a, b, oferta) → bool,
 // gestionar(partida, jugador), fin(ganador, motivo).

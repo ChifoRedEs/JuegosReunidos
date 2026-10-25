@@ -1,4 +1,4 @@
-// Motor de Hundir la Flota (sin DOM, probable con Node).
+// Motor de Batalla Naval (sin DOM, probable con Node).
 // Tablero n×n, casilla i = fila * n + columna (fila 0 = A). Jugador 0 (tú / jugador 1) y jugador 1 (CPU / jugador 2).
 // S.tiros[p][i] = lo que el jugador p sabe del mar RIVAL: 0 sin disparar · 1 agua · 2 tocado · 3 hundido · 4 agua deducida
 // (alrededor de un barco hundido cuando los barcos no pueden tocarse).

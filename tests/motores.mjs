@@ -282,7 +282,7 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
       assert.ok(MU.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); }
   ok('Mus: lances, 8 reyes, recuento de tantos, envites, órdago y 60 partidas completas'); }
-// ---- Hundir la Flota ----
+// ---- Batalla Naval ----
 { const S = FL.crear({ flota: 'espanola', tocar: false });
   assert.ok(FL.colocar(S, 0, 0, 0, false)); assert.ok(!FL.colocar(S, 0, 6, 4, false)); assert.ok(!FL.colocar(S, 0, 6, 12, false)); assert.ok(FL.colocar(S, 0, 6, 15, false)); assert.ok(!FL.colocar(S, 0, 1, 8, false));
   for (const flota of Object.keys(FL.FLOTAS)) for (const tocar of [false, true]) for (let g = 0; g < 12; g++) {
@@ -290,7 +290,7 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivial: partidas co
     let k = 0; while (T.fase === 'jugar' && k++ < 600) { const p = T.turno, i = FL.sugerencia(T, p, ['facil', 'medio', 'dificil'][(g + p) % 3]); assert.ok(FL.disparar(T, p, i)); assert.ok(FL.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); assert.ok(FL.quedan(T, 1 - T.ganador).length === 0); }
   const D = FL.crear({ modo: 'dos', flota: 'rapida' }); FL.alAzar(D, 0); FL.listo(D, 0); assert.equal(D.fase, 'pasar'); FL.continuar(D); assert.equal(D.colocando, 1); FL.alAzar(D, 1); FL.listo(D, 1); FL.continuar(D); assert.equal(D.fase, 'jugar');
-  ok('Hundir la Flota: colocación sin tocarse, 3 flotas, IA, pasar el móvil y partidas completas'); }
+  ok('Batalla Naval: colocación sin tocarse, 3 flotas, IA, pasar el móvil y partidas completas'); }
 // ---- Rummy de fichas ----
 { const f = (c, n, k = 0) => k * 52 + c * 13 + n - 1;
   assert.equal(RM.analizar([f(0, 5), f(1, 5), f(2, 5)]).tipo, 'grupo'); assert.ok(!RM.valida([f(0, 5), f(0, 5, 1), f(2, 5)]));
@@ -470,9 +470,9 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   ok('Arcade: modo Excavar de Bloques, Obstáculos de la Serpiente y niveles propios del Rompe-Ladrillos'); }
 // ---- Flota y Rosco: contenido nuevo ----
 { assert.ok(Object.keys(FL.FLOTAS).length >= 6); for (const L of LRosco) assert.ok(BRosco[L].length >= 16, L);
-  ok('Hundir la Flota: 6 flotas · El Rosco: 16 palabras por letra'); }
+  ok('Batalla Naval: 6 flotas · El Rosco: 16 palabras por letra'); }
 
-// ---- Magnate Tecnológico ----
+// ---- Magnate Urbano ----
 { assert.equal(MTC.length, 40); for (const s of MTC) if (s.g) assert.ok(MTG[s.g]);
   const mudo = { render() {}, log() {}, async paso() {}, async dados() {}, flash() {}, async pregunta(t, x, b) { return b[0]; }, async carta() {}, async comprar() { return true; }, async puja() { return 0; }, async aceptar() { return false; }, async gestionar() {}, async fin() {} };
   let terminadas = 0;
@@ -494,7 +494,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [3], daM: 0, pide: [], pideM: 0 }), 'empresa ajena');
   assert.ok(g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: 10, pide: [], pideM: 0 }));
   assert.equal(validarMT({ ...JSON.parse(JSON.stringify(g)), oficinas: 3 }), null);
-  ok('Magnate Tecnológico: 40 partidas entre CPU (con y sin límite de rondas), guardado de ida y vuelta, pases sin duplicar y tratos validados'); }
+  ok('Magnate Urbano: 40 partidas entre CPU (con y sin límite de rondas), guardado de ida y vuelta, pases sin duplicar y tratos validados'); }
 
 // ---- Diccionario español (juegos de palabras) ----
 { const info = JSON.parse(readFileSync(new URL('../data/diccionario/indice.json', import.meta.url), 'utf8'));

@@ -32,7 +32,7 @@ export const JUEGOS = [
   { id: 'chinchon', nombre: 'Chinchón', icono: '🀄', color: '#0E7C66', categoria: 'cartas', descripcion: 'Baraja española: liga, cierra y busca el chinchón.', cargar: () => import('./games/chinchon/index.js') },
   { id: 'mus', nombre: 'Mus', icono: '🤝', color: '#B3182B', categoria: 'cartas', descripcion: 'Por parejas: grande, chica, pares, juego y órdago.', cargar: () => import('./games/mus/index.js') },
   { id: 'quecara', nombre: '¿Qué cara tienes?', icono: '🧐', color: '#E0553D', categoria: 'tablero', descripcion: 'Adivina la cara del rival. 30 caras, CPU o 2 jugadores.', cargar: () => import('./games/quecara/index.js') },
-  { id: 'flota', nombre: 'Hundir la Flota', icono: '🚢', color: '#1B4FA8', categoria: 'tablero', descripcion: '6 flotas, de Relámpago 6×6 a Gran armada 12×12.', cargar: () => import('./games/flota/index.js') },
+  { id: 'flota', nombre: 'Batalla Naval', icono: '🚢', color: '#1B4FA8', categoria: 'tablero', descripcion: '6 flotas, de Relámpago 6×6 a Gran armada 12×12.', cargar: () => import('./games/flota/index.js') },
   { id: 'rummy', nombre: 'Rummy de fichas', icono: '🀄', color: '#E0243A', categoria: 'tablero', descripcion: 'Grupos y escaleras de fichas: reorganiza la mesa y quédate sin fichas.', cargar: () => import('./games/rummy/index.js') },
   { id: 'oca', nombre: 'Juego de la Oca', icono: '🦢', color: '#7CA83A', categoria: 'tablero', descripcion: 'De oca a oca y tiro porque me toca. De 2 a 4 jugadores.', cargar: () => import('./games/oca/index.js') },
   { id: 'cinquillo', nombre: 'Cinquillo', icono: '5️⃣', color: '#C0392B', categoria: 'cartas', descripcion: 'Empieza el 5 de oros: abre palos y quédate sin cartas.', cargar: () => import('./games/cinquillo/index.js') },
@@ -51,7 +51,7 @@ export const JUEGOS = [
   { id: 'worms', nombre: 'Worms', icono: '🪱', color: '#E0457B', categoria: 'arcade', descripcion: 'Dos ejércitos de gusanos: bazukas, granadas, cuerda ninja y tumbas. De 3 a 12 por equipo.', cargar: () => import('./games/worms/index.js') },
   { id: 'trivial', nombre: 'Trivial', icono: '🧠', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Parchís',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
-  { id: 'magnate', nombre: 'Magnate Tecnológico', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas tecnológicas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
+  { id: 'magnate', nombre: 'Magnate Urbano', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
   { id: 'hotel', nombre: 'Hotel', icono: '🏨', color: '#E0457B', categoria: 'tablero', descripcion: 'El clásico de Milton Bradley: compra terrenos, levanta hoteles por fases, abre entradas y cobra las noches. Tablero 3D.', cargar: () => import('./games/hotel/index.js') },
 ];
 

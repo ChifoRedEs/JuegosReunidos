@@ -1,4 +1,4 @@
-// Vista 3D de Hundir la Flota (Three.js): mar con barcos en relieve, chapoteos, fuego y barcos hundidos.
+// Vista 3D de Batalla Naval (Three.js): mar con barcos en relieve, chapoteos, fuego y barcos hundidos.
 // Solo dibuja el tablero grande (colocar tu flota / disparar al mar enemigo); el juego le pasa los datos y recibe los toques.
 //   const V = await crearFlota3D(contenedor, { alCelda(i) })
 //   V.pintar({ n, barcos: [{ k, celdas, len, v, hundido, marcado }], tiros: [0 libre|1 agua|2 tocado|3 hundido|4 deducida], ult, pista, etiquetas })
@@ -8,7 +8,7 @@ import { T, crearEscena, lienzo, textura, emojiTextura, suave } from '../../core
 
 export async function crearFlota3D(cont, o = {}) {
   const E = crearEscena(cont, { fov: 36, pol: .8, polMin: .2, polMax: 1.25, radio: 6.4, margen: 1.6, distMin: 6, distMax: 34, sombraRadio: 9, sol: { pos: [-4, 12, 7], int: 2.1 }, hemi: { int: 1.9 }, sueloY: -.4,
-    etiqueta: 'Tablero de Hundir la flota en 3D: toca una casilla; arrastra para girar la vista' });
+    etiqueta: 'Tablero de Batalla Naval en 3D: toca una casilla; arrastra para girar la vista' });
   const V = { E }, raiz = new T.Group(); E.escena.add(raiz);
   const mAgua = [new T.MeshStandardMaterial({ roughness: .25, metalness: .05 }), new T.MeshStandardMaterial({ roughness: .25, metalness: .05 })];
   const mCaja = new T.MeshStandardMaterial({ roughness: .6 }), mCasco = new T.MeshStandardMaterial({ roughness: .45, metalness: .15 }), mCabina = new T.MeshStandardMaterial({ roughness: .5, metalness: .1 });

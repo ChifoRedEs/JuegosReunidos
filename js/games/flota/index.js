@@ -246,7 +246,7 @@ function teclado(e) {
   if (e.key === 'r' || e.key === 'R') { vertical = !vertical; pintar(); }
 }
 function reglas() {
-  api.modal('Hundir la Flota', `<ul><li>Cada jugador coloca su flota en secreto en su tablero. Los barcos van en horizontal o vertical${cfg.tocar ? '' : ' y, si eliges «No se tocan», no pueden tocarse ni en diagonal'}.</li>
+  api.modal('Batalla Naval', `<ul><li>Cada jugador coloca su flota en secreto en su tablero. Los barcos van en horizontal o vertical${cfg.tocar ? '' : ' y, si eliges «No se tocan», no pueden tocarse ni en diagonal'}.</li>
     <li><b>Colocar</b>: elige un barco abajo, decide ↔️/↕️ y toca la casilla de la proa (si no cabe así, se prueba girado). Toca un barco colocado para moverlo, o usa 🎲 Al azar.</li>
     <li><b>Disparar</b>: toca una casilla del mar enemigo. Verás <b>agua</b> (punto), <b>tocado</b> (🔥) o <b>hundido</b> (barco a la vista). Con «Vuelves a disparar», si aciertas sigues tirando.</li>
     <li>Cuando hundes un barco y no se pueden tocar, sus casillas vecinas se marcan solas como agua.</li>
