@@ -130,8 +130,8 @@ function armar() {
   root.innerHTML = `<div class="skcab"><b id="skTit"></b><span id="skCont"></span></div>
     <div id="skTab" role="application" aria-label="Almacén: usa las flechas o desliza el dedo"></div>
     <div class="msg" id="skMsg" role="status" aria-live="polite"></div>
-    <div class="skctl"><div class="skdpad"><button class="btn" data-dir="arriba" aria-label="Arriba">▲</button><button class="btn" data-dir="izquierda" aria-label="Izquierda">◀</button><button class="btn" data-dir="abajo" aria-label="Abajo">▼</button><button class="btn" data-dir="derecha" aria-label="Derecha">▶</button></div>
-      <div class="skacc"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="reiniciar">⟲ Reiniciar</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="menu">☰ Niveles</button></div></div>
+    <div class="skctl"><div class="skdpad"><button class="btn" data-dir="izquierda" aria-label="Izquierda">◀</button><button class="btn" data-dir="arriba" aria-label="Arriba">▲</button><button class="btn" data-dir="abajo" aria-label="Abajo">▼</button><button class="btn" data-dir="derecha" aria-label="Derecha">▶</button></div>
+      <div class="skacc"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="reiniciar">⟲ Reiniciar</button></div></div>
     ${api.barraHtml()}`;
   cerrar3D(); modo3d = quiere3D();
   const tab = $('#skTab');
@@ -260,7 +260,6 @@ function clic(e) {
   if (d.nivel != null) return nivelCampana(+d.nivel);
   const a = d.ac;
   if (a === 'deshacer') deshacer(); else if (a === 'reiniciar') reiniciar(); else if (a === 'pista') pista();
-  else if (a === 'menu') { clearTimeout(andando); andando = null; elegirModo(S && S.modo === 'campana' ? 'campana' : cfg.modo); }
   else if (a === 'volver') armar(); else if (a === 'generar') generado(cfg.tam); else if (a === 'reto') reto();
   else if (a === 'siguiente') nivelCampana(S.nivel + 1); else if (a === 'aspecto') asp.abrir();
 }

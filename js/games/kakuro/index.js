@@ -52,11 +52,10 @@ export async function mount(r, a) {
   root.innerHTML = `<div id="kaReto"></div>
     <div class="info"><span class="mut" id="kaInfo"></span><span id="kaCrono" aria-label="Tiempo">0:00</span></div>
     <div class="ka" id="kaTab" role="group" aria-label="Tablero de Kakuro"></div>
-    <div class="kacomb" id="kaComb" aria-live="polite"></div>
     <div class="msg" id="kaMsg" role="status" aria-live="polite"></div>
     <div class="kpad" id="kaPad" style="--n2:5"></div>
     <div class="kpad" id="kaAcc" style="--n2:4"><button class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button class="acc" data-ac="undo">↶ Deshacer</button><button class="acc" data-ac="pista">💡 Pista</button><button class="acc" data-ac="comprobar">✔ Comprobar</button></div>
-    <div class="bar" style="justify-content:center"></div>${api.barraHtml()}`;
+    <div class="kacomb" id="kaComb" aria-live="polite"></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => nueva(S.n, S.dif, false, true),

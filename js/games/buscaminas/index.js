@@ -1,3 +1,4 @@
+import { crearFlotante } from '../../core/flotante.js';
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
@@ -6,7 +7,7 @@ import { NIVELES, LIMITES, maxMinas, medidas, nuevo, abrir, acorde, bandera, pis
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'Personalizado' };
 const RETO = 'medio';
 const MINAS = { bomba: '💣', calavera: '☠️', pez: '🐡', volcan: '🌋' }, BANDERAS = { bandera: '🚩', estrella: '⭐', corazon: '❤️', pirata: '🏴‍☠️' };
-let S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false;
+let flot = null, S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false;
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -48,11 +49,12 @@ export async function mount(r, a) {
   S = g ? { ...g } : { ...nuevo(nivel, dims()), nivel, t: 0, pistas: 0, reg: false, sa: api.pref('sa', true) };
   cache = crearCache();
   root.innerHTML = `<div id="bmReto"></div>
-    <div class="bar"><span class="lbl">Al tocar</span><div class="seg"><button class="btn" data-modo="abrir">👆 Abrir</button><button class="btn" data-modo="bandera">🚩 Bandera</button></div></div>
     <div class="bmtop"><div class="bmc" id="bmMinas" aria-label="Minas restantes">000</div><button class="bmf" id="bmCara" data-ac="nueva" aria-label="Nueva partida">😀</button><div class="bmc t" id="bmT" aria-label="Tiempo">000</div></div>
     <div class="bm" id="bmTab" role="group" aria-label="Campo de minas"></div>
     <div class="msg" id="bmMsg" role="status" aria-live="polite"></div>
-    <div class="bar"><button class="btn" data-ac="pista">💡 Pista</button></div>${api.barraHtml()}`;
+${api.barraHtml()}`;
+  flot = crearFlotante(api, { ancla: $('#bmTab'), raiz: root, botones: [{ id: 'abrir', texto: '👆 Abrir' }, { id: 'bandera', texto: '🚩 Bandera' }, { id: 'pista', texto: '💡 Pista' }],
+    alClic: id => { if (id === 'pista') pista(); else { modo = id; pintar(); } } });
   root.addEventListener('click', clic);
   const tab = $('#bmTab');
   tab.addEventListener('pointerdown', pDown); tab.addEventListener('pointerup', pUp); tab.addEventListener('pointercancel', pCancel); tab.addEventListener('pointerleave', pCancel);
@@ -69,7 +71,7 @@ export async function mount(r, a) {
 export function unmount() {
   if (S && crono) { S.t = crono.s; guardar(); }
   if (crono) crono.detener();
-  clearTimeout(pstT); clearTimeout(press && press.lp);
+  clearTimeout(pstT); clearTimeout(press && press.lp); if (flot) { flot.destruir(); flot = null; }
   if (root) root.removeEventListener('click', clic);
   S = null; crono = null; cel = []; asp = null; press = null;
 }
@@ -151,7 +153,7 @@ function pintar() {
   $('#bmMinas').textContent = pad3(S.m - banderas(S));
   pintarTiempo();
   $('#bmCara').textContent = fin === 'gana' ? '😎' : fin === 'pierde' ? '😵' : pulsando ? '😮' : '😀';
-  root.querySelectorAll('[data-modo]').forEach(b => b.classList.toggle('on', b.dataset.modo === modo));
+  if (flot) { flot.marcar('abrir', modo === 'abrir'); flot.marcar('bandera', modo === 'bandera'); flot.activar('pista', !fin); }
   const m = $('#bmMsg'); m.className = 'msg' + (fin === 'gana' ? ' win' : fin === 'pierde' ? ' err' : '');
   m.textContent = fin === 'gana' ? `¡Despejado en ${fmtTiempo(S.t)}!` : fin === 'pierde' ? '¡Boom! Toca la carita para jugar otra vez.' : pst ? (pst.tipo === 'mina' ? 'Pista: aquí hay una mina.' : 'Pista: esta casilla es segura.') : modo === 'abrir' ? 'Toca para abrir · mantén pulsado para poner bandera.' : 'Toca para poner bandera · mantén pulsado para abrir.';
 }

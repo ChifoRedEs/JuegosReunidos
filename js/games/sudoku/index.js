@@ -7,7 +7,7 @@ import { PARES, candidatos, generar } from './generador.js';
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', experto: 'Experto' };
 const NIVEL_RETO = 'dificil';
 const MAX_DESHACER = 60;                                       // pasos de deshacer que se guardan con la partida
-let asp = null, S = null, api = null, cel = [], hist = null, crono = null, notasOn = false, ocupado = false, onKey = null, rootEl = null;
+let malas = new Set(), asp = null, S = null, api = null, cel = [], hist = null, crono = null, notasOn = false, ocupado = false, onKey = null, rootEl = null;
 const POP = m => { let n = 0; while (m) { n += m & 1; m >>= 1; } return n; };
 
 /* ---------- validación / migración (también la usa la importación) ---------- */
@@ -39,7 +39,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
   api = a; rootEl = root; asp = api.aspecto([grupoFondo('#sdTab'), grupoTablero(), { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }, { id: 'color', nombre: 'De colores', sw: ['#E5383B', '#F77F00', '#2BA84A', '#2F6BFF', '#7A4DFF'] }] }]);
-  notasOn = false; ocupado = false;
+  notasOn = false; ocupado = false; malas = new Set();
   await api.css(new URL('./sudoku.css', import.meta.url));
   const guardado = api.cargar();
   S = guardado ? { ...guardado, sel: -1, done: completo(guardado) } : null;
@@ -50,7 +50,7 @@ export async function mount(root, a) {
     <div class="sd" id="sdTab" role="group" aria-label="Tablero de Sudoku">${Array.from({ length: 81 }, (_, i) => `<button type="button" data-i="${i}"></button>`).join('')}</div>
     <div class="msg" id="sdMsg" role="status" aria-live="polite"></div>
     <div class="pad" id="sdPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-n="${n}" aria-label="Poner ${n}">${n}<small></small></button>`).join('')}<button type="button" data-n="0" aria-label="Borrar">⌫</button></div>
-    <div class="pad" id="sdAcc"><button type="button" class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button type="button" class="acc" data-ac="undo">↶ Deshacer</button><button type="button" class="acc" data-ac="pista">💡 Pista</button></div>${api.barraHtml()}`;
+    <div class="pad pad4" id="sdAcc"><button type="button" class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button type="button" class="acc" data-ac="undo">↶ Deshacer</button><button type="button" class="acc" data-ac="pista">💡 Pista</button><button type="button" class="acc" data-ac="comprobar">✔ Comprobar</button></div>${api.barraHtml()}`;
   cel = [...root.querySelectorAll('#sdTab button')];
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
@@ -92,14 +92,14 @@ async function nuevo(nivel, forzar = false, reto = false) {
   const fecha = api.reto.fecha();
   const { sol, cur } = reto ? api.reto.generar(() => generar(nivel)) : generar(nivel);   // el reto: mismo tablero para todos
   S = { sol, cur, given: cur.map(v => v > 0), notas: new Array(81).fill(0), level: nivel, t: 0, pistas: 0, sel: -1, done: false, reto: reto ? fecha : null };
-  hist.vaciar(); ocupado = false;
+  hist.vaciar(); malas = new Set(); ocupado = false;
   crono = new Cronometro(crono.alTick, 0); arrancar();
   $('#sdCrono').textContent = '0:00';
   pintar(); guardar();
 }
 function reiniciar() {
   if (!S || S.done || !api.confirmar('¿Borrar todo lo que has escrito en este tablero?')) return;
-  push(); S.cur = S.cur.map((v, i) => S.given[i] ? v : 0); S.notas.fill(0); pintar(); guardar();
+  push(); S.cur = S.cur.map((v, i) => S.given[i] ? v : 0); S.notas.fill(0); malas = new Set(); pintar(); guardar();
 }
 function guardar() {
   if (!S) return;
@@ -116,7 +116,7 @@ function poner(v) {
     push(); S.notas[i] ^= 1 << v;
   } else {
     if (S.cur[i] === v) return;
-    push(); S.cur[i] = v; S.notas[i] = 0;
+    push(); S.cur[i] = v; S.notas[i] = 0; malas.delete(i);
     if (v) for (const j of PARES[i]) S.notas[j] &= ~(1 << v);      // quita ese candidato en fila, columna y caja
     api.sonido(v ? 'click' : 'mover');
   }
@@ -125,7 +125,12 @@ function poner(v) {
 function deshacer() {
   if (!S || S.done) return;
   const h = hist.pop(); if (!h) { api.aviso('Nada que deshacer'); return; }
-  S.cur = h.cur; S.notas = h.notas; pintar(); guardar();
+  S.cur = h.cur; S.notas = h.notas; malas = new Set(); pintar(); guardar();
+}
+function comprobar() {
+  if (!S || S.done) return;
+  malas = new Set(); for (let i = 0; i < 81; i++) if (!S.given[i] && S.cur[i] && S.cur[i] !== S.sol[i]) malas.add(i);
+  api.aviso(malas.size ? `${malas.size} casilla${malas.size > 1 ? 's' : ''} incorrecta${malas.size > 1 ? 's' : ''}` : '¡Todo lo escrito es correcto!'); api.sonido(malas.size ? 'error' : 'ok'); pintar();
 }
 function pista() {
   if (!S || S.done) return;
@@ -137,7 +142,7 @@ function pista() {
     if (!mejor.length) return;
     i = mejor[Math.random() * mejor.length | 0];
   }
-  push(); S.cur[i] = S.sol[i]; S.notas[i] = 0; for (const j of PARES[i]) S.notas[j] &= ~(1 << S.sol[i]);
+  push(); S.cur[i] = S.sol[i]; S.notas[i] = 0; malas.delete(i); for (const j of PARES[i]) S.notas[j] &= ~(1 << S.sol[i]);
   S.sel = i; S.pistas++; api.sonido('ok'); pintar(); guardar();
 }
 
@@ -156,7 +161,7 @@ function pintar() {
     const v = S.cur[i]; let c = S.given[i] ? 'g' : 'u';
     if (S.sel >= 0 && i !== S.sel && PARES[S.sel].includes(i)) c += ' p';
     if (sv && v === sv) c += ' m';
-    if (conflicto(S, i)) c += ' x'; else if (errores && v && !S.given[i] && v !== S.sol[i]) c += ' e';
+    if (conflicto(S, i)) c += ' x'; else if (v && !S.given[i] && v !== S.sol[i] && (errores || malas.has(i))) c += ' e';
     if (i === S.sel) c += ' s';
     const b = cel[i]; b.className = c;
     if (v) { if (b.dataset.k !== 'v' + v) { b.textContent = v; b.dataset.k = 'v' + v; b.dataset.d = v; } }
@@ -190,6 +195,7 @@ function clic(e) {
   if (ac === 'notas') { notasOn = !notasOn; pintar(); }
   else if (ac === 'undo') deshacer();
   else if (ac === 'pista') pista();
+  else if (ac === 'comprobar') comprobar();
   else if (ac === 'nuevo') nuevo(S.level);
   else if (ac === 'reto') nuevo(NIVEL_RETO, false, true);
   else if (ac === 'aspecto') asp.abrir();
@@ -216,6 +222,7 @@ function reglas() {
     <li><b>Reto del día</b>: cada día hay un tablero igual para todo el mundo. Completarlo cuenta para los 🏅 logros.</li>
     <li>El historial de <b>deshacer</b> se guarda con la partida: puedes cerrar la app y seguir deshaciendo al volver.</li>
     <li><b>Notas</b>: anota candidatos a lápiz; al poner un número se borran solos en su fila, columna y caja.</li>
+    <li><b>Comprobar</b> marca en rojo las casillas escritas que no son correctas (se quitan al seguir jugando).</li>
     <li>La <b>Pista</b> rellena la casilla elegida (o la más fácil si no hay ninguna). Con pistas no cuenta el récord de tiempo.</li>
     <li>El número pequeño de cada tecla indica cuántos te quedan por colocar.</li>
     <li>Teclado: 1-9, Borrar, flechas, <kbd>N</kbd> notas, <kbd>Z</kbd> deshacer.</li></ul>`);

@@ -36,15 +36,11 @@
 .juego-sokoban .skjug span{display:block;transition:transform .12s}
 .juego-sokoban .skjug.derecha span{transform:scaleX(-1)}
 .juego-sokoban .skjug{display:grid;place-items:center;font-size:clamp(18px,calc(80vw / var(--w) * .62),34px);line-height:1;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
-.juego-sokoban .skctl{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px}
-.juego-sokoban .skdpad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,46px);gap:4px}
-.juego-sokoban .skdpad .btn{min-height:0;padding:0;font-size:18px}
-.juego-sokoban .skdpad [data-dir="arriba"]{grid-column:2}
-.juego-sokoban .skdpad [data-dir="izquierda"]{grid-column:1;grid-row:2}
-.juego-sokoban .skdpad [data-dir="abajo"]{grid-column:2;grid-row:2}
-.juego-sokoban .skdpad [data-dir="derecha"]{grid-column:3;grid-row:2}
-.juego-sokoban .skacc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.juego-sokoban .skacc .btn{min-height:42px;padding:6px 10px;font-size:14px}
+.juego-sokoban .skctl{display:flex;flex-direction:column;gap:8px;width:min(100%,380px);margin:8px auto 0}
+.juego-sokoban .skdpad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.juego-sokoban .skdpad .btn{min-height:52px;padding:0;font-size:20px}
+.juego-sokoban .skacc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.juego-sokoban .skacc .btn{min-height:44px;padding:6px 4px;font-size:14px;white-space:nowrap}
 .juego-sokoban .skniveles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:8px 0}
 .juego-sokoban .sknv{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
 .juego-sokoban .sknv b{font:800 22px/1 'Baloo 2',system-ui,sans-serif}

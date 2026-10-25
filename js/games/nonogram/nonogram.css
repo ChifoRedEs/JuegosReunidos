@@ -1,4 +1,4 @@
-.ngwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ngwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 10px 0 4px}
 .ng{display:grid;grid-template-columns:auto repeat(var(--n),var(--cs));margin:10px auto;width:max-content;font-size:var(--fs);font-weight:800;user-select:none;-webkit-user-select:none;color:var(--tb-ink)}
 .ng .cc{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:3px;line-height:1.15}
 .ng .rc{display:flex;gap:4px;justify-content:flex-end;align-items:center;padding-right:6px;white-space:nowrap}
@@ -20,3 +20,4 @@
 .juego-nonogram[data-forma="circulo"] .ng .c.f::after{border-radius:50%}
 .juego-nonogram[data-forma="estrella"] .ng .c.f::after{border-radius:0;inset:4%;box-shadow:none;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
 .juego-nonogram[data-forma="corazon"] .ng .c.f::after{border-radius:0;inset:6%;box-shadow:none;clip-path:polygon(50% 92%,10% 55%,2% 35%,10% 14%,28% 6%,42% 12%,50% 24%,58% 12%,72% 6%,90% 14%,98% 35%,90% 55%)}
+.juego-nonogram .msg:empty{display:none}

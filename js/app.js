@@ -10,6 +10,7 @@ import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION, FECHA } from './version.js';
 
+const cabTxt = t => { const e = document.getElementById('titulotxt'); if (e) e.textContent = t; };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), btnAtras = $('#atras'), nav = $('#nav');
 const RUTAS = [
@@ -329,7 +330,7 @@ async function render() {
 }
 async function abrirJuego(id, t) {
   const j = JUEGOS.find(x => x.id === id);
-  nombreVista = j.nombre; btnAtras.hidden = false;
+  nombreVista = j.nombre; cabTxt(j.nombre); btnAtras.hidden = false;
   app.innerHTML = '<p class="note">Cargando…</p>';
   let mod;
   await cargarBarajas();                       // índice de barajas/dorsos de imagen (no falla: sin él solo salen las cartas dibujadas)
@@ -372,7 +373,7 @@ function elegirJuego(gid) {
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio(filtro = null) {
   const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
-  nombreVista = nombreFiltro || 'Juegos Reunidos';
+  nombreVista = nombreFiltro || 'Juegos Reunidos'; cabTxt('Juegos Reunidos');
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
   const grupos = cats.map(([k, n]) => {
     const es = entradas(k), js = JUEGOS.filter(j => j.categoria === k);
@@ -386,7 +387,7 @@ function vInicio(filtro = null) {
 
 /* ---------- estadísticas ---------- */
 function vStats() {
-  nombreVista = 'Estadísticas';
+  nombreVista = 'Estadísticas'; cabTxt('Juegos Reunidos');
   const T = stats.todas();
   revisarLogros();
   const G = logros.conseguidos(), defs = logros.definiciones(CAT_IDS), nG = defs.filter(d => G[d.id]).length;
@@ -442,7 +443,7 @@ async function estadoSinConexion() {
   } catch { el.textContent = '⚠️ No se pudo comprobar el modo sin conexión.'; }
 }
 function vAjustes() {
-  nombreVista = 'Ajustes';
+  nombreVista = 'Ajustes'; cabTxt('Juegos Reunidos');
   const A = aj.ajustes();
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="btn ${A[k] === v ? 'on' : ''}" data-set="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   app.innerHTML = `

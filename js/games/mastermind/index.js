@@ -81,7 +81,7 @@ function setup() {
     <div class="bar"><span class="lbl">Repetir</span>${seg('rep', [[true, 'Sí'], [false, 'No']])}</div>
     <div class="bar"><span class="lbl">Intentos</span>${seg('max', M.MAXS.map(n => [n, n]))}</div>` : `<p class="note">${cfg.pos} bolas · ${cfg.col} colores · ${cfg.rep ? 'se pueden repetir' : 'sin repetir colores'} · ${cfg.max} intentos</p>`}
     ${cfg.modo === 'adivinar' && rec ? `<p class="note">🏆 Tu mejor marca aquí: <b>${rec.n}</b> ${rec.n === 1 ? 'intento' : 'intentos'} · ${fmt(rec.t)}</p>` : ''}
-    <div class="bar"><button class="btn on" data-ac="jugar">▶️ Jugar</button>${S && !S.done ? '<button class="btn" data-ac="volver">Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    <div class="bar"><button class="btn on" data-ac="jugar">▶️ Jugar</button>${S && !S.done ? '<button class="btn" data-ac="volver">Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
 }
 function jugar() {
   api.setPref('cfg', cfg);

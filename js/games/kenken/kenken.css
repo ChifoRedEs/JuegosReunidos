@@ -26,3 +26,4 @@
 .kpad button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tb-line)}
 .kpad .acc{font:800 14px Nunito,sans-serif;color:var(--ink)}
 .kpad .acc.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
+.kpad .acc{padding:8px 2px;font-size:13.5px;line-height:1.15;white-space:nowrap}

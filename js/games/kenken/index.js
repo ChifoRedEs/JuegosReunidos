@@ -50,7 +50,7 @@ export async function mount(r, a) {
     <div class="kk" id="kkTab" role="group" aria-label="Tablero de KenKen"></div>
     <div class="msg" id="kkMsg" role="status" aria-live="polite"></div>
     <div class="kpad" id="kkPad"></div>
-    <div class="kpad" id="kkAcc" style="--n2:3"><button class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button class="acc" data-ac="undo">↶ Deshacer</button><button class="acc" data-ac="pista">💡 Pista</button><button class="acc" data-ac="comprobar">✔ Comprobar</button></div>${api.barraHtml()}`;
+    <div class="kpad" id="kkAcc" style="--n2:4"><button class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button class="acc" data-ac="undo">↶ Deshacer</button><button class="acc" data-ac="pista">💡 Pista</button><button class="acc" data-ac="comprobar">✔ Comprobar</button></div>${api.barraHtml()}`;
   root.addEventListener('click', clic);
   onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => nueva(S.n, S.dif, false, true),

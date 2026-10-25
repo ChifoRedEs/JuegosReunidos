@@ -125,3 +125,16 @@ button.ficha{display:flex}
 .ap-cuerpo{padding:4px 12px 12px}
 .ap-cuerpo.ap-rej{margin:0}
 @media(max-width:375px){.top h1{font-size:19px}.top h1 .logo{width:24px;height:24px;border-radius:7px;margin:0 4px;vertical-align:-6px}}
+
+/* ---------- menú flotante común (core/flotante.js) ---------- */
+.flotante{position:fixed;z-index:40;width:min(calc(100vw - 12px),420px);background:color-mix(in srgb,var(--card) 94%,transparent);border:2px solid var(--line);border-radius:18px;box-shadow:0 12px 30px rgba(20,15,60,.35);padding:0 8px 8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);user-select:none;-webkit-user-select:none;transition:opacity .2s}
+.flotante.mov{box-shadow:0 20px 44px rgba(20,15,60,.5);opacity:.9}
+.flasa{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0 5px;cursor:grab;touch-action:none}
+.flotante.mov .flasa{cursor:grabbing}
+.flasa span{width:40px;height:5px;border-radius:99px;background:var(--line)}
+.flasa small{font-size:11px;font-weight:800;color:var(--mut)}
+.flbtns{display:grid;grid-template-columns:repeat(var(--nb),1fr);gap:6px}
+.flbtns .btn{padding:8px 2px;font-size:13.5px;line-height:1.15;min-height:44px;white-space:nowrap;touch-action:manipulation}
+.flbtns .btn.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
+.flbtns .btn:disabled{opacity:.4}
+.flhueco{width:100%}
