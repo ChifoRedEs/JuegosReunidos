@@ -38,6 +38,8 @@ import { BANCOS as BCw } from '../js/games/crucigrama/pistas.js';
 import * as BJ from '../js/games/blackjack/motor.js';
 import * as KL from '../js/games/klondike/motor.js';
 import * as SP from '../js/games/spider/motor.js';
+import * as FC from '../js/games/freecell/motor.js';
+import { resolver as resolverFc } from '../js/games/freecell/solver.js';
 import * as HE from '../js/games/holdem/motor.js';
 import { resolver as resolverKl } from '../js/games/klondike/solver.js';
 import { nuevaPartida as nuevaPz, tirar as tirarPz, mover as moverPz, actual as actualPz } from '../js/games/parchis/reglas.js';
@@ -689,5 +691,18 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   // 40 partidas de 1 palo jugadas con la pista: el estado guardado siempre es válido y el reparto cuadra
   let ganadas = 0; for (let k = 0; k < 40; k++) { const V = SP.nuevo(k % 2 ? 2 : 1); let n = 0; while (!SP.gana(V) && n++ < 2500) { const p = SP.pista(V); if (!p || p.tipo === 'vacia') break; if (p.tipo === 'mover') assert.ok(SP.mover(V, p.col, p.idx, p.dest)); else assert.ok(SP.repartir(V)); assert.ok(SP.validar(JSON.parse(JSON.stringify(V)))); } if (SP.gana(V)) ganadas++; }
   ok(`Spider: 104 cartas, series que salen a las bases, reglas de movimiento y reparto, partidas con la pista siempre válidas (${ganadas} ganadas de 40)`); }
+
+// ---- Carta Blanca (FreeCell) ----
+{ const S = FC.nuevo(); assert.equal(S.tab.map(c => c.length).join(','), '7,7,7,7,6,6,6,6'); assert.ok(FC.validar(JSON.parse(JSON.stringify(S))));
+  const mala = JSON.parse(JSON.stringify(S)); mala.tab[0].pop(); assert.equal(FC.validar(mala), null, 'faltan cartas: no vale');
+  // tamaño de grupo: (libres + 1) · 2^columnas vacías
+  const T = FC.nuevo(); T.tab[0] = []; T.tab[1] = []; T.cells[0] = 7; assert.equal(FC.maxGrupo(T, false), 4 * 4); assert.equal(FC.maxGrupo(T, true), 4 * 2);
+  // una carta sube a la base y sube sola si es segura
+  const U = FC.nuevo(); for (const c of U.tab) c.length = 0; U.fund = [[], [], [], []]; U.tab[0] = [26, 0]; U.cells = [null, null, null, null]; // 2♦ bajo A♠… (ids parciales: solo para reglas)
+  assert.ok(FC.puede(U, { t: 'tab', col: 0, idx: 1 }, { t: 'fund' })); assert.ok(!FC.puede(U, { t: 'tab', col: 0, idx: 0 }, { t: 'fund' }));
+  assert.ok(FC.seguraParaSubir(U, 0));
+  let res = 0, n = 12; for (let k = 0; k < n; k++) { const V = FC.nuevo(), r = resolverFc(V, { ms: 3000 }); if (r.r === 'ganable') { res++; for (const p of r.pasos) assert.ok(FC.mover(V, p.o, p.a), 'paso válido'); assert.ok(FC.gana(V), 'la solución gana'); assert.ok(FC.validar(JSON.parse(JSON.stringify(V)))); } }
+  assert.ok(res >= n - 2, 'el solver resuelve casi todos los repartos');
+  ok(`Carta Blanca: 52 cartas en 8 columnas, tamaño de grupo, subida segura, y el solver resuelve ${res}/${n} repartos con pasos válidos`); }
 
 console.log(`\n${n} pruebas correctas`);

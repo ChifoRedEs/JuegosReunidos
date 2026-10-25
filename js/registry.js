@@ -15,6 +15,7 @@ export const JUEGOS = [
   { id: 'blackjack', nombre: 'BlackJack', icono: '🃏', color: '#12A05C', categoria: 'cartas', descripcion: 'Consejo de estrategia y contador Hi-Lo.', cargar: () => import('./games/blackjack/index.js') },
   { id: 'klondike', nombre: 'Klondike', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Siempre con solución y modo Vegas.', cargar: () => import('./games/klondike/index.js') },
   { id: 'spider', nombre: 'Spider', icono: '🕷️', color: '#7A3FB0', categoria: 'cartas', descripcion: 'Solitario de 104 cartas: forma 8 series de K a A. Con 1, 2 o 4 palos.', cargar: () => import('./games/spider/index.js') },
+  { id: 'freecell', nombre: 'Carta Blanca', icono: '🃏', color: '#2B7A9B', categoria: 'cartas', descripcion: 'FreeCell: 4 casillas libres, todas las cartas a la vista y siempre con solución.', cargar: () => import('./games/freecell/index.js') },
   { id: 'holdem', nombre: "Texas Hold'em", icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: 'Torneo o partida libre contra bots.', cargar: () => import('./games/holdem/index.js') },
   { id: 'pokercub', nombre: 'Póker cubierto', icono: '♣️', color: '#7B3FC4', categoria: 'cartas', descripcion: 'Cinco cartas tapadas, descarte y dos rondas de apuestas.', cargar: () => import('./games/pokercub/index.js') },
   { id: 'corazones', nombre: 'Corazones', icono: '❤️', color: '#D63A5E', categoria: 'cartas', descripcion: 'Evita los corazones y la dama de picas… o llévatelos todos.', cargar: () => import('./games/corazones/index.js') },
@@ -54,7 +55,7 @@ export const JUEGOS = [
 // Juegos agrupados: en Inicio salen como UNA ficha y, al pulsarla, una ventana pregunta a cuál se quiere jugar.
 // Cada juego conserva su propio id, su partida guardada y sus estadísticas (no se mezclan).
 export const GRUPOS = [
-  { id: 'solitarios', nombre: 'Solitarios', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Klondike (siempre con solución y modo Vegas) o Spider (104 cartas, de 1 a 4 palos).', juegos: ['klondike', 'spider'] },
+  { id: 'solitarios', nombre: 'Solitarios', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Klondike (siempre con solución y modo Vegas), Spider (104 cartas, de 1 a 4 palos) o Carta Blanca (FreeCell).', juegos: ['klondike', 'spider', 'freecell'] },
   { id: 'parchis-oca', nombre: 'Parchís y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Parchís y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
   { id: 'ajedrez-damas', nombre: 'Ajedrez y Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
   { id: 'poker', nombre: 'Poker & BlackJack', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em, Póker cubierto o BlackJack contra la banca.", juegos: ['holdem', 'pokercub', 'blackjack'] },
