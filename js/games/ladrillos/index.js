@@ -2,6 +2,7 @@ import { $, esc } from '../../core/dom.js';
 import * as L from './motor.js';
 import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
+import { gruposFichas, estilo, spriteFicha, variantes } from '../../core/fichas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, escala = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, gesto = null, teclas = { izq: false, der: false }, palaX = null, particulas = [], aviso = null, nuevoRecord = false;
@@ -20,8 +21,10 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; particulas = []; aviso = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] }], () => { if (S) dibujar(); });
-  await api.css(new URL('./ladrillos.css', import.meta.url));
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] },
+    ...gruposFichas({ titulo: 'Ladrillos', icono: '🧱' })], () => { EST = estilo(asp.valores); VARS = EST.hex ? variantes(EST.hex, 6) : null; if (S) dibujar(); });
+  EST = estilo(asp.valores); VARS = EST.hex ? variantes(EST.hex, 6) : null;
+  await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./ladrillos.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && L.MODOS[c0.modo] && Number.isInteger(c0.nivel)) cfg = { ...cfg, ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic);
@@ -217,7 +220,7 @@ function dibujar() {
   else { const g = ctx.createLinearGradient(0, 0, 0, cv.height); g.addColorStop(0, T[0]); g.addColorStop(1, T[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, cv.width, cv.height); }
   ctx.setTransform(k, 0, 0, k, 0, 0);
   // ladrillos: los fijos se pintan en una capa aparte y solo se rehace cuando se rompe o agrieta alguno
-  const firma = S.ladrillos.map(l => l.c + l.f * 10 + l.golpes * 100).join(',') + '|' + cv.width;
+  const firma = S.ladrillos.map(l => l.c + l.f * 10 + l.golpes * 100).join(',') + '|' + cv.width + '|' + EST.clave;
   if (!capaLad || capaLad.firma !== firma) {
     const f = capaLad && capaLad.cv.width === cv.width && capaLad.cv.height === cv.height ? capaLad.cv : document.createElement('canvas');
     f.width = cv.width; f.height = cv.height; const g2 = f.getContext('2d'); g2.setTransform(k, 0, 0, k, 0, 0);
@@ -228,6 +231,7 @@ function dibujar() {
   for (const l of S.ladrillos) if (l.tipo === 's') pintarLadrillo(ctx, l, ahora);      // los «?» cambian de color: en vivo
   dibujarResto(k, ahora);
 }
+let EST = estilo({}), VARS = null;
 function pintarLadrillo(ctx, l, ahora) {
   {
     const r = L.rectLadrillo(l), x = r.x + 3, y = r.y + 3, w = r.w - 6, h = r.h - 6;
@@ -236,10 +240,15 @@ function pintarLadrillo(ctx, l, ahora) {
     else if (l.tipo === 'd') { c1 = '#B9E6FF'; c2 = '#5AA9E6'; }
     else if (l.tipo === 't') { c1 = '#FFE9A6'; c2 = '#E0A400'; }
     else if (l.tipo === 's') { const h2 = (ahora / 8 + l.c * 30) % 360; c1 = `hsl(${h2},90%,72%)`; c2 = `hsl(${(h2 + 60) % 360},85%,55%)`; }
-    else { c1 = COLORES[l.color]; c2 = COLORES[l.color]; }
-    const gg = ctx.createLinearGradient(0, y, 0, y + h); gg.addColorStop(0, c1); gg.addColorStop(1, c2);
-    ctx.fillStyle = gg; rrEn(ctx, x, y, w, h, 8); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.35)'; rrEn(ctx, x + 4, y + 3, w - 8, 7, 4); ctx.fill();
+    else { c1 = c2 = VARS ? VARS[l.color - 1] : COLORES[l.color]; }
+    if (l.tipo !== 's' && (EST.tex || EST.forma || EST.esc !== 1)) {           // 🎨 Ladrillos: textura, forma o tamaño elegidos
+      const w2 = w * EST.esc, h2 = h * EST.esc;
+      ctx.drawImage(spriteFicha(c2, { ...EST, hex: null }, w2, h2, 8), x + (w - w2) / 2, y + (h - h2) / 2);
+    } else {
+      const gg = ctx.createLinearGradient(0, y, 0, y + h); gg.addColorStop(0, c1); gg.addColorStop(1, c2);
+      ctx.fillStyle = gg; rrEn(ctx, x, y, w, h, 8); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.35)'; rrEn(ctx, x + 4, y + 3, w - 8, 7, 4); ctx.fill();
+    }
     if (l.tipo === 'm') { ctx.fillStyle = '#5B6474'; for (const px of [x + 9, x + w - 9]) { ctx.beginPath(); ctx.arc(px, y + h / 2, 4, 0, Math.PI * 2); ctx.fill(); } }
     if (l.tipo === 's') { ctx.fillStyle = '#fff'; ctx.font = '800 26px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', x + w / 2, y + h / 2 + 2); }
     if ((l.tipo === 'd' && l.golpes === 1) || (l.tipo === 't' && l.golpes < 3)) {                  // grietas

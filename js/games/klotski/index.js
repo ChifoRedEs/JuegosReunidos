@@ -4,6 +4,7 @@ import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoFondo } from '../../core/aspectos.js';
+import { gruposFichas, estilo, aplicarVars, variantes, luz, oscuro, claro } from '../../core/fichas.js';
 import * as K from './motor.js';
 
 const MOTOR = new URL('./motor.js', import.meta.url).href;
@@ -39,8 +40,9 @@ export async function mount(r, a) {
     { clave: 'marco', titulo: 'Tablero', icono: '🪵', def: 'madera', opciones: Object.entries(MARCOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'paleta', titulo: 'Colores de las fichas', icono: '🎨', def: 'vivo', opciones: Object.entries(PALETAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'estilo', titulo: 'Estilo de las fichas', icono: '🧩', def: 'clasico', opciones: Object.entries(ESTILOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-  ], () => { if (S && $('#klTab')) { if (modo3d !== quiere3D()) armar(); else if (V3) { V3.recolor(); pintar(); } } });
-  await api.css(new URL('./klotski.css', import.meta.url));
+    ...gruposFichas({ titulo: 'Fichas', icono: '🟦', tamano: ['pequeno', 'normal'] }),
+  ], () => { if (S && $('#klTab')) { if (modo3d !== quiere3D()) armar(); else if (V3) { V3.recolor(aplicarFichas()); pintar(); } else aplicarFichas(); } });
+  await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./klotski.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && K.dims(c0.modo, c0.tam) && K.NIVELES[c0.nivel]) cfg = { modo: c0.modo, tam: c0.tam, nivel: c0.nivel };
   S = api.cargar();
   root.addEventListener('click', clic);
@@ -93,9 +95,18 @@ function armar() {
     <div id="klTab" ${modo3d ? 'class="e3d kl3"' : 'class="kltab"'} style="--w:${S.w};--h:${S.h}" role="application" aria-label="Tablero de Klotski: toca o arrastra las fichas"></div>
     <p class="klmsg" id="klMsg" role="status" aria-live="polite"></p>
     <div class="bar klbar"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="reiniciar">↺ Reiniciar</button></div>${api.barraHtml()}`;
+  aplicarFichas();
   if (modo3d) iniciar3D(); else construir2D();
   if (!S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); }
   pintar();
+}
+// 🎨 Fichas: un solo color (se reparte en 6 tonos para distinguir las piezas), tamaño; textura y forma van por css/fichas.css (2D) y vista3d.js (3D)
+function aplicarFichas() {
+  const tab = $('#klTab'), e = estilo(asp.valores), N = ['--k0', '--k1', '--k2', '--k3', '--k4', '--k5', '--kg', '--kt']; if (!tab) return e;
+  aplicarVars(tab, e);
+  if (e.hex) { variantes(e.hex, 6).forEach((c, i) => tab.style.setProperty('--k' + i, c)); const clara = luz(e.hex) > .5; tab.style.setProperty('--kg', clara ? oscuro(e.hex, .6) : claro(e.hex, .65)); tab.style.setProperty('--kt', luz(e.hex) > .55 ? '#2b2f3a' : '#fff'); }
+  else N.forEach(n => tab.style.removeProperty(n));
+  return e;
 }
 function info() { const e = $('#klInfo'); if (e) e.textContent = `${S.movs} mov. · ${fmt(S.t)}`; }
 const colorDe = i => (S.modo === 'colores' ? (i === 0 ? 'var(--kg)' : `var(--k${(i - 1) % 6})`) : `var(--k${i % S.w % 6})`);
@@ -105,7 +116,7 @@ function construir2D() {
   const tab = $('#klTab'), gx = K.metaX(S.w);
   tab.innerHTML = `<div class="klmarco"><div class="kltray" id="klTray"></div>${S.modo === 'colores' ? `<span class="klsal" style="--gx:${gx}"></span>` : ''}</div>${S.modo === 'colores' ? `<div class="klsalt" style="--gx:${gx}">⬇ SALIDA</div>` : ''}`;
   const tray = $('#klTray');
-  tray.innerHTML = S.p.map((q, i) => `<div class="klp ${S.modo === 'colores' && i === 0 ? 'esp' : ''}" data-i="${i}" role="button" tabindex="-1" aria-label="${S.modo === 'colores' ? (i === 0 ? 'Bloque grande' : 'Bloque ' + i) : 'Ficha ' + (i + 1)}" style="--c:${colorDe(i)};--pw:${q[2]};--ph:${q[3]}"><i>${S.modo === 'numeros' ? `<b>${i + 1}</b>` : i === 0 ? '<b>★</b>' : ''}</i></div>`).join('');
+  tray.innerHTML = S.p.map((q, i) => `<div class="klp ${S.modo === 'colores' && i === 0 ? 'esp' : ''}" data-i="${i}" role="button" tabindex="-1" aria-label="${S.modo === 'colores' ? (i === 0 ? 'Bloque grande' : 'Bloque ' + i) : 'Ficha ' + (i + 1)}" style="--c:${colorDe(i)};--pw:${q[2]};--ph:${q[3]}"><i class="fx">${S.modo === 'numeros' ? `<b>${i + 1}</b>` : i === 0 ? '<b>★</b>' : ''}</i></div>`).join('');
   tray.addEventListener('pointerdown', abajo2D);
   tray.addEventListener('pointermove', mover2D);
   tray.addEventListener('pointerup', soltar2D);
@@ -147,7 +158,7 @@ async function iniciar3D() {
   try {
     const b3 = await import('../../core/escena3d.js'), { crearKlotski3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
     const v = crearKlotski3D(host, { w: S.w, h: S.h, modo: S.modo }); b3.botonesCamara(host, v.E);
-    v.limites = limites; v.alMover = mover; v.alToque = tocarPieza; v.alCelda = tocarCelda; V3 = v; v.recolor(); pintar();
+    v.limites = limites; v.alMover = mover; v.alToque = tocarPieza; v.alCelda = tocarCelda; V3 = v; v.recolor(aplicarFichas()); pintar();
   } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); } }
 }
 

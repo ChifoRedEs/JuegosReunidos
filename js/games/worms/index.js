@@ -5,6 +5,7 @@ import * as M from './motor.js';
 import { crearPiloto } from './ia.js';
 import { grupoEscenario, grupoPersonaje } from '../../core/aspectos.js';
 import { imagenTapete } from '../../core/cartas.js';
+import { gruposFichas, estilo, rgb, claro, oscuro, pixelTextura } from '../../core/fichas.js';
 import { FICHAS } from '../../core/personajes.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, cv = null, ctx = null, dpr = 1, cw = 360, ch = 280, zona = null;
@@ -26,7 +27,9 @@ const PAL = {
   lago:      { top: [112, 192, 74], tope: [154, 224, 104], mid: [142, 106, 64], deep: [88, 64, 40], agua: ['rgba(46,150,224,.6)', '#a6e2ff'] },
   medieval:  { top: [118, 172, 82], tope: [152, 204, 110], mid: [150, 140, 118], deep: [96, 88, 72], agua: ['rgba(60,122,184,.62)', '#a6d0f0'] },
 };
-const paleta = () => PAL[String((asp && asp.valores.esc) || '').slice(2)] || PAL.bosque;
+const paletaBase = () => PAL[String((asp && asp.valores.esc) || '').slice(2)] || PAL.bosque;
+// 🎨 Terreno: si se elige un color, la tierra se tiñe de él (superficie, capas y fondo) y se conserva el agua del escenario
+const paleta = () => { const b = paletaBase(), e = asp ? estilo(asp.valores) : null; if (!e || !e.hex) return b; return { ...b, tope: rgb(claro(e.hex, .3)), top: rgb(e.hex), mid: rgb(oscuro(e.hex, .22)), deep: rgb(oscuro(e.hex, .5)) }; };
 const urlIcono = n => new URL(`../../../img/worms/${n}.webp`, import.meta.url).href;
 const ICON = {};
 const ico = n => { let im = ICON[n]; if (!im) { im = ICON[n] = new Image(); im.src = urlIcono(n); } return im.complete && im.naturalWidth ? im : null; };
@@ -49,8 +52,9 @@ export async function mount(r, a) {
     grupoEscenario('.wmfondo'),
     { ...grupoPersonaje('Personajes · equipo Rojo'), clave: 'pj' },
     { ...grupoPersonaje('Personajes · equipo Azul o CPU'), clave: 'pj2' },
+    ...gruposFichas({ titulo: 'Terreno', icono: '⛰️', formas: false, tamano: false }),
   ], () => { if (S) { construirTerreno(); dibujar(); } });
-  await api.css(new URL('./worms.css', import.meta.url));
+  await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./worms.css', import.meta.url));
   PRECARGA.forEach(ico);
   root.addEventListener('click', clic);
   onKey = teclaAbajo; onKeyUp = teclaArriba; document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKeyUp);
@@ -355,7 +359,7 @@ function camara(dt) {
 
 /* ---------- terreno ---------- */
 function construirTerreno() {
-  if (!S) return; const W = S.W, H = S.H, m = S.mask, pal = paleta();
+  if (!S) return; const W = S.W, H = S.H, m = S.mask, pal = paleta(), tex = asp ? estilo(asp.valores).tex : null;
   terCv = document.createElement('canvas'); terCv.width = W; terCv.height = H;
   const c = terCv.getContext('2d'), img = c.createImageData(W, H), d = img.data, prof = new Int16Array(W);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -365,6 +369,7 @@ function construirTerreno() {
     if (p < 2) [r, g, b] = pal.tope; else if (p < 7) { const t = (p - 2) / 5; r = pal.top[0] + (pal.mid[0] - pal.top[0]) * t * .5; g = pal.top[1] + (pal.mid[1] - pal.top[1]) * t * .5; b = pal.top[2] + (pal.mid[2] - pal.top[2]) * t * .5; }
     else { const t = Math.min(1, (p - 7) / 240); r = pal.mid[0] + (pal.deep[0] - pal.mid[0]) * t; g = pal.mid[1] + (pal.deep[1] - pal.mid[1]) * t; b = pal.mid[2] + (pal.deep[2] - pal.mid[2]) * t; }
     const borde = x === 0 || x === W - 1 || !m[i - 1] || !m[i + 1] || (y > 0 && !m[i - W]) || (y < H - 1 && !m[i + W]);
+    if (tex) { const q = 1 + pixelTextura(tex, x, y); r *= q; g *= q; b *= q; }
     const f = borde ? .52 : 1, o = i * 4;
     d[o] = Math.max(0, Math.min(255, (r + ruido) * f)); d[o + 1] = Math.max(0, Math.min(255, (g + ruido) * f)); d[o + 2] = Math.max(0, Math.min(255, (b + ruido) * f)); d[o + 3] = 255;
   }

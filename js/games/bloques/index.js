@@ -2,6 +2,7 @@ import { $, esc } from '../../core/dom.js';
 import * as B from './motor.js';
 import { grupoFondo, grupoPantalla, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
+import { gruposFichas, estilo, spriteFicha, variantes } from '../../core/fichas.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, onKey = null, onKeyUp = null, onVis = null;
 let cv = null, ctx = null, cvR = null, cvN = null, dpr = 1, bajando = false, rep = null, gesto = null, flash = null, letrero = null, nuevoRecord = false, onRes = null, hudAnt = '', rejilla = null, podioPos = -1;
@@ -29,8 +30,10 @@ const reloj = ms => { const s = Math.max(0, ms) / 1000; return `${Math.floor(s /
 export async function mount(r, a) {
   api = a; root = r; bajando = false; flash = null; letrero = null; nuevoRecord = false;
   asp = api.aspecto([grupoFondo(''), grupoPantalla(''), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
-    { clave: 'fantasma', titulo: 'Pieza fantasma', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] }], () => { if (S) dibujar(); });
-  await api.css(new URL('./bloques.css', import.meta.url));
+    ...gruposFichas({ titulo: 'Bloques', icono: '🧱' }),
+    { clave: 'fantasma', titulo: 'Pieza fantasma', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] }], () => { EST = estilo(asp.valores); if (S) dibujar(); });
+  EST = estilo(asp.valores);
+  await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./bloques.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && B.MODOS[c0.modo] && Number.isInteger(c0.nivel) && c0.nivel >= 1 && c0.nivel <= 15) cfg = { ...cfg, ...c0, botones: c0.botones !== false };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic);
@@ -193,8 +196,13 @@ function gestoFin(e) {
 }
 
 /* ---------- dibujo ---------- */
+let EST = estilo({});
 function bloque(c, x, y, s, color, alfa = 1) {
   c.globalAlpha = alfa;
+  if (EST.tex || EST.forma || EST.esc !== 1) {       // 🎨 Fichas: textura, forma o tamaño elegidos
+    const t = Math.max(2, (s - 2) * EST.esc), m = (s - t) / 2;
+    c.drawImage(spriteFicha(color, EST, t, t, s * .08), x + m, y + m); c.globalAlpha = 1; return;
+  }
   const g = c.createLinearGradient(x, y, x + s, y + s); g.addColorStop(0, aclarar(color, .25)); g.addColorStop(1, color);
   c.fillStyle = g; c.fillRect(x + 1, y + 1, s - 2, s - 2);
   c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x + 1, y + 1, s - 2, Math.max(2, s * .14));
@@ -204,7 +212,8 @@ function bloque(c, x, y, s, color, alfa = 1) {
 function aclarar(hex, f) { const n = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16)); return `rgb(${n.map(v => Math.round(v + (255 - v) * f)).join(',')})`; }
 function dibujar() {
   if (!S || !cv || !ctx) return;
-  const P = PALETAS[asp.valores.paleta] || PALETAS.clasica, F = FONDOS[asp.valores.paleta] || FONDOS.clasica, L = cv.width / B.W, oculto = B.H - B.VISIBLES, ahora = performance.now();
+  let P = PALETAS[asp.valores.paleta] || PALETAS.clasica; if (EST.hex) P = ['', ...variantes(EST.hex, 7), P[8]];
+  const F = FONDOS[asp.valores.paleta] || FONDOS.clasica, L = cv.width / B.W, oculto = B.H - B.VISIBLES, ahora = performance.now();
   ctx.drawImage(fondoRejilla(F, L), 0, 0);                        // fondo y rejilla: se pintan una sola vez
   for (let y = oculto; y < B.H; y++) for (let x = 0; x < B.W; x++) { const v = S.tab[y * B.W + x]; if (v) bloque(ctx, x * L, (y - oculto) * L, L, S.fase === 'fin' && S.motivo === 'arriba' ? '#6B7280' : P[v]); }
   if (S.fase !== 'fin' && S.p) {

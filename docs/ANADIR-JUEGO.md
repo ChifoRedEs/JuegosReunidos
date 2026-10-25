@@ -110,3 +110,13 @@ Las animaciones están en `img/victoria/*.webp` y se declaran en `ANIMACIONES` d
 
 ## Bancos de imágenes (Memorama)
 Las imágenes viven en `img/memorama/<tema>/<id>.webp` con un `nombres.json` (`{id: "Nombre"}`) por tema. Tras añadir/quitar imágenes o un tema nuevo (añádelo al dict `TEMAS` del script) ejecuta `python3 tools/generar_memorama.py`, que regenera `js/games/memorama/bancos.js`.
+
+## Apariencia de las fichas (js/core/fichas.js)
+Color (más de 45), textura (8), forma (5) y tamaño de las piezas, común a varios juegos. Todo es «Original» por defecto, así que el juego no cambia hasta que el jugador elige algo.
+1. En `api.aspecto([...])` añade `...gruposFichas({ titulo: 'Cajas', icono: '📦', formas: true, tamano: true })` (se pueden quitar `formas`, `tamano`, `textura` o `color`, o limitar `tamano: ['pequeno','normal']`). Claves resultantes: `fcolor`, `ftex`, `fforma`, `ftam`.
+2. Lee la elección con `const est = estilo(asp.valores)` → `{ hex|null, tex|null, forma|null, esc, hay, clave }` (`clave` sirve para invalidar cachés).
+3. Según cómo se dibuje la pieza:
+   - **HTML/CSS**: carga `css/fichas.css` (`api.css(new URL('../../../css/fichas.css', import.meta.url))`), pon la clase `.fx` en la pieza (o `.fxb` si el dibujo está en su `::before`) y llama a `aplicarVars(elemento, est)`; el color llega en `--fx-c` / `--fx-c2`. Si la textura tapa el color de fondo, añade `background-color` en el CSS del juego.
+   - **Canvas 2D**: `spriteFicha(colorBase, est, w, h, radio)` devuelve un lienzo con color, textura y forma (con caché) para `drawImage`; `variantes(est.hex, n)` reparte un color en n tonos si las piezas deben distinguirse. Para terrenos pintados píxel a píxel: `pixelTextura(est.tex, x, y)`.
+   - **Three.js**: `geoCaja(T, w, h, d, est.forma)` (caja redondeada/biselada con UV) y `capaTextura(ctx, 0, 0, w, h, est.tex)` sobre el lienzo del mapa; `est.esc` escala la pieza.
+Juegos que ya lo usan: Sokoban, Klotski, Bloques, Rompe-Ladrillos y Worms (terreno).

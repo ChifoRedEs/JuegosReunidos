@@ -5,6 +5,7 @@ import * as K from './motor.js';
 import { NIVELES } from './niveles.js';
 import { FICHAS, opcionesPersonajes } from '../../core/personajes.js';
 import { grupoFondo } from '../../core/aspectos.js';
+import { gruposFichas, estilo, aplicarVars, oscuro } from '../../core/fichas.js';
 
 const MOTOR = new URL('./motor.js', import.meta.url).href;
 const MODOS = { campana: '🗺️ Campaña', azar: '🎲 Generados' };
@@ -53,9 +54,10 @@ export async function mount(r, a) {
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#skTab'), { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+    ...gruposFichas({ titulo: 'Cajas', icono: '📦' }),
     { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: opcionesPersonajes() }],
   () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });
-  await api.css(new URL('./sokoban.css', import.meta.url));
+  await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./sokoban.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && MODOS[c0.modo] && K.TAMANOS[c0.tam]) cfg = { ...c0 };
   S = api.cargar(); L = S ? K.leer(S.mapa) : null;
   root.addEventListener('click', clic);
@@ -119,7 +121,7 @@ async function iniciar3D() {
     const b3 = await import('../../core/escena3d.js'), { crearSokoban3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
     const v = await crearSokoban3D(host, L, { cajas: asp.valores.cajas }); if (t !== tok3 || !root) { v.destruir(); return; }
     b3.botonesCamara(host, v.E); const g = host.querySelector('[data-cam="girar"]'); if (g) g.remove();       // girar cambiaría el sentido de los gestos
-    v.alDeslizar = d => paso(d); v.alCasilla = i => irA(i); V3 = v; delete host.dataset.iniciando; v.recolor({ cajas: asp.valores.cajas }); pintar(); V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: ficha().e, volteo: false, nuevo: true });
+    v.alDeslizar = d => paso(d); v.alCasilla = i => irA(i); V3 = v; delete host.dataset.iniciando; v.recolor({ cajas: asp.valores.cajas, est: estilo(asp.valores) }); pintar(); V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: ficha().e, volteo: false, nuevo: true });
   } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); } }
 }
 
@@ -143,18 +145,24 @@ function armar() {
   }
   construir(); pintar();
 }
+// 🎨 Cajas: color (variables --caja / --caja2 que leen el CSS 2D y la vista 3D), tamaño y textura/forma (css/fichas.css)
+function aplicarCajas(tab) {
+  const e = estilo(asp.valores); aplicarVars(tab, e);
+  if (e.hex) { tab.style.setProperty('--caja', e.hex); tab.style.setProperty('--caja2', oscuro(e.hex)); } else { tab.style.removeProperty('--caja'); tab.style.removeProperty('--caja2'); }
+  return e;
+}
 function construir() {
   const tab = $('#skTab'); if (!tab || !L) return;
   if (modo3d) {
-    tab.className = `e3d sk3 tema-${asp.valores.tema} cajas-${asp.valores.cajas}`;
-    if (V3) V3.recolor({ cajas: asp.valores.cajas }); else if (!tab.dataset.iniciando) iniciar3D();
+    tab.className = `e3d sk3 tema-${asp.valores.tema} cajas-${asp.valores.cajas}`; const e3 = aplicarCajas(tab);
+    if (V3) V3.recolor({ cajas: asp.valores.cajas, est: e3 }); else if (!tab.dataset.iniciando) iniciar3D();
     return;
   }
-  tab.className = `sktab tema-${asp.valores.tema} cajas-${asp.valores.cajas}`;
+  tab.className = `sktab tema-${asp.valores.tema} cajas-${asp.valores.cajas}`; aplicarCajas(tab);
   tab.style.setProperty('--w', L.w); tab.style.setProperty('--h', L.h);
   let html = '';
   for (let i = 0; i < L.w * L.h; i++) html += `<div class="skc ${L.muro[i] ? 'muro' : L.fuera[i] ? 'fuera' : 'suelo'}${L.meta[i] ? ' meta' : ''}" data-c="${i}"></div>`;
-  html += L.cajas.map((_, k) => `<div class="skcaja" data-k="${k}"></div>`).join('') + `<div class="skjug"><span>${ficha().e}</span></div>`;
+  html += L.cajas.map((_, k) => `<div class="skcaja fxb" data-k="${k}"></div>`).join('') + `<div class="skjug"><span>${ficha().e}</span></div>`;
   tab.innerHTML = html;
 }
 const pos = i => `--x:${i % L.w};--y:${(i / L.w) | 0}`;

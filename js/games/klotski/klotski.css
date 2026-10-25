@@ -44,3 +44,5 @@
 .juego-klotski[data-estilo="plano"] .klp>i{background:var(--c);border:0;box-shadow:none;text-shadow:none}
 /* vista 3D */
 .juego-klotski .e3d.kl3{width:min(calc(100vw - 28px),560px);margin:6px auto;touch-action:none}
+/* 🎨 Fichas · Textura (css/fichas.css): el color de la pieza se conserva debajo de la textura */
+[data-ftex]:not([data-ftex="original"]) .klp>i{background-color:var(--c)}

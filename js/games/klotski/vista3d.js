@@ -6,13 +6,16 @@ import { metaX, DIR } from './motor.js';
 const css = (el, v, d) => getComputedStyle(el).getPropertyValue(v).trim() || d;
 const rr = (x, a, b, w, h, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); };
 const lerp = (a, b, k) => a + (b - a) * k;
+import { estilo, capaTextura, oscuro } from '../../core/fichas.js';
 const GAP = .09, ALTO = .36;
 
+const estilo0 = () => estilo({});       // 🎨 Fichas: color (ya viene en --k0…), textura, forma y tamaño elegidos
+const ef = E => Math.min(1, E.esc);
 export function crearKlotski3D(cont, { w, h, modo }) {
   const M = Math.max(w, h);
   const E = crearEscena(cont, { fov: 36, az: 0, pol: .55, polMin: .2, polMax: 1.15, radio: M * .5 + .85, margen: .5, objetivo: [0, 0, .1], distMin: 5, distMax: 30, sombraRadio: M + 3, sombraTam: 1536, sol: { pos: [-3, 11, 6], int: 2.1 }, hemi: { int: 1.7 }, sueloY: -.3, etiqueta: 'Tablero de Klotski en 3D' });
   const V = { limites: () => [0, 0, 0, 0], alMover: null, alToque: null, alCelda: null }, esc = E.escena;
-  let col = {}, tex = new Map(), sel = -1, pistaI = -1, estilo = 'clasico';
+  let col = {}, tex = new Map(), sel = -1, pistaI = -1, estilo = 'clasico', EST = estilo0();
   const leer = () => {
     const j = cont.closest('.juego') || cont; estilo = j.dataset.estilo || 'clasico';
     col = { m1: css(cont, '--kl-marco', '#8A5A2B'), m2: css(cont, '--kl-marco2', '#5E3B1A'), hueco: css(cont, '--kl-hueco', '#2B1D12'), kg: css(cont, '--kg', '#E0243A'), kt: css(cont, '--kt', '#ffffff'), k: [0, 1, 2, 3, 4, 5].map(i => css(cont, '--k' + i, ['#FF5A5F', '#4C8DFF', '#3DCB7A', '#FFD23F', '#9B5DE5', '#FF8A3D'][i])) };
@@ -39,14 +42,16 @@ export function crearKlotski3D(cont, { w, h, modo }) {
   /* fichas */
   const geos = new Map();
   const geo = (pw, ph) => {
-    const k = pw + 'x' + ph; if (geos.has(k)) return geos.get(k);
-    const W = pw - GAP * 2, H = ph - GAP * 2, r = Math.min(.2, Math.min(W, H) * .22), s = new T.Shape(), x0 = -W / 2, y0 = -H / 2;
-    s.moveTo(x0 + r, y0); s.lineTo(-x0 - r, y0); s.quadraticCurveTo(-x0, y0, -x0, y0 + r); s.lineTo(-x0, -y0 - r); s.quadraticCurveTo(-x0, -y0, -x0 - r, -y0); s.lineTo(x0 + r, -y0); s.quadraticCurveTo(x0, -y0, x0, -y0 - r); s.lineTo(x0, y0 + r); s.quadraticCurveTo(x0, y0, x0 + r, y0);
+    const k = pw + 'x' + ph + '|' + EST.forma + '|' + ef(EST); if (geos.has(k)) return geos.get(k);
+    const W = (pw - GAP * 2) * ef(EST), H = (ph - GAP * 2) * ef(EST), m = Math.min(W, H), f = EST.forma;
+    const r = f === 'cuadrada' ? .015 : f === 'pildora' ? m / 2 - .001 : f === 'redonda' ? m * .24 : f === 'marcada' ? m * .1 : f === 'biselada' ? m * .2 : Math.min(.2, m * .22), s = new T.Shape(), x0 = -W / 2, y0 = -H / 2;
+    const esq = (cx, cy, x, y) => (f === 'biselada' ? s.lineTo(x, y) : s.quadraticCurveTo(cx, cy, x, y));
+    s.moveTo(x0 + r, y0); s.lineTo(-x0 - r, y0); esq(-x0, y0, -x0, y0 + r); s.lineTo(-x0, -y0 - r); esq(-x0, -y0, -x0 - r, -y0); s.lineTo(x0 + r, -y0); esq(x0, -y0, x0, -y0 - r); s.lineTo(x0, y0 + r); esq(x0, y0, x0 + r, y0);
     const g = new T.ExtrudeGeometry(s, { depth: ALTO, bevelEnabled: true, bevelSize: .035, bevelThickness: .045, bevelSegments: 2, curveSegments: 5 }); g.rotateX(-Math.PI / 2); geos.set(k, g); return g;
   };
   const colorDe = (i) => modo === 'colores' ? (i === 0 ? col.kg : col.k[(i - 1) % 6]) : col.k[(i % w) % 6];
   const texDe = (i, pw, ph) => {
-    const etiqueta = modo === 'numeros' ? String(i + 1) : i === 0 ? '★' : '', c0 = colorDe(i), key = [pw, ph, c0, etiqueta, estilo, col.kt].join('|');
+    const etiqueta = modo === 'numeros' ? String(i + 1) : i === 0 ? '★' : '', c0 = colorDe(i), key = [pw, ph, c0, etiqueta, estilo, col.kt, EST.clave].join('|');
     if (tex.has(key)) return tex.get(key);
     const PX = 128, W = pw * PX, H = ph * PX, c = lienzo(W, H), x = c.getContext('2d');
     const g = x.createLinearGradient(0, 0, W, H);
@@ -56,8 +61,10 @@ export function crearKlotski3D(cont, { w, h, modo }) {
     x.fillStyle = g; x.fillRect(0, 0, W, H);
     if (estilo === 'madera') { x.fillStyle = c0; x.globalAlpha = .38; x.fillRect(0, 0, W, H); x.globalAlpha = 1; x.strokeStyle = 'rgba(0,0,0,.10)'; x.lineWidth = 2; for (let i = 0; i < W; i += 14) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 6, H); x.stroke(); } }
     if (estilo === 'clasico' || estilo === 'cristal') { x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 6; rr(x, 14, 14, W - 28, H - 28, 18); x.stroke(); }
+    if (EST.tex) capaTextura(x, 0, 0, W, H, EST.tex);
+    if (EST.forma === 'marcada') { x.lineWidth = 16; x.strokeStyle = oscuro(c0, .5); x.strokeRect(8, 8, W - 16, H - 16); }
     if (etiqueta) { x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = estilo === 'madera' && etiqueta !== '★' ? '#3b2410' : etiqueta === '★' ? '#fff7c2' : col.kt; x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = 6; x.shadowOffsetY = 3; x.font = `800 ${etiqueta === '★' ? Math.min(W, H) * .8 : PX * (etiqueta.length > 1 ? .56 : .66)}px "Baloo 2",system-ui,sans-serif`; x.fillText(etiqueta, W / 2, H / 2 + PX * .04); }
-    const t = textura(c, 8); t.repeat.set(1 / (pw - GAP * 2), 1 / (ph - GAP * 2)); t.offset.set(.5, .5); tex.set(key, t); return t;
+    const t = textura(c, 8); t.repeat.set(1 / ((pw - GAP * 2) * ef(EST)), 1 / ((ph - GAP * 2) * ef(EST))); t.offset.set(.5, .5); tex.set(key, t); return t;
   };
   const piezas = [];
   const crearPieza = i => {
@@ -73,7 +80,7 @@ export function crearKlotski3D(cont, { w, h, modo }) {
     sel = D.sel; pistaI = D.pista ? D.pista.i : -1;
     while (piezas.length < D.p.length) piezas.push(crearPieza(piezas.length));
     D.p.forEach(([px, py, pw, ph], i) => {
-      const P = piezas[i], key = [pw, ph, i, estilo].join('|');
+      const P = piezas[i], key = [pw, ph, i, estilo, EST.forma, ef(EST)].join('|');
       if (P.k !== key) { P.k = key; P.m.geometry = geo(pw, ph); }
       P.mc.map = texDe(i, pw, ph); P.mc.needsUpdate = true; P.ms.color.set(colorDe(i)).multiplyScalar(.62);
       const estr = estilo === 'cristal'; P.mc.transparent = P.ms.transparent = estr; P.mc.opacity = P.ms.opacity = estr ? .86 : 1; P.mc.metalness = estr ? .25 : 0;
@@ -86,8 +93,9 @@ export function crearKlotski3D(cont, { w, h, modo }) {
     E.tocables = [...piezas.map(p => p.m), suelo];
     E.marcar();
   };
-  V.recolor = () => {
-    leer(); matMarco.color.set(col.m1); matSuelo.color.set(col.hueco);
+  V.recolor = est => {
+    if (est) EST = est; leer();
+    for (const g of geos.values()) g.dispose(); geos.clear(); matMarco.color.set(col.m1); matSuelo.color.set(col.hueco);
     for (const t of tex.values()) t.dispose(); tex = new Map(); for (const P of piezas) P.k = '';
     E.marcar();
   };

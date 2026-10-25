@@ -2,6 +2,7 @@
 //   const V = await crearSokoban3D(contenedor, L, { cajas: 'madera' })
 //   V.pintar({ cajas: [celda…], jugador, emoji, volteo, nuevo }) · V.alCasilla(i) · V.alDeslizar(dir) · V.recolor() · V.camara(modo) · V.celebrar() · V.destruir()
 import { T, crearEscena, lienzo, textura, emojiTextura } from '../../core/escena3d.js';
+import { estilo, capaTextura, oscuro, geoCaja } from '../../core/fichas.js';
 
 const ALTO_MURO = .46, TAM_CAJA = .84;
 
@@ -12,7 +13,7 @@ export async function crearSokoban3D(cont, L, o = {}) {
   const V = { E, alCasilla: null, alDeslizar: null }, S3 = E.escena;
   const X = i => (i % W) - W / 2 + .5, Z = i => ((i / W) | 0) - H / 2 + .5;
   let C = { muro: '#6B7A99', muro2: '#56637F', suelo: '#EFE6D8', suelo2: '#E6DBC9', caja: '#C98A4B', caja2: '#9C6230', meta: '#FF4757' };
-  let estiloCaja = o.cajas || 'madera';
+  let estiloCaja = o.cajas || 'madera', EST = estilo({}), tc = TAM_CAJA;       // EST = 🎨 Cajas (color, textura, forma, tamaño); tc = lado actual de la caja
 
   // ----- escenario -----
   const mSuelo = [new T.MeshStandardMaterial({ roughness: .8 }), new T.MeshStandardMaterial({ roughness: .8 })];
@@ -34,19 +35,21 @@ export async function crearSokoban3D(cont, L, o = {}) {
     }
   }
   // ----- cajas -----
-  const gCaja = new T.BoxGeometry(TAM_CAJA, TAM_CAJA, TAM_CAJA);
+  let gCaja = new T.BoxGeometry(TAM_CAJA, TAM_CAJA, TAM_CAJA);
   function texCaja(en) {
-    const c = lienzo(160, 160), x = c.getContext('2d'), a = en ? '#2ECC71' : C.caja, b = en ? '#1E8F4E' : C.caja2;
+    const c = lienzo(160, 160), x = c.getContext('2d'), a = en ? '#2ECC71' : (EST.hex || C.caja), b = en ? '#1E8F4E' : (EST.hex ? oscuro(EST.hex) : C.caja2);
     x.fillStyle = a; x.fillRect(0, 0, 160, 160);
     if (en) { x.strokeStyle = b; x.lineWidth = 12; x.strokeRect(6, 6, 148, 148); x.fillStyle = '#fff'; x.font = '900 100px Nunito, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('✓', 80, 88); return textura(c, 4); }
     if (estiloCaja === 'regalo') { x.fillStyle = b; x.fillRect(64, 0, 32, 160); x.fillRect(0, 64, 160, 32); x.beginPath(); x.ellipse(80, 62, 30, 16, 0, 0, 6.3); x.fill(); x.strokeStyle = a; x.lineWidth = 5; x.stroke(); }
     else if (estiloCaja === 'metal') { x.strokeStyle = b; x.lineWidth = 12; x.strokeRect(6, 6, 148, 148); x.fillStyle = b; for (const [px, py] of [[24, 24], [136, 24], [24, 136], [136, 136]]) { x.beginPath(); x.arc(px, py, 9, 0, 6.3); x.fill(); } x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 6; x.beginPath(); x.moveTo(30, 80); x.lineTo(130, 80); x.stroke(); }
     else if (estiloCaja === 'carton') { x.fillStyle = 'rgba(0,0,0,.08)'; x.fillRect(0, 0, 160, 8); x.fillStyle = '#C9A06A'; x.fillRect(0, 66, 160, 28); x.strokeStyle = b; x.lineWidth = 6; x.strokeRect(3, 3, 154, 154); }
     else { x.strokeStyle = b; x.lineWidth = 12; x.strokeRect(6, 6, 148, 148); x.lineWidth = 9; x.beginPath(); x.moveTo(14, 14); x.lineTo(146, 146); x.moveTo(146, 14); x.lineTo(14, 146); x.stroke(); x.strokeStyle = 'rgba(0,0,0,.12)'; x.lineWidth = 3; for (let k = 1; k < 5; k++) { x.beginPath(); x.moveTo(8, k * 32); x.lineTo(152, k * 32); x.stroke(); } }
+    if (EST.tex) capaTextura(x, 0, 0, 160, 160, EST.tex);
+    if (EST.forma === 'marcada') { x.lineWidth = 14; x.strokeStyle = oscuro(en ? '#2ECC71' : (EST.hex || C.caja), .5); x.strokeRect(7, 7, 146, 146); }
     return textura(c, 4);
   }
   const mCajaN = new T.MeshStandardMaterial({ roughness: .6 }), mCajaE = new T.MeshStandardMaterial({ roughness: .5, emissive: '#1E8F4E', emissiveIntensity: .25 });
-  const cajas = L.cajas.map(() => { const m = new T.Mesh(gCaja, mCajaN); m.castShadow = m.receiveShadow = true; m.position.set(0, TAM_CAJA / 2, 0); S3.add(m); return { m, tx: 0, tz: 0, en: null, nuevo: true, salto: 0 }; });
+  const cajas = L.cajas.map(() => { const m = new T.Mesh(gCaja, mCajaN); m.castShadow = m.receiveShadow = true; m.position.set(0, tc / 2, 0); S3.add(m); return { m, tx: 0, tz: 0, en: null, nuevo: true, salto: 0 }; });
   // ----- jugador: solo el avatar elegido -----
   const sombra = new T.Mesh(new T.CircleGeometry(.3, 20), new T.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .28, depthWrite: false })); sombra.rotation.x = -Math.PI / 2; sombra.position.y = .01; S3.add(sombra);
   let jug = null, emojiAct = '', tj = { x: 0, z: 0 }, volt = 1, t0 = 0, ult = 0, mueve = 0, bote = 0;
@@ -55,10 +58,10 @@ export async function crearSokoban3D(cont, L, o = {}) {
     tj = { x: X(s.jugador), z: Z(s.jugador) }; volt = s.volteo ? -1 : 1;
     s.cajas.forEach((c, k) => {
       const q = cajas[k], en = !!L.meta[c]; q.tx = X(c); q.tz = Z(c);
-      if (q.nuevo) { q.m.position.set(q.tx, TAM_CAJA / 2, q.tz); q.nuevo = false; }
+      if (q.nuevo) { q.m.position.set(q.tx, tc / 2, q.tz); q.nuevo = false; }
       if (q.en !== en) { if (q.en != null && en) q.salto = 1; q.en = en; q.m.material = en ? mCajaE : mCajaN; q.m.material.map = en ? V._tE : V._tN; q.m.material.needsUpdate = true; }
     });
-    if (s.nuevo) { cajas.forEach((q, k) => { q.m.position.set(X(s.cajas[k]), TAM_CAJA / 2, Z(s.cajas[k])); }); jug.position.set(tj.x, .5, tj.z); }
+    if (s.nuevo) { cajas.forEach((q, k) => { q.m.position.set(X(s.cajas[k]), tc / 2, Z(s.cajas[k])); }); jug.position.set(tj.x, .5, tj.z); }
     E.marcar();
   };
   V.celebrar = () => { bote = 1.6; E.marcar(); };
@@ -67,7 +70,7 @@ export async function crearSokoban3D(cont, L, o = {}) {
     for (const q of cajas) {
       const dx = q.tx - q.m.position.x, dz = q.tz - q.m.position.z;
       if (Math.abs(dx) + Math.abs(dz) > .003) { q.m.position.x += dx * k; q.m.position.z += dz * k; sigue = true; } else { q.m.position.x = q.tx; q.m.position.z = q.tz; }
-      if (q.salto > 0) { q.salto = Math.max(0, q.salto - dt * 3); q.m.position.y = TAM_CAJA / 2 + Math.sin((1 - q.salto) * Math.PI) * .22; sigue = true; } else q.m.position.y = TAM_CAJA / 2;
+      if (q.salto > 0) { q.salto = Math.max(0, q.salto - dt * 3); q.m.position.y = tc / 2 + Math.sin((1 - q.salto) * Math.PI) * .22; sigue = true; } else q.m.position.y = tc / 2;
       if (bote > 0 && q.en) q.m.position.y += Math.abs(Math.sin(t0 * 7 + q.tx)) * .25 * Math.min(1, bote);
     }
     if (jug) {
@@ -84,6 +87,7 @@ export async function crearSokoban3D(cont, L, o = {}) {
   // ----- colores del escenario (variables CSS del tema elegido) -----
   V.recolor = (ids = {}) => {
     if (ids.cajas) estiloCaja = ids.cajas;
+    if (ids.est) { EST = ids.est; tc = TAM_CAJA * EST.esc; gCaja.dispose(); gCaja = geoCaja(T, tc, tc, tc, EST.forma); for (const q of cajas) { q.m.geometry = gCaja; q.m.position.y = tc / 2; } }
     const s = getComputedStyle(cont), v = (n, d) => s.getPropertyValue(n).trim() || d;
     C = { muro: v('--muro', C.muro), muro2: v('--muro2', C.muro2), suelo: v('--suelo', C.suelo), suelo2: v('--suelo2', C.suelo2), caja: v('--caja', C.caja), caja2: v('--caja2', C.caja2), meta: v('--meta', C.meta) };
     mSuelo[0].color.set(C.suelo); mSuelo[1].color.set(C.suelo2);
