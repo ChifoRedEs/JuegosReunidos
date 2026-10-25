@@ -16,7 +16,10 @@ Una sola identidad visual para los 41 juegos. Vive en `css/marca.css` (se carga 
 | `.btn.grande` | Acción principal destacada (54 px). |
 | `.btn.danger` | Acción destructiva (texto rojo). |
 
-## Menú de partida (igual en todos los juegos)
+## Barra de partida (igual en todos los juegos)
+Bajo el tablero, una sola fila de 5 botones: **Nueva partida · Configurar partida · Apariencia · Reglas · Pausa / Salir**. Ya no hay menú ⋯ en la cabecera; las funciones extra de cada juego están en Pausa / Salir → «⋯ Más opciones del juego».
+
+## Menú de partida (pantalla de «nueva partida»)
 Estructura que deben seguir las pantallas de «nueva partida»:
 
 ```html

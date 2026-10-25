@@ -10,7 +10,7 @@ import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION, FECHA } from './version.js';
 
-const app = $('#app'), tit = $('#titulo'), btnAtras = $('#atras'), btnMas = $('#mas'), nav = $('#nav');
+const app = $('#app'), tit = $('#titulo'), btnAtras = $('#atras'), nav = $('#nav');
 const RUTAS = [
   ['cat-logica', '🧠', 'Lógica', '#/cat/logica'],
   ['cat-tablero', '🎲', 'Tablero', '#/cat/tablero'],
@@ -21,6 +21,10 @@ const RUTAS = [
   ['ajustes', '⚙️', 'Ajustes', '#/ajustes']
 ];
 let actual = null, token = 0, menuItems = [];
+// Antes había un menú ⋯ en la cabecera. Ahora «Reglas» va en la barra inferior y el resto de entradas (Historial, Pista, Podio, Compartir…) se abren desde «Pausa / Salir» → «Más opciones».
+const RE_REGLAS = /^(Reglas|Reglamento|Cómo se juega)/i, RE_EN_BARRA = /Apariencia|^(Nuev[oa]\b|Otra palabra)|^⏸️ Pausa/i;
+const itemReglas = () => menuItems.find(it => RE_REGLAS.test(it.texto));
+const itemsExtra = () => menuItems.filter(it => !RE_REGLAS.test(it.texto) && !RE_EN_BARRA.test(it.texto));
 const V1_KEY = 'juegos-reunidos-save';
 
 aj.aplicarTema();
@@ -79,13 +83,12 @@ function modal(titulo, html) {
   const cerrar = hoja([el('h2', {}, titulo), cuerpo, b]); b.addEventListener('click', cerrar);
   return { cuerpo, cerrar };
 }
-function abrirMenu() {
-  if (!menuItems.length) return;
+function abrirMenu(lista) {
+  if (!lista || !lista.length) return;
   let cerrar;
-  const items = menuItems.map(it => el('button', { class: 'item' + (it.peligro ? ' danger' : ''), 'aria-pressed': it.activo == null ? false : String(!!it.activo), onclick: () => { cerrar(); it.accion(); } }, it.texto));
+  const items = lista.map(it => el('button', { class: 'item' + (it.peligro ? ' danger' : ''), 'aria-pressed': it.activo == null ? false : String(!!it.activo), onclick: () => { cerrar(); it.accion(); } }, it.texto));
   cerrar = hoja([el('h2', {}, tit.textContent), ...items]);
 }
-btnMas.addEventListener('click', abrirMenu);
 btnAtras.addEventListener('click', () => { const r = ruta(); location.hash = r.cat ? '#/cat/' + r.cat : '#/'; });   // vuelve a la categoría del juego
 
 /* ---------- API que reciben los juegos ---------- */
@@ -136,18 +139,21 @@ function crearApi(j, ent, mod, root) {
     let decidido = false, cerrar;
     const no = el('button', { class: 'btn on', onclick: () => { decidido = true; cerrar(); seguir('salir'); } }, 'No, seguir jugando');
     const si = el('button', { class: 'btn', onclick: () => { decidido = true; cerrar(); if (defBarra && defBarra.salir) defBarra.salir(); else location.hash = j.categoria ? '#/cat/' + j.categoria : '#/'; } }, 'Sí, salir');
-    cerrar = hoja([el('h2', {}, '⏸️ Partida en pausa'), el('p', {}, '¿Salir de la partida?'), el('div', { class: 'bar', style: 'margin-top:14px' }, si, no)], () => { if (!decidido) seguir('salir'); });
+    const extra = itemsExtra();
+    const mas = extra.length ? el('button', { class: 'btn', style: 'width:100%;margin-top:10px', onclick: () => { decidido = true; cerrar(); seguir('salir'); setTimeout(() => abrirMenu(extra), 0); } }, '⋯ Más opciones del juego') : null;
+    cerrar = hoja([el('h2', {}, '⏸️ Partida en pausa'), el('p', {}, '¿Salir de la partida?'), el('div', { class: 'bar', style: 'margin-top:14px' }, si, no), mas], () => { if (!decidido) seguir('salir'); });
   }
   return {
     barra(def) { defBarra = def; },
     barraHtml() {
-      return `<div class="barra-gen" role="group" aria-label="Controles de la partida"><button type="button" data-gen="nueva"><span aria-hidden="true">🆕</span>${esc(etiquetaNueva())}</button><button type="button" data-gen="config"><span aria-hidden="true">⚙️</span>Configurar partida</button>${abrirAsp ? '<button type="button" data-gen="aspecto"><span aria-hidden="true">🎨</span>Apariencia</button>' : ''}<button type="button" data-gen="salir"><span aria-hidden="true">⏸️</span>Pausa / Salir</button></div>`;
+      return `<div class="barra-gen" role="group" aria-label="Controles de la partida"><button type="button" data-gen="nueva"><span aria-hidden="true">🆕</span>${esc(etiquetaNueva())}</button><button type="button" data-gen="config"><span aria-hidden="true">⚙️</span>Configurar partida</button>${abrirAsp ? '<button type="button" data-gen="aspecto"><span aria-hidden="true">🎨</span>Apariencia</button>' : ''}<button type="button" data-gen="reglas"><span aria-hidden="true">📖</span>Reglas</button><button type="button" data-gen="salir"><span aria-hidden="true">⏸️</span>Pausa / Salir</button></div>`;
     },
     gen(ac) {
       if (!defBarra) return;
       if (ac === 'nueva') { if (defBarra.nueva) defBarra.nueva(); }
       else if (ac === 'config') abrirConfig();
       else if (ac === 'aspecto') { if (abrirAsp) pausaTemp(volver => abrirAsp(volver)); }
+      else if (ac === 'reglas') { const r = itemReglas(); if (r) r.accion(); }
       else if (ac === 'salir') preguntarSalir();
     },
     id, root,
@@ -172,7 +178,6 @@ function crearApi(j, ent, mod, root) {
         const r = store.getResumen(id);
         compartir(`${j.icono} ${j.nombre}${r && r.resumen ? ': ' + r.resumen + (r.fin ? '' : ' (en juego)') : ''} · Juegos Reunidos`);
       } });
-      btnMas.hidden = !menuItems.length;
     },
     // Reto del día: el mismo tablero para todo el mundo (generado con semilla fecha + juego)
     reto: {
@@ -304,7 +309,7 @@ async function cerrarJuego() {
   if (!actual) return;
   const a = actual; actual = null;
   try { await a.mod.unmount?.(); } catch (e) { console.error(e); }
-  menuItems = []; btnMas.hidden = true;
+  menuItems = [];
 }
 async function render() {
   const t = ++token;
@@ -317,13 +322,13 @@ async function render() {
   }).join('');
   app.innerHTML = '';
   if (r.v === 'juego') return abrirJuego(r.id, t);
-  btnAtras.hidden = true; btnMas.hidden = true;
+  btnAtras.hidden = true;
   if (r.v === 'inicio') vInicio(r.cat); else ({ stats: vStats, ajustes: vAjustes })[r.v]();
   window.scrollTo(0, 0);
 }
 async function abrirJuego(id, t) {
   const j = JUEGOS.find(x => x.id === id);
-  tit.textContent = j.nombre; btnAtras.hidden = false; btnMas.hidden = true;
+  tit.textContent = j.nombre; btnAtras.hidden = false;
   app.innerHTML = '<p class="note">Cargando…</p>';
   let mod;
   await cargarBarajas();                       // índice de barajas/dorsos de imagen (no falla: sin él solo salen las cartas dibujadas)

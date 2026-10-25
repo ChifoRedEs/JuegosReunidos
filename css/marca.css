@@ -108,6 +108,7 @@ button.ficha{display:flex}
 .barra-gen{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin:14px 0 6px;padding-top:12px;border-top:2px dashed var(--line)}
 .barra-gen button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;padding:6px 4px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:800 12px/1.15 var(--f-titulo,system-ui);text-align:center;cursor:pointer;touch-action:manipulation}
 .barra-gen button span{font-size:20px;line-height:1}
+@media (max-width:440px){.barra-gen{gap:5px}.barra-gen button{padding:6px 1px;font-size:10px;letter-spacing:-.2px;hyphens:none}.barra-gen button span{font-size:18px}}
 .barra-gen button:active{transform:scale(.96)}
 .barra-gen button[data-gen="nueva"]{border-color:var(--purple)}
 .barra-gen button[data-gen="salir"]{border-color:#E0553D}

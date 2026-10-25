@@ -16,7 +16,7 @@
 //   api.pref(k, def) / api.setPref(k, v)             preferencias propias del juego
 //   api.sonido('click'|'mover'|'captura'|'ok'|'error'|'dado'|'ganar'|'perder'), api.vibrar(ms | [ms, ms…])
 //   api.confirmar(texto) → boolean, api.aviso(texto), api.modal(titulo, html)
-//   api.menu([{ texto, accion, peligro?, activo? }])  entradas del menú «⋯» de la cabecera
+//   api.menu([{ texto, accion, peligro?, activo? }])  entradas extra: «Reglas» sale en la barra inferior; el resto en Pausa / Salir → Más opciones
 //   api.css(url)                 carga la hoja de estilos del juego: await api.css(new URL('./mi.css', import.meta.url))
 //   api.titulo(texto)            cambia el título de la cabecera
 import { $ } from '../../core/dom.js';
