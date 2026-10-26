@@ -19,7 +19,15 @@ function ajustarCabecera() {
 }
 window.addEventListener('resize', ajustarCabecera); ajustarCabecera();
 if (document.fonts) { document.fonts.load('40px Chewy').then(ajustarCabecera).catch(() => {}); document.fonts.ready.then(ajustarCabecera); }
-const cabTxt = t => { const e = document.getElementById('titulotxt'); if (e) e.textContent = t; };
+// Título de la cabecera: «Juegos» (amarillo) y «Reunidos» (azul) como en el logo; el nombre de cada juego cambia de color al azar (todos con buen contraste sobre blanco)
+const COLORES_TITULO = ['#C62828', '#1565C0', '#2E7D32', '#6A1B9A', '#D84315', '#00796B', '#AD1457', '#283593', '#8D4B00', '#00838F'];
+let colorTitulo = '';
+const cabTxt = t => {
+  const e = document.getElementById('titulotxt'); if (!e) return;
+  if (t === 'Juegos Reunidos') { e.innerHTML = '<span class="cj">Juegos</span> <span class="cr">Reunidos</span>'; e.style.color = ''; return; }
+  let c; do { c = COLORES_TITULO[Math.random() * COLORES_TITULO.length | 0]; } while (c === colorTitulo && COLORES_TITULO.length > 1);
+  colorTitulo = c; e.textContent = t; e.style.color = c;
+};
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), nav = $('#nav');
 const RUTAS = [
