@@ -20,7 +20,7 @@ y abre http://localhost:8000. (Cualquier otro servidor estático vale.)
     index.html · manifest.webmanifest · sw.js
     css/        base.css (global) · cartas.css (para juegos de cartas)
     img/cartas/ imágenes de barajas (espanola/ · francesa/) y dorsos (dorsos/) para 🎨 Apariencia; ver img/cartas/LEEME.md
-    icons/      iconos de la app (tools/generar_iconos.py los regenera)
+    icons/      iconos de la app (icon-192, icon-512 e icon-maskable-512, que lleva margen de seguridad para Android)
     js/app.js        rutas (#/cat/<categoría>, #/juego/<id>, #/stats, #/ajustes), menú superior, estadísticas por categoría, logros, ajustes, importar/exportar
     js/registry.js   LISTA DE JUEGOS: aquí se da de alta cada juego nuevo
     js/core/         aspectos (apariencia), dom, storage, ajustes, stats, sonido, undo, cronometro, cartas, teclado (teclado emergente arrastrable),
@@ -31,7 +31,7 @@ y abre http://localhost:8000. (Cualquier otro servidor estático vale.)
     js/games/_plantilla/   punto de partida para un juego nuevo
     data/diccionario/ diccionario español para los juegos de palabras (lo genera tools/generar_diccionario.py; ver su LEEME.md)
     data/nonogramas/ fuentes.txt (dibujos hechos a mano) → pixelart.json (lo genera tools/verificar_nonogramas.mjs)
-    tools/           generar_sw.py · generar_barajas.py · optimizar_imagenes.py · generar_iconos.py · verificar_nonogramas.mjs
+    tools/           generar_sw.py · generar_barajas.py · optimizar_imagenes.py · verificar_nonogramas.mjs
     tests/motores.mjs   pruebas de los motores:  node tests/motores.mjs
     docs/            ANADIR-JUEGO.md · MEJORAS-INCLUIDAS.md · HOJA-DE-RUTA.md · AUDITORIA.md
 
@@ -108,6 +108,7 @@ Formato MAYOR.MENOR.PARCHE: MAYOR = cambios grandes en toda la app · MENOR = ju
 | **3.33.1** | 26/10/2026 | 🚪 **«Pausa/Salir» unificado**: en todos los juegos, «Sí, salir» lleva al menú de su categoría (antes unos salían y otros iban a la pantalla de creación de partida). Se elimina el botón/flecha «Atrás» de la cabecera. |
 | **3.33.2** | 26/10/2026 | 🖼️ Nuevo banner de cabecera (`img/banner-cabecera.webp`, 8:1). |
 | **3.33.3** | 26/10/2026 | 🔤 Título de la cabecera en **Chewy** (Google Fonts). El tamaño se calcula para que «Palabras Cruzadas», el nombre más largo, ocupe justo la zona clara del banner (50 % del ancho); los demás caben siempre. |
+| **3.33.4** | 26/10/2026 | 📱 **Iconos de instalación**: en Android salía el logo en negro porque seguían el `icon-maskable-512.png` antiguo y el `icon.svg` trazado en negro. Se regenera el maskable a partir del logo nuevo (con margen de seguridad) y se quita el SVG del manifiesto y de la cabecera. |
 | **3.24.0** | 25/10/2026 | 🗂️ **Tres fichas nuevas agrupadas** (como Parchís y Oca): **Buscaminas y Klotski** (Lógica), **3 en raya y Conecta 4** y **Dominó y Rummy** (Tablero). Cada juego conserva su partida, estadísticas y apariencia; Inicio pasa de 40 a 37 fichas. |
 | **3.23.0** | 25/10/2026 | 🧭 **Fuera el menú ⋯ de la cabecera**: «Reglas» (o «Reglamento» / «Cómo se juega») pasa a la barra inferior junto a Apariencia, que ahora tiene **5 botones en una sola fila** (Nueva · Configurar · Apariencia · Reglas · Pausa/Salir). El resto de funciones del antiguo menú (Historial, Pista, Podio, Compartir resultado…) se abren desde **Pausa / Salir → ⋯ Más opciones del juego**. |
 | **3.22.0** | 25/10/2026 | 🃏 Los 3 **Solitarios** (Klondike, Spider y Carta Blanca) se pueden jugar con las **2 barajas francesas** (52 cartas) o las **2 españolas** (40 cartas: A–7, sota, caballo y rey) desde 🎨 Apariencia › Barajas («Aleatoria» sortea solo entre las francesas). Las reglas se adaptan: Klondike y Carta Blanca alternan «color» (oros y copas contra espadas y bastos), Spider usa 8 series de 10 cartas con 4 repartos. Cambiar de familia empieza una partida nueva (con confirmación si hay una en curso). Módulo común: `js/core/barajasol.js`. |
