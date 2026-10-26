@@ -38,7 +38,7 @@ export async function mount(r, a) {
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
   api.barra({ nueva: () => empezar(),
-    salir: () => { pausar(); setup(); },
+    salir: () => { pausar(); location.hash = '#/cat/arcade'; },
     pausar: () => { eraJugando = !!S && (S.fase === 'juego' || S.fase === 'gol'); pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) seguir(); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, meta: cfg.meta }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(A.MODOS) }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.modo === 'cpu', opciones: Object.entries(A.NIVELES).map(([k, n]) => [k, n.nombre]) }, { clave: 'meta', titulo: 'Partido a', opciones: A.METAS.map(m => [m, `${m} goles`]) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

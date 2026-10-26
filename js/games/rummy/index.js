@@ -43,7 +43,7 @@ export async function mount(r, a) {
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; } else S = null;
   root.addEventListener('click', clic);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(R.NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
@@ -230,7 +230,7 @@ function clic(e) {
   }
 }
 function reglas() {
-  api.modal('Rummy de fichas', `<ul><li>106 fichas: del 1 al 13 en cuatro colores (dos de cada) y 2 comodines ★. Cada jugador empieza con 14.</li>
+  api.modal('Rummy Tile', `<ul><li>106 fichas: del 1 al 13 en cuatro colores (dos de cada) y 2 comodines ★. Cada jugador empieza con 14.</li>
     <li><b>Jugadas</b>: <b>grupo</b> = 3 o 4 fichas del mismo número y colores distintos; <b>escalera</b> = 3 o más números seguidos del mismo color (el 13 no enlaza con el 1). El comodín sustituye a cualquier ficha.</li>
     <li>En tu turno: <b>juega fichas</b> o <b>roba</b> una de la bolsa.</li>
     <li><b>Primera bajada</b>: debe sumar al menos ${R.BAJADA} puntos solo con fichas tuyas (el comodín vale lo que sustituye) y sin tocar la mesa.</li>

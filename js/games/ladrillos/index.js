@@ -32,7 +32,7 @@ export async function mount(r, a) {
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
   api.barra({ nueva: () => empezar(),
-    salir: () => { pausar(); setup(); },
+    salir: () => { pausar(); location.hash = '#/cat/arcade'; },
     pausar: () => { eraJugando = !!S && (S.fase === 'jugar' || S.fase === 'listo'); pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) tocar(); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(L.MODOS) }, { clave: 'nivel', titulo: 'Empezar en el nivel', visible: v.modo === 'campana', opciones: Array.from({ length: nivelMax() }, (_, k) => [k + 1, String(k + 1)]) }], aplicar: v => { Object.assign(cfg, v); if (cfg.modo === 'propio') { api.setPref('cfg', cfg); pausar(); setup(); } else empezar(); } } });

@@ -29,7 +29,7 @@ export async function mount(r, a) {
   onRes = () => { if (cv && S) { ajustarTamano(); dibujar(); } }; addEventListener('resize', onRes);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   api.barra({ nueva: () => empezar(),
-    salir: () => { pausar(); setup(); },
+    salir: () => { pausar(); location.hash = '#/cat/arcade'; },
     pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
     config: { valores: () => ({ modo: cfg.modo, vel: cfg.vel, tam: cfg.tam, cruceta: cfg.cruceta }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS) }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(M.VELOCIDADES).map(([k, x]) => [k, x.nombre]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(M.TAMANOS).map(([k, x]) => [k, x.nombre]) }, { clave: 'cruceta', titulo: 'Cruceta', opciones: [[true, 'Mostrar'], [false, 'Solo deslizar']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

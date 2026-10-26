@@ -36,7 +36,7 @@ export async function mount(r, a) {
   tk = crearTeclado({ filas: ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM', '✔'], borrar: true, alPulsar: tecla, titulo: 'Encadenadas · escribe tu palabra' });
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); empezar(); },
-    salir: () => { parar(); api.borrar(); setup(); },
+    salir: () => { parar(); api.borrar(); location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra la CPU'], ['solo', 'Solo (récord)'], ['grupo', 'En grupo']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(E.NIVEL) }, { clave: 'n', titulo: 'Jugadores', visible: v.modo === 'grupo', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'enlace', titulo: 'Enlazar con', opciones: Object.entries(E.ENLACES) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: E.TIEMPOS.map(t => [t, t ? `${t} s` : 'Sin límite']) }], aplicar: v => { Object.assign(cfg, v); parar(); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (S) { armar(); empezarTurno(); } else setup();

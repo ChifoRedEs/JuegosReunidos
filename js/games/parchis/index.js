@@ -79,7 +79,7 @@ export async function mount(root, a) {
   const n0 = api.pref('names', {}); nombres = n0 && typeof n0 === 'object' ? { ...n0 } : {};
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('change', alCambiar);
   api.barra({ nueva: () => { if (P && P.phase !== 'over' && !api.confirmar('¿Abandonar la partida actual?')) return; iniciarPartida(); },
-    salir: () => { clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false; P = null; api.borrar(); modo = 'setup'; rSetup(); },
+    salir: () => { clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false; P = null; api.borrar(); modo = 'setup'; location.hash = '#/cat/tablero'; },
     pausar: () => { clearTimeout(timer); },
     reanudar: () => { if (P && P.phase !== 'over') drive(); },
     config: { valores: () => ({ ...Object.fromEntries(PC.map(c => [c, cfgSetup[c] || 'n'])), parejas, libre, vel: api.pref('vel', 'normal') }), grupos: v => [...PC.map(c => ({ clave: c, titulo: `Jugador ${PNAME[c]}${nombres[c] ? ' · ' + nombres[c] : ''}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'parejas', titulo: 'Por parejas (con 4 jugadores)', opciones: [[true, 'Sí'], [false, 'No']], visible: PC.every(c => v[c] !== 'n') }, { clave: 'libre', titulo: 'Salida libre', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'vel', titulo: 'Velocidad CPU', opciones: [['rapida', 'Rápida'], ['normal', 'Normal'], ['lenta', 'Lenta']] }], aplicar: v => { if (PC.filter(c => v[c] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } PC.forEach(c => { cfgSetup[c] = v[c] === 'n' ? null : v[c]; }); api.setPref('cfg', cfgSetup); libre = !!v.libre; parejas = !!v.parejas; api.setPref('libre', libre); api.setPref('parejas', parejas); api.setPref('vel', v.vel); iniciarPartida(); } } });
@@ -372,4 +372,4 @@ function iniciarPartida() {
   clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false;
   P = nuevaPartida(cfgSetup, nm, { salidaLibre: libre, parejas: parejas && PC.every(c => cfgSetup[c]) }); P.anim = false; modo = 'juego'; ultFoco = ''; guardar(); rJuego(); pintarJuego(); drive();
 }
-function reglas() { api.modal('Party’s', listaReglas()); }
+function reglas() { api.modal('Partxis', listaReglas()); }

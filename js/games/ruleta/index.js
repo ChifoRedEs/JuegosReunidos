@@ -38,7 +38,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', teclaPanel);
   onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/palabras'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin' && !girando) bucle(); },
     config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], rondas: cfg.rondas, nivel: cfg.nivel }), grupos: v => [...[0, 1, 2].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'rondas', titulo: 'Rondas', opciones: R.RONDAS.map(k => [k, String(k)]) }, { clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(R.NIVEL).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { if ([0, 1, 2].filter(i => v['j' + i] !== 'n').length < 1) { api.aviso('Elige al menos un jugador'); return; } [0, 1, 2].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.rondas = v.rondas; cfg.nivel = v.nivel; empezar(); } } });

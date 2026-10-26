@@ -31,7 +31,7 @@ export async function mount(r, a) {
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   root.addEventListener('click', clic);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'n', titulo: 'Jugadores', opciones: [[2, '2 · tú vs CPU'], [3, '3 · cada uno por su cuenta'], [4, '4 · en parejas']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }, { clave: 'cambio', titulo: 'Cambiar el 7 del triunfo', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

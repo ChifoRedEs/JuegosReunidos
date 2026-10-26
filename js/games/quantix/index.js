@@ -30,7 +30,7 @@ export async function mount(r, a) {
   onRes = () => { if (cv && S) { encajar(); ajustarTamano(); dibujar(); } }; addEventListener('resize', onRes);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   api.barra({ nueva: () => empezar(),
-    salir: () => { pausar(); setup(); },
+    salir: () => { pausar(); location.hash = '#/cat/arcade'; },
     pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
     config: { valores: () => ({ ...cfg }), grupos: () => [

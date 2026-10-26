@@ -41,7 +41,7 @@ export async function mount(r, a) {
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
   api.barra({ nueva: () => empezar(),
-    salir: () => { pausar(); setup(); },
+    salir: () => { pausar(); location.hash = '#/cat/arcade'; },
     pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, botones: cfg.botones }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(B.MODOS) }, { clave: 'nivel', titulo: 'Nivel inicial', visible: !B.porTiempo(v.modo), opciones: [1, 5, 8, 10, 13].map(n => [n, String(n)]) }, { clave: 'botones', titulo: 'Botones táctiles', opciones: [[true, 'Mostrar'], [false, 'Solo gestos']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

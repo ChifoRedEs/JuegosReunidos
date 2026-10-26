@@ -12,7 +12,7 @@ import { VERSION } from './version.js';
 
 const cabTxt = t => { const e = document.getElementById('titulotxt'); if (e) e.textContent = t; };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
-const app = $('#app'), btnAtras = $('#atras'), nav = $('#nav');
+const app = $('#app'), nav = $('#nav');
 const RUTAS = [
   ['cat-logica', '🧠', 'Lógica', '#/cat/logica'],
   ['cat-tablero', '🎲', 'Tablero', '#/cat/tablero'],
@@ -91,7 +91,6 @@ function abrirMenu(lista) {
   const items = lista.map(it => el('button', { class: 'item' + (it.peligro ? ' danger' : ''), 'aria-pressed': it.activo == null ? false : String(!!it.activo), onclick: () => { cerrar(); it.accion(); } }, it.texto));
   cerrar = hoja([el('h2', {}, nombreVista), ...items]);
 }
-btnAtras.addEventListener('click', () => { const r = ruta(); location.hash = r.cat ? '#/cat/' + r.cat : '#/'; });   // vuelve a la categoría del juego
 
 /* ---------- API que reciben los juegos ---------- */
 function crearApi(j, ent, mod, root) {
@@ -327,13 +326,12 @@ async function render() {
   }).join('');
   app.innerHTML = '';
   if (r.v === 'juego') return abrirJuego(r.id, t);
-  btnAtras.hidden = true;
   if (r.v === 'inicio') vInicio(r.cat); else ({ stats: vStats, ajustes: vAjustes })[r.v]();
   window.scrollTo(0, 0);
 }
 async function abrirJuego(id, t) {
   const j = JUEGOS.find(x => x.id === id);
-  nombreVista = j.nombre; cabTxt(j.nombre); btnAtras.hidden = false;
+  nombreVista = j.nombre; cabTxt(j.nombre);
   app.innerHTML = '<p class="note">Cargando…</p>';
   let mod;
   await cargarBarajas();                       // índice de barajas/dorsos de imagen (no falla: sin él solo salen las cartas dibujadas)

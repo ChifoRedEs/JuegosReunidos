@@ -61,7 +61,7 @@ export async function mount(r, a) {
   onVis = () => { if (document.hidden) poner_pausa(true); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv && S) { ajustar(); dibujar(); } }; addEventListener('resize', onRes);
   api.barra({ nueva: () => nuevaPartida(),
-    salir: () => ajustes(),
+    salir: () => { location.hash = '#/cat/arcade'; },
     pausar: () => { eraPausa = pausa; poner_pausa(true); },
     reanudar: o => { if (o === 'salir' && !eraPausa) poner_pausa(false); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, n: cfg.n, mapa: cfg.mapa, tiempo: cfg.tiempo, cajas: cfg.cajas }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.modo === 'cpu', opciones: M.NIVELES.map((n, i) => [i, n]) }, { clave: 'n', titulo: 'Gusanos por equipo', opciones: M.TAMANOS.map(n => [n, String(n)]) }, { clave: 'mapa', titulo: 'Mapa', opciones: [...Object.entries(M.MAPAS), ['azar', '🎲 Al azar']] }, { clave: 'tiempo', titulo: 'Tiempo por turno', opciones: M.TIEMPOS.map(t => [t, t + ' s']) }, { clave: 'cajas', titulo: 'Cajas de suministros', opciones: [[true, '📦 Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); nuevaPartida(); } } });

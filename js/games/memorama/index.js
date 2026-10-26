@@ -1,4 +1,4 @@
-// Memorama: encuentra las parejas de imágenes. Un jugador (movimientos y tiempo), 2 jugadores por turnos o contra la máquina (3 niveles de memoria).
+// Match-Up: encuentra las parejas de imágenes. Un jugador (movimientos y tiempo), 2 jugadores por turnos o contra la máquina (3 niveles de memoria).
 // Reglas y lógica en motor.js; los bancos de imágenes (img/memorama/<tema>) se listan en bancos.js (tools/generar_memorama.py).
 import { $, esc } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
@@ -48,7 +48,7 @@ export async function mount(r, a) {
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
   api.barra({
     nueva: () => jugar(),
-    salir: () => { parar(); setup(); },
+    salir: () => { parar(); location.hash = '#/cat/logica'; },
     crono: () => crono,
     pausar: () => { pausado = true; clearTimeout(tim); tim = 0; },
     reanudar: () => { pausado = false; siguiente(); },
@@ -200,7 +200,7 @@ function clic(e) {
   else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'vistazo') vistazo();
 }
 function reglas() {
-  api.modal('Memorama', `<ul><li>Todas las cartas empiezan <b>boca abajo</b>. En tu turno destapa <b>dos</b>: si tienen la misma imagen son <b>pareja</b> y se quedan a la vista; si no, se vuelven a tapar. Memoriza dónde está cada una.</li>
+  api.modal('Match-Up', `<ul><li>Todas las cartas empiezan <b>boca abajo</b>. En tu turno destapa <b>dos</b>: si tienen la misma imagen son <b>pareja</b> y se quedan a la vista; si no, se vuelven a tapar. Memoriza dónde está cada una.</li>
     <li><b>👤 Un jugador</b>: encuentra todas las parejas con los menos movimientos y el menor tiempo (⭐⭐⭐ si casi no fallas). Hay hasta 3 <b>👁️ vistazos</b> que enseñan todo el tablero un instante (no cuentan para el récord).</li>
     <li><b>👥 2 jugadores</b> y <b>🤖 contra la máquina</b>: si aciertas una pareja te la quedas y <b>repites turno</b>. Gana quien reúna más. La máquina solo recuerda lo que ha visto, y su memoria depende del nivel.</li>
     <li>Tras un fallo puedes tocar otra carta para no esperar. Teclado: flechas para moverte, Intro o espacio para destapar.</li>

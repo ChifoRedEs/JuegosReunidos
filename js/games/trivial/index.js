@@ -22,7 +22,7 @@ export async function mount(r, a) {
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', alTecla);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/palabras'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], nCat: cfg.nCat, banco: cfg.banco, modo: cfg.modo, nivel: cfg.nivel }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'nCat', titulo: 'Quesitos', opciones: [[6, '6 categorías'], [9, '9 (completo)']] }, { clave: 'banco', titulo: 'Preguntas', opciones: Object.entries(T.BANCOS) }, { clave: 'modo', titulo: 'Respuestas', opciones: [['opciones', '4 opciones'], ['escribir', 'Escribir']] }, { clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(T.NIVEL).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.nCat = v.nCat; cfg.banco = v.banco; cfg.modo = v.modo; cfg.nivel = v.nivel; empezar(); } } });

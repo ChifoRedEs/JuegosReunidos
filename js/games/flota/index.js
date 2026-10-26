@@ -43,7 +43,7 @@ export async function mount(r, a) {
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra CPU'], ['dos', '2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(F.NIVEL) }, { clave: 'flota', titulo: 'Flota', opciones: Object.entries(F.FLOTAS).map(([k, f]) => [k, f.nombre]) }, { clave: 'tocar', titulo: 'Barcos juntos', opciones: [[false, 'No se tocan'], [true, 'Pueden tocarse']] }, { clave: 'repetir', titulo: 'Al acertar', opciones: [[true, 'Vuelves a disparar'], [false, 'Pasa el turno']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

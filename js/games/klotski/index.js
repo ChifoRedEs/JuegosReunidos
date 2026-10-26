@@ -1,4 +1,4 @@
-// Klotski: puzle de bloques deslizantes («fichas de colores») y puzle de fichas numeradas, con varios tamaños y niveles.
+// Deslizadas: puzle de bloques deslizantes («fichas de colores») y puzle de fichas numeradas, con varios tamaños y niveles.
 // Vista 2D (HTML) o 3D (Three.js). Reglas y generación en motor.js.
 import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
@@ -48,7 +48,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => { cfg = { modo: S.modo, tam: S.tam, nivel: cfg.nivel }; parar(); jugar(); },
-    salir: () => { parar(); setup(); },
+    salir: () => { parar(); location.hash = '#/cat/logica'; },
     crono: () => crono,
     config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(K.MODOS).map(([k, l]) => [k, (k === 'colores' ? '🟦 ' : '🔢 ') + l]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(K.TAMANOS[v.modo]).map(([k, t]) => [k, t.nombre]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVELES) }], alCambiar: (v, c) => { if (c === 'modo' && !K.TAMANOS[v.modo][v.tam]) v.tam = v.modo === 'colores' ? '4x5' : '4x4'; }, aplicar: v => { cfg = { modo: v.modo, tam: v.tam, nivel: v.nivel }; parar(); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '↶ Deshacer', accion: deshacer }, { texto: '💡 Pista', accion: pedirPista }, { texto: '↺ Reiniciar este puzle', accion: reiniciar },
@@ -92,7 +92,7 @@ function armar() {
   cerrar3D(); modo3d = quiere3D(); sel = -1; pistaMov = null; parar();
   const T = K.dims(S.modo, S.tam);
   root.innerHTML = `<div class="klcab"><b id="klTit">${esc(K.MODOS[S.modo])} · ${esc(T.nombre)}</b><span id="klInfo"></span></div>
-    <div id="klTab" ${modo3d ? 'class="e3d kl3"' : 'class="kltab"'} style="--w:${S.w};--h:${S.h}" role="application" aria-label="Tablero de Klotski: toca o arrastra las fichas"></div>
+    <div id="klTab" ${modo3d ? 'class="e3d kl3"' : 'class="kltab"'} style="--w:${S.w};--h:${S.h}" role="application" aria-label="Tablero de Deslizadas: toca o arrastra las fichas"></div>
     <p class="klmsg" id="klMsg" role="status" aria-live="polite"></p>
     <div class="bar klbar"><button class="btn" data-ac="deshacer">↶ Deshacer</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="reiniciar">↺ Reiniciar</button></div>${api.barraHtml()}`;
   aplicarFichas();
@@ -156,8 +156,8 @@ function cerrar3D() { tok3++; if (V3) { V3.destruir(); V3 = null; } }
 async function iniciar3D() {
   const t = ++tok3, host = $('#klTab'); if (!host || !S) return;
   try {
-    const b3 = await import('../../core/escena3d.js'), { crearKlotski3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
-    const v = crearKlotski3D(host, { w: S.w, h: S.h, modo: S.modo }); b3.botonesCamara(host, v.E);
+    const b3 = await import('../../core/escena3d.js'), { crearDeslizadas3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
+    const v = crearDeslizadas3D(host, { w: S.w, h: S.h, modo: S.modo }); b3.botonesCamara(host, v.E);
     v.limites = limites; v.alMover = mover; v.alToque = tocarPieza; v.alCelda = tocarCelda; V3 = v; v.recolor(aplicarFichas()); pintar();
   } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); } }
 }
@@ -254,7 +254,7 @@ function clic(e) {
   else if (a === 'nueva') { if (S && !S.done && S.movs && !api.confirmar('¿Abandonar este puzle?')) return; parar(); setup(); }
 }
 function reglas() {
-  api.modal('Klotski', `<ul><li><b>Fichas de colores</b> (Klotski clásico): hay bloques de varios tamaños y solo dos casillas vacías. Lleva el <b>bloque grande ★</b> hasta la <b>salida</b> del borde inferior.</li>
+  api.modal('Deslizadas', `<ul><li><b>Fichas de colores</b> (Deslizadas clásico): hay bloques de varios tamaños y solo dos casillas vacías. Lleva el <b>bloque grande ★</b> hasta la <b>salida</b> del borde inferior.</li>
     <li>Un bloque se desliza en línea recta, tantas casillas como quieras, y eso cuenta como <b>1 movimiento</b>. Toca un bloque para ver adónde puede ir (si solo tiene un movimiento posible, se hace solo) o arrástralo.</li>
     <li><b>Fichas con números</b>: ordénalas de 1 a n dejando el hueco en la esquina inferior derecha. Toca una ficha y se desplazan todas las de su fila o columna hasta el hueco (1 movimiento).</li>
     <li>Varios tableros (4×4 a 5×6 en colores; 3×3 a 5×5 en números) y 4 niveles. En colores, al terminar verás el <b>mínimo de movimientos</b> posible y ganas ⭐ por acercarte.</li>

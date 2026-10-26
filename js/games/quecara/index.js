@@ -36,7 +36,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({
     nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; empezar(); },
-    salir: () => { parar(); api.borrar(); setup(); },
+    salir: () => { parar(); api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => { clearTimeout(timer); pensando = false; },
     reanudar: () => bucle(),
     config: {

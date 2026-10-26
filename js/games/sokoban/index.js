@@ -63,7 +63,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   onKey = tecla; document.addEventListener('keydown', onKey);
   api.barra({ nueva: () => { if (S && S.modo === 'campana') nivelCampana(S.nivel); else generado(cfg.tam || 'mediano'); },
-    salir: () => elegirModo(cfg.modo),
+    salir: () => { location.hash = '#/cat/logica'; },
     etiqueta: 'Nuevo nivel',
     config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(MODOS) }, { clave: 'tam', titulo: 'Tamaño del almacén', visible: v.modo !== 'campana', opciones: Object.entries(K.TAMANOS).map(([k, t]) => [k, `${t.nombre} · ${t.cajas} cajas`]) }], aplicar: v => { cfg.modo = v.modo; cfg.tam = v.tam; api.setPref('cfg', cfg); if (v.modo === 'campana') elegirModo('campana'); else generado(v.tam); } } });
   api.menu([{ texto: '🗺️ Campaña', accion: () => elegirModo('campana') }, { texto: '🎲 Nivel generado', accion: () => elegirModo('azar') }, { texto: '📅 Reto del día', accion: () => reto() },

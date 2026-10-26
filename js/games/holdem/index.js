@@ -59,7 +59,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null); if (c0 && c0.bots >= 2 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel, modo: c0.modo === 'libre' ? 'libre' : 'torneo', ciegas: H.CIEGAS_LIBRE[c0.ciegas] ? c0.ciegas : 'baja' };
   root.addEventListener('click', clic); root.addEventListener('input', alMover);
   api.barra({ nueva: () => { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); if (S && S.modo === 'libre' && S.fase !== 'terminado') levantarse(true); else { api.borrar(); setup(); } },
+    salir: () => { clearTimeout(timer); if (S && S.modo === 'libre' && S.fase !== 'terminado') levantarse(true); else api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'terminado') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['torneo', '🏆 Torneo'], ['libre', '🃏 Partida libre']] }, { clave: 'ciegas', titulo: 'Ciegas', visible: v.modo === 'libre', opciones: Object.entries(H.CIEGAS_LIBRE).map(([k, [a, b]]) => [k, `${a}/${b}`]) }, { clave: 'bots', titulo: 'Rivales', opciones: [2, 3, 4, 5].map(n => [n, n + ' bots']) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

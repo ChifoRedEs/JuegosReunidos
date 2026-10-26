@@ -32,7 +32,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   onVis = () => { ultimo = performance.now(); }; document.addEventListener('visibilitychange', onVis);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar este rosco?')) return; parar(); empezar(); },
-    salir: () => { parar(); api.borrar(); setup(); },
+    salir: () => { parar(); api.borrar(); location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['solo', 'Contrarreloj'], ['cpu', 'Duelo contra la CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(R.NIVEL) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: R.TIEMPOS.map(t => [t, `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]) }], aplicar: v => { Object.assign(cfg, v); parar(); empezar(); } } });
   api.menu([{ texto: 'Nuevo rosco', accion: nuevaSetup }, { texto: '🏳️ Plantarse', accion: plantarse }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
   if (S) { armar(); pintar(); arrancar(); } else setup();

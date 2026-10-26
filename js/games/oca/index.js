@@ -35,7 +35,7 @@ export async function mount(r, a) {
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; empezar(); },
-    salir: () => { clearTimeout(timer); anim = false; api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); anim = false; api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ dados: cfg.dados, pozo: cfg.pozo, j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1] }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'dados', titulo: 'Dados', opciones: [[1, '1 dado'], [2, '2 dados']] }, { clave: 'pozo', titulo: 'Pozo', opciones: [['rescate', 'Hasta que te rescaten'], ['turnos', '2 turnos']] }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } cfg.dados = v.dados; cfg.pozo = v.pozo; [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); empezar(); } } });

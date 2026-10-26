@@ -52,7 +52,7 @@ export async function mount(r, a) {
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
   onRes = () => limitarPanel(); addEventListener('resize', onRes);
   api.barra({ nueva: () => jugar(),
-    salir: () => { parar(); setup(); },
+    salir: () => { parar(); location.hash = '#/cat/logica'; },
     crono: () => crono,
     config: { valores: () => ({ modo: cfg.modo, preset: cfg.preset, pos: cfg.pos, col: cfg.col, rep: cfg.rep, max: cfg.max }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'adivinar' ? '🔍 ' : '🔒 ') + l]) }, { clave: 'preset', titulo: 'Nivel', opciones: [...Object.entries(M.PRESETS).map(([k, p]) => [k, p.nombre]), ['personal', '⚙️ A tu gusto']] }, { clave: 'pos', titulo: 'Bolas', visible: v.preset === 'personal', opciones: M.POS.map(n => [n, String(n)]) }, { clave: 'col', titulo: 'Colores', visible: v.preset === 'personal', opciones: M.COLS.map(n => [n, String(n)]) }, { clave: 'rep', titulo: 'Repetir colores', visible: v.preset === 'personal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'max', titulo: 'Intentos', visible: v.preset === 'personal', opciones: M.MAXS.map(n => [n, String(n)]) }], alCambiar: (v, c) => { if (c === 'preset' && M.PRESETS[v.preset]) Object.assign(v, { pos: M.PRESETS[v.preset].pos, col: M.PRESETS[v.preset].col, rep: M.PRESETS[v.preset].rep, max: M.PRESETS[v.preset].max }); else if (c !== 'modo' && c !== 'preset' && !v.rep && v.col < v.pos) v.col = M.COLS.find(x => x >= v.pos) || 8; }, aplicar: v => { Object.assign(cfg, v); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '⌫ Borrar', accion: borrar }, { texto: '💡 Pista', accion: pedirPista },

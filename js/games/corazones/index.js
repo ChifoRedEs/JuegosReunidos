@@ -27,7 +27,7 @@ export async function mount(r, a) {
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }, { clave: 'meta', titulo: 'Partida a', opciones: C.METAS.map(m => [m, `${m} puntos`]) }, { clave: 'luna', titulo: 'Tiro a la luna', opciones: [['resto', 'Los rivales +26'], ['resta', 'Tú −26']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

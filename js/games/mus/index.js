@@ -37,7 +37,7 @@ export async function mount(r, a) {
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; hm = g.hm || historialVacio(); } else { S = null; hm = historialVacio(); }
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
-    salir: () => { clearTimeout(timer); api.borrar(); setup(); },
+    salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(M.NIVEL) }, { clave: 'meta', titulo: 'Tantos', opciones: M.METAS.map(x => [x, `A ${x}`]) }, { clave: 'juegos', titulo: 'Partida', opciones: [[1, 'Un juego'], [2, 'Mejor de 3']] }, { clave: 'reyes', titulo: 'Reyes', opciones: [[8, '8 reyes'], [4, '4 reyes']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });

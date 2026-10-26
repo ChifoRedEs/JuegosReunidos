@@ -58,7 +58,7 @@ Los juegos nuevos deben seguir `docs/MARCA.md`: pantalla de partida con `<p clas
 
 ## Agrupar juegos
 Para que dos juegos salgan como una sola ficha en Inicio, añade un grupo a `GRUPOS` en `js/registry.js`:
-`{ id: 'parchis-oca', nombre: 'Party’s y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
+`{ id: 'parchis-oca', nombre: 'Partxis y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
 Cada juego conserva su id, su partida guardada y sus estadísticas.
 
 ## Juegos en 3D (Three.js)
@@ -90,7 +90,7 @@ Todo juego debe ofrecer, bajo el tablero y durante la partida, la barra unificad
 ```js
 api.barra({
   nueva: () => empezar(),                    // botón 1 (la etiqueta es «Nuevo panel» en Lógica/Palabras y «Nueva partida» en el resto; `etiqueta` la cambia)
-  salir: () => { pausar(); setup(); },       // «Sí» al preguntar «¿Salir de la partida?»: pantalla de creación (o '#/cat/<cat>' si no la hay)
+  salir: () => { pausar(); location.hash = '#/cat/<categoría>'; },   // «Sí» al preguntar «¿Salir de la partida?»: SIEMPRE a la pantalla de su categoría (nunca a la de creación)
   crono: () => crono,                        // opcional: Cronometro que la app pausa y reanuda sola
   pausar: () => {}, reanudar: origen => {},  // opcional: para bucles propios (origen 'salir' = pulsó «No»)
   config: {
@@ -111,7 +111,7 @@ No hace falta código extra: cuando tu juego anota el final con `api.registrar({
 
 Las animaciones están en `img/victoria/*.webp` y se declaran en `ANIMACIONES` de `js/core/victoria.js` (imagen, fondo de la ventana y efecto opcional a pantalla completa: confeti o lluvia de emojis). Para añadir una: copia el .webp (animado, con transparencia si quieres) y añade una línea.
 
-## Bancos de imágenes (Memorama)
+## Bancos de imágenes (Match-Up)
 Las imágenes viven en `img/memorama/<tema>/<id>.webp` con un `nombres.json` (`{id: "Nombre"}`) por tema. Tras añadir/quitar imágenes o un tema nuevo (añádelo al dict `TEMAS` del script) ejecuta `python3 tools/generar_memorama.py`, que regenera `js/games/memorama/bancos.js`.
 
 ## Apariencia de las fichas (js/core/fichas.js)
@@ -122,7 +122,7 @@ Color (más de 45), textura (8), forma (5) y tamaño de las piezas, común a var
    - **HTML/CSS**: carga `css/fichas.css` (`api.css(new URL('../../../css/fichas.css', import.meta.url))`), pon la clase `.fx` en la pieza (o `.fxb` si el dibujo está en su `::before`) y llama a `aplicarVars(elemento, est)`; el color llega en `--fx-c` / `--fx-c2`. Si la textura tapa el color de fondo, añade `background-color` en el CSS del juego.
    - **Canvas 2D**: `spriteFicha(colorBase, est, w, h, radio)` devuelve un lienzo con color, textura y forma (con caché) para `drawImage`; `variantes(est.hex, n)` reparte un color en n tonos si las piezas deben distinguirse. Para terrenos pintados píxel a píxel: `pixelTextura(est.tex, x, y)`.
    - **Three.js**: `geoCaja(T, w, h, d, est.forma)` (caja redondeada/biselada con UV) y `capaTextura(ctx, 0, 0, w, h, est.tex)` sobre el lienzo del mapa; `est.esc` escala la pieza.
-Opciones útiles: `color:false` (si las piezas necesitan sus colores para jugar: Encajados, Klotski, Bloques, Rompe-Ladrillos) y `pocos:true` (paleta de 18 colores, solo muestras sin nombre: Guerra de Orugas; Dominó usa su propia lista). Juegos que ya lo usan: Encajados, Klotski, Bloques, Rompe-Ladrillos, Guerra de Orugas (terreno), Ajedrez, Damas, 3 en raya, Cuatro en Línea, Party’s, Oca, Rummy, Magnate, Hotel y Batalla Naval. Los juegos de dos bandos o varios jugadores usan `lados:[…]` (un color por bando) y sobrescriben sus propias variables CSS o el color que pasan a la vista 3D (ver `damas`, `parchis`, `hotel`).
+Opciones útiles: `color:false` (si las piezas necesitan sus colores para jugar: Encajados, Deslizadas, Bloques, Rompe-Ladrillos) y `pocos:true` (paleta de 18 colores, solo muestras sin nombre: Guerra de Orugas; Dominó usa su propia lista). Juegos que ya lo usan: Encajados, Deslizadas, Bloques, Rompe-Ladrillos, Guerra de Orugas (terreno), Ajedrez, Damas, 3 en raya, Cuatro en Línea, Partxis, Oca, Rummy, Magnate, Hotel y Batalla Naval. Los juegos de dos bandos o varios jugadores usan `lados:[…]` (un color por bando) y sobrescriben sus propias variables CSS o el color que pasan a la vista 3D (ver `damas`, `parchis`, `hotel`).
 
 ## Caras de «¿Qué cara tienes?» (avatares)
 `js/games/quecara/avatar.js` compone una cara como un SVG a partir de piezas por capas (`piezas.js`, generado con `python tools/generar_piezas.py` desde `tools/avatares/<pieza>/<forma>.svg`; el marcador `$fillColor` se sustituye por el color). Una cara es un objeto pequeño (`nm, sx, pi, pe, pc, …`); `caraValida(f)` la normaliza, `svgDe(f)` devuelve el SVG (con ids únicos) y `generarCaras(n, semilla, vectorDe)` crea un tablero repartido y repetible. Para añadir una pieza: dibuja el SVG en `tools/avatares/<pieza>/` (coordenadas absolutas de la cara, 4 px de contorno negro), añade la forma al catálogo de `avatar.js` y, si se puede preguntar por ella, una pregunta en `preguntas.js`. Las 30 caras por defecto se regeneran con `node tools/generar_caras_quecara.mjs`. Crédito obligatorio (licencia MIT): Vue Color Avatar, de LeoKu.

@@ -56,7 +56,7 @@ export async function mount(r, a) {
   onResize = () => { if (S && $('#dmCad')) { medir(); pintar(); } }; window.addEventListener('resize', onResize);
   api.barra({
     nueva: () => jugar(),
-    salir: () => { parar(); setup(); },
+    salir: () => { parar(); location.hash = '#/cat/tablero'; },
     pausar: () => { pausado = true; clearTimeout(tim); tim = 0; },
     reanudar: () => { pausado = false; siguiente(); },
     config: {

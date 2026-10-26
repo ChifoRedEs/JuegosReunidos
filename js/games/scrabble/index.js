@@ -71,7 +71,7 @@ export async function mount(r, a) {
   onKey = tecla; document.addEventListener('keydown', onKey);
   onVis = () => { if (document.hidden) guardar(); }; document.addEventListener('visibilitychange', onVis);
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && S.hist.length && !api.confirmar('¿Abandonar la partida actual?')) return; empezar(); },
-    salir: () => { api.borrar(); S = null; serie++; setup(); },
+    salir: () => { api.borrar(); S = null; serie++; location.hash = '#/cat/palabras'; },
     etiqueta: 'Nueva partida',
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'jug', titulo: 'Jugadores', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'rival', titulo: 'Rivales', opciones: [['cpu', '🤖 CPU'], ['personas', '👥 Personas']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.rival === 'cpu', opciones: Object.entries(M.NIVELES) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
