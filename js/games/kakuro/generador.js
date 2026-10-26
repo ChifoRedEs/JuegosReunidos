@@ -1,4 +1,4 @@
-// Kakuro: generador de paneles con solución única, resolvedor por combinaciones y utilidades.
+// CruciSumas: generador de paneles con solución única, resolvedor por combinaciones y utilidades.
 // Panel n×n (la fila 0 y la columna 0 son siempre negras). Casilla negra: { abajo, derecha } = sumas de las tiras
 // que empiezan debajo / a su derecha (0 si no hay). Casilla blanca: un número del 1 al 9; en cada tira no se repiten.
 import { conSemilla } from '../../core/semilla.js';

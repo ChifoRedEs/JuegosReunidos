@@ -1,4 +1,4 @@
-/* Kakuro · mismo estilo que Calcudoku (variables --tb-* de la paleta del tablero) */
+/* CruciSumas · mismo estilo que Calcudoku (variables --tb-* de la paleta del tablero) */
 .juego-kakuro{--ka-font:'Baloo 2',system-ui,sans-serif;--ka-negra:#1B2340;--ka-negra-txt:#fff;--ka-l:min(88vw,440px)}
 .juego-kakuro[data-numeros="clasico"]{--ka-font:Georgia,'Times New Roman',serif}
 .juego-kakuro[data-negras="tablero"]{--ka-negra:var(--tb-strong);--ka-negra-txt:#fff}

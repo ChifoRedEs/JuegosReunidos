@@ -1,4 +1,4 @@
-// Kakuro: «crucigrama de sumas». Mismo formato que Calcudoku y Sudoku: tamaño y nivel, notas, deshacer guardado,
+// CruciSumas: «crucigrama de sumas». Mismo formato que Calcudoku y Sudoku: tamaño y nivel, notas, deshacer guardado,
 // pista, comprobar, errores automáticos, reto del día y 🎨 Apariencia. Ayuda propia: las combinaciones de cada suma.
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
@@ -51,7 +51,7 @@ export async function mount(r, a) {
   hist = new Pila(60, g ? g.hist : []);
   root.innerHTML = `<div id="kaReto"></div>
     <div class="info"><span class="mut" id="kaInfo"></span><span id="kaCrono" aria-label="Tiempo">0:00</span></div>
-    <div class="ka" id="kaTab" role="group" aria-label="Tablero de Kakuro"></div>
+    <div class="ka" id="kaTab" role="group" aria-label="Tablero de CruciSumas"></div>
     <div class="msg" id="kaMsg" role="status" aria-live="polite"></div>
     <div class="kpad" id="kaPad" style="--n2:5"></div>
     <div class="kpad" id="kaAcc" style="--n2:4"><button class="acc" data-ac="notas" aria-pressed="false">✏️ Notas</button><button class="acc" data-ac="undo">↶ Deshacer</button><button class="acc" data-ac="pista">💡 Pista</button><button class="acc" data-ac="comprobar">✔ Comprobar</button></div>
@@ -168,7 +168,7 @@ function pintar() {
   const m = $('#kaMsg'); m.className = 'msg' + (hecho ? ' win' : '');
   m.textContent = hecho ? `¡Panel resuelto en ${fmtTiempo(S.t)}!` : notasOn ? 'Modo notas: los números se anotan a lápiz.' : 'Cada tira suma el número de su pista, con cifras del 1 al 9 sin repetir.';
 }
-// Ayuda propia del Kakuro: las combinaciones posibles de las dos sumas de la casilla elegida (tachadas las que ya no encajan)
+// Ayuda propia del CruciSumas: las combinaciones posibles de las dos sumas de la casilla elegida (tachadas las que ya no encajan)
 function combHtml(i, marcar) {
   return runsDe[i].map(k => {
     const t = ts[k], puestos = marcar ? t.celdas.map(j => S.cur[j]).filter(Boolean) : [], lista = combinaciones(t.suma, t.celdas.length);
@@ -233,7 +233,7 @@ function clic(e) {
   if (ac === 'notas') { notasOn = !notasOn; pintar(); } else if (ac === 'undo') deshacer(); else if (ac === 'pista') pista(); else if (ac === 'comprobar') comprobar(); else if (ac === 'nuevo') nueva(S.n, S.dif, false, true);
 }
 function reglas() {
-  api.modal('Kakuro', `<ul><li>Es un <b>crucigrama de sumas</b>: rellena las casillas blancas con cifras del <b>1 al 9</b>.</li>
+  api.modal('CruciSumas', `<ul><li>Es un <b>crucigrama de sumas</b>: rellena las casillas blancas con cifras del <b>1 al 9</b>.</li>
     <li>Cada casilla oscura con números da la suma de una <b>tira</b>: el número de arriba a la derecha es la suma de las casillas que tiene a su derecha, y el de abajo a la izquierda, la de las que tiene debajo.</li>
     <li>En una misma tira <b>no se repite ninguna cifra</b>. Por ejemplo, 4 en dos casillas solo puede ser 1 + 3.</li>
     <li>🧮 Debajo del tablero ves las <b>combinaciones posibles</b> de las dos sumas de la casilla elegida; las tachadas ya no encajan con lo que has puesto (se puede ocultar en el menú ⋯).</li>

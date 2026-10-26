@@ -86,7 +86,7 @@ assert.deepEqual(jugadas(b, 'w', REGLAS.espanola).map(m => m.caps.length), [2]);
 
 for (const cfg of [{ am: 'c', az: 'c' }, { am: 'c', az: 'c', ro: 'c', ve: 'c' }]) {
   for (let g = 0; g < 20; g++) { const P = nuevaPartida(cfg); let s = 0; while (P.phase !== 'over' && s++ < 20000) { if (P.phase === 'roll') tirar(P, 1 + Math.random() * 6 | 0); else if (P.phase === 'move') mover(P, mejorJugada(P)); else siguiente(P); } assert.equal(P.phase, 'over'); }
-  ok(`Party’s ${Object.keys(cfg).length} jugadores: las partidas terminan`);
+  ok(`Partxis ${Object.keys(cfg).length} jugadores: las partidas terminan`);
 }
 
 // ---- 3 en raya ----
@@ -162,11 +162,11 @@ for (let g = 0; g < 4; g++) { const S = HE.crear(2 + g % 4, 'facil'); S.jug.forE
   while (S.fase !== 'terminado' && guardia++ < 4000) { if (S.fase === 'fin') { HE.nuevaMano(S); continue; } const i = S.turno; assert.ok(i >= 0); let a = HE.decidir(S, i); if (!HE.actuar(S, i, a)) assert.ok(HE.actuar(S, i, HE.legal(S, i).pasar ? { t: 'check' } : { t: 'call' })); if (S.fase === 'fin') assert.equal(S.jug.reduce((s, p) => s + p.stack, 0), S.total); }
   assert.equal(S.fase, 'terminado'); }
 ok('Hold\'em: torneos completos solo de bots, con conservación de fichas');
-// ---- Party’s: salida libre ----
+// ---- Partxis: salida libre ----
 { const P = nuevaPz({ am: 'c', az: 'c' }, {}); P.turn = 0; tirarPz(P, 3); assert.equal(P.phase, 'pass'); }
 for (const v of [1, 2, 3, 4, 6]) { const P = nuevaPz({ am: 'c', az: 'c' }, {}, { salidaLibre: true }); P.turn = 0; tirarPz(P, v); assert.equal(P.kind, 'libre'); moverPz(P, P.moves[0]); assert.equal(P.pieces.am.filter(p => p === 0).length, 1); }
 { const P = nuevaPz({ am: 'c', az: 'c' }, {}, { salidaLibre: true }); P.turn = 0; tirarPz(P, 5); moverPz(P, P.moves[0]); assert.equal(P.kind, 'libre'); moverPz(P, P.moves[0]); assert.equal(P.pieces.am.filter(p => p === 0).length, 2); assert.equal(actualPz(P), 'az'); }
-ok('Party’s salida libre: cualquier número saca ficha sin fichas en juego y un 5 en la primera tirada saca dos');
+ok('Partxis salida libre: cualquier número saca ficha sin fichas en juego y un 5 en la primera tirada saca dos');
 // ---- BlackJack: pago del blackjack (+150 %) frente a victoria normal (+100 %) ----
 { const mesa = (cartas, ap = 100) => { const S = BJ.nuevoEstado(); S.fichas = 1000; S.apuesta = ap; S.zapato = [...Array(100).fill(20), ...cartas.slice().reverse()]; BJ.repartir(S); return S; };
   let S = mesa([0, 4, 12, 5]); assert.equal(S.manos[0].res, 'bj'); assert.equal(S.resultado.neto, 150);
@@ -291,7 +291,7 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivia Quesitos: par
     assert.equal(T.fase, 'fin'); assert.ok(FL.quedan(T, 1 - T.ganador).length === 0); }
   const D = FL.crear({ modo: 'dos', flota: 'rapida' }); FL.alAzar(D, 0); FL.listo(D, 0); assert.equal(D.fase, 'pasar'); FL.continuar(D); assert.equal(D.colocando, 1); FL.alAzar(D, 1); FL.listo(D, 1); FL.continuar(D); assert.equal(D.fase, 'jugar');
   ok('Batalla Naval: colocación sin tocarse, 3 flotas, IA, pasar el móvil y partidas completas'); }
-// ---- Rummy de fichas ----
+// ---- Rummy Tile ----
 { const f = (c, n, k = 0) => k * 52 + c * 13 + n - 1;
   assert.equal(RM.analizar([f(0, 5), f(1, 5), f(2, 5)]).tipo, 'grupo'); assert.ok(!RM.valida([f(0, 5), f(0, 5, 1), f(2, 5)]));
   assert.deepEqual(RM.analizar([f(3, 12), f(3, 13), 104]).orden, [104, f(3, 12), f(3, 13)]); assert.ok(!RM.valida([f(3, 13), f(3, 1), f(3, 2)]));
@@ -303,7 +303,7 @@ assert.ok(TV.coincide('talweg', 'Talweg (o Vaguada)')); ok('Trivia Quesitos: par
   for (let g = 0; g < 30; g++) { const T = RM.crear({ jugadores: Array.from({ length: 2 + g % 3 }, (_, k) => ({ nombre: 'J' + k, cpu: true })), nivel: ['facil', 'medio', 'dificil'][g % 3] }); let k = 0;
     while (T.fase === 'jugar' && k++ < 3000) { const p = T.turno, s = RM.sugerir(T, p); if (s) assert.equal(RM.jugar(T, p, s.mesa, s.mano), ''); else assert.ok(RM.robar(T, p)); assert.ok(RM.validar(JSON.parse(JSON.stringify(T)))); }
     assert.equal(T.fase, 'fin'); }
-  ok('Rummy de fichas: grupos, escaleras con comodín, bajada de 30 y partidas completas de 2 a 4 jugadores'); }
+  ok('Rummy Tile: grupos, escaleras con comodín, bajada de 30 y partidas completas de 2 a 4 jugadores'); }
 // ---- Juego de la Oca ----
 { const nuevo = (o = {}) => OC.crear({ jugadores: [{ nombre: 'A' }, { nombre: 'B' }, { nombre: 'C' }], ...o });
   let S = nuevo(); assert.ok(OC.tirar(S, [5]).otra); assert.equal(S.jug[0].pos, 9); OC.tirar(S, [3]); assert.equal(S.jug[0].pos, 6);   // oca → 9; 12 puente → 6
@@ -430,11 +430,11 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   for (const regla of ['brasilena', 'internacional']) { let e = { b: tableroInicial(REGLAS[regla]), t: 'w' }, k = 0;
     while (k++ < 300) { const js = jugadas(e.b, e.t, REGLAS[regla]); if (!js.length) break; const m = e.t === 'w' ? elegirPorRegla(e.b, 'w', regla, 'facil') : js[Math.floor(Math.random() * js.length)]; assert.ok(js.some(x => JSON.stringify(x.path) === JSON.stringify(m.path))); e = { b: aplicar(e.b, m), t: e.t === 'w' ? 'b' : 'w' }; } }
   ok('Damas: brasileñas e internacionales 10×10 (captura hacia atrás, partidas completas con la IA)'); }
-// ---- Party’s por parejas ----
+// ---- Partxis por parejas ----
 { for (let g = 0; g < 10; g++) { const P = PZ.nuevaPartida({ am: 'c', az: 'c', ro: 'c', ve: 'c' }, {}, { parejas: true }); let t = 0;
     while (P.phase !== 'over' && t++ < 30000) { if (P.phase === 'roll') PZ.tirar(P, 1 + Math.floor(Math.random() * 6)); else if (P.phase === 'move') { const m = PZ.mejorJugada(P); assert.ok(!m.cap || !PZ.amigos(P, m.cap.c, m.c)); PZ.mover(P, m); } else PZ.siguiente(P); }
     assert.equal(P.phase, 'over'); assert.ok(P.pieces[P.winner].every(p => p === 71) && P.pieces[PZ.COMPANERO[P.winner]].every(p => p === 71)); }
-  ok('Party’s por parejas: nunca se come al compañero y gana la pareja con sus 8 fichas en meta'); }
+  ok('Partxis por parejas: nunca se come al compañero y gana la pareja con sus 8 fichas en meta'); }
 // ---- Trivia Quesitos: preguntas clásicas ----
 { for (const b of BLOQUES) { const l = CLASICAS[b.id]; assert.ok(l && l.length >= 15); for (const q of l) assert.ok(q.length === 5 && new Set(q.slice(1)).size === 4); }
   for (const banco of ['cla', 'mix']) for (const modo of ['opciones', 'escribir']) { const S = TV.crear({ nCat: 9, modo, nivel: 'medio', banco, jugadores: [{ nombre: 'A', cpu: true }, { nombre: 'B', cpu: true }] }); let k = 0;
@@ -562,7 +562,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   for (const t of ['pequeno', 'mediano']) { const g = SK.generar(t, 'prueba-' + t); const G = SK.leer(g.texto); assert.equal(G.cajas.length, SK.TAMANOS[t].cajas); assert.ok(SK.resolver(G, G.cajas, G.jugador, 200000)); assert.ok(G.cajas.every(c => !G.meta[c])); }
   ok(`Encajados: los ${SKN.length} niveles de la campaña tienen solución, reglas de empuje y niveles generados (y repetibles con semilla) resolubles`); }
 
-// ---- Kakuro ----
+// ---- CruciSumas ----
 { assert.deepEqual(KA.combinaciones(4, 2).map(KA.cifras), [[1, 3]]); assert.deepEqual(KA.combinaciones(45, 9).map(KA.cifras), [[1, 2, 3, 4, 5, 6, 7, 8, 9]]);
   for (const [n, d] of [[6, 'facil'], [8, 'medio'], [8, 'dificil'], [10, 'medio']]) {
     const p = KA.generar(n, d), ts = KA.tiras(n, p.negra), sumas = ts.map(t => t.celdas.reduce((a, i) => a + p.sol[i], 0));
@@ -574,7 +574,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   }
   const a = KA.generarTrabajo(6, 'medio', 0, '2026-10-19:kakuro'), b = KA.generarTrabajo(6, 'medio', 0, '2026-10-19:kakuro');
   assert.deepEqual(a.sol, b.sol, 'reto del día: misma semilla, mismo panel');
-  ok('Kakuro: combinaciones, paneles de 6, 8 y 10 con solución única, guardado validado y reto del día repetible'); }
+  ok('CruciSumas: combinaciones, paneles de 6, 8 y 10 con solución única, guardado validado y reto del día repetible'); }
 
 // ---- Corazones ----
 { let lunas = 0;
