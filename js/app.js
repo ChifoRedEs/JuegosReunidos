@@ -10,6 +10,15 @@ import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION } from './version.js';
 
+// «Palabras Cruzadas» (el nombre más largo) ocupa justo la zona clara del banner (50 % de su ancho); los demás, más cortos, caben siempre
+function ajustarCabecera() {
+  const h = document.getElementById('titulo'); if (!h || !h.clientWidth) return;
+  const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:400 100px Chewy,"Baloo 2",system-ui,sans-serif;letter-spacing:.2px'; m.textContent = 'Palabras Cruzadas';
+  document.body.appendChild(m); const w = m.getBoundingClientRect().width; m.remove(); if (!w) return;
+  h.style.setProperty('--tit-fs', Math.min(0.5 * h.clientWidth / w * 100, h.clientHeight * 0.78).toFixed(1) + 'px');
+}
+window.addEventListener('resize', ajustarCabecera); ajustarCabecera();
+if (document.fonts) { document.fonts.load('40px Chewy').then(ajustarCabecera).catch(() => {}); document.fonts.ready.then(ajustarCabecera); }
 const cabTxt = t => { const e = document.getElementById('titulotxt'); if (e) e.textContent = t; };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), nav = $('#nav');

@@ -141,4 +141,4 @@ button.ficha{display:flex}
 
 /* Cabecera: banner 8:1 con los dos logos en los extremos; el nombre va encima, en el centro blanco */
 .top h1{position:relative;display:flex;align-items:center;justify-content:center;flex:1 1 100%;width:100%;max-width:1000px;margin:0 auto;padding:0;aspect-ratio:8/1;background:#fff url(../img/banner-cabecera.webp) center/100% 100% no-repeat;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(20,10,80,.25)}
-.top h1 #titulotxt{display:block;max-width:60%;color:#2347B8;font-size:clamp(15px,4.5vw,30px);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 5px #fff,0 0 10px #fff,0 0 16px rgba(255,255,255,.9)}
+.top h1 #titulotxt{display:block;max-width:56%;color:#2347B8;font-family:Chewy,'Baloo 2',system-ui,sans-serif;font-weight:400;font-size:var(--tit-fs,clamp(15px,4.5vw,30px));line-height:1.1;letter-spacing:.2px;white-space:nowrap;overflow:visible;text-shadow:0 0 5px #fff,0 0 10px #fff,0 0 16px rgba(255,255,255,.9)}

@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-00d1c96b08';
+const VERSION = 'jr-37df093a0d';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -260,7 +260,7 @@ const ARCHIVOS = [
 './js/vendor/three.module.min.js'
 /*ARCHIVOS-FIN*/
 ];
-// Tipografías de Google Fonts (Baloo 2 y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
+// Tipografías de Google Fonts (Baloo 2, Chewy y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
 // para que sin conexión los textos se vean igual que con internet. Debe ser la MISMA dirección que en index.html.
 const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas', DICC = 'jr-diccionario';      // cachés que se conservan entre versiones
 const esDiccionario = url => url.origin === location.origin && /\/data\/diccionario\/(es|lemas)-[0-9a-f]{8}\.txt$/.test(url.pathname);
@@ -297,7 +297,7 @@ self.addEventListener('message', e => {
   if (m === 'guardar-cartas') e.waitUntil(guardarCartas([]).catch(() => {}));
   else if (m && m.tipo === 'guardar-cartas') e.waitUntil(guardarCartas(m.ids).catch(() => {}));
 });
-const FUENTES_CSS = 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap';
+const FUENTES_CSS = 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Chewy&family=Nunito:wght@500;700;800&display=swap';
 const esFuente = url => url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 async function guardarFuentes() {                 // descarga la hoja de estilos y todos los archivos de letra que enlaza
   const c = await caches.open(FUENTES), res = await fetch(FUENTES_CSS, { cache: 'reload' });
