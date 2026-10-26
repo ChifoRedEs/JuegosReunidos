@@ -8,18 +8,8 @@ import * as son from './core/sonido.js';
 import { BARAJAS, urlTapete, buscarFondo, cargarBarajas, precargarSeleccion } from './core/cartas.js';
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
-import { VERSION, FECHA } from './version.js';
+import { VERSION } from './version.js';
 
-// Ancho fijo del texto de la cabecera = el del nombre más largo («Palabras Cruzadas»): los logos no se mueven al cambiar de juego
-function medirCabecera() {
-  const t = document.getElementById('titulotxt'), h = document.getElementById('titulo'); if (!t || !h) return;
-  const m = document.createElement('span'), cs = getComputedStyle(t);
-  m.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;font:${cs.font};letter-spacing:${cs.letterSpacing}`; m.textContent = 'Palabras Cruzadas';
-  document.body.appendChild(m); const w = Math.ceil(m.getBoundingClientRect().width) + 2; m.remove();
-  h.style.setProperty('--wtit', w + 'px');
-}
-window.addEventListener('resize', medirCabecera); medirCabecera();
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(medirCabecera);
 const cabTxt = t => { const e = document.getElementById('titulotxt'); if (e) e.textContent = t; };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), btnAtras = $('#atras'), nav = $('#nav');
@@ -407,7 +397,7 @@ function vStats() {
   const R = logros.todosRetos(), diasR = Object.values(R).filter(l => Array.isArray(l) && l.length).length, totR = Object.values(R).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0);
   const retosHoy = (R[hoy()] || []).map(id => JUEGOS.find(j => j.id === id)).filter(Boolean);
   const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => d.icono).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span>${G[d.id] ? d.icono : '🔒'}</span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
-    <div class="panel"><h3>📅 Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, Kakuro, Encajados, Sopa de letras, Crucigramas y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
+    <div class="panel"><h3>📅 Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, Suma Total, Encajados, Sopa de letras, Crucigramas y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
   const solicitada = new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
   const elegida = cats.some(([k]) => k === solicitada) ? solicitada : cats[0]?.[0];
@@ -475,7 +465,7 @@ function vAjustes() {
   <div class="panel"><h3>Sin conexión</h3><p class="note" id="gOff" role="status">Comprobando…</p><div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
   <div class="panel"><h3>Acerca de</h3><p class="note">Juegos Reunidos · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p>
     <p class="note">Créditos: los dibujos de las caras de «¿Qué cara tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
-  <p class="version">Juegos Reunidos · versión ${VERSION} · ${new Date(FECHA + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>`;
+  <p class="version">Juegos Reunidos · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); vAjustes();
   }));
