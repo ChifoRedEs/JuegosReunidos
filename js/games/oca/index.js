@@ -8,7 +8,8 @@ let animJ = -1;
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } }
-let S = null, api = null, asp = null, root = null, timer = null, reg = false, anim = false, vis = {}, dadosVis = null, msgEvento = '';
+import { crearDado3D } from '../../core/dado3d.js';
+let S = null, api = null, asp = null, root = null, timer = null, reg = false, anim = false, vis = {}, dadosVis = null, msgEvento = '', D3 = null, tokD = 0;
 // 🪿 Fichas: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
 const colF = k => [estilo(asp.valores).hex, estilo(asp.valores).hex2, estilo(asp.valores).hex3, estilo(asp.valores).hex4][k] || O.COLORES[k];
 let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'n'], ['CPU 3', 'n']], dados: 1, pozo: 'rescate' };
@@ -38,16 +39,16 @@ export async function mount(r, a) {
     salir: () => { clearTimeout(timer); anim = false; api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
-    config: { valores: () => ({ dados: cfg.dados, pozo: cfg.pozo, j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1] }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'dados', titulo: 'Dados', opciones: [[1, '1 dado'], [2, '2 dados']] }, { clave: 'pozo', titulo: 'Pozo', opciones: [['rescate', 'Hasta que te rescaten'], ['turnos', '2 turnos']] }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } cfg.dados = v.dados; cfg.pozo = v.pozo; [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); empezar(); } } });
+    config: { pantalla: () => nuevaSetup() } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); } S = null; asp = null; anim = false; }
+export function unmount() { quitarDado(); cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); } S = null; asp = null; anim = false; }
 function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantalla de inicio ---------- */
 function setup() {
-  S = null; clearTimeout(timer); cerrar3D(); modo3d = false;
+  S = null; clearTimeout(timer); quitarDado(); cerrar3D(); modo3d = false;
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">El clásico de toda la vida: tira el dado, salta de oca a oca, cruza puentes y evita la posada, el pozo, el laberinto, la cárcel y la muerte. Gana quien llegue <b>justo</b> a la casilla 63.</p>
     ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${colF(i)}"><span class="jf-dot"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
@@ -57,17 +58,25 @@ function setup() {
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos.`}${cfg.dados === 2 ? ' Con 2 dados, si en la primera tirada sacas 6 y 3 vas a la 26; con 5 y 4, a la 53.' : ''}</p>`;
 }
 function armar() {
-  cerrar3D(); modo3d = quiere3D();
+  quitarDado(); cerrar3D(); modo3d = quiere3D();
   root.innerHTML = `<div class="ocjug" id="ocJug"></div>
     ${modo3d ? '<div class="e3d" id="ocTab"></div>' : `<div class="octab" id="ocTab">${O.ESPIRAL.map(([f, c], n) => {
       const k = O.CASILLAS[n]; return `<div class="occ ${n === 0 ? 'salida' : k ? k.tipo : ''} ${n % 2 ? 'imp' : ''}" style="grid-row:${f + 1};grid-column:${c + 1}" title="${n === 0 ? 'Salida' : k ? `${n} · ${k.nombre}` : n}"><span class="num">${n === 0 ? '' : n}</span>${n === 0 ? '<span class="ico">🚩</span>' : k ? `<span class="ico">${k.ico}</span>` : ''}</div>`;
     }).join('')}<div class="ocfichas" id="ocFichas"></div></div>`}
     <div class="ocmsg" id="ocMsg" role="status" aria-live="polite"></div>
-    <div class="ocacc"><div class="ocdados" id="ocDados" aria-hidden="true"></div><button class="btn on octirar" data-ac="tirar" id="ocTirar">🎲 Tirar</button></div>
+    <div class="dadozona" id="ocDado"></div>
     <div id="ocFin"></div>
     <ul class="oclog" id="ocLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    ${api.barraHtml()}`;
   if (modo3d) iniciar3D();
+  iniciarDado();
+}
+function quitarDado() { tokD++; if (D3) { D3.destruir(); D3 = null; } }
+async function iniciarDado() {
+  const t = ++tokD, host = $('#ocDado'); if (!host || !S) return;
+  const d = await crearDado3D(host, { n: S.dados, etiqueta: 'Dado: toca para tirar', alClic: () => { if (S && !S.jug[S.turno].cpu) tirar(); } });
+  if (t !== tokD || !d) { if (d) d.destruir(); return; }
+  D3 = d; if (S) pintar();
 }
 async function iniciar3D() {
   const t = ++tok3;
@@ -90,7 +99,7 @@ function pintar3D() {
       turno: j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim), mueve: vis[j] != null };
   }) });
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; api.borrar(); setup(); }
+function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; quitarDado(); api.borrar(); setup(); }
 function empezar() {
   const jugadores = cfg.jug.map(([nombre, t], k) => ({ nombre: nombre.trim() || O.NOMBRES_COLOR[k], cpu: t === 'c', color: k, t })).filter(j => j.t !== 'n');
   if (jugadores.length < 2) return;
@@ -99,8 +108,6 @@ function empezar() {
 }
 
 /* ---------- pintado ---------- */
-const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
-const dadoHTML = v => `<span class="dado">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
 const posDe = j => (vis[j] != null ? vis[j] : S.jug[j].pos);
 function colocarFichas() {
   if (modo3d) return pintar3D();
@@ -122,12 +129,7 @@ function pintar() {
   $('#ocJug').innerHTML = S.jug.map((J, j) => `<div class="ocj ${j === tj && (S.fase === 'tirar' || anim) ? 'turno' : ''} ${S.fase === 'fin' && j === S.ganador ? 'gana' : ''}" style="--c:${colF(J.color)}"><i></i><b>${esc(J.nombre)}${J.cpu ? ' 🤖' : ''}</b><span>${posDe(j) === 0 ? 'Salida' : `Casilla ${posDe(j)}`}</span>${J.pozo ? '<small>🕳️ en el pozo</small>' : J.pierde ? `<small>${J.pierde} turno${J.pierde > 1 ? 's' : ''} sin tirar</small>` : ''}</div>`).join('');
   colocarFichas();
   const J = S.jug[anim ? animJ : S.turno], humano = !J.cpu;
-  const d = dadosVis || (S.ultima ? S.ultima.dados : Array(S.dados).fill(1));
-  $('#ocDados').innerHTML = d.map(dadoHTML).join('');
-  $('#ocDados').classList.toggle('rodando', !!dadosVis);
-  const btn = $('#ocTirar'); btn.disabled = anim || S.fase !== 'tirar' || !humano; btn.hidden = S.fase === 'fin';
-  btn.textContent = S.fase === 'tirar' ? `🎲 Tirar · ${J.nombre}` : '🎲 Tirar';
-  btn.style.setProperty('--c', colF(J.color));
+  if (D3) { D3.color(colF(J.color)); if (!anim) D3.poner(S.ultima ? S.ultima.dados : null); D3.activar(!anim && S.fase === 'tirar' && humano, `Toca el dado para tirar · ${J.nombre}`); }
   const m = $('#ocMsg');
   if (S.fase === 'fin') m.innerHTML = `🏆 <b>¡${esc(S.jug[S.ganador].nombre)} ${S.jug[S.ganador].nombre === 'Tú' ? 'llegas al jardín de la Oca y ganas' : 'llega al jardín de la Oca y gana'}!</b>`;
   else if (msgEvento) m.innerHTML = msgEvento;
@@ -146,7 +148,7 @@ async function tirar() {
   vis = { [j]: desde };
   // dados girando
   api.sonido('dado');
-  if (!lento) for (let k = 0; k < 6; k++) { dadosVis = r.dados.map(() => 1 + Math.floor(Math.random() * 6)); pintar(); await esperar(70); if (!S) return; }
+  if (D3) { D3.color(colF(J.color)); await D3.tirar(r.dados, lento ? 0 : 900); if (!S) return; } else await esperar(lento ? 0 : 450);
   dadosVis = null; msgEvento = `${esc(J.nombre)} ${J.nombre === 'Tú' ? 'sacas' : 'saca'} <b>${r.dados.join(' + ')}${r.dados.length > 1 ? ` = ${r.dados[0] + r.dados[1]}` : ''}</b>`; pintar();
   // avance casilla a casilla
   for (const p of r.camino) { vis[j] = p; colocarFichas(); api.sonido('click'); await esperar(lento ? 40 : 170); if (!S) return; }
@@ -188,7 +190,6 @@ function clic(e) {
   const a = d.ac;
   if (a === 'start') empezar(); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
   else if (a === 'setup') { api.borrar(); setup(); } else if (a === 'otra') { api.borrar(); empezar(); }
-  else if (a === 'tirar' && S && !S.jug[S.turno].cpu) tirar();
 }
 function reglas() {
   api.modal('Juego de la Oca', `<ul><li>Por turnos, cada jugador tira el dado y avanza su ficha. Gana quien llegue <b>exactamente</b> a la casilla 63; si te pasas, rebotas hacia atrás lo que sobre.</li>

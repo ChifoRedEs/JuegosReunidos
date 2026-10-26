@@ -146,3 +146,21 @@ button.ficha{display:flex}
 /* Título «Juegos Reunidos»: colores del logo (J amarilla, R azul), algo más oscuros para contrastar con el blanco */
 .top h1 #titulotxt .cj{color:#D98E00}
 .top h1 #titulotxt .cr{color:#1F55C8}
+
+/* ---------- dado 3D común (core/dado3d.js) ---------- */
+.dadozona{display:flex;flex-direction:column;align-items:center;margin:4px 0 2px}
+.dado3d{width:min(100%,240px);height:116px;margin:0 auto;border-radius:18px;outline:none;cursor:default;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.dado3d.dos{width:min(100%,340px)}
+.dado3d.listo{cursor:pointer;animation:dadoPulso 1.3s ease-in-out infinite}
+.dado3d:focus-visible{box-shadow:0 0 0 3px var(--blue)}
+@keyframes dadoPulso{0%,100%{filter:drop-shadow(0 0 3px rgba(255,190,0,.0))}50%{filter:drop-shadow(0 0 12px rgba(255,190,0,.95))}}
+.dado3d-aviso{display:block;text-align:center;font-weight:800;font-size:12.5px;color:var(--mut);margin:0 0 4px}
+.dado3d.plano{display:flex;align-items:center;justify-content:center;gap:16px}
+.dado3d .d2{width:72px;height:72px;border-radius:16px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:10px;box-shadow:0 4px 10px rgba(0,0,0,.3),inset 0 -3px 0 rgba(0,0,0,.12)}
+.dado3d .d2 i{width:12px;height:12px;margin:auto;border-radius:50%}
+.dado3d .d2 i.on{background:currentColor}
+.dado3d .d2 b{grid-area:1/1/4/4;display:grid;place-items:center;font-size:30px}
+.dado3d .d2.roda{animation:dadogiro .35s linear infinite}
+@keyframes dadogiro{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.dado3d.listo{animation:none;filter:drop-shadow(0 0 8px rgba(255,190,0,.9))}}
+.dado3d-aviso[hidden]{display:none}

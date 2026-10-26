@@ -49,14 +49,6 @@
 .juego-magnate .mttit{font:800 calc(var(--mt-l) / 15)/.95 'Baloo 2',system-ui,sans-serif;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
 .juego-magnate .mtturno{font-size:14px;line-height:1.25}
 .juego-magnate .mtturno small{color:var(--mut);font-size:12px}
-.juego-magnate .mtdados{display:flex;gap:8px}
-.juego-magnate .mtdado{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);width:calc(var(--mt-l) / 10);height:calc(var(--mt-l) / 10);min-width:36px;min-height:36px;padding:6px;background:#fff;border-radius:10px;border:2px solid #D7DCEB;box-shadow:0 3px 0 #C5CBDD}
-.juego-magnate .mtdado i{width:7px;height:7px;border-radius:50%;margin:auto}
-.juego-magnate .mtdado i.on{background:#1B2340}
-.juego-magnate .mtdados.rodando .mtdado{animation:mtrueda .14s linear infinite}
-@keyframes mtrueda{50%{transform:rotate(18deg) scale(1.06)}}
-.juego-magnate .mttirar{font-size:17px;padding:9px 22px;background:linear-gradient(135deg,var(--c,var(--purple)),color-mix(in srgb,var(--c,var(--blue)) 70%,#000))!important;color:#fff!important;border-color:transparent!important}
-.juego-magnate .mttirar[hidden]{display:none}
 .juego-magnate .mtacc{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .juego-magnate .mtacc .btn{min-height:36px;padding:5px 10px;font-size:13px}
 .juego-magnate .mtbote{color:var(--mut);font-weight:800;font-size:12px}

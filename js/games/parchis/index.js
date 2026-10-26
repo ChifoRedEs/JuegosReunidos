@@ -1,11 +1,12 @@
 import { $, esc, rnd } from '../../core/dom.js';
+import { crearDado3D } from '../../core/dado3d.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
 import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, mejorJugada, fichasDe, equipo, nombreEquipo, COMPANERO } from './reglas.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 const VEL = { rapida: .5, normal: 1, lenta: 1.7 };
-let P = null, api = null, asp = null, rootEl = null, modo = 'setup', timer = null, ivDado = null, ivAnim = null, rodando = false, ptsMov = [], ultFoco = '';
+let P = null, api = null, asp = null, rootEl = null, modo = 'setup', timer = null, ivDado = null, ivAnim = null, rodando = false, ptsMov = [], ultFoco = '', D3 = null, tokD = 0;
 let cfgSetup = { am: 'h', az: 'c', ro: 'c', ve: 'c' }, nombres = {}, libre = false, parejas = false;
 const velMult = () => VEL[api.pref('vel', 'normal')] || 1;
 const zoom = () => +(asp && asp.valores.zoom) || 1.4;
@@ -89,7 +90,7 @@ export async function mount(root, a) {
   else { P = null; modo = 'setup'; rSetup(); }
 }
 export function unmount() {
-  clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); timer = ivDado = ivAnim = null; rodando = false; cerrar3D(); modo3d = false;
+  clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); timer = ivDado = ivAnim = null; rodando = false; quitarDado(); cerrar3D(); modo3d = false;
   if (rootEl) { rootEl.removeEventListener('click', clic); rootEl.removeEventListener('input', alEscribir); rootEl.removeEventListener('change', alCambiar); }
   P = null; asp = null;
 }
@@ -122,16 +123,11 @@ function drive() {
 function iniciarTirada() {
   if (!P || P.phase !== 'roll' || rodando || P.anim) return;
   clearTimeout(timer); rodando = true; api.sonido('dado'); api.vibrar(10);
-  const c = actual(P); let n = 0;
+  const c = actual(P), v = 1 + rnd(6), ms = Math.round(900 * velMult());
   pintarJuego();
-  ivDado = setInterval(() => {
-    pintarDado(1 + rnd(6), c, true);
-    if (++n >= 6) {
-      clearInterval(ivDado); ivDado = null; rodando = false;
-      if (!P) return;
-      tirar(P, 1 + rnd(6)); guardar(); pintarJuego(); drive();
-    }
-  }, 90);
+  if (D3) D3.color(getComputedStyle(rootEl).getPropertyValue('--pz-' + c).trim());
+  const fin = () => { rodando = false; if (!P) return; tirar(P, v); guardar(); pintarJuego(); drive(); };
+  if (D3) D3.tirar([v], ms).then(fin); else ivDado = setTimeout(() => { ivDado = null; fin(); }, Math.min(ms, 600));
 }
 function jugarMov(m) {
   if (!P || P.phase !== 'move' || P.anim || !m) return;
@@ -199,14 +195,21 @@ function listaReglas() {
     <li>En 🎨 Apariencia eliges tablero, colores, forma de las fichas y tamaño; con zoom el tablero se desplaza solo hacia la acción.</li></ul>`;
 }
 function rJuego() {
-  cerrar3D(); modo3d = quiere3D();
+  quitarDado(); cerrar3D(); modo3d = quiere3D();
   rootEl.innerHTML = `
     ${modo3d ? '<div class="e3d" id="pzView"></div><div id="pzTab" hidden></div>' : `<div class="pzv" id="pzView"><div class="pzb" id="pzTab" style="width:${zoom() * 100}%"></div></div>`}
-    <div class="pbar"><button type="button" class="die" id="pzDie" data-ac="roll" aria-label="Dado"></button><div><div class="msg" id="pzMsg" role="status" aria-live="polite"></div><div class="note" id="pzSub"></div></div></div>
-    <div class="bar"><button class="btn on" id="pzRoll" data-ac="roll">Tirar dado</button></div>
-    <div class="bar"><span class="lbl">Velocidad CPU</span><span id="pzVel">${velBotones()}</span></div>
+    <div class="dadozona" id="pzDado"></div>
+    <div class="pbar"><div><div class="msg" id="pzMsg" role="status" aria-live="polite"></div><div class="note" id="pzSub"></div></div></div>
     <ul class="plog" id="pzLog"></ul>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
+  iniciarDado();
+}
+function quitarDado() { tokD++; if (D3) { D3.destruir(); D3 = null; } }
+async function iniciarDado() {
+  const t = ++tokD, host = $('#pzDado'); if (!host) return;
+  const d = await crearDado3D(host, { n: 1, etiqueta: 'Dado: toca para tirar', alClic: () => { if (P && P.phase === 'roll' && !esCPU(P, actual(P))) iniciarTirada(); } });
+  if (t !== tokD || !d) { if (d) d.destruir(); return; }
+  D3 = d; if (P) pintarJuego();
 }
 async function iniciar3D() {
   const t = ++tok3, volver = () => { if (t === tok3 && rootEl && modo === 'juego') { forzar2d = true; rJuego(); pintarJuego(); } };
@@ -242,11 +245,9 @@ function pintar3D() {
   V3.pintar({ piezas, dest, turno: cur, casas, forma: forma() });
 }
 function pintarDado(v, c, roda) {
-  const d = $('#pzDie'); if (!d) return;
-  if (modo3d && V3) V3.dado(v, !!roda, getComputedStyle(rootEl).getPropertyValue('--pz-' + c).trim());
-  d.style.setProperty('--pc', `var(--pz-${c})`);
-  if (v) { d.className = 'die' + (roda ? ' roda' : ''); d.innerHTML = [...Array(9).keys()].map(k => `<i class="${PIPS[v].includes(k) ? 'on' : ''}"></i>`).join(''); }
-  else { d.className = 'die q'; d.textContent = '?'; }
+  if (!D3 || roda) return;
+  D3.color(getComputedStyle(rootEl).getPropertyValue('--pz-' + c).trim());
+  D3.poner([v || null]);
 }
 function pintarJuego() {
   if (modo !== 'juego' || !P || !$('#pzTab')) return;
@@ -259,9 +260,8 @@ function pintarJuego() {
   if (!rodando) pintarDado(P.die, c, false);
   const m = $('#pzMsg'); m.textContent = msg; m.className = 'msg' + (over ? ' win' : '');
   $('#pzSub').textContent = sub;
-  $('#pzRoll').disabled = !(humano && P.phase === 'roll' && !rodando && !P.anim);
+  if (D3) D3.activar(humano && P.phase === 'roll' && !rodando && !P.anim, 'Toca el dado para tirar');
   $('#pzLog').innerHTML = P.log.map(l => `<li>${esc(l)}</li>`).join('');
-  const v = $('#pzVel'); if (v) v.innerHTML = velBotones();
   const clave = `${P.turn}|${P.phase}|${P.step}|${P.order.length}`;
   if (!P.anim && !over && clave !== ultFoco) {
     ultFoco = clave;
@@ -363,8 +363,7 @@ function clic(e) {
   if (ac === 'start') {
     if (PC.filter(c => cfgSetup[c]).length < 2) return;
     iniciarPartida();
-  } else if (ac === 'roll') { if (P && P.phase === 'roll' && !esCPU(P, actual(P))) iniciarTirada(); }
-  else if (ac === 'setup') nuevaSetup();
+  } else if (ac === 'setup') nuevaSetup();
   else if (ac === 'aspecto') asp.abrir();
 }
 function iniciarPartida() {

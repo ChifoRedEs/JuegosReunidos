@@ -4,6 +4,7 @@ import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { FICHAS as PERSONAJES, opcionesPersonajes } from '../../core/personajes.js';
 import { GRUPOS, CASILLAS, NUBE, RED, SALARIO, FIANZA, OFICINAS, SEDES, COLORES_JUGADOR, FICHAS } from './datos.js';
+import { crearDado3D } from '../../core/dado3d.js';
 import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
@@ -77,7 +78,7 @@ export function unmount() {
   if (pendiente) { pendiente(ABORTO); pendiente = null; }
   document.removeEventListener('keydown', onKey);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); }
-  cerrar3D(); G = null; asp = null;
+  quitarDado(); cerrar3D(); G = null; asp = null;
 }
 function guardar() { if (!G) return; const d = { g: G.toJSON(), reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 const vel = () => VELOCIDAD[cfg.vel] || VELOCIDAD.normal;
@@ -87,7 +88,7 @@ const pausa = async ms => { if (ms) await esperar(ms); while (enPausa && vivo) a
 
 /* ---------- pantalla de inicio ---------- */
 function setup() {
-  G = null; jugando = false; cerrar3D();
+  G = null; jugando = false; quitarDado(); cerrar3D();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra empresas tecnológicas, completa sectores, abre oficinas y cobra alquiler a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
     ${cfg.jug.map(([nom, t, f], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><button class="mtfichab" data-ficha="${i}" aria-label="Cambiar ficha del jugador ${i + 1}">${FICHAS[f]}</button><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
@@ -128,22 +129,20 @@ function empezar() {
 const celda = i => (i <= 10 ? [11, 11 - i] : i < 20 ? [21 - i, 1] : i <= 30 ? [1, i - 19] : [i - 29, 11]);
 const lado = i => (i % 10 === 0 ? 'esq' : i < 10 ? 'ab' : i < 20 ? 'iz' : i < 30 ? 'ar' : 'de');
 function armar() {
-  cerrar3D(); modo3d = quiere3D();
-  const centro = `<b class="mttit">Magnate<br>Tecnológico</b>
+  quitarDado(); cerrar3D(); modo3d = quiere3D();
+  const centro = `<b class="mttit">Magnate<br>Urbano</b>
         <div class="mtturno" id="mtTurno"></div>
-        ${modo3d ? '' : `<div class="mtdados" id="mtDados" aria-hidden="true">${dadoHTML(1)}${dadoHTML(6)}</div>`}
-        <button class="btn on mttirar" data-ac="tirar" id="mtTirar">🎲 Tirar</button>
         <div class="mtacc"><button class="btn" data-ac="gestionar" id="mtGes">🏢 Empresas</button><button class="btn" data-ac="trato" id="mtTrato">🤝 Trato</button></div>
         <small class="mtbote" id="mtBote"></small>`;
-  const pie = `<div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
-    <ul class="mtlog" id="mtLog" aria-label="Historial de la partida"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>`;
+  const pie = `<div class="dadozona" id="mtDado"></div>
+    <div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
+    <ul class="mtlog" id="mtLog" aria-label="Historial de la partida"></ul>`;
   if (modo3d) {
     root.innerHTML = `<div class="mtjug" id="mtJug"></div>
       <div class="e3d" id="mtTab"><div class="e3d-carga" id="mtCarga">Preparando el tablero…</div></div>
-      <div class="mtpanel">${centro.replace('<b class="mttit">Magnate<br>Tecnológico</b>', '')}</div>
+      <div class="mtpanel">${centro.replace('<b class="mttit">Magnate<br>Urbano</b>', '')}</div>
       ${pie}${api.barraHtml()}`;
-    iniciar3D(++tok3);
+    iniciar3D(++tok3); iniciarDado();
     return;
   }
   root.innerHTML = `<div class="mtjug" id="mtJug"></div>
@@ -156,18 +155,25 @@ function armar() {
     </div>
     ${pie}${api.barraHtml()}`;
   G.jug.forEach((p, i) => { if (!p.fuera) colocar(i); });
+  iniciarDado();
+}
+let D3 = null, tokD = 0;
+function quitarDado() { tokD++; if (D3) { D3.destruir(); D3 = null; } }
+async function iniciarDado() {
+  const t = ++tokD, host = $('#mtDado'); if (!host || !G) return;
+  const d = await crearDado3D(host, { n: 2, etiqueta: 'Dados: toca para tirar', alClic: () => { if (G && !G.p().bot) jugar(); } });
+  if (t !== tokD || !d) { if (d) d.destruir(); return; }
+  D3 = d; if (G) pintar();
 }
 async function iniciar3D(t) {
   const host = $('#mtTab');
   try {
-    const v = await mod3d.crearVista(host, { estilo: asp.valores.estilo || 'rascacielos', grupos: GRUPOS, titulo: 'MAGNATE', subtitulo: 'TECNOLÓGICO', iconos: { suerte: '📰', imprevisto: '📈' } });
+    const v = await mod3d.crearVista(host, { estilo: asp.valores.estilo || 'rascacielos', grupos: GRUPOS, titulo: 'MAGNATE', subtitulo: 'URBANO', iconos: { suerte: '📰', imprevisto: '📈' } });
     if (!vivo || t !== tok3 || !G) { v.destruir(); return; }
     v.alTocar = i => { if (!G) return; const s = G.c[i]; if (s.precio && !jugando) dialogo(esc(s.nombre), fichaEmpresa(s), ['Cerrar'], { cancelable: true }).catch(() => {}); else if (!s.precio) api.aviso(textoCasilla(s)); };
     vista = v; v.construir(estado3D()); botones3d(host, v); const c = $('#mtCarga'); if (c) c.remove(); pintar();
   } catch (e) { console.error(e); if (t === tok3 && vivo && G) { forzar2d = true; armar(); pintar(); } }
 }
-const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
-const dadoHTML = v => `<span class="mtdado">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
 function colocar(i) {
   if (modo3d) return;
   const p = G.jug[i], cel = root.querySelector(`.mtc[data-c="${p.pos}"] .mttk`); if (!cel) return;
@@ -195,9 +201,8 @@ function pintar() {
   const p = G.p(), humano = !p.bot && !p.fuera && !G.terminada, libre = humano && !jugando;
   $('#mtTurno').innerHTML = G.terminada ? `🏆 Gana <b>${esc(G.jug[G.ganador].nombre)}</b>` : `Turno de <b style="color:${cj(p.color)}">${esc(p.ficha)} ${esc(p.nombre)}</b>${p.espera ? '<br><small>retenido en la Auditoría</small>' : ''}`;
   $('#mtBote').textContent = `${G.reglas.bote ? `Bote: ${G.bote}M · ` : ''}Ronda ${G.ronda}${G.reglas.rondas ? ` de ${G.reglas.rondas}` : ''}`;
-  $('#mtTirar').disabled = !libre; $('#mtGes').disabled = !libre; $('#mtTrato').disabled = !libre || G.jug.filter(q => !q.fuera).length < 2;
-  $('#mtTirar').style.setProperty('--c', cj(p.color));
-  $('#mtTirar').hidden = G.terminada;
+  if (D3) { D3.color(cj(p.color)); D3.activar(libre && !G.terminada, `Toca los dados para tirar · ${p.nombre}`); }
+  $('#mtGes').disabled = !libre; $('#mtTrato').disabled = !libre || G.jug.filter(q => !q.fuera).length < 2;
   if (vista) { vista.fichas(estilo(asp.valores)); vista.actualizar(estado3D()); vista.resaltar(G.terminada ? -1 : p.pos, cj(p.color)); }
 }
 function log(html, clase = '') {
@@ -251,10 +256,8 @@ return {
   },
   dados: async (a, b) => {
     vigila(); api.sonido('dado');
-    if (modo3d) { if (vista) await vista.dados(a, b, vel().dado); await pausa(vel().paso ? 200 : 0); vigila(); return; }
-    const D = $('#mtDados'); D.classList.add('rodando');
-    if (vel().paso) for (let k = 0; k < 6; k++) { D.innerHTML = dadoHTML(1 + (Math.random() * 6 | 0)) + dadoHTML(1 + (Math.random() * 6 | 0)); await pausa(70); vigila(); }
-    D.innerHTML = dadoHTML(a) + dadoHTML(b); D.classList.remove('rodando'); await pausa(vel().paso ? 260 : 0); vigila();
+    if (D3) { D3.color(cj(G.p().color)); await D3.tirar([a, b], vel().dado); } else await pausa(vel().paso ? 400 : 0);
+    await pausa(vel().paso ? 200 : 0); vigila();
   },
   flash: (p, v) => {
     if (!vivo || sid !== sesion || !v) return; const c = root.querySelector(`.mtj[data-j="${G.idx(p)}"]`); if (!c) return;

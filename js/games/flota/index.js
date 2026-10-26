@@ -32,7 +32,6 @@ export async function mount(r, a) {
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#flCuerpo'), 
     { clave: 'mar', titulo: 'Color del mar', def: 'oceano', opciones: [{ id: 'oceano', nombre: 'Océano', sw: ['#2F80ED', '#1B4FA8'] }, { id: 'tropical', nombre: 'Tropical', sw: ['#16C1C8', '#0B8A9A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3A78', '#141C40'] }, { id: 'papel', nombre: 'Papel', sw: ['#EEF2FB', '#9DB0D8'] }] },
-    { clave: 'barcos', titulo: 'Color de los barcos', def: 'gris', opciones: [{ id: 'gris', nombre: 'Gris naval', sw: ['#6B7A90'] }, { id: 'verde', nombre: 'Verde militar', sw: ['#5F7A3A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#F07B22'] }] },
     ...gruposFichas({ pocos: true, titulo: 'Barcos', icono: '🚢', formas: false, tamano: ['pequeno', 'normal'] }),
   ], () => { aplicarFichas(); if (!S) return; if (quiere3D() && !V3) iniciar3D(); else if (V3 && !quiere3D()) cerrar3D(); else if (V3) V3.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
@@ -71,7 +70,7 @@ function armar() {
   cerrar3D(); if (quiere3D()) iniciar3D();
   root.innerHTML = `<div class="flmsg" id="flMsg" role="status" aria-live="polite"></div>
     <div id="flCuerpo"></div><ul class="fllog" id="flLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    ${api.barraHtml()}`;
 }
 async function iniciar3D() {
   const t = ++tok3;

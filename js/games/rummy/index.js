@@ -75,8 +75,7 @@ function armar() {
     </div>
     <div class="bar rmacc" id="rmAcc"></div>
     <div id="rmFin"></div>
-    <ul class="rmlog" id="rmLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="rmlogs"><div class="rmlogc"><b>Tus jugadas</b><ul class="rmlog" id="rmLog"></ul></div><div class="rmlogc"><b>CPUs</b><ul class="rmlog" id="rmLogCpu"></ul></div></div>${api.barraHtml()}`;
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#rmAtril'), { sel: '.rmf', clave: el => +el.dataset.id, alSoltar: ids => { ord = { modo: 'libre', ids }; pintar(); guardar(); } });
   if (modo3d) iniciar3D();
@@ -152,7 +151,8 @@ function pintar() {
   acc.innerHTML = miTurno ? `${cambiado() ? '<button class="btn" data-ac="reset">↺ Deshacer cambios</button><button class="btn on" data-ac="terminar">✔ Terminar turno</button>' : `<button class="btn on" data-ac="robar">${S.bolsa.length ? '🀫 Robar ficha' : 'Pasar'}</button>`}<button class="btn" data-ac="pista">💡 Sugerir</button>` : '';
   acc.hidden = !miTurno;
   pintarFin();
-  $('#rmLog').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
+  const reg = S.log.map(l => { const m = /^(-?\d)\|(.*)$/.exec(l); return m ? [+m[1], m[2]] : [-1, l]; }), li = a => a.map(([, t]) => `<li>${esc(t)}</li>`).join('') || '<li class="vacio">—</li>';
+  $('#rmLog').innerHTML = li(reg.filter(([j]) => j <= 0)); $('#rmLogCpu').innerHTML = li(reg.filter(([j]) => j > 0));
 }
 function pintarFin() {
   const el = $('#rmFin'); if (S.fase !== 'fin') { el.innerHTML = ''; return; }

@@ -87,9 +87,9 @@ function empezar() {
 function armar() {
   const cols = COLUMNAS[S.n] || 5;
   root.innerHTML = `<div class="qcmsg" id="qcMsg" role="status" aria-live="polite"></div>
-    <div class="qcpanel" id="qcPanel"></div>
     <div class="qctab" id="qcTab" style="--c:${cols}" role="group" aria-label="Tablero de caras">${S.caras.map((f, i) =>
       `<button type="button" class="qcc" data-i="${i}"><span class="qci"><span class="qcfront">${svgDe(f)}<b>${esc(f.nm)}</b></span><span class="qcback"><i>?</i></span></span></button>`).join('')}</div>
+    <div class="qcpanel" id="qcPanel"></div>
     <ul class="qclog" id="qclog" aria-label="Preguntas hechas"></ul>
     ${api.barraHtml()}`;
   aplicarAspecto();
@@ -140,11 +140,11 @@ function pintar() {
       panel.innerHTML = cabecera + (pensando ? '' : banner(p));
     } else {
       msg.textContent = S.pregunto ? 'Tumba las caras que ya no pueden ser y termina el turno.' : arriesgando ? '🎯 Toca la cara que crees que es.' : (S.modo === 'cpu' ? 'Tu turno: pregunta o arriesga.' : `Turno de ${n[S.turno]}: pregunta o arriesga.`);
-      panel.innerHTML = `${cabecera}${banner(p)}<div class="bar qcbar">
+      panel.innerHTML = `${cabecera}${banner(p)}<div class="bar qcbar" style="--n:${S.pregunto && S.tumbar === 'mano' ? 4 : 3}">
         <button class="btn on" data-ac="preguntar" ${S.pregunto ? 'disabled' : ''}>❓ Preguntar</button>
         <button class="btn ${arriesgando ? 'on' : ''}" data-ac="arriesgar" ${S.pregunto ? 'disabled' : ''}>${arriesgando ? '✖ Cancelar' : '🎯 Arriesgar'}</button>
         ${S.pregunto && S.tumbar === 'mano' ? '<button class="btn" data-ac="auto">🪄 Tumbar por mí</button>' : ''}
-        <button class="btn ${S.pregunto ? 'on' : ''}" data-ac="terminar" ${S.pregunto ? '' : 'disabled'}>✅ Terminar turno</button></div>`;
+        <button class="btn ${S.pregunto ? 'on' : ''}" data-ac="terminar" ${S.pregunto ? '' : 'disabled'}>✅ Pasar turno</button></div>`;
     }
   } else {
     msg.innerHTML = `<b>${S.modo === 'cpu' ? (S.ganador === 0 ? '🏆 ¡Has ganado!' : '😔 Ha ganado la CPU') : `🏆 ¡Gana ${esc(n[S.ganador])}!`}</b>`;

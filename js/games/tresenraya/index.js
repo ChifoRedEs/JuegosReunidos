@@ -49,9 +49,8 @@ const duelo = crearDuelo({
   chip: (n, vals = {}) => EMOJIS[vals.fichas] ? `<i class="ch em">${EMOJIS[vals.fichas][n - 1]}</i>` : `<i class="ch tr${n}">${n === 1 ? '✕' : '○'}</i>`,
   aspecto: [grupoFondo('#duTab'), grupoPersonaje('Personajes (tu marca)'), 
     grupoTablero(),
-    ...gruposFichas({ pocos: true, titulo: 'Marcas', icono: '❌', lados: ['✕', '○'], textura: false, formas: false }),
+    ...gruposFichas({ pocos: true, titulo: 'Marcas', icono: '❌', lados: ['✕', '○'], textura: false, formas: false, nombresColor: ['Color Ficha X', 'Color Ficha O'] }),
     { clave: 'fichas', titulo: 'Fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: '✕ ○ Clásicas' }, { id: 'animales', nombre: '🐱 🐶 Animales' }, { id: 'espacio', nombre: '🚀 👽 Espacio' }, { id: 'comida', nombre: '🍕 🍔 Comida' }, { id: 'deporte', nombre: '⚽ 🏀 Deporte' }] },
-    { clave: 'colores', titulo: 'Colores de las fichas clásicas', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Azul / Rojo', sw: ['#2F6BFF', '#FF4757'] }, { id: 'bosque', nombre: 'Verde / Naranja', sw: ['#0FA971', '#FF8A00'] }, { id: 'fantasia', nombre: 'Violeta / Rosa', sw: ['#8B3DFF', '#FF3FA4'] }, { id: 'dorado', nombre: 'Negro / Oro', sw: ['#1B2340', '#E8A800'] }] },
   ],
   estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML, vista: { montar, pintar },
 });

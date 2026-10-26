@@ -1,4 +1,4 @@
-// Motor del Rummy de fichas (las reglas del clásico juego de fichas numeradas). Sin DOM, probable con Node.
+// Motor del Rummy Tile (las reglas del clásico juego de fichas numeradas). Sin DOM, probable con Node.
 // 106 fichas: id 0..103 = números 1..13 en 4 colores, dos copias; 104 y 105 = comodines.
 // Jugadas válidas: GRUPO (3–4 fichas del mismo número y colores distintos) o ESCALERA (3+ números seguidos del mismo color, del 1 al 13).
 // En tu turno juegas fichas (y puedes reorganizar la mesa) o robas una. La primera bajada debe sumar ≥ 30 con fichas propias.
@@ -49,11 +49,12 @@ export function crear({ jugadores, nivel = 'medio' }) {
   const bolsa = shuffle(Array.from({ length: 106 }, (_, i) => i));
   const S = { nivel: NIVEL[nivel] ? nivel : 'medio', mesa: [], bolsa, turno: 0, fase: 'jugar', ganador: -1, pases: 0, nTurno: 1, log: [],
     jug: jugadores.slice(0, 4).map(j => ({ nombre: String(j.nombre).slice(0, 14), cpu: !!j.cpu, fichas: bolsa.splice(0, 14), bajado: false, puntos: 0 })) };
-  S.turno = Math.floor(Math.random() * S.jug.length); log(S, S.jug[S.turno].nombre === 'Tú' ? 'Empiezas tú.' : `Empieza ${S.jug[S.turno].nombre}.`);
+  S.turno = Math.floor(Math.random() * S.jug.length); log(S, S.jug[S.turno].nombre === 'Tú' ? 'Empiezas tú.' : `Empieza ${S.jug[S.turno].nombre}.`, S.turno);
   return S;
 }
 const v = (J, el, tu) => (J.nombre === 'Tú' ? tu : el);          // «CPU juega» / «Tú juegas»
-const log = (S, t) => { S.log.unshift(t); if (S.log.length > 6) S.log.length = 6; };
+// El registro guarda «n|texto» (n = jugador que actúa, -1 = general): la pantalla separa lo tuyo (0) de lo de las CPU
+const log = (S, t, j = -1) => { S.log.unshift(`${j}|${t}`); if (S.log.length > 24) S.log.length = 24; };
 const claveSet = s => s.slice().sort((a, b) => a - b).join(',');
 // Comprueba una jugada completa del turno: nuevaMesa (lista de jugadas) y nuevaMano. Devuelve '' si es válida o el motivo.
 export function comprobar(S, p, nuevaMesa, nuevaMano) {
@@ -79,15 +80,15 @@ export function jugar(S, p, nuevaMesa, nuevaMano) {
   const err = comprobar(S, p, nuevaMesa, nuevaMano); if (err) return err;
   const J = S.jug[p], n = J.fichas.length - nuevaMano.length;
   S.mesa = nuevaMesa.map(s => analizar(s).orden); J.fichas = nuevaMano.slice();
-  log(S, `${J.nombre} ${J.bajado ? v(J, 'juega', 'juegas') : v(J, 'se baja con', 'te bajas con')} ${n} ficha${n === 1 ? '' : 's'}.`); J.bajado = true; S.pases = 0;
+  log(S, `${J.nombre} ${J.bajado ? v(J, 'juega', 'juegas') : v(J, 'se baja con', 'te bajas con')} ${n} ficha${n === 1 ? '' : 's'}.`, S.jug.indexOf(J)); J.bajado = true; S.pases = 0;
   if (!J.fichas.length) return terminar(S, p), '';
   siguiente(S); return '';
 }
 export function robar(S, p) {
   if (S.fase !== 'jugar' || S.turno !== p) return false;
   const J = S.jug[p];
-  if (S.bolsa.length) { J.fichas.push(S.bolsa.pop()); S.pases = 0; log(S, `${J.nombre} ${v(J, 'roba', 'robas')}.`); }
-  else { S.pases++; log(S, `${J.nombre} ${v(J, 'pasa', 'pasas')} (no quedan fichas en la bolsa).`); if (S.pases >= S.jug.length) { let g = 0; S.jug.forEach((x, k) => { if (puntosMano(x.fichas) < puntosMano(S.jug[g].fichas)) g = k; }); return terminar(S, g), true; } }
+  if (S.bolsa.length) { J.fichas.push(S.bolsa.pop()); S.pases = 0; log(S, `${J.nombre} ${v(J, 'roba', 'robas')}.`, S.jug.indexOf(J)); }
+  else { S.pases++; log(S, `${J.nombre} ${v(J, 'pasa', 'pasas')} (no quedan fichas en la bolsa).`, S.jug.indexOf(J)); if (S.pases >= S.jug.length) { let g = 0; S.jug.forEach((x, k) => { if (puntosMano(x.fichas) < puntosMano(S.jug[g].fichas)) g = k; }); return terminar(S, g), true; } }
   siguiente(S); return true;
 }
 function siguiente(S) { S.turno = (S.turno + 1) % S.jug.length; S.nTurno++; }
@@ -95,7 +96,7 @@ function terminar(S, g) {
   S.fase = 'fin'; S.ganador = g; let total = 0;
   S.jug.forEach((x, k) => { if (k === g) return; const pts = puntosMano(x.fichas); x.puntos = -pts; total += pts; });
   S.jug[g].puntos = total - (S.jug[g].fichas.length ? puntosMano(S.jug[g].fichas) : 0);
-  log(S, `¡${S.jug[g].nombre} ${v(S.jug[g], 'gana', 'ganas')} la partida${S.jug[g].fichas.length ? ' (bolsa agotada: menos puntos en el atril)' : ''}!`);
+  log(S, `¡${S.jug[g].nombre} ${v(S.jug[g], 'gana', 'ganas')} la partida${S.jug[g].fichas.length ? ' (bolsa agotada: menos puntos en el atril)' : ''}!`, g);
 }
 
 /* ---------- IA ---------- */
@@ -204,5 +205,5 @@ export function validar(d) {
   if (!d.mesa.every(valida)) return null;
   if (!['jugar', 'fin'].includes(d.fase) || !ent(d.turno, 0, jug.length - 1) || !ent(d.ganador, -1, jug.length - 1) || !ent(d.pases, 0, 8)) return null;
   return { nivel: d.nivel, mesa: d.mesa.map(s => analizar(s).orden), bolsa: d.bolsa.slice(), turno: d.turno, fase: d.fase, ganador: d.ganador, pases: d.pases, nTurno: ent(d.nTurno, 1, 99999) ? d.nTurno : 1, jug,
-    log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 6).map(x => x.slice(0, 120)) : [] };
+    log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 24).map(x => (/^-?\d\|/.test(x) ? x : '-1|' + x).slice(0, 124)) : [] };
 }

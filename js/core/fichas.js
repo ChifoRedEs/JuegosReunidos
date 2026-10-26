@@ -19,10 +19,10 @@ export const TAMANOS = { pequeno: ['Pequeño', .82], normal: ['Normal', 1], gran
 /* ---------- grupos de 🎨 Apariencia ---------- */
 // Paleta reducida (se muestra solo con el color, sin nombre): para juegos donde el color de la pieza no condiciona el juego (Dominó, Guerra de Orugas)
 export const IDS_POCOS = ['marfil', 'blanco', 'plata', 'gris', 'negro', 'dorado', 'rojo-m', 'naranja-m', 'amarillo-m', 'lima-m', 'verde-m', 'turquesa-m', 'azul-m', 'violeta-m', 'rosa-m', 'azul-o', 'verde-o', 'rojo-o'];
-// o: { clave:'f', titulo:'Cajas', icono:'📦', lados:['Rojo','Amarillo'] (un grupo de color por bando: fcolor, fcolor2…), formas:true|false|[ids], tamano:true|false|[ids], textura:true|false, color:true|false, pocos:true (paleta reducida, solo color sin nombre) }
+// o: { clave:'f', titulo:'Cajas', icono:'📦', lados:['Rojo','Amarillo'] (un grupo de color por bando: fcolor, fcolor2…), formas:true|false|[ids], tamano:true|false|[ids], textura:true|false, color:true|false, pocos:true (paleta reducida, solo color sin nombre), nombresColor:['Color Ficha X','Color Ficha O'] (título de cada grupo de color) }
 export function gruposFichas(o = {}) {
   const k = o.clave || 'f', t = o.titulo || 'Fichas', out = [];
-  if (o.color !== false) (o.lados || [null]).forEach((lado, i) => out.push({ clave: k + 'color' + (i ? i + 1 : ''), titulo: `${t} · Color${lado ? ` (${lado})` : ''}`, icono: o.icono || '🎨', def: 'original', soloColor: !!o.pocos, opciones: [{ id: 'original', nombre: 'Original', emoji: '↩️' }, ...COLORES.filter(c => !o.pocos || IDS_POCOS.includes(c.id)).map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] }))] }));
+  if (o.color !== false) (o.lados || [null]).forEach((lado, i) => out.push({ clave: k + 'color' + (i ? i + 1 : ''), titulo: (o.nombresColor && o.nombresColor[i]) || `${t} · Color${lado ? ` (${lado})` : ''}`, icono: o.icono || '🎨', def: 'original', soloColor: !!o.pocos, opciones: [{ id: 'original', nombre: 'Original', emoji: '↩️' }, ...COLORES.filter(c => !o.pocos || IDS_POCOS.includes(c.id)).map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] }))] }));
   if (o.textura !== false) out.push({ clave: k + 'tex', titulo: `${t} · Textura`, icono: '✨', def: 'original', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) });
   if (o.formas !== false) { const ids = Array.isArray(o.formas) ? o.formas : Object.keys(FORMAS); out.push({ clave: k + 'forma', titulo: `${t} · Forma`, icono: '📐', def: 'original', opciones: ids.map(id => ({ id, nombre: FORMAS[id] })) }); }
   if (o.tamano !== false) out.push({ clave: k + 'tam', titulo: `${t} · Tamaño`, icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).filter(([id]) => !Array.isArray(o.tamano) || o.tamano.includes(id)).map(([id, [nombre]]) => ({ id, nombre })) });
@@ -43,7 +43,7 @@ export const mezcla = (a, b, t) => { const x = rgb(a), y = rgb(b); return aHex(x
 export const oscuro = (h, t = .32) => mezcla(h, '#000000', t);
 export const claro = (h, t = .3) => mezcla(h, '#FFFFFF', t);
 export const luz = h => { const [r, g, b] = rgb(h); return (.299 * r + .587 * g + .114 * b) / 255; };
-// n variantes del mismo color (más claras y oscuras) para juegos donde cada pieza debe distinguirse (Klotski…)
+// n variantes del mismo color (más claras y oscuras) para juegos donde cada pieza debe distinguirse (Deslizadas…)
 export const variantes = (h, n) => Array.from({ length: n }, (_, i) => { const t = n < 2 ? 0 : i / (n - 1) * 2 - 1; return t < 0 ? claro(h, -t * .42) : oscuro(h, t * .38); });
 
 /* ---------- DOM ---------- */

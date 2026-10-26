@@ -2,9 +2,10 @@
 // abre entradas en el Ayuntamiento y cobra las noches de los rivales. Gana el último jugador en pie. Tablero 3D (Three.js) con respaldo SVG.
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
-import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { grupoFondo } from '../../core/aspectos.js';
 import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, EXTRA_LEYENDA, TIPO, LADOS } from './datos.js';
 import * as M from './motor.js';
+import { crearDado3D } from '../../core/dado3d.js';
 
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 170, bot: 750, dado: 900 }, rapida: { nombre: 'Rápida', paso: 60, bot: 280, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
 const NIVELES = ['', 'Fácil', 'Normal', 'Difícil'];
@@ -31,7 +32,7 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; bloqueado = false; V = null; sel = null; plan = {}; forzar2d = false; modo3d = false; ses++;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   if (!vivo) return;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), grupoTablero(), ...gruposFichas({ pocos: true, titulo: 'Coches de los jugadores', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), ...gruposFichas({ pocos: true, titulo: 'Coches de los jugadores', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
     () => { if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./hotel.css', import.meta.url));
@@ -45,12 +46,12 @@ export async function mount(r, a) {
     salir: () => { enPausa = false; ses++; bloqueado = false; api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => { enPausa = true; },
     reanudar: () => { enPausa = false; },
-    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], limite: cfg.limite, nivel: cfg.nivel, vel: cfg.vel }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'limite', titulo: 'Duración', opciones: [[0, 'Hasta la quiebra'], [40, '40 rondas'], [80, '80 rondas']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', opciones: [1, 2, 3].map(k => [k, NIVELES[k]]) }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { enPausa = false; if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.limite = v.limite; cfg.nivel = v.nivel; cfg.vel = v.vel; empezar(); } } });
+    config: { pantalla: () => nuevaSetup() } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏨 Hoteles', accion: () => hoteles() }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') { armar(); pintar(); ciclo(); } else setup();
 }
 export function unmount() {
-  vivo = false; enPausa = false; ses++; cerrarVista(); document.removeEventListener('keydown', onKey);
+  vivo = false; enPausa = false; ses++; quitarDado(); cerrarVista(); document.removeEventListener('keydown', onKey);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); }
   document.querySelectorAll('.htmodal').forEach(m => m.remove());
   S = null; asp = null; bloqueado = false;
@@ -60,7 +61,7 @@ function cerrarVista() { tok3++; if (V) { V.destruir(); V = null; } }
 
 /* ---------- inicio ---------- */
 function setup() {
-  S = null; cerrarVista(); sel = null; plan = {};
+  S = null; quitarDado(); cerrarVista(); sel = null; plan = {};
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra los terrenos junto al camino, pide <b>licencias de obras</b> y levanta tus hoteles fase a fase. Abre <b>entradas</b> al pasar por el Ayuntamiento: cada vez que un rival cae en una, te paga las noches. Gana el último jugador que no se arruine${cfg.limite ? ` (o quien tenga más patrimonio tras ${cfg.limite} rondas)` : ''}.</p>
     ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="htfichab" aria-hidden="true">${COCHES[i]}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
@@ -83,14 +84,23 @@ function empezar() {
 
 /* ---------- pantalla de juego ---------- */
 function armar() {
-  cerrarVista(); modo3d = quiere3D();
+  quitarDado(); cerrarVista(); modo3d = quiere3D();
   root.innerHTML = `<div class="htjug" id="htJug"></div>
     <div class="e3d htvista ${modo3d ? '' : 'ht2'}" id="htVista"><div class="e3d-carga" id="htCarga">Preparando el tablero…</div></div>
+    <div class="dadozona" id="htDado"></div>
     <div class="htpanel"><div class="htturno" id="htTurno"></div><div class="htacc" id="htAcc"></div></div>
     <div class="msg htmsg" id="htMsg" role="status" aria-live="polite"></div>
     <ul class="htlog" id="htLog" aria-label="Historial de la partida"></ul>
-    <div class="bar"><button class="btn" data-ac="leyenda">📖 Leyenda</button><button class="btn" data-ac="hoteles">🏨 Hoteles</button><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
-  iniciarVista();
+    <div class="bar htdos"><button class="btn" data-ac="leyenda">📖 Leyenda</button><button class="btn" data-ac="hoteles">🏨 Hoteles</button></div>${api.barraHtml()}`;
+  iniciarVista(); iniciarDado();
+}
+let D3 = null, tokD = 0;
+function quitarDado() { tokD++; if (D3) { D3.destruir(); D3 = null; } }
+async function iniciarDado() {
+  const t = ++tokD, host = $('#htDado'); if (!host || !S) return;
+  const d = await crearDado3D(host, { n: 1, etiqueta: 'Dado: toca para tirar', alClic: () => { if (S && !bloqueado && S.fase === 'tirar' && !S.jug[S.turno].cpu) humano({ t: 'tirar' }); } });
+  if (t !== tokD || !d) { if (d) d.destruir(); return; }
+  D3 = d; if (S) pintar();
 }
 async function iniciarVista() {
   const t = ++tok3, host = $('#htVista'); if (!host) return;
@@ -128,6 +138,7 @@ function pintar() {
   $('#htTurno').innerHTML = S.fase === 'fin' ? `🏆 <b>${esc(S.jug[S.ganador].nombre)}</b> gana la partida<br><small>${esc(S.motivo)}</small>`
     : `<span style="color:${cj(p.color)}">${p.coche} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
   $('#htAcc').innerHTML = accionesHTML(j);
+  if (D3) { D3.color(cj(p.color)); D3.activar(S.fase === 'tirar' && !S.jug[j].cpu && !bloqueado, `Toca el dado para tirar · ${p.nombre}`); }
   const L = S.log.slice(-60).reverse(); $('#htLog').innerHTML = L.map(t => `<li>${esc(t)}</li>`).join(''); const m = $('#htMsg'); if (m && S.log.length) m.textContent = S.log[S.log.length - 1];
   if (V) { pintarV(); V.resaltar(resaltados()); }
 }
@@ -149,7 +160,7 @@ function accionesHTML(j) {
   if (bloqueado) return '<small class="htesp">…</small>';
   const B = (ac, txt, on = true, dis = false) => `<button class="btn ${on ? 'on' : ''}" data-ac="${ac}" ${dis ? 'disabled' : ''}>${txt}</button>`;
   switch (S.fase) {
-    case 'tirar': return B('tirar', '🎲 Tirar el dado') + L.inst.map(o => B('inst:' + o.h, `🏊 Instalación ${HOTELES[o.h].nombre} · ${eur(o.coste)}`, false)).join('');
+    case 'tirar': return L.inst.map(o => B('inst:' + o.h, `🏊 Instalación ${HOTELES[o.h].nombre} · ${eur(o.coste)}`, false)).join('');
     case 'ayto': case 'entLibre': {
       const hs = [...new Set(L.entradas.map(o => o.h))], gr = S.fase === 'entLibre';
       return `<p class="htex">${gr ? 'Entrada gratis' : 'Compra una entrada por hotel con edificio principal'}. Elige hotel y toca una casilla resaltada del camino.</p>`
@@ -183,7 +194,7 @@ async function animar(evs) {
   for (const e of evs) {
     if (!vivo || s !== ses) return;
     switch (e.t) {
-      case 'dado': api.sonido('dado'); dadoVis = e.v; if (V && V.dado) { await V.dado(e.v, v.dado); await pausa(v.dado ? 350 : 0); V.quitarDado && V.quitarDado(); } else await pausa(v.dado / 2); break;
+      case 'dado': api.sonido('dado'); dadoVis = e.v; if (D3) { D3.color(cj(S.jug[M.actor(S)].color)); await D3.tirar([e.v], v.dado); await pausa(v.dado ? 350 : 0); } else await pausa(v.dado / 2); break;
       case 'mover': api.sonido('mover'); if (V) await V.mover(e.j, e.camino, v.paso); break;
       case 'cobra': flash(e.j, '+' + eur(e.cant), 'pos'); api.sonido('ok'); await pausa(v.paso * 3); break;
       case 'paga': flash(e.j, '−' + eur(e.cant), 'neg'); if (e.a >= 0) flash(e.a, '+' + eur(e.cant), 'pos'); api.sonido('click'); await pausa(v.paso * 3); break;

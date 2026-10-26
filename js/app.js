@@ -134,6 +134,7 @@ function crearApi(j, ent, mod, root) {
   const pausaTemp = fn => { const seguir = parar_(); fn(() => seguir('aux')); };
   function abrirConfig() {
     const c = defBarra && defBarra.config; if (!c) return;
+    if (c.pantalla) { c.pantalla(); return; }       // el juego usa su propia pantalla de configuración (la inicial)
     pausaTemp(volver => {
       const vals = { ...c.valores() }, cont = el('div', { class: 'cfg-cont' });
       let aplicado = false, cerrar;
