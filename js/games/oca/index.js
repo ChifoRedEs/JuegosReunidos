@@ -8,7 +8,7 @@ let animJ = -1;
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (V3) { try { V3.destruir(); } catch { /* nada */ } V3 = null; } }
-import { crearDado3D } from '../../core/dado3d.js';
+import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, anim = false, vis = {}, dadosVis = null, msgEvento = '', D3 = null, tokD = 0;
 // 🪿 Fichas: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
 const colF = k => [estilo(asp.valores).hex, estilo(asp.valores).hex2, estilo(asp.valores).hex3, estilo(asp.valores).hex4][k] || O.COLORES[k];
@@ -28,7 +28,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; anim = false; vis = {}; dadosVis = null; msgEvento = ''; forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🪿', lados: ['Rojo', 'Azul', 'Verde', 'Amarillo'], formas: false }), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
+  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#ocTab'), grupoPersonaje('Personajes (tu ficha)'), ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🪿', lados: ['Rojo', 'Azul', 'Verde', 'Amarillo'], formas: false }), { clave: 'tablero', titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (D3) D3.estilo(asp.valores); if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./oca.css', import.meta.url));
   const c0 = api.pref('cfg', null);
@@ -76,7 +76,7 @@ async function iniciarDado() {
   const t = ++tokD, host = $('#ocDado'); if (!host || !S) return;
   const d = await crearDado3D(host, { n: S.dados, etiqueta: 'Dado: toca para tirar', alClic: () => { if (S && !S.jug[S.turno].cpu) tirar(); } });
   if (t !== tokD || !d) { if (d) d.destruir(); return; }
-  D3 = d; if (S) pintar();
+  D3 = d; D3.estilo(asp.valores); if (S) pintar();
 }
 async function iniciar3D() {
   const t = ++tok3;

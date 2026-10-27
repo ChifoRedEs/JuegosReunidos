@@ -4,7 +4,7 @@ import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { FICHAS as PERSONAJES, opcionesPersonajes } from '../../core/personajes.js';
 import { GRUPOS, CASILLAS, NUBE, RED, SALARIO, FIANZA, OFICINAS, SEDES, COLORES_JUGADOR, FICHAS } from './datos.js';
-import { crearDado3D } from '../../core/dado3d.js';
+import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
@@ -43,12 +43,13 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; jugando = false; pendiente = null; vista = null; forzar2d = false; hay3d = false;
   try { const b = await import('../../core/escena3d.js'); if (b.hayWebGL()) { mod3d = await import('../../core/anillo3d.js'); botones3d = b.botonesCamara; hay3d = true; } } catch (e) { console.error(e); }
   if (!vivo) return;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#mtTab'), grupoTablero(),
+  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#mtTab'), grupoTablero(),
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
     { clave: 'edif', titulo: 'Iconos de oficinas y sede (vista 2D)', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) },
     { clave: 'estilo', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) },
     ...gruposFichas({ pocos: true, titulo: 'Fichas de los jugadores', icono: '🎩', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
   () => {
+    if (D3) D3.estilo(asp.valores);
     if (G && root.querySelector('#mtJug')) {
       if (modo3d !== quiere3D()) { armar(); pintar(); return; }
       aplicarPersonaje(); if (vista) { vista.estiloHotel(asp.valores.estilo || 'rascacielos'); vista.tema(); } pintar();
@@ -163,7 +164,7 @@ async function iniciarDado() {
   const t = ++tokD, host = $('#mtDado'); if (!host || !G) return;
   const d = await crearDado3D(host, { n: 2, etiqueta: 'Dados: toca para tirar', alClic: () => { if (G && !G.p().bot) jugar(); } });
   if (t !== tokD || !d) { if (d) d.destruir(); return; }
-  D3 = d; if (G) pintar();
+  D3 = d; D3.estilo(asp.valores); if (G) pintar();
 }
 async function iniciar3D(t) {
   const host = $('#mtTab');

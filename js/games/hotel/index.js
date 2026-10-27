@@ -5,7 +5,7 @@ import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoFondo } from '../../core/aspectos.js';
 import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, EXTRA_LEYENDA, TIPO, LADOS } from './datos.js';
 import * as M from './motor.js';
-import { crearDado3D } from '../../core/dado3d.js';
+import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 170, bot: 750, dado: 900 }, rapida: { nombre: 'Rápida', paso: 60, bot: 280, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
 const NIVELES = ['', 'Fácil', 'Normal', 'Difícil'];
@@ -32,8 +32,8 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; bloqueado = false; V = null; sel = null; plan = {}; forzar2d = false; modo3d = false; ses++;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   if (!vivo) return;
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), ...gruposFichas({ pocos: true, titulo: 'Coches de los jugadores', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
-    () => { if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
+  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), ...gruposFichas({ pocos: true, titulo: 'Coches de los jugadores', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
+    () => { if (D3) D3.estilo(asp.valores); if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./hotel.css', import.meta.url));
   const c0 = api.pref('cfg', null);
@@ -100,7 +100,7 @@ async function iniciarDado() {
   const t = ++tokD, host = $('#htDado'); if (!host || !S) return;
   const d = await crearDado3D(host, { n: 1, etiqueta: 'Dado: toca para tirar', alClic: () => { if (S && !bloqueado && S.fase === 'tirar' && !S.jug[S.turno].cpu) humano({ t: 'tirar' }); } });
   if (t !== tokD || !d) { if (d) d.destruir(); return; }
-  D3 = d; if (S) pintar();
+  D3 = d; D3.estilo(asp.valores); if (S) pintar();
 }
 async function iniciarVista() {
   const t = ++tok3, host = $('#htVista'); if (!host) return;

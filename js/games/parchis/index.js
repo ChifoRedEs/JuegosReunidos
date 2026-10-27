@@ -1,5 +1,5 @@
 import { $, esc, rnd } from '../../core/dom.js';
-import { crearDado3D } from '../../core/dado3d.js';
+import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
 import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, mejorJugada, fichasDe, equipo, nombreEquipo, COMPANERO } from './reglas.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
@@ -53,6 +53,7 @@ function guardar() {
 
 /* ---------- ciclo de vida ---------- */
 const DEFS_ASPECTO = [
+  ...grupoDado(),
   { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
   grupoFondo('#pzView'), grupoPersonaje('Personajes (tus fichas)'),
   { clave: 'tablero', titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
@@ -65,6 +66,7 @@ export async function mount(root, a) {
   api = a; rootEl = root; rodando = false; ultFoco = ''; forzar2d = false; modo3d = false;
   try { const b3 = await import('../../core/escena3d.js'); hay3d = b3.hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto(DEFS_ASPECTO, () => {
+    if (D3) D3.estilo(asp.valores);
     aplicarFichas();
     if (modo === 'setup' || !P) { if (rootEl) rSetup(); return; }
     if (modo3d !== quiere3D()) { rJuego(); ultFoco = ''; pintarJuego(); return; }
@@ -209,7 +211,7 @@ async function iniciarDado() {
   const t = ++tokD, host = $('#pzDado'); if (!host) return;
   const d = await crearDado3D(host, { n: 1, etiqueta: 'Dado: toca para tirar', alClic: () => { if (P && P.phase === 'roll' && !esCPU(P, actual(P))) iniciarTirada(); } });
   if (t !== tokD || !d) { if (d) d.destruir(); return; }
-  D3 = d; if (P) pintarJuego();
+  D3 = d; D3.estilo(asp.valores); if (P) pintarJuego();
 }
 async function iniciar3D() {
   const t = ++tok3, volver = () => { if (t === tok3 && rootEl && modo === 'juego') { forzar2d = true; rJuego(); pintarJuego(); } };

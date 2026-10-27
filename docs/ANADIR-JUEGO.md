@@ -58,7 +58,7 @@ Los juegos nuevos deben seguir `docs/MARCA.md`: pantalla de partida con `<p clas
 
 ## Agrupar juegos
 Para que dos juegos salgan como una sola ficha en Inicio, añade un grupo a `GRUPOS` en `js/registry.js`:
-`{ id: 'parchis-oca', nombre: 'Partxis y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
+`{ id: 'parchis-oca', nombre: 'Partxis & Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
 Cada juego conserva su id, su partida guardada y sus estadísticas.
 
 ## Juegos en 3D (Three.js)
@@ -128,5 +128,5 @@ Opciones útiles: `color:false` (si las piezas necesitan sus colores para jugar:
 `js/games/quecara/avatar.js` compone una cara como un SVG a partir de piezas por capas (`piezas.js`, generado con `python tools/generar_piezas.py` desde `tools/avatares/<pieza>/<forma>.svg`; el marcador `$fillColor` se sustituye por el color). Una cara es un objeto pequeño (`nm, sx, pi, pe, pc, …`); `caraValida(f)` la normaliza, `svgDe(f)` devuelve el SVG (con ids únicos) y `generarCaras(n, semilla, vectorDe)` crea un tablero repartido y repetible. Para añadir una pieza: dibuja el SVG en `tools/avatares/<pieza>/` (coordenadas absolutas de la cara, 4 px de contorno negro), añade la forma al catálogo de `avatar.js` y, si se puede preguntar por ella, una pregunta en `preguntas.js`. Las 30 caras por defecto se regeneran con `node tools/generar_caras_quecara.mjs`. Crédito obligatorio (licencia MIT): Vue Color Avatar, de LeoKu.
 
 ## Dado 3D común (`core/dado3d.js`)
-`const D = await crearDado3D(contenedor, { n: 1|2, alClic, etiqueta })` pinta un lienzo con 1 o 2 dados; el propio dado es el botón de tirar (no pongas un botón «Tirar»). `D.activar(bool, 'Toca el dado')` lo marca como pulsable, `await D.tirar([v1, v2], ms)` lo anima hasta el valor ya decidido por el motor, `D.poner(vals|null)` muestra valores sin animar, `D.color('#hex')` tiñe el dado y `D.destruir()` lo libera (llámalo en `unmount` y al reconstruir la pantalla). Sin WebGL usa un dado plano HTML. Contenedor: `<div class="dadozona">` (estilos en `css/marca.css`). Lo usan Partxis, Oca, Magnate Urbano y Hotel.
+`const D = await crearDado3D(contenedor, { n: 1|2, alClic, etiqueta })` pinta un lienzo con 1 o 2 dados; el propio dado es el botón de tirar (no pongas un botón «Tirar»). `D.activar(bool, 'Toca el dado')` lo marca como pulsable, `await D.tirar([v1, v2], ms)` lo anima hasta el valor ya decidido por el motor, `D.poner(vals|null)` muestra valores sin animar, `D.color('#hex')` tiñe el dado y `D.estilo(asp.valores)` aplica la apariencia (añade `...grupoDado()` al `api.aspecto([...])` del juego y llama a `D.estilo` al crear el dado y en la función de cambio de aspecto), `D.destruir()` lo libera (llámalo en `unmount` y al reconstruir la pantalla). Sin WebGL usa un dado plano HTML. Contenedor: `<div class="dadozona">` (estilos en `css/marca.css`). Lo usan Partxis, Oca, Magnate Urbano y Hotel.
 Si `api.barra({config})` lleva `pantalla: () => …`, «Configurar partida» abre esa pantalla (p. ej. la inicial del juego) en vez de la hoja genérica.
