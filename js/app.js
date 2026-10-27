@@ -387,6 +387,7 @@ async function render() {
     return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span aria-hidden="true">${ic}</span><b>${tx}</b></a>`;
   }).join('');
   app.innerHTML = '';
+  document.body.classList.toggle('fijo', r.v === 'inicio');          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
   if (r.v === 'inicio') vInicio(r.cat); else ({ stats: vStats, ajustes: vAjustes })[r.v]();
   window.scrollTo(0, 0);
@@ -455,11 +456,19 @@ function elegirJuego(gid) {
     el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'))]);
 }
 // Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
+const COLOR_CAT = { logica: '#6B4DE0', tablero: '#E0553D', cartas: '#C8243E', palabras: '#D98A00', arcade: '#2F6BFF' };
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio(filtro = null) {
   const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
   nombreVista = nombreFiltro || 'Juegos Reunidos'; cabTxt('Juegos Reunidos');
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
+  if (!filtro) {                                                    // Pantalla de inicio: el logo de fondo y las categorías a todo el alto (sin desplazamiento)
+    app.innerHTML = `<div class="ini" role="navigation" aria-label="Categorías de juegos">${cats.map(([k, n]) => {
+      const js = JUEGOS.filter(j => j.categoria === k), enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
+      return `<a class="ini-cat" href="#/cat/${k}" style="--c:${COLOR_CAT[k] || '#6B4DE0'}"><span class="ini-ico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="ini-t"><b>Juegos de ${esc(n)}</b><small>${js.length} juegos${enCurso ? ` · ${enCurso} en curso` : ''}</small></span><span class="ini-fl" aria-hidden="true">›</span></a>`;
+    }).join('')}</div>`;
+    return;
+  }
   const grupos = cats.map(([k, n]) => {
     const es = entradas(k), js = JUEGOS.filter(j => j.categoria === k);
     const enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
@@ -467,7 +476,7 @@ function vInicio(filtro = null) {
       <h2 class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}</h2>
       <div class="rejilla">${es.map(x => x.tipo === 'grupo' ? fichaGrupo(x.g, x.js) : ficha(x.j)).join('')}</div></section>`;
   }).join('');
-  app.innerHTML = grupos + (!filtro && PROXIMAMENTE.length ? `<div class="soon">Próximamente: ${PROXIMAMENTE.map(esc).join(' · ')}.</div>` : '');
+  app.innerHTML = grupos + '';
 }
 
 /* ---------- estadísticas ---------- */
