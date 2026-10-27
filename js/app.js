@@ -269,11 +269,31 @@ function crearApi(j, ent, mod, root) {
         const resumenSec = new Map();
         const pintarResumen = g => {
           const o = actual(g), r = resumenSec.get(g.clave); if (!r) return;
+          if (g.multi) { r.replaceChildren(el('span', { class: 'ap-li' }, g.icono || '🎨'), el('b', {}, g.titulo), el('small', { class: 'ap-mres' }, ...g.multi.map(sg => { const x = sg.opciones.find(q => q.id === elec[sg.clave]); return x && x.sw ? el('i', { class: 'sw', style: `background:${x.sw[0]}` }) : el('i', { class: 'sw orig' }, '↩'); }))); return; }
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
           r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, g.soloColor && o.sw ? '' : o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
         };
         const elegir = (g, idO) => { elec[g.clave] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); const r = alCambiar && alCambiar({ ...vals }); if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } };
+        // Sección única de color para varios bandos: leyenda (quién es cada color) + una sola paleta; un color elegido por un bando no puede repetirse en otro.
+        const cuerpoMulti = g => {
+          const slots = g.multi; let act = 0; const cont = el('div', { class: 'ap-multi' });
+          const pintar = () => {
+            const usados = new Set(slots.map(x => elec[x.clave]).filter(x => x !== 'original')), sg = slots[act];
+            cont.replaceChildren(
+              el('div', { class: 'ap-ley', role: 'group', 'aria-label': 'Leyenda de colores' }, ...slots.map((x, i) => { const q = x.opciones.find(z => z.id === elec[x.clave]);
+                return el('button', { type: 'button', class: 'ap-slot' + (i === act ? ' on' : ''), 'data-s': i }, q && q.sw ? el('i', { class: 'sw', style: `background:${q.sw[0]}` }) : el('i', { class: 'sw orig' }, '↩'), el('span', {}, g.leyenda[i])); })),
+              el('small', { class: 'ap-sec' }, `Elige el color de: ${g.leyenda[act]}`),
+              el('div', { class: 'seg' }, ...sg.opciones.map(o => { const b = boton(sg, o); if (o.id !== 'original' && usados.has(o.id) && elec[sg.clave] !== o.id) { b.classList.add('dis'); b.disabled = true; b.title = o.nombre + ' (ya en uso)'; } return b; })));
+          };
+          cont.addEventListener('click', e => {
+            const sl = e.target.closest('.ap-slot'); if (sl) { act = +sl.dataset.s; pintar(); return; }
+            const b = e.target.closest('.ap-o'); if (!b || b.disabled) return;
+            elegir(slots[act], b.dataset.o); pintarResumen(g); if (act < slots.length - 1) act++; pintar();
+          });
+          pintar(); return cont;
+        };
         const cuerpoDe = g => {
+          if (g.multi) return cuerpoMulti(g);
           const imgs = g.opciones.some(o => o.img) && g.forma;
           if (imgs) return el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
             o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || (o.nada ? '🚫' : '🎲')), el('small', {}, o.nombre))));
@@ -281,10 +301,10 @@ function crearApi(j, ent, mod, root) {
           for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); }
           return el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, out);
         };
-        const secciones = defs.map(g => {
+        const secciones = defs.filter(g => !g.oculto).map(g => {
           const det = el('details', { class: 'ap-det' }), sum = el('summary', { class: 'ap-link' }); resumenSec.set(g.clave, sum); pintarResumen(g);
           const cuerpo = cuerpoDe(g); cuerpo.classList.add('ap-cuerpo');
-          cuerpo.addEventListener('click', e => {
+          if (!g.multi) cuerpo.addEventListener('click', e => {
             const b = e.target.closest('.ap-o, .ap-ficha'); if (!b) return;
             const idO = b.dataset.o; if (idO == null) return;
             elegir(g, idO); cuerpo.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === elec[g.clave]));

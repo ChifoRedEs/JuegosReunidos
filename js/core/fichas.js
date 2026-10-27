@@ -23,6 +23,13 @@ export const IDS_POCOS = ['marfil', 'blanco', 'plata', 'gris', 'negro', 'dorado'
 export function gruposFichas(o = {}) {
   const k = o.clave || 'f', t = o.titulo || 'Fichas', out = [];
   if (o.color !== false) (o.lados || [null]).forEach((lado, i) => out.push({ clave: k + 'color' + (i ? i + 1 : ''), titulo: (o.nombresColor && o.nombresColor[i]) || `${t} · Color${lado ? ` (${lado})` : ''}`, icono: o.icono || '🎨', def: 'original', soloColor: !!o.pocos, opciones: [{ id: 'original', nombre: 'Original', emoji: '↩️' }, ...COLORES.filter(c => !o.pocos || IDS_POCOS.includes(c.id)).map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] }))] }));
+  // Con varios bandos se muestra UNA sola sección de color (la primera) con una leyenda de quién es cada color; las demás quedan ocultas pero siguen guardando su valor (fcolor2…).
+  const cg = out.filter(g => g.clave.startsWith(k + 'color'));
+  if (cg.length > 1) {
+    const ROL = ['Jugador 1', 'CPU / Jugador 2', 'CPU / Jugador 3', 'CPU / Jugador 4'], ley = o.leyenda || cg.map((_, i) => { const l = o.lados[i]; return /^Jugador \d$/.test(l) ? (i ? `CPU / ${l}` : `${l} (tú)`) : `${ROL[i] || l} · ${l}`; });
+    cg[0].multi = cg; cg[0].leyenda = ley; cg[0].titulo = o.tituloColor || 'Color de Fichas';
+    cg.slice(1).forEach(g => { g.oculto = true; });
+  }
   if (o.textura !== false) out.push({ clave: k + 'tex', titulo: `${t} · Textura`, icono: '✨', def: 'original', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) });
   if (o.formas !== false) { const ids = Array.isArray(o.formas) ? o.formas : Object.keys(FORMAS); out.push({ clave: k + 'forma', titulo: `${t} · Forma`, icono: '📐', def: 'original', opciones: ids.map(id => ({ id, nombre: FORMAS[id] })) }); }
   if (o.tamano !== false) out.push({ clave: k + 'tam', titulo: `${t} · Tamaño`, icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).filter(([id]) => !Array.isArray(o.tamano) || o.tamano.includes(id)).map(([id, [nombre]]) => ({ id, nombre })) });

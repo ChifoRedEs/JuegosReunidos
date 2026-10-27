@@ -248,3 +248,10 @@ main{padding-top:14px}
 .ap-o.ap-e{justify-content:center;padding:4px;min-height:46px;font-size:26px;line-height:1}
 /* versión al pie de Ajustes */
 .version{text-align:center;color:var(--mut);font-size:12.5px;font-weight:800;margin:18px 0 6px;letter-spacing:.02em}
+.ap-ley{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.ap-slot{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 10px;border-radius:14px;border:2px solid var(--line);background:var(--card);font:700 13px/1.15 inherit;color:inherit;cursor:pointer}
+.ap-slot.on{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 28%,transparent)}
+.ap-slot .sw,.ap-mres .sw{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid rgba(0,0,0,.25);display:inline-grid;place-items:center;font-size:12px;font-style:normal}
+.ap-mres{display:inline-flex;gap:4px}
+.ap-o.dis{opacity:.28;pointer-events:none}
+.ap-multi .ap-sec{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:6px 0}
