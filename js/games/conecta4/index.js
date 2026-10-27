@@ -62,7 +62,7 @@ const duelo = crearDuelo({
   chip: n => `<i class="ch c4${n}"></i>`,
   aspecto: [grupoFondo('#duTab'), grupoPersonaje('Personajes (tus fichas)'), ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🔴', lados: ['Rojas', 'Amarillas'], formas: false }),
     { clave: 'tablero', titulo: 'Color del tablero', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2457A6'] }, { id: 'morado', nombre: 'Morado', sw: ['#6B3FD4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0B9A6B'] }, { id: 'coral', nombre: 'Coral', sw: ['#F0572D'] }, { id: 'negro', nombre: 'Noche', sw: ['#262B4A'] }] },
-    { clave: 'forma', titulo: 'Forma de las fichas', def: 'redonda', opciones: [{ id: 'redonda', nombre: '● Redonda' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'corazon', nombre: '♥ Corazón' }] },
+    { clave: 'forma', enEstilos: true, etiqueta: 'Forma de la ficha', titulo: 'Forma de las fichas', def: 'redonda', opciones: [{ id: 'redonda', nombre: '● Redonda' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'corazon', nombre: '♥ Corazón' }] },
   ],
   estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML, vista: { montar, pintar },
 });

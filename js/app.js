@@ -235,6 +235,9 @@ function crearApi(j, ent, mod, root) {
     aspecto(defs, alCambiar) {
       // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
       defs = defs.filter(g => g.opciones.some(o => !o.azar && !o.nada) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
+      // Grupos propios «Forma de las fichas» (enEstilos) se integran en el desplegable «Estilos de Fichas» si el juego lo tiene.
+      const est = defs.find(g => g.sub && g.clave !== 'dado');
+      if (est) defs.filter(g => g.enEstilos).forEach(g => { est.sub.splice(Math.min(1, est.sub.length), 0, g); g.oculto = true; });
       const gd = aj.pref(id, 'aspecto', {}) || {}, elec = {}, vals = {};
       const resolver = nuevo => defs.forEach(g => {
         if (elec[g.clave] !== 'azar') { vals[g.clave] = elec[g.clave]; return; }
