@@ -31,7 +31,7 @@ export const JUEGOS = [
   { id: 'ajedrez', nombre: 'Ajedrez', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Reloj, PGN, revisión y CPU de 3 niveles.', cargar: () => import('./games/ajedrez/index.js') },
   { id: 'chinchon', nombre: 'Chinchón', icono: '🀄', color: '#0E7C66', categoria: 'cartas', descripcion: 'Baraja española: liga, cierra y busca el chinchón.', cargar: () => import('./games/chinchon/index.js') },
   { id: 'mus', nombre: 'Mus', icono: '🤝', color: '#B3182B', categoria: 'cartas', descripcion: 'Por parejas: grande, chica, pares, juego y órdago.', cargar: () => import('./games/mus/index.js') },
-  { id: 'quecara', nombre: '¿Qué cara tienes?', icono: '🧐', color: '#E0553D', categoria: 'tablero', descripcion: 'Adivina la cara del rival. 30 caras, CPU o 2 jugadores.', cargar: () => import('./games/quecara/index.js') },
+  { id: 'quecara', nombre: '¿Qué Cara Tienes?', icono: '🧐', color: '#E0553D', categoria: 'tablero', descripcion: 'Adivina la cara del rival. 30 caras, CPU o 2 jugadores.', cargar: () => import('./games/quecara/index.js') },
   { id: 'flota', nombre: 'Batalla Naval', icono: '🚢', color: '#1B4FA8', categoria: 'tablero', descripcion: '6 flotas, de Relámpago 6×6 a Gran armada 12×12.', cargar: () => import('./games/flota/index.js') },
   { id: 'rummy', nombre: 'Rummy', icono: '🀄', color: '#E0243A', categoria: 'tablero', descripcion: 'Grupos y escaleras de fichas: reorganiza la mesa y quédate sin fichas.', cargar: () => import('./games/rummy/index.js') },
   { id: 'oca', nombre: 'Juego de la Oca', icono: '🦢', color: '#7CA83A', categoria: 'tablero', descripcion: 'De oca a oca y tiro porque me toca. De 2 a 4 jugadores.', cargar: () => import('./games/oca/index.js') },
@@ -59,13 +59,13 @@ export const JUEGOS = [
 // Cada juego conserva su propio id, su partida guardada y sus estadísticas (no se mezclan).
 export const GRUPOS = [
   { id: 'solitarios', nombre: 'Solitarios', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Klondike (siempre con solución y modo Vegas), Spider (104 cartas, de 1 a 4 palos) o Carta Blanca (FreeCell).', juegos: ['klondike', 'spider', 'freecell'] },
-  { id: 'parchis-oca', nombre: 'Partxis y Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Partxis y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
-  { id: 'ajedrez-damas', nombre: 'Ajedrez y Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
-  { id: 'buscaminas-klotski', nombre: 'Bombardeo y Deslizadas', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Bombardeo (sin adivinar, reto del día) o Deslizadas (bloques deslizantes y números).', juegos: ['buscaminas', 'klotski'] },
-  { id: 'tresenraya-conecta4', nombre: '3 en raya y Cuatro en Línea', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: 'Dos duelos de líneas: 3 en raya y Cuatro en Línea, contra la CPU.', juegos: ['tresenraya', 'conecta4'] },
-  { id: 'domino-rummy', nombre: 'Dominó y Rummy', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Dos juegos de fichas: Dominó (varias modalidades) y Rummy.', juegos: ['domino', 'rummy'] },
+  { id: 'parchis-oca', nombre: 'Partxis & Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Partxis y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
+  { id: 'ajedrez-damas', nombre: 'Ajedrez & Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
+  { id: 'buscaminas-klotski', nombre: 'Bombardeo & Deslizadas', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Bombardeo (sin adivinar, reto del día) o Deslizadas (bloques deslizantes y números).', juegos: ['buscaminas', 'klotski'] },
+  { id: 'tresenraya-conecta4', nombre: '3 en Raya & Cuatro en Línea', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: 'Dos duelos de líneas: 3 en raya y Cuatro en Línea, contra la CPU.', juegos: ['tresenraya', 'conecta4'] },
+  { id: 'domino-rummy', nombre: 'Dominó & Rummy', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Dos juegos de fichas: Dominó (varias modalidades) y Rummy.', juegos: ['domino', 'rummy'] },
   { id: 'poker', nombre: 'Poker & BlackJack', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em, Póker cubierto o BlackJack contra la banca.", juegos: ['holdem', 'pokercub', 'blackjack'] },
-  { id: 'sopa-crucigramas', nombre: 'Sopa y Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopa', 'crucigrama'] },
+  { id: 'sopa-crucigramas', nombre: 'Sopa & Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopa', 'crucigrama'] },
 ];
 export const grupoDe = id => GRUPOS.find(g => g.juegos.includes(id)) || null;
 // Entradas de Inicio de una categoría: fichas sueltas y fichas de grupo (el grupo ocupa el sitio de su primer juego)

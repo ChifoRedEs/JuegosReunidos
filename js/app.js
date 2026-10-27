@@ -134,6 +134,7 @@ function crearApi(j, ent, mod, root) {
   const pausaTemp = fn => { const seguir = parar_(); fn(() => seguir('aux')); };
   function abrirConfig() {
     const c = defBarra && defBarra.config; if (!c) return;
+    if (c.pantalla) { c.pantalla(); return; }       // el juego usa su propia pantalla de configuración (la inicial)
     pausaTemp(volver => {
       const vals = { ...c.valores() }, cont = el('div', { class: 'cfg-cont' });
       let aplicado = false, cerrar;
@@ -364,6 +365,28 @@ async function abrirJuego(id, t) {
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', render);
+/* Deslizar a izquierda/derecha cambia de pantalla en el orden del menú superior (Lógica → … → Ajustes).
+   En una partida solo cuenta si el gesto empieza en el fondo (no sobre tableros, botones, campos ni lienzos) y es claramente horizontal. */
+(() => {
+  let t0 = null;
+  const INTERACTIVO = 'button,a,input,select,textarea,canvas,label,summary,[role=button],[tabindex],[draggable=true],.e3d,.ck,.hoja,.modal,.flotante,[class*=tab],[class*=tablero],[class*=rejilla],[class*=grid]';
+  const desplazable = n => { for (; n && n !== document.body; n = n.parentElement) { const o = getComputedStyle(n).overflowX; if ((o === 'auto' || o === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
+  document.addEventListener('touchstart', e => {
+    t0 = null; if (e.touches.length !== 1 || document.querySelector('.hoja,.modal,.htmodal,.flotante')) return;
+    const r = ruta(), tg = e.target; if (!(tg instanceof Element)) return;
+    if (r.v === 'juego' && (tg.closest(INTERACTIVO) || desplazable(tg))) return;
+    if (r.v !== 'juego' && desplazable(tg)) return;
+    t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), r };
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const g = t0; t0 = null; if (!g || !e.changedTouches.length) return;
+    const dx = e.changedTouches[0].clientX - g.x, dy = e.changedTouches[0].clientY - g.y;
+    if (Date.now() - g.t > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
+    const id = g.r.v === 'juego' ? 'cat-' + g.r.cat : g.r.v === 'inicio' ? (g.r.cat ? 'cat-' + g.r.cat : null) : g.r.v;
+    const i = RUTAS.findIndex(x => x[0] === id); if (i < 0) return;
+    const n = RUTAS[i + (dx < 0 ? 1 : -1)]; if (n) location.hash = n[3];
+  }, { passive: true });
+})();
 app.addEventListener('click', e => { const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); const g = e.target.closest('[data-gen]'); if (g && actual) actual.api.gen(g.dataset.gen); });
 
 /* ---------- inicio ---------- */
@@ -479,7 +502,7 @@ function vAjustes() {
     <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
   <div class="panel"><h3>Sin conexión</h3><p class="note" id="gOff" role="status">Comprobando…</p><div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
   <div class="panel"><h3>Acerca de</h3><p class="note">Juegos Reunidos · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p>
-    <p class="note">Créditos: los dibujos de las caras de «¿Qué cara tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
+    <p class="note">Créditos: los dibujos de las caras de «¿Qué Cara Tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
   <p class="version">Juegos Reunidos · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); vAjustes();

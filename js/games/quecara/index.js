@@ -257,7 +257,7 @@ function confirmarArriesgo(i) {
 
 /* ---------- reglas ---------- */
 function reglas() {
-  api.modal('¿Qué cara tienes? · Reglas', `<ul>
+  api.modal('¿Qué Cara Tienes? · Reglas', `<ul>
     <li><b>Objetivo</b>: adivinar antes que el rival cuál es su personaje secreto.</li>
     <li><b>Preparación</b>: los dos veis el mismo tablero de caras. Cada jugador elige en secreto una. Con 2 jugadores aparece una pantalla para pasar el móvil sin que se vea el tablero del otro.</li>
     <li><b>En tu turno</b> haces <b>una</b> de estas dos cosas: <b>❓ preguntar</b> por un rasgo (¿es una chica? ¿lleva gafas? ¿tiene barba? ¿lleva sombrero?…) o <b>🎯 arriesgar</b> diciendo quién crees que es.</li>
