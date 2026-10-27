@@ -1,4 +1,4 @@
-# Juegos Reunidos 3.34
+# Juegos Reunidos 3.4
 
 50 juegos (40 fichas, con siete parejas y dos tríos agrupados) en 5 categorías: Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Deslizadas, Código Cifrado, Match-Up (Lógica) · Damas, Ajedrez, Batalla Naval, Rummy Tile, Juego de la Oca, Partxis, Magnate Urbano, Hotel (tablero 3D), 3 en raya, Cuatro en Línea, Dominó, ¿Qué cara tienes? (Tablero) · BlackJack, Klondike, Spider y Carta Blanca (Solitarios), Texas Hold'em, Póker cubierto, Corazones, Brisca, Chinchón, Mus, Cinquillo, Continental (Cartas) · Sopa de letras, Crucigramas, El Ahorcado, Ruleta Millonaria, El Rosco, Encadenadas, Números y Letras, Palabras Cruzadas, Trivia Quesitos (Palabras) · Serpiente, Vuela Alto, Quantix, Bloques, Rompe-Ladrillos, Air Hockey, Billar y Guerra de Orugas (Arcade).
 
