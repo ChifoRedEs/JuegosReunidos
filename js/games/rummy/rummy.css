@@ -1,5 +1,10 @@
 /* Rummy Tile · colores por 🎨 Apariencia (data-mesa = tapete e data-fichas en .juego-rummy) */
 .juego-rummy{--rm1:#12A05C;--rm2:#0A6B3C;--fz:#FFF8E7;--fz2:#EADFC4;--fb:#C9B88F;--k0:#E0243A;--k1:#1F6BFF;--k2:#F28C1B;--k3:#1B2340;--fw:min(34px,calc((min(100vw,520px) - 60px) / 10.5))}
+.juego-rummy[data-tablero="azul"]{--rm1:#2F6BFF;--rm2:#17409E}
+.juego-rummy[data-tablero="burdeos"]{--rm1:#B5304A;--rm2:#6E1328}
+.juego-rummy[data-tablero="violeta"]{--rm1:#7A5BC7;--rm2:#47308A}
+.juego-rummy[data-tablero="madera"]{--rm1:#B57A43;--rm2:#6E4524}
+.juego-rummy[data-tablero="noche"]{--rm1:#3A4678;--rm2:#1A2150}
 .juego-rummy[data-fichas="blanco"]{--fz:#FFFFFF;--fz2:#E8ECF4;--fb:#B8C2D6}
 .juego-rummy[data-fichas="oscuro"]{--fz:#2C3658;--fz2:#1C2440;--fb:#11162C;--k3:#E8ECF7;--k1:#5C9BFF}
 

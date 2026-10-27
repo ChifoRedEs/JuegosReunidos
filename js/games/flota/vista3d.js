@@ -7,7 +7,7 @@ import { lienzoTextura } from '../../core/fichas.js';
 import { T, crearEscena, lienzo, textura, emojiTextura, suave } from '../../core/escena3d.js';
 
 export async function crearFlota3D(cont, o = {}) {
-  const E = crearEscena(cont, { fov: 36, pol: .8, polMin: .2, polMax: 1.25, radio: 6.4, margen: 1.6, distMin: 6, distMax: 34, sombraRadio: 9, sol: { pos: [-4, 12, 7], int: 2.1 }, hemi: { int: 1.9 }, sueloY: -.4,
+  const E = crearEscena(cont, { fov: 36, pol: .8, polMin: .2, polMax: 1.25, radio: 6.4, objetivo: [0, 0, .8], margen: 1.6, distMin: 6, distMax: 34, sombraRadio: 9, sol: { pos: [-4, 12, 7], int: 2.1 }, hemi: { int: 1.9 }, sueloY: -.4,
     etiqueta: 'Tablero de Batalla Naval en 3D: toca una casilla; arrastra para girar la vista' });
   const V = { E }, raiz = new T.Group(); E.escena.add(raiz);
   const mAgua = [new T.MeshStandardMaterial({ roughness: .25, metalness: .05 }), new T.MeshStandardMaterial({ roughness: .25, metalness: .05 })];

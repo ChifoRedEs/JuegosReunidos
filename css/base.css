@@ -102,16 +102,16 @@ details li{margin:3px 0}
 .ap-lsw .sw{width:20px;height:20px;margin-right:-5px}
 .ap-link small{margin-left:auto;padding-left:6px;font-size:13px;font-weight:700;color:var(--mut);text-align:right}
 .ap-link i{font-style:normal;font-size:22px;font-weight:800;color:var(--mut)}
-.ap-rej{display:grid;gap:10px;margin:10px 0}
-.ap-rej.ap-tapete{grid-template-columns:repeat(2,1fr)}
-.ap-rej.ap-carta{grid-template-columns:repeat(3,1fr)}
-.ap-ficha{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:3px solid var(--line);border-radius:14px;padding:6px;font:inherit;color:var(--ink);min-width:0}
+.ap-rej{display:grid;gap:6px;margin:8px 0}
+.ap-rej.ap-tapete{grid-template-columns:repeat(3,1fr)}
+.ap-rej.ap-carta{grid-template-columns:repeat(4,1fr)}
+.ap-ficha{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--card);border:3px solid var(--line);border-radius:12px;padding:4px;font:inherit;color:var(--ink);min-width:0}
 .ap-ficha.on{border-color:var(--purple)}
 .ap-ficha img{width:100%;border-radius:8px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .ap-tapete .ap-ficha img,.ap-tapete .ap-azar{aspect-ratio:16/10}
-.ap-carta .ap-ficha img,.ap-carta .ap-azar{height:104px;width:auto;max-width:100%;object-fit:contain}
+.ap-carta .ap-ficha img,.ap-carta .ap-azar{height:68px;width:auto;max-width:100%;object-fit:contain}
 .ap-azar{display:flex;align-items:center;justify-content:center;width:100%;font-size:34px;border-radius:8px;background:var(--line)}
-.ap-ficha small{font-size:12px;font-weight:800;text-align:center;line-height:1.15}
+.ap-ficha small{font-size:10.5px;font-weight:800;text-align:center;line-height:1.15}
 .ap-th{height:38px;width:auto;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.35);margin-right:2px}
 .sw{display:inline-block;width:15px;height:15px;border-radius:50%;border:1.5px solid rgba(0,0,0,.28);margin-right:1px}
 .toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:800;font-size:14px;max-width:90vw;text-align:center}

@@ -71,3 +71,8 @@
 .htmodal .htlh{font-size:15px;margin:12px 0 6px}
 .juego-hotel .bar.htdos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .juego-hotel .bar.htdos .btn{width:100%;justify-content:center}
+
+.juego.juego-hotel[data-tablero="arena"]{--ht-hierba:#EBD6A0;--ht-marco:#A6783A}
+.juego.juego-hotel[data-tablero="nieve"]{--ht-hierba:#E3EEF8;--ht-marco:#6B7F99}
+.juego.juego-hotel[data-tablero="rosa"]{--ht-hierba:#F4C6DA;--ht-marco:#9A4F6D}
+.juego.juego-hotel[data-tablero="noche"]{--ht-hierba:#3A4A7A;--ht-marco:#232B50}

@@ -9,7 +9,9 @@ const VEL = { rapida: .5, normal: 1, lenta: 1.7 };
 let P = null, api = null, asp = null, rootEl = null, modo = 'setup', timer = null, ivDado = null, ivAnim = null, rodando = false, ptsMov = [], ultFoco = '', D3 = null, tokD = 0;
 let cfgSetup = { am: 'h', az: 'c', ro: 'c', ve: 'c' }, nombres = {}, libre = false, parejas = false;
 const velMult = () => VEL[api.pref('vel', 'normal')] || 1;
-const zoom = () => +(asp && asp.valores.zoom) || 1.4;
+let zoomN = 1;
+const ZOOMS = [1, 1.4, 1.8];                                   // Todo → Grande → Muy grande (doble toque en el tablero)
+const zoom = () => zoomN;
 const forma = () => (asp && asp.valores.fichas) || 'canica';
 // Vista 3D (Three.js): opcional, con vuelta automática al tablero SVG si no hay WebGL
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
@@ -55,12 +57,10 @@ function guardar() {
 const DEFS_ASPECTO = [
   ...grupoDado(),
   { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
-  grupoFondo('#pzView'), grupoPersonaje('Personajes (tus fichas)'),
-  { clave: 'tablero', titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
-  { clave: 'colores', titulo: 'Colores de los jugadores', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicos', sw: ['#FFC21A', '#2F6BFF', '#FF4757', '#0FB56A'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#FFD76A', '#7FA8FF', '#FF8FA0', '#7FDDA8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FFE600', '#00C8FF', '#FF2E88', '#39E614'] }, { id: 'accesible', nombre: 'Daltonismo', sw: ['#F0E442', '#0072B2', '#D55E00', '#009E73'] }] },
+  { ...grupoFondo('#pzView'), tt: true }, grupoPersonaje('Personajes (tus fichas)'),
+  { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
   { clave: 'fichas', enEstilos: true, etiqueta: 'Forma de la ficha', titulo: 'Forma de las fichas', def: 'canica', opciones: [{ id: 'canica', nombre: '● Canica' }, { id: 'peon', nombre: '♟ Peón' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }] },
   ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🎲', lados: ['Amarillo', 'Azul', 'Rojo', 'Verde'], formas: false }),
-  { clave: 'zoom', titulo: 'Tamaño del tablero (vista 2D, se desplaza solo)', def: '1.4', opciones: [{ id: '1', nombre: 'Todo' }, { id: '1.4', nombre: 'Grande' }, { id: '1.8', nombre: 'Muy grande' }] },
 ];
 export async function mount(root, a) {
   api = a; rootEl = root; rodando = false; ultFoco = ''; forzar2d = false; modo3d = false;
@@ -80,6 +80,8 @@ export async function mount(root, a) {
   if (c0 && PC.every(c => ['h', 'c', null].includes(c0[c] ?? null)) && PC.filter(c => c0[c]).length >= 2) cfgSetup = { am: c0.am ?? null, az: c0.az ?? null, ro: c0.ro ?? null, ve: c0.ve ?? null };
   libre = !!api.pref('libre', false); parejas = !!api.pref('parejas', false);
   const n0 = api.pref('names', {}); nombres = n0 && typeof n0 === 'object' ? { ...n0 } : {};
+  zoomN = ZOOMS.includes(+api.pref('zoom', 1)) ? +api.pref('zoom', 1) : 1;
+  root.addEventListener('pointerup', dobleToque);
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('change', alCambiar);
   api.barra({ nueva: () => { if (P && P.phase !== 'over' && !api.confirmar('¿Abandonar la partida actual?')) return; iniciarPartida(); },
     salir: () => { clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false; P = null; api.borrar(); modo = 'setup'; location.hash = '#/cat/tablero'; },
@@ -93,7 +95,7 @@ export async function mount(root, a) {
 }
 export function unmount() {
   clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); timer = ivDado = ivAnim = null; rodando = false; quitarDado(); cerrar3D(); modo3d = false;
-  if (rootEl) { rootEl.removeEventListener('click', clic); rootEl.removeEventListener('input', alEscribir); rootEl.removeEventListener('change', alCambiar); }
+  if (rootEl) { rootEl.removeEventListener('pointerup', dobleToque); rootEl.removeEventListener('click', clic); rootEl.removeEventListener('input', alEscribir); rootEl.removeEventListener('change', alCambiar); }
   P = null; asp = null;
 }
 
@@ -194,7 +196,7 @@ function listaReglas() {
     <li>A meta se entra con el número exacto. Gana quien mete antes sus 4 fichas.</li>
     <li><b>Por parejas</b> (4 jugadores): Amarillo y Rojo contra Azul y Verde. Al compañero no se le come; quien acaba antes sigue tirando y mueve las fichas de su pareja. Gana la pareja que mete sus 8 fichas.</li>
     <li>Para mover, toca una ficha resaltada <b>o</b> la casilla de destino marcada (si ahí se come una ficha verás 💥).</li>
-    <li>En 🎨 Apariencia eliges tablero, colores, forma de las fichas y tamaño; con zoom el tablero se desplaza solo hacia la acción.</li></ul>`;
+    <li>En 🎨 Apariencia eliges tapete, tablero, colores y estilo de las fichas. En la vista 2D, un doble toque en el tablero lo amplía (Todo → Grande → Muy grande → Todo) y con zoom se desplaza solo hacia la acción.</li></ul>`;
 }
 function rJuego() {
   quitarDado(); cerrar3D(); modo3d = quiere3D();
@@ -352,6 +354,17 @@ function alCambiar(e) {
 function alEscribir(e) {
   const c = e.target.dataset && e.target.dataset.name; if (!c) return;
   nombres[c] = e.target.value.slice(0, 14); api.setPref('names', nombres);
+}
+// Doble toque en el tablero (vista 2D): Todo → Grande → Muy grande → Todo
+let ultToque = null;
+function dobleToque(e) {
+  if (modo3d || !P || !e.target.closest('#pzView') || e.target.closest('[data-pc],[data-dest]')) return;
+  const ahora = Date.now(), u = ultToque; ultToque = { t: ahora, x: e.clientX, y: e.clientY };
+  if (!u || ahora - u.t > 380 || Math.hypot(e.clientX - u.x, e.clientY - u.y) > 34) return;
+  ultToque = null; zoomN = ZOOMS[(ZOOMS.indexOf(zoomN) + 1) % ZOOMS.length]; api.setPref('zoom', zoomN);
+  const t = $('#pzTab'); if (t) t.style.width = zoom() * 100 + '%';
+  api.aviso(zoomN === 1 ? 'Tablero: Todo' : zoomN === 1.4 ? 'Tablero: Grande' : 'Tablero: Muy grande');
+  ultFoco = ''; pintarJuego();
 }
 function clic(e) {
   const pc = e.target.closest('[data-pc]');

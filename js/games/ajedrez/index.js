@@ -269,8 +269,8 @@ function pintar(eReal, ctx) {
 const duelo = crearDuelo({
   id: 'ajedrez', css: [new URL('../../../css/fichas.css', import.meta.url), new URL('./ajedrez.css', import.meta.url)], iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Blancas', 'Negras'],
   chip: n => `<i class="ch axch${n}">${GLIFO[6]}</i>`,
-  aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#duTab'), 
-    { clave: 'tablero', titulo: 'Colores del tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#F0D9B5', '#B58863'] }, { id: 'torneo', nombre: 'Torneo', sw: ['#EEEED2', '#769656'] }, { id: 'oceano', nombre: 'Océano', sw: ['#E4EDFF', '#5B7FD6'] }, { id: 'uva', nombre: 'Uva', sw: ['#F3E8FF', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#4A5486', '#232A55'] }] },
+  aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#duTab'), tt: true }, 
+    { clave: 'tablero', tt: true, titulo: 'Colores del tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#F0D9B5', '#B58863'] }, { id: 'torneo', nombre: 'Torneo', sw: ['#EEEED2', '#769656'] }, { id: 'oceano', nombre: 'Océano', sw: ['#E4EDFF', '#5B7FD6'] }, { id: 'uva', nombre: 'Uva', sw: ['#F3E8FF', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#4A5486', '#232A55'] }] },
     ...gruposFichas({ pocos: true, titulo: 'Piezas', icono: '♟️', lados: ['Blancas', 'Negras'], tituloColor: 'Color de Piezas', formas: false }),
     { clave: 'marcas', titulo: 'Marcar las casillas posibles', def: 'si', opciones: [{ id: 'si', nombre: 'Sí' }, { id: 'no', nombre: 'No' }] },
   ],

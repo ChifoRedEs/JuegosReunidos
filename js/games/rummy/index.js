@@ -31,9 +31,9 @@ export async function mount(r, a) {
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
-    grupoMesa(),
-    { clave: 'fichas', titulo: 'Fichas', def: 'marfil', opciones: [{ id: 'marfil', nombre: 'Marfil', sw: ['#FFF8E7'] }, { id: 'blanco', nombre: 'Blanco', sw: ['#FFFFFF'] }, { id: 'oscuro', nombre: 'Oscuras', sw: ['#26304F'] }] },
-    ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🀫', formas: false, tamano: ['pequeno', 'normal'] }),
+    { ...grupoMesa(), tt: true },
+    { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'verde', opciones: [{ id: 'verde', nombre: 'Verde', sw: ['#12A05C', '#0A6B3C'] }, { id: 'azul', nombre: 'Azul', sw: ['#2F6BFF', '#17409E'] }, { id: 'burdeos', nombre: 'Burdeos', sw: ['#B5304A', '#6E1328'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#7A5BC7', '#47308A'] }, { id: 'madera', nombre: 'Madera', sw: ['#B57A43', '#6E4524'] }, { id: 'noche', nombre: 'Noche', sw: ['#3A4678', '#1A2150'] }] },
+    ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🀫', nombresColor: ['Color de Fichas'], formas: false, tamano: ['pequeno', 'normal'] }),
   ], () => { aplicarFichas(); if (S && $('#rmMesa')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else { if (V3) V3.recolor(); pintar(); } } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./rummy.css', import.meta.url));

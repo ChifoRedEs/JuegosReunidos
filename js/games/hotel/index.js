@@ -32,7 +32,7 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; bloqueado = false; V = null; sel = null; plan = {}; forzar2d = false; modo3d = false; ses++;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   if (!vivo) return;
-  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#htVista'), ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
+  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#htVista'), tt: true }, { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#8CCB6A', '#8A5A3B'] }, { id: 'arena', nombre: 'Arena', sw: ['#EBD6A0', '#A6783A'] }, { id: 'nieve', nombre: 'Nieve', sw: ['#E3EEF8', '#6B7F99'] }, { id: 'rosa', nombre: 'Primavera', sw: ['#F4C6DA', '#9A4F6D'] }, { id: 'noche', nombre: 'Noche', sw: ['#3A4A7A', '#232B50'] }] }, ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
     () => { if (D3) D3.estilo(asp.valores); if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./hotel.css', import.meta.url));

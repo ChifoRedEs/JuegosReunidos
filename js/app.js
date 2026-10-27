@@ -236,7 +236,13 @@ function crearApi(j, ent, mod, root) {
       // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
       defs = defs.filter(g => g.opciones.some(o => !o.azar && !o.nada) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
       // Grupos propios «Forma de las fichas» (enEstilos) se integran en el desplegable «Estilos de Fichas» si el juego lo tiene.
-      const est = defs.find(g => g.sub && g.clave !== 'dado');
+      defs.forEach(g => { if (g.clave === 'vista') g.oculto = true; });                // 2D/3D: ya está el botón flotante de la esquina superior izquierda
+      // `junto: clave` = este grupo se une, como subgrupo, al desplegable de otro grupo (p. ej. los edificios 2D y 3D de Magnate).
+      defs.filter(g => g.junto).forEach(g => { const d = defs.find(x => x.clave === g.junto); if (d) { d.sub = d.sub || [d]; d.sub.push(g); g.oculto = true; } });
+      // «Tapete y Tablero»: el tapete (imagen de fondo) y el color del tablero (grupos marcados con `tt`) comparten un único desplegable.
+      const tts = defs.filter(g => g.tt).sort((x, y) => (/tapete|mesa/.test(y.clave) ? 1 : 0) - (/tapete|mesa/.test(x.clave) ? 1 : 0));
+      if (tts.length > 1) { tts.forEach(g => { if (!g.etiqueta) g.etiqueta = /tapete|mesa/.test(g.clave) ? 'Tapete' : 'Tablero'; }); tts[0].sub = tts; tts[0].titulo = tts[0].ttTitulo || 'Tapete y Tablero'; tts[0].icono = '🖼️'; tts.slice(1).forEach(g => { g.oculto = true; }); }
+      const est = defs.find(g => g.sub && g.estilos);
       if (est) defs.filter(g => g.enEstilos).forEach(g => { est.sub.splice(Math.min(1, est.sub.length), 0, g); g.oculto = true; });
       const gd = aj.pref(id, 'aspecto', {}) || {}, elec = {}, vals = {};
       const resolver = nuevo => defs.forEach(g => {
