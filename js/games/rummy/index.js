@@ -230,7 +230,7 @@ function clic(e) {
   }
 }
 function reglas() {
-  api.modal('Rummy Tile', `<ul><li>106 fichas: del 1 al 13 en cuatro colores (dos de cada) y 2 comodines ★. Cada jugador empieza con 14.</li>
+  api.modal('Rummy', `<ul><li>106 fichas: del 1 al 13 en cuatro colores (dos de cada) y 2 comodines ★. Cada jugador empieza con 14.</li>
     <li><b>Jugadas</b>: <b>grupo</b> = 3 o 4 fichas del mismo número y colores distintos; <b>escalera</b> = 3 o más números seguidos del mismo color (el 13 no enlaza con el 1). El comodín sustituye a cualquier ficha.</li>
     <li>En tu turno: <b>juega fichas</b> o <b>roba</b> una de la bolsa.</li>
     <li><b>Primera bajada</b>: debe sumar al menos ${R.BAJADA} puntos solo con fichas tuyas (el comodín vale lo que sustituye) y sin tocar la mesa.</li>

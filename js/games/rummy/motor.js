@@ -1,4 +1,4 @@
-// Motor del Rummy Tile (las reglas del clásico juego de fichas numeradas). Sin DOM, probable con Node.
+// Motor del Rummy (las reglas del clásico juego de fichas numeradas). Sin DOM, probable con Node.
 // 106 fichas: id 0..103 = números 1..13 en 4 colores, dos copias; 104 y 105 = comodines.
 // Jugadas válidas: GRUPO (3–4 fichas del mismo número y colores distintos) o ESCALERA (3+ números seguidos del mismo color, del 1 al 13).
 // En tu turno juegas fichas (y puedes reorganizar la mesa) o robas una. La primera bajada debe sumar ≥ 30 con fichas propias.

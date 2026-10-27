@@ -52,6 +52,7 @@ export function resumen(d) {
 }
 
 /* ---------- ciclo de vida ---------- */
+let marc = { w: 0, b: 0, t: 0 };
 export async function mount(root, a) {
   api = a; rootEl = root; pensando = false; anim = null;
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#dmTab'), grupoPersonaje('Personajes (tus fichas)'), 
@@ -72,7 +73,9 @@ export async function mount(root, a) {
       aplicar: v => { pausado = false; nueva(v.regla, v.nivel, true); },
     },
   });
+  marc = api.pref('marc', null); if (!marc || ![marc.w, marc.b, marc.t].every(Number.isInteger)) marc = { w: 0, b: 0, t: 0 };
   root.innerHTML = `
+    <div class="duM" id="dmMarc"></div>
     <div class="msg" id="dmMsg" role="status" aria-live="polite"></div>
     <div class="e3d" id="dm3d" hidden></div>
     <div class="ck" id="dmTab" role="group" aria-label="Tablero de damas"></div>
@@ -85,6 +88,7 @@ export async function mount(root, a) {
     { texto: 'Nueva partida', accion: () => nueva(C.regla, C.nivel) },
     { texto: 'Deshacer jugada', accion: deshacer },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() },
+    { texto: 'Reiniciar marcador', accion: () => { if (!api.confirmar('¿Poner el marcador a cero?')) return; marc = { w: 0, b: 0, t: 0 }; api.setPref('marc', marc); pintar(); }, peligro: true },
     { texto: 'Reglamento', accion: reglamento },
   ]);
   if (g) { C = { ...g, ruta: null }; construirTablero(); C.jug = jugadas(C.b, C.turn, R()); if (!C.over) comprobarFin(); }
@@ -139,6 +143,7 @@ function jugar(m) {
   if (C.over && !C.reg) {
     C.reg = true;
     api.registrar({ res: C.res === 'w' ? 'victoria' : C.res === 'b' ? 'derrota' : 'tablas', variante: `${R().nombre} · ${NIVEL[C.nivel]}` });
+    marc[C.res === 'w' ? 'w' : C.res === 'b' ? 'b' : 't']++; api.setPref('marc', marc);
     api.sonido(C.res === 'w' ? 'ganar' : C.res === 'b' ? 'perder' : 'ok');
   }
   pintar(); guardar();
@@ -244,6 +249,7 @@ function pintar() {
     m3.pintar({ piezas, ult: C.ultimo ? C.ultimo.path : [], sel: C.ruta ? [C.ruta[0]] : [], ruta: C.ruta ? C.ruta.slice(1) : [], dest: [...sig].map(k => k.split(',').map(Number)), marcas: true });
   }
   const cn = contar(C.b), ini = fichasIniciales(R());
+  $('#dmMarc').innerHTML = `<div class="${!C.over && C.turn === 'w' ? 'turno' : ''}"><b>${marc.w}</b><small><i class="pdot w"></i> Tú</small></div><div><b>${marc.t}</b><small>Tablas</small></div><div class="${!C.over && C.turn === 'b' ? 'turno' : ''}"><b>${marc.b}</b><small><i class="pdot b"></i> CPU</small></div>`;
   $('#dmCnt').innerHTML = `<b><i class="pdot w"></i>Tú ${cn.w}</b><span>te han comido ${ini - cn.w}</span><b><i class="pdot b"></i>CPU ${cn.b}</b><span>has comido ${ini - cn.b}</span>`;
   $('#dmReg').innerHTML = `<b>${R().nombre}:</b> ${R().texto}`;
   pintarMsg();

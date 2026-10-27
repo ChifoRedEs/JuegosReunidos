@@ -33,7 +33,7 @@ export const JUEGOS = [
   { id: 'mus', nombre: 'Mus', icono: '🤝', color: '#B3182B', categoria: 'cartas', descripcion: 'Por parejas: grande, chica, pares, juego y órdago.', cargar: () => import('./games/mus/index.js') },
   { id: 'quecara', nombre: '¿Qué cara tienes?', icono: '🧐', color: '#E0553D', categoria: 'tablero', descripcion: 'Adivina la cara del rival. 30 caras, CPU o 2 jugadores.', cargar: () => import('./games/quecara/index.js') },
   { id: 'flota', nombre: 'Batalla Naval', icono: '🚢', color: '#1B4FA8', categoria: 'tablero', descripcion: '6 flotas, de Relámpago 6×6 a Gran armada 12×12.', cargar: () => import('./games/flota/index.js') },
-  { id: 'rummy', nombre: 'Rummy Tile', icono: '🀄', color: '#E0243A', categoria: 'tablero', descripcion: 'Grupos y escaleras de fichas: reorganiza la mesa y quédate sin fichas.', cargar: () => import('./games/rummy/index.js') },
+  { id: 'rummy', nombre: 'Rummy', icono: '🀄', color: '#E0243A', categoria: 'tablero', descripcion: 'Grupos y escaleras de fichas: reorganiza la mesa y quédate sin fichas.', cargar: () => import('./games/rummy/index.js') },
   { id: 'oca', nombre: 'Juego de la Oca', icono: '🦢', color: '#7CA83A', categoria: 'tablero', descripcion: 'De oca a oca y tiro porque me toca. De 2 a 4 jugadores.', cargar: () => import('./games/oca/index.js') },
   { id: 'cinquillo', nombre: 'Cinquillo', icono: '5️⃣', color: '#C0392B', categoria: 'cartas', descripcion: 'Empieza el 5 de oros: abre palos y quédate sin cartas.', cargar: () => import('./games/cinquillo/index.js') },
   { id: 'continental', nombre: 'Continental', icono: '🎴', color: '#6A3DF0', categoria: 'cartas', descripcion: '7 rondas con contratos de tríos y escaleras.', cargar: () => import('./games/continental/index.js') },
@@ -63,7 +63,7 @@ export const GRUPOS = [
   { id: 'ajedrez-damas', nombre: 'Ajedrez y Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
   { id: 'buscaminas-klotski', nombre: 'Bombardeo y Deslizadas', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Bombardeo (sin adivinar, reto del día) o Deslizadas (bloques deslizantes y números).', juegos: ['buscaminas', 'klotski'] },
   { id: 'tresenraya-conecta4', nombre: '3 en raya y Cuatro en Línea', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: 'Dos duelos de líneas: 3 en raya y Cuatro en Línea, contra la CPU.', juegos: ['tresenraya', 'conecta4'] },
-  { id: 'domino-rummy', nombre: 'Dominó y Rummy Tile', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Dos juegos de fichas: Dominó (varias modalidades) y Rummy Tile.', juegos: ['domino', 'rummy'] },
+  { id: 'domino-rummy', nombre: 'Dominó y Rummy', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Dos juegos de fichas: Dominó (varias modalidades) y Rummy.', juegos: ['domino', 'rummy'] },
   { id: 'poker', nombre: 'Poker & BlackJack', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em, Póker cubierto o BlackJack contra la banca.", juegos: ['holdem', 'pokercub', 'blackjack'] },
   { id: 'sopa-crucigramas', nombre: 'Sopa y Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopa', 'crucigrama'] },
 ];

@@ -60,6 +60,6 @@
 .qcnombre{text-align:center;font-size:18px;margin:2px 0 6px}
 @media (prefers-reduced-motion:reduce){.qci{transition:none}.qctab.arriesgando .qcc:not(.down) .qcfront{animation:none}}
 
-.qcbar{display:grid!important;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px}
-.qcbar .btn{min-width:0;padding:9px 2px;font-size:13px;line-height:1.1;white-space:nowrap}
+.qcbar{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+.qcbar .btn{min-width:0;padding:10px 6px;font-size:14px;line-height:1.1}
 .qctab + .qcpanel{margin-top:10px}
