@@ -30,9 +30,12 @@ export function gruposFichas(o = {}) {
     cg[0].multi = cg; cg[0].leyenda = ley; cg[0].titulo = o.tituloColor || 'Color de Fichas';
     cg.slice(1).forEach(g => { g.oculto = true; });
   }
-  if (o.textura !== false) out.push({ clave: k + 'tex', titulo: `${t} · Textura`, icono: '✨', def: 'original', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) });
-  if (o.formas !== false) { const ids = Array.isArray(o.formas) ? o.formas : Object.keys(FORMAS); out.push({ clave: k + 'forma', titulo: `${t} · Forma`, icono: '📐', def: 'original', opciones: ids.map(id => ({ id, nombre: FORMAS[id] })) }); }
-  if (o.tamano !== false) out.push({ clave: k + 'tam', titulo: `${t} · Tamaño`, icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).filter(([id]) => !Array.isArray(o.tamano) || o.tamano.includes(id)).map(([id, [nombre]]) => ({ id, nombre })) });
+  if (o.textura !== false) out.push({ clave: k + 'tex', etiqueta: 'Textura', titulo: `${t} · Textura`, icono: '✨', def: 'original', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) });
+  if (o.formas !== false) { const ids = Array.isArray(o.formas) ? o.formas : Object.keys(FORMAS); out.push({ clave: k + 'forma', etiqueta: 'Forma', titulo: `${t} · Forma`, icono: '📐', def: 'original', opciones: ids.map(id => ({ id, nombre: FORMAS[id] })) }); }
+  if (o.tamano !== false) out.push({ clave: k + 'tam', etiqueta: 'Tamaño', titulo: `${t} · Tamaño`, icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).filter(([id]) => !Array.isArray(o.tamano) || o.tamano.includes(id)).map(([id, [nombre]]) => ({ id, nombre })) });
+  // Textura, forma y tamaño van juntos en UN desplegable («Estilos de Fichas»): la primera es la visible y lleva las demás en `sub`.
+  const es = out.filter(g => /(tex|forma|tam)$/.test(g.clave));
+  if (es.length) { es[0].sub = es; es[0].titulo = o.tituloEstilos || `Estilos de ${t}`; es.slice(1).forEach(g => { g.oculto = true; }); }
   return out;
 }
 // Lee la elección. hex = null → conservar el color original del juego.

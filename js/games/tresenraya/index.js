@@ -49,7 +49,7 @@ const duelo = crearDuelo({
   chip: (n, vals = {}) => EMOJIS[vals.fichas] ? `<i class="ch em">${EMOJIS[vals.fichas][n - 1]}</i>` : `<i class="ch tr${n}">${n === 1 ? '✕' : '○'}</i>`,
   aspecto: [grupoFondo('#duTab'), grupoPersonaje('Personajes (tu marca)'), 
     grupoTablero(),
-    ...gruposFichas({ pocos: true, titulo: 'Marcas', icono: '❌', lados: ['✕', '○'], textura: false, formas: false, nombresColor: ['Color Ficha X', 'Color Ficha O'] }),
+    ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '❌', lados: ['✕', '○'], textura: false, formas: false, nombresColor: ['Color Ficha X', 'Color Ficha O'] }),
     { clave: 'fichas', titulo: 'Fichas', def: 'clasico', opciones: [{ id: 'clasico', nombre: '✕ ○ Clásicas' }, { id: 'animales', nombre: '🐱 🐶 Animales' }, { id: 'espacio', nombre: '🚀 👽 Espacio' }, { id: 'comida', nombre: '🍕 🍔 Comida' }, { id: 'deporte', nombre: '⚽ 🏀 Deporte' }] },
   ],
   estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML, vista: { montar, pintar },

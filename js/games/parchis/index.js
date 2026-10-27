@@ -59,7 +59,7 @@ const DEFS_ASPECTO = [
   { clave: 'tablero', titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
   { clave: 'colores', titulo: 'Colores de los jugadores', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicos', sw: ['#FFC21A', '#2F6BFF', '#FF4757', '#0FB56A'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#FFD76A', '#7FA8FF', '#FF8FA0', '#7FDDA8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FFE600', '#00C8FF', '#FF2E88', '#39E614'] }, { id: 'accesible', nombre: 'Daltonismo', sw: ['#F0E442', '#0072B2', '#D55E00', '#009E73'] }] },
   { clave: 'fichas', titulo: 'Forma de las fichas', def: 'canica', opciones: [{ id: 'canica', nombre: '● Canica' }, { id: 'peon', nombre: '♟ Peón' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }] },
-  ...gruposFichas({ pocos: true, titulo: 'Color, textura y tamaño', icono: '🎲', lados: ['Amarillo', 'Azul', 'Rojo', 'Verde'], formas: false }),
+  ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🎲', lados: ['Amarillo', 'Azul', 'Rojo', 'Verde'], formas: false }),
   { clave: 'zoom', titulo: 'Tamaño del tablero (vista 2D, se desplaza solo)', def: '1.4', opciones: [{ id: '1', nombre: 'Todo' }, { id: '1.4', nombre: 'Grande' }, { id: '1.8', nombre: 'Muy grande' }] },
 ];
 export async function mount(root, a) {

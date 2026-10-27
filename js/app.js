@@ -269,6 +269,7 @@ function crearApi(j, ent, mod, root) {
         const resumenSec = new Map();
         const pintarResumen = g => {
           const o = actual(g), r = resumenSec.get(g.clave); if (!r) return;
+          if (g.sub) { r.replaceChildren(el('span', { class: 'ap-li' }, g.icono || '🎨'), el('b', {}, g.titulo), el('small', {}, g.sub.map(sg => { const x = actual(sg); return (x.emoji ? x.nombre.replace(x.emoji, '').trim() : x.nombre) || x.nombre; }).join(' · '))); return; }
           if (g.multi) { r.replaceChildren(el('span', { class: 'ap-li' }, g.icono || '🎨'), el('b', {}, g.titulo), el('small', { class: 'ap-mres' }, ...g.multi.map(sg => { const x = sg.opciones.find(q => q.id === elec[sg.clave]); return x && x.sw ? el('i', { class: 'sw', style: `background:${x.sw[0]}` }) : el('i', { class: 'sw orig' }, '↩'); }))); return; }
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
           r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, g.soloColor && o.sw ? '' : o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
@@ -292,8 +293,22 @@ function crearApi(j, ent, mod, root) {
           });
           pintar(); return cont;
         };
+        // Varios grupos en un solo desplegable («Estilos de Fichas», «Estilos de Dados»): cada subgrupo con su rótulo.
+        const cuerpoSub = g => {
+          const cont = el('div', { class: 'ap-sub' });
+          for (const sg of g.sub) {
+            const cu = cuerpoDe(Object.assign(Object.create(sg), { sub: null })); cu.classList.add('ap-cuerpo');
+            cu.addEventListener('click', e => {
+              const b = e.target.closest('.ap-o, .ap-ficha'); if (!b || b.dataset.o == null) return;
+              elegir(sg, b.dataset.o); cu.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === elec[sg.clave])); pintarResumen(g);
+            });
+            cont.append(el('small', { class: 'ap-sec' }, sg.etiqueta || sg.titulo), cu);
+          }
+          return cont;
+        };
         const cuerpoDe = g => {
           if (g.multi) return cuerpoMulti(g);
+          if (g.sub) return cuerpoSub(g);
           const imgs = g.opciones.some(o => o.img) && g.forma;
           if (imgs) return el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
             o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || (o.nada ? '🚫' : '🎲')), el('small', {}, o.nombre))));
@@ -304,7 +319,7 @@ function crearApi(j, ent, mod, root) {
         const secciones = defs.filter(g => !g.oculto).map(g => {
           const det = el('details', { class: 'ap-det' }), sum = el('summary', { class: 'ap-link' }); resumenSec.set(g.clave, sum); pintarResumen(g);
           const cuerpo = cuerpoDe(g); cuerpo.classList.add('ap-cuerpo');
-          if (!g.multi) cuerpo.addEventListener('click', e => {
+          if (!g.multi && !g.sub) cuerpo.addEventListener('click', e => {
             const b = e.target.closest('.ap-o, .ap-ficha'); if (!b) return;
             const idO = b.dataset.o; if (idO == null) return;
             elegir(g, idO); cuerpo.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === elec[g.clave]));

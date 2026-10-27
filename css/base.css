@@ -255,3 +255,4 @@ main{padding-top:14px}
 .ap-mres{display:inline-flex;gap:4px}
 .ap-o.dis{opacity:.28;pointer-events:none}
 .ap-multi .ap-sec{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:6px 0}
+.ap-sub .ap-sec{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:8px 0 4px}.ap-sub .ap-cuerpo{margin-bottom:4px}

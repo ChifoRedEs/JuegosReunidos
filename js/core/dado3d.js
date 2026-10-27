@@ -21,10 +21,10 @@ function punto(x, cx, cy, r, forma) {
 const claro = h => { const n = parseInt(h.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (.299 * r + .587 * g + .114 * b) / 255 > .55; };
 // Apariencia común del dado: «Estilo» (color del cuerpo y de los puntos) y «Puntos» (forma). «jugador» = el color del jugador al que le toca.
 export const ESTILOS_DADO = { jugador: { nombre: 'Color del jugador', sw: ['#E0243A', '#FFFFFF'] }, marfil: { nombre: 'Marfil', bg: '#FFFDF4', pip: '#1B1F33', sw: ['#FFFDF4', '#1B1F33'] }, negro: { nombre: 'Negro', bg: '#20232F', pip: '#FFFFFF', sw: ['#20232F', '#FFFFFF'] }, casino: { nombre: 'Casino', bg: '#C8102E', pip: '#FFFFFF', sw: ['#C8102E', '#FFFFFF'] }, cristal: { nombre: 'Cristal', bg: '#9BD3F5', pip: '#10346B', sw: ['#9BD3F5', '#10346B'] }, oro: { nombre: 'Oro', bg: '#E8B923', pip: '#4A2E00', sw: ['#E8B923', '#4A2E00'] }, jade: { nombre: 'Jade', bg: '#2E9E6B', pip: '#F4FFF8', sw: ['#2E9E6B', '#F4FFF8'] } };
-export const grupoDado = () => [
-  { clave: 'dado', titulo: 'Dado · Estilo', icono: '🎲', def: 'jugador', opciones: Object.entries(ESTILOS_DADO).map(([id, e]) => ({ id, nombre: e.nombre, sw: e.sw })) },
-  { clave: 'dadoPuntos', titulo: 'Dado · Puntos', icono: '⚀', def: 'redondo', opciones: [{ id: 'redondo', nombre: '● Redondos' }, { id: 'cuadrado', nombre: '■ Cuadrados' }, { id: 'rombo', nombre: '◆ Rombos' }, { id: 'estrella', nombre: '★ Estrellas' }] },
-];
+export const grupoDado = () => { const g = [
+  { clave: 'dado', etiqueta: 'Estilo', titulo: 'Estilos de Dados', icono: '🎲', def: 'jugador', opciones: Object.entries(ESTILOS_DADO).map(([id, e]) => ({ id, nombre: e.nombre, sw: e.sw })) },
+  { clave: 'dadoPuntos', etiqueta: 'Puntos', titulo: 'Dado · Puntos', icono: '⚀', def: 'redondo', opciones: [{ id: 'redondo', nombre: '● Redondos' }, { id: 'cuadrado', nombre: '■ Cuadrados' }, { id: 'rombo', nombre: '◆ Rombos' }, { id: 'estrella', nombre: '★ Estrellas' }] },
+]; g[0].sub = g; g[1].oculto = true; return g; };
 const pausa = ms => new Promise(r => setTimeout(r, ms));
 
 function envoltorio(cont, o) {

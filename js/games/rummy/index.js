@@ -33,7 +33,7 @@ export async function mount(r, a) {
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     grupoMesa(),
     { clave: 'fichas', titulo: 'Fichas', def: 'marfil', opciones: [{ id: 'marfil', nombre: 'Marfil', sw: ['#FFF8E7'] }, { id: 'blanco', nombre: 'Blanco', sw: ['#FFFFFF'] }, { id: 'oscuro', nombre: 'Oscuras', sw: ['#26304F'] }] },
-    ...gruposFichas({ pocos: true, titulo: 'Fichas · personalizar', icono: '🀫', formas: false, tamano: ['pequeno', 'normal'] }),
+    ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🀫', formas: false, tamano: ['pequeno', 'normal'] }),
   ], () => { aplicarFichas(); if (S && $('#rmMesa')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else { if (V3) V3.recolor(); pintar(); } } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./rummy.css', import.meta.url));
