@@ -321,6 +321,6 @@ body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--vel
 :root[data-theme="dark"] body.fondo main::before{top:0;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}
 
 /* 3.36.7: ventana «¿A qué quieres jugar?» con el banner de fondo (velo blanco 50 % en claro; el de las pantallas en oscuro) */
-.hoja.hoja-elegir{--vl:rgba(255,255,255,.5);background:linear-gradient(var(--vl),var(--vl)),url(../img/fondo-ventana.webp) center/100% 100% no-repeat,var(--card)}
+.hoja.hoja-elegir{--vl:rgba(255,255,255,.5);background:linear-gradient(var(--vl),var(--vl)),url(../img/fondo-ventana-cuadrada.webp) center/cover no-repeat,var(--card)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hoja.hoja-elegir{--vl:var(--velo)}}
 :root[data-theme="dark"] .hoja.hoja-elegir{--vl:var(--velo)}
