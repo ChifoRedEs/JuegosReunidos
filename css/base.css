@@ -357,3 +357,6 @@ body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--vel
 
 /* 3.37.2: 10 % de transparencia en los paneles de Estadísticas (Logros, Retos del día) y de Ajustes */
 body.fondo .panel{background:linear-gradient(135deg,color-mix(in srgb,var(--pan1) 90%,transparent),color-mix(in srgb,var(--pan2) 90%,transparent))}
+
+/* 3.37.3: todas las páginas usan el mismo encuadre de fondo que la Página Principal (imagen a pantalla completa, «cover»); cada tema conserva su velo */
+body.fijo:has(.cat-seccion) main::before,body.fondo main::before{position:fixed;inset:0;top:0;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
