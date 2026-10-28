@@ -354,3 +354,6 @@ body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--vel
 .ficha,body.fijo .cat-seccion .ficha{box-shadow:inset 0 0 0 3px rgba(255,255,255,.30),inset 0 3px 0 rgba(255,255,255,.5),inset 0 -5px 0 rgba(0,0,0,.20),0 6px 16px color-mix(in srgb,var(--c) var(--ficha-sombra,40%),transparent)}
 .ficha:active{transform:translateY(3px)}
 .st-ficha{box-shadow:inset 0 0 0 3px rgba(255,255,255,.28),inset 0 3px 0 rgba(255,255,255,.45),inset 0 -4px 0 rgba(0,0,0,.18),0 5px 12px color-mix(in srgb,var(--c) 40%,transparent)}
+
+/* 3.37.2: 10 % de transparencia en los paneles de Estadísticas (Logros, Retos del día) y de Ajustes */
+body.fondo .panel{background:linear-gradient(135deg,color-mix(in srgb,var(--pan1) 90%,transparent),color-mix(in srgb,var(--pan2) 90%,transparent))}
