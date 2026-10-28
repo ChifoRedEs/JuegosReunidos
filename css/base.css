@@ -365,3 +365,6 @@ body.fijo:has(.cat-seccion) main::before,body.fondo main::before{position:fixed;
 body.fijo .ini::before,body.fijo .cat-seccion::before,body.fijo:has(.cat-seccion) main::before,body.fondo main::before{content:none}
 body.fijo::before,body.fondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
 body.fijo:has(.ini)::before{background:url(../img/fondo-inicio.webp) center/cover no-repeat}
+
+/* 3.37.5: la capa de fondo mide siempre lo que la pantalla grande (sin barras del navegador), así no se estira ni «hace zoom» cuando las barras del móvil se ocultan al hacer scroll */
+body.fijo::before,body.fondo::before{height:100vh;height:100lvh;min-height:100%;bottom:auto}
