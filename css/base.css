@@ -304,3 +304,11 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 .hoja.hoja-img h2{flex:none;margin-bottom:6px}
 .hoja.hoja-img .cuerpo{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .hoja.hoja-img .bar{flex:none;margin-top:8px!important}
+
+/* 3.36.0 (PRUEBA de diseño): pantallas de categoría con el estilo de la Página Principal */
+:root{--velo-cat:rgba(255,255,255,0);--ficha-a:80%;--ficha-b:70%;--ficha-sombra:32%}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo-cat:rgba(6,10,30,.58);--ficha-a:92%;--ficha-b:80%;--ficha-sombra:55%}}
+:root[data-theme="dark"]{--velo-cat:rgba(6,10,30,.58);--ficha-a:92%;--ficha-b:80%;--ficha-sombra:55%}
+body.fijo .cat-seccion::before{background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+body.fijo .cat-seccion .ficha{background:linear-gradient(145deg,color-mix(in srgb,var(--c) var(--ficha-a),transparent),color-mix(in srgb,var(--c) var(--ficha-b),transparent));box-shadow:0 6px 18px color-mix(in srgb,var(--c) var(--ficha-sombra),transparent);backdrop-filter:blur(2px)}
+body.fijo .cat-seccion>.cat{align-self:flex-start;padding:4px 14px 4px 8px;border-radius:99px;background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:blur(3px)}
