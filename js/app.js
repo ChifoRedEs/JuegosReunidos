@@ -387,7 +387,8 @@ async function render() {
     return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span aria-hidden="true">${ic}</span><b>${tx}</b></a>`;
   }).join('');
   app.innerHTML = '';
-  document.body.classList.toggle('fijo', r.v === 'inicio');          // inicio y categorías: pantalla fija, sin desplazamiento
+  document.body.classList.toggle('fijo', r.v === 'inicio');
+  document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes');   // mismo fondo que las categorías          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
   if (r.v === 'inicio') vInicio(r.cat); else ({ stats: vStats, ajustes: vAjustes })[r.v]();
   window.scrollTo(0, 0);

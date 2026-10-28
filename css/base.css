@@ -277,8 +277,8 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;min-height:0}
 .ini-fl{font:800 34px/1 'Baloo 2',system-ui,sans-serif;opacity:.85}
 
 /* Fondo de las pantallas de categoría: fondo-inicio muy difuminado hacia blanco (tema claro) o hacia el azul oscuro de base (tema oscuro) */
-:root{--velo:rgba(255,255,255,.9)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo:rgba(15,22,48,.88)}}
-:root[data-theme="dark"]{--velo:rgba(15,22,48,.88)}
-body.fijo .cat-seccion{position:relative;isolation:isolate}
-body.fijo .cat-seccion::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+:root{--velo:rgba(255,255,255,.84)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo:rgba(15,22,48,.82)}}
+:root[data-theme="dark"]{--velo:rgba(15,22,48,.82)}
+body.fijo .cat-seccion,body.fondo main{position:relative;isolation:isolate}
+body.fijo .cat-seccion::before,body.fondo main::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}
