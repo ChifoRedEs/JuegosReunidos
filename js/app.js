@@ -530,6 +530,7 @@ function vStats_(catSel = null) {
   app.querySelectorAll('[data-stat-juego]').forEach(b => b.addEventListener('click', () => {
     const j = JUEGOS.find(x => x.id === b.dataset.statJuego); if (!j) return;
     const cerrar = hoja([el('h2', {}, `${j.icono} ${j.nombre}`), (() => { const d = el('div', { class: 'cuerpo' }); d.innerHTML = tabla(j); return d; })(), el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn on', onclick: () => cerrar() }, 'Cerrar'))]);
+    const h = [...document.querySelectorAll('.modal > .hoja')].pop(); if (h) h.classList.add('hoja-img');
   }));
   $('#stResetCat').addEventListener('click', () => {
     const nombre = CATEGORIAS[elegida] || 'esta categoría';

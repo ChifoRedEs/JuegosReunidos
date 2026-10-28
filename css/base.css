@@ -297,3 +297,6 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 .st-i{font-size:26px;line-height:1}
 .st-ficha b{font:800 12px/1.1 'Baloo 2',system-ui,sans-serif;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-shadow:0 1px 2px rgba(0,0,0,.3)}
 .st-ficha small{font-size:10.5px;font-weight:700;opacity:.92}
+
+/* Ventana de estadísticas de un juego: fondo-ventana con el mismo velo (blanco / azul oscuro) que las pantallas */
+.hoja.hoja-img{background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-ventana.webp) center/cover no-repeat}
