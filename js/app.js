@@ -497,14 +497,15 @@ function vInicio(filtro = null) {
 /* Las fichas de juegos (categorías y Estadísticas) toman al azar uno de estos 8 colores cada vez que se pinta la pantalla.
    Se reparten en tandas barajadas, así que en cada pantalla se repiten lo menos posible y nunca salen otros colores. */
 const COLORES_FICHA = ['#2CB5E8' /* azul cian */, '#FFC21A' /* amarillo */, '#E0356E' /* magenta */, '#7A5BC7' /* morado */, '#E5622B' /* naranja */, '#0E9FA6' /* turquesa */, '#1D3A8A' /* azul marino */, '#1F8A4C' /* verde oscuro */];
-function colorearFichas() {
+const COLORES_STATS = [...COLORES_FICHA, '#F48FB1' /* rosa claro */, '#6B4426' /* marrón */, '#D40511' /* rojo ferrari */, '#3CC8B4' /* aguamarina */];
+function colorearFichas(sel = '.ficha', paleta = COLORES_FICHA) {
   let cola = [];
-  app.querySelectorAll('.ficha, .st-ficha').forEach(f => {
-    if (!cola.length) { cola = [...COLORES_FICHA]; for (let i = cola.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [cola[i], cola[k]] = [cola[k], cola[i]]; } }
+  app.querySelectorAll(sel).forEach(f => {
+    if (!cola.length) { cola = [...paleta]; for (let i = cola.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [cola[i], cola[k]] = [cola[k], cola[i]]; } }
     f.style.setProperty('--c', cola.pop());
   });
 }
-function vStats(catSel = null) { const y = scrollY; vStats_(catSel); colorearFichas(); if (ruta().v === 'stats') scrollTo(0, y); }
+function vStats(catSel = null) { const y = scrollY; vStats_(catSel); colorearFichas('.st-ficha', COLORES_STATS); if (ruta().v === 'stats') scrollTo(0, y); }
 function vStats_(catSel = null) {
   nombreVista = 'Estadísticas'; cabTxt('Juegos Reunidos');
   const T = stats.todas();
