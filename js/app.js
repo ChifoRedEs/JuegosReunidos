@@ -17,6 +17,18 @@ function ajustarCabecera() {
   document.body.appendChild(m); const w = m.getBoundingClientRect().width; m.remove(); if (!w) return;
   h.style.setProperty('--tit-fs', Math.min(0.5 * h.clientWidth / w * 100, h.clientHeight * 0.78).toFixed(1) + 'px');
 }
+// En el móvil, al desplazar la página la barra del navegador se oculta/aparece y se dispara «resize» (solo cambia un poco el alto).
+// Los juegos recalculan su tamaño con ese evento y el contenido se recoloca: la página «salta». Se ignoran esos cambios pequeños de alto.
+{
+  const addOrig = window.addEventListener.bind(window), remOrig = window.removeEventListener.bind(window), env = new WeakMap();
+  window.addEventListener = function (tipo, fn, op) {
+    if (tipo !== 'resize' || typeof fn !== 'function') return addOrig(tipo, fn, op);
+    let w = innerWidth, h = innerHeight;
+    const f = function (e) { if (innerWidth === w && Math.abs(innerHeight - h) < 130) return; w = innerWidth; h = innerHeight; return fn.call(this, e); };
+    env.set(fn, f); return addOrig(tipo, f, op);
+  };
+  window.removeEventListener = function (tipo, fn, op) { return remOrig(tipo, tipo === 'resize' && env.has(fn) ? env.get(fn) : fn, op); };
+}
 window.addEventListener('resize', ajustarCabecera); ajustarCabecera();
 if (document.fonts) { document.fonts.load('40px Chewy').then(ajustarCabecera).catch(() => {}); document.fonts.ready.then(ajustarCabecera); }
 // Título de la cabecera: «Juegos» (amarillo) y «Reunidos» (azul) como en el logo; el nombre de cada juego cambia de color al azar (todos con buen contraste sobre blanco)
@@ -407,8 +419,8 @@ async function abrirJuego(id, t) {
   app.innerHTML = ''; app.append(root);
   const api = crearApi(j, store.getJuego(id), mod, root);
   actual = { j, mod, api };
+  window.scrollTo(0, 0);                                    // arriba al entrar (antes de montar: un montaje lento no debe devolver al jugador arriba cuando ya ha bajado)
   try { await mod.mount(root, api); } catch (e) { console.error(e); root.innerHTML = '<p class="msg err">Error al abrir el juego.</p>'; }
-  window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', render);
 /* Deslizar a izquierda/derecha cambia de pantalla en el orden del menú superior (Lógica → … → Ajustes).
@@ -481,7 +493,8 @@ function vInicio(filtro = null) {
 }
 
 /* ---------- estadísticas ---------- */
-function vStats() {
+function vStats(catSel = null) { const y = scrollY; vStats_(catSel); if (ruta().v === 'stats') scrollTo(0, y); }
+function vStats_(catSel = null) {
   nombreVista = 'Estadísticas'; cabTxt('Juegos Reunidos');
   const T = stats.todas();
   revisarLogros();
@@ -491,22 +504,32 @@ function vStats() {
   const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => d.icono).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span>${G[d.id] ? d.icono : '🔒'}</span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
     <div class="panel"><h3>📅 Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
-  const solicitada = new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
+  const solicitada = catSel || new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
   const elegida = cats.some(([k]) => k === solicitada) ? solicitada : cats[0]?.[0];
   const tabs = `<div class="stats-tabs" role="tablist" aria-label="Categorías de estadísticas">${cats.map(([k, n]) => `<button type="button" role="tab" class="stats-tab ${k === elegida ? 'on' : ''}" aria-selected="${k === elegida}" data-stat-cat="${k}"><span>${ICONO_CAT[k] || '🎮'}</span>${n}</button>`).join('')}</div>`;
-  const cards = JUEGOS.filter(j => j.categoria === elegida).map(j => {
+  // Fichas pequeñas de los juegos de la categoría; al pulsar una se abre su estadística en una ventana
+  const tabla = j => {
     const s = T[j.id];
-    if (!s || !s.partidas) return `<div class="panel"><h3>${j.icono} ${esc(j.nombre)}</h3><p class="note">Todavía sin partidas terminadas.</p></div>`;
+    if (!s || !s.partidas) return '<p class="note">Todavía sin partidas terminadas.</p>';
     const tiempos = Object.entries(s.tiempos || {}).map(([k, v]) => `<tr><td>Mejor tiempo · ${esc(k)}</td><td>${fmtTiempo(v)}</td></tr>`).join('')
       + Object.entries(s.records || {}).map(([k, v]) => `<tr><td>🏆 Récord · ${esc(k)}</td><td>${v.toLocaleString('es-ES')}</td></tr>`).join('');
-    return `<div class="panel"><h3>${j.icono} ${esc(j.nombre)}</h3><table class="tabla">
+    return `<table class="tabla">
       <tr><td>Partidas</td><td>${s.partidas}</td></tr>
       ${s.victorias || s.derrotas || s.tablas ? `<tr><td>Victorias · derrotas · tablas</td><td>${s.victorias} · ${s.derrotas} · ${s.tablas}</td></tr><tr><td>Racha actual · mejor racha</td><td>${s.racha} · ${s.mejorRacha}</td></tr>` : ''}
-      ${tiempos}</table></div>`;
+      ${tiempos}</table>`;
+  };
+  const cards = JUEGOS.filter(j => j.categoria === elegida).map(j => {
+    const s = T[j.id], n = s && s.partidas ? s.partidas : 0;
+    return `<button type="button" class="st-ficha ${n ? '' : 'vacia'}" data-stat-juego="${j.id}" style="--c:${j.color}" aria-haspopup="dialog"><span class="st-i" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'sin partidas'}</small></button>`;
   }).join('');
-  app.innerHTML = panelLogros + tabs + `<div class="stats-cards">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar Todas las Estadísticas</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar las estadísticas.</p>`;
+  app.innerHTML = panelLogros + tabs + `<div class="stats-fichas">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar Todas las Estadísticas</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar las estadísticas.</p>`;
   app.querySelectorAll('[data-stat-cat]').forEach(b => b.addEventListener('click', () => {
-    location.hash = '#/stats?categoria=' + b.dataset.statCat;
+    history.replaceState(null, '', '#/stats?categoria=' + b.dataset.statCat);      // sin cambiar de pantalla: no salta el scroll
+    const y = scrollY; vStats(b.dataset.statCat); scrollTo(0, y);
+  }));
+  app.querySelectorAll('[data-stat-juego]').forEach(b => b.addEventListener('click', () => {
+    const j = JUEGOS.find(x => x.id === b.dataset.statJuego); if (!j) return;
+    const cerrar = hoja([el('h2', {}, `${j.icono} ${j.nombre}`), (() => { const d = el('div', { class: 'cuerpo' }); d.innerHTML = tabla(j); return d; })(), el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn on', onclick: () => cerrar() }, 'Cerrar'))]);
   }));
   $('#stResetCat').addEventListener('click', () => {
     const nombre = CATEGORIAS[elegida] || 'esta categoría';
@@ -537,7 +560,8 @@ async function estadoSinConexion() {
     else { el.textContent = reg && (reg.installing || reg.waiting) ? '⏳ Guardando los juegos para usarlos sin conexión… espera unos segundos.' : '⚠️ El modo sin conexión aún no está listo. Abre la app con internet y pulsa «Volver a intentarlo».'; bar.hidden = false; if (reg && (reg.installing || reg.waiting)) setTimeout(estadoSinConexion, 3000); }
   } catch { el.textContent = '⚠️ No se pudo comprobar el modo sin conexión.'; }
 }
-function vAjustes() {
+function vAjustes() { const y = scrollY; vAjustes_(); if (ruta().v === 'ajustes') scrollTo(0, y); }   // al volver a pintar (cambiar un ajuste…) no se salta arriba
+function vAjustes_() {
   nombreVista = 'Ajustes'; cabTxt('Juegos Reunidos');
   const A = aj.ajustes();
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="btn ${A[k] === v ? 'on' : ''}" data-set="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
@@ -559,7 +583,7 @@ function vAjustes() {
     <p class="note">Créditos: los dibujos de las caras de «¿Qué Cara Tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
   <p class="version">Juegos Reunidos · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
-    const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); vAjustes();
+    const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = scrollY; vAjustes(); scrollTo(0, y);
   }));
   estadoSinConexion();
   $('#gOffRe').addEventListener('click', async () => {
