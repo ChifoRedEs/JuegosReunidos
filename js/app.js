@@ -496,7 +496,7 @@ function vInicio(filtro = null) {
 /* ---------- estadísticas ---------- */
 /* Las fichas de juegos (categorías y Estadísticas) toman al azar uno de estos 8 colores cada vez que se pinta la pantalla.
    Se reparten en tandas barajadas, así que en cada pantalla se repiten lo menos posible y nunca salen otros colores. */
-const COLORES_FICHA = ['#2CB5E8' /* azul cian */, '#FFC21A' /* amarillo */, '#E0356E' /* magenta */, '#7A5BC7' /* morado */, '#E5622B' /* naranja */, '#0E9F8E' /* turquesa */, '#F59E0B' /* dorado */, '#2E9E5B' /* verde */];
+const COLORES_FICHA = ['#2CB5E8' /* azul cian */, '#FFC21A' /* amarillo */, '#E0356E' /* magenta */, '#7A5BC7' /* morado */, '#E5622B' /* naranja */, '#0E9FA6' /* turquesa */, '#1D3A8A' /* azul marino */, '#1F8A4C' /* verde oscuro */];
 function colorearFichas() {
   let cola = [];
   app.querySelectorAll('.ficha, .st-ficha').forEach(f => {
