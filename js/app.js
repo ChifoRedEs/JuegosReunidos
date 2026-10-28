@@ -468,6 +468,7 @@ function elegirJuego(gid) {
     return `<a class="eleg" href="#/juego/${j.id}" data-cerrar style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><span class="eleg-t"><b>${esc(j.nombre)}</b><small>${cur ? 'Continuar · ' + esc(e.resumen) : esc(j.descripcion)}</small></span><i aria-hidden="true">›</i></a>`; }).join('');
   const cerrar = hoja([el('h2', {}, `${g.icono} ${g.nombre}`), el('p', { class: 'note' }, '¿A qué quieres jugar?'), (() => { const d = el('div', { class: 'elegir' }); d.innerHTML = opciones; d.addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrar(); }); return d; })(),
     el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'))]);
+  const h = [...document.querySelectorAll('.modal > .hoja')].pop(); if (h) h.classList.add('hoja-elegir');
 }
 // Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
 const COLOR_CAT = { logica: '#6B4DE0', tablero: '#E0553D', cartas: '#C8243E', palabras: '#D98A00', arcade: '#2F6BFF' };
