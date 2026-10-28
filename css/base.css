@@ -282,3 +282,9 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;min-height:0}
 :root[data-theme="dark"]{--velo:rgba(15,22,48,.82)}
 body.fijo .cat-seccion,body.fondo main{position:relative;isolation:isolate}
 body.fijo .cat-seccion::before,body.fondo main::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+
+/* Tarjetas de Estadísticas y Ajustes: en vez de blanco liso, degradado morado → azul de la cabecera, casi imperceptible (claro) o muy oscuro (oscuro) */
+:root{--pan1:color-mix(in srgb,var(--head1) 7%,#fff);--pan2:color-mix(in srgb,var(--head2) 9%,#fff)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pan1:color-mix(in srgb,var(--head1) 26%,var(--card));--pan2:color-mix(in srgb,var(--head2) 10%,var(--card))}}
+:root[data-theme="dark"]{--pan1:color-mix(in srgb,var(--head1) 26%,var(--card));--pan2:color-mix(in srgb,var(--head2) 10%,var(--card))}
+body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
