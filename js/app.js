@@ -403,7 +403,7 @@ async function render() {
   document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes');
   { const tp = document.querySelector('.top'); if (tp) document.documentElement.style.setProperty('--htop', tp.offsetHeight + 'px'); }   // mismo fondo que las categorías          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
-  if (r.v === 'inicio') vInicio(r.cat); else ({ stats: vStats, ajustes: vAjustes })[r.v]();
+  if (r.v === 'inicio') { vInicio(r.cat); if (r.cat) colorearFichas(); } else ({ stats: vStats, ajustes: vAjustes })[r.v]();
   window.scrollTo(0, 0);
 }
 async function abrirJuego(id, t) {
@@ -494,7 +494,17 @@ function vInicio(filtro = null) {
 }
 
 /* ---------- estadísticas ---------- */
-function vStats(catSel = null) { const y = scrollY; vStats_(catSel); if (ruta().v === 'stats') scrollTo(0, y); }
+/* Las fichas de juegos (categorías y Estadísticas) toman al azar uno de estos 8 colores cada vez que se pinta la pantalla.
+   Se reparten en tandas barajadas, así que en cada pantalla se repiten lo menos posible y nunca salen otros colores. */
+const COLORES_FICHA = ['#2CB5E8' /* azul cian */, '#FFC21A' /* amarillo */, '#E0356E' /* magenta */, '#7A5BC7' /* morado */, '#E5622B' /* naranja */, '#0E9F8E' /* turquesa */, '#F59E0B' /* dorado */, '#2E9E5B' /* verde */];
+function colorearFichas() {
+  let cola = [];
+  app.querySelectorAll('.ficha, .st-ficha').forEach(f => {
+    if (!cola.length) { cola = [...COLORES_FICHA]; for (let i = cola.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [cola[i], cola[k]] = [cola[k], cola[i]]; } }
+    f.style.setProperty('--c', cola.pop());
+  });
+}
+function vStats(catSel = null) { const y = scrollY; vStats_(catSel); colorearFichas(); if (ruta().v === 'stats') scrollTo(0, y); }
 function vStats_(catSel = null) {
   nombreVista = 'Estadísticas'; cabTxt('Juegos Reunidos');
   const T = stats.todas();
