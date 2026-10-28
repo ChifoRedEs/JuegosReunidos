@@ -306,9 +306,9 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 .hoja.hoja-img .bar{flex:none;margin-top:8px!important}
 
 /* 3.36.0 (PRUEBA de diseño): pantallas de categoría con el estilo de la Página Principal */
-:root{--velo-cat:rgba(255,255,255,0);--ficha-a:66%;--ficha-b:56%;--ficha-sombra:28%}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo-cat:rgba(6,10,30,.58);--ficha-a:80%;--ficha-b:68%;--ficha-sombra:50%}}
-:root[data-theme="dark"]{--velo-cat:rgba(6,10,30,.58);--ficha-a:80%;--ficha-b:68%;--ficha-sombra:50%}
+:root{--velo-cat:rgba(255,255,255,.55);--ficha-a:90%;--ficha-b:80%;--ficha-sombra:38%}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo-cat:rgba(10,16,44,.68);--ficha-a:94%;--ficha-b:84%;--ficha-sombra:55%}}
+:root[data-theme="dark"]{--velo-cat:rgba(10,16,44,.68);--ficha-a:94%;--ficha-b:84%;--ficha-sombra:55%}
 body.fijo .cat-seccion::before{content:none}
 body.fijo:has(.cat-seccion) main{position:relative;isolation:isolate}
 body.fijo:has(.cat-seccion) main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/100% 100% no-repeat}
