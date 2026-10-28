@@ -315,10 +315,8 @@ body.fijo:has(.cat-seccion) main::before{content:"";position:absolute;inset:0;z-
 body.fijo .cat-seccion .ficha{background:linear-gradient(145deg,color-mix(in srgb,var(--c) var(--ficha-a),transparent),color-mix(in srgb,var(--c) var(--ficha-b),transparent));box-shadow:0 6px 18px color-mix(in srgb,var(--c) var(--ficha-sombra),transparent);backdrop-filter:blur(2px)}
 body.fijo .cat-seccion>.cat{align-self:flex-start;padding:4px 18px 4px 8px;border-radius:99px;background:linear-gradient(90deg,#F5B91E 0%,#F5B91E 14%,#3E6FE0 100%);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);box-shadow:0 3px 10px rgba(30,50,160,.3)}
 
-/* 3.36.3: Estadísticas y Ajustes (tema claro) con el fondo de las categorías: imagen completa bajo el menú */
+/* 3.36.3 (y 3.37.1 también en oscuro): Estadísticas y Ajustes con el fondo de las categorías: imagen completa bajo el menú */
 body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/100% 100% no-repeat}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body.fondo main::before{top:0;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}}
-:root[data-theme="dark"] body.fondo main::before{top:0;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}
 
 /* 3.36.7: ventana «¿A qué quieres jugar?» con el banner de fondo (velo blanco 50 % en claro; el de las pantallas en oscuro) */
 .hoja.hoja-elegir{--vl:rgba(255,255,255,.5);background:linear-gradient(var(--vl),var(--vl)),url(../img/fondo-ventana-cuadrada.webp) center/cover no-repeat,var(--card)}
