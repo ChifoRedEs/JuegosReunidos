@@ -131,8 +131,8 @@ function ajustar(forzar = false) {
 // Deja la mesa entera a la vista justo debajo de la barra superior
 function verMesa() {
   const z = $('#biZona'); if (!z) return;
-  const cab = ($('.top') || { offsetHeight: 0 }).offsetHeight, y = z.getBoundingClientRect().top + scrollY - cab - 6;
-  scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  const ap_ = document.getElementById('app'), y = ap_.scrollTop + z.getBoundingClientRect().top - ap_.getBoundingClientRect().top - 6;
+  ap_.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
 }
 
 /* ---------- panel de tiro flotante (se arrastra desde el asa a cualquier sitio de la pantalla) ---------- */

@@ -376,3 +376,12 @@ body.fondo .top{position:static;flex:none}
 body.fondo main{flex:1 1 auto;min-height:0;width:100%;max-width:none;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
   padding-left:max(14px,calc((100% - 520px)/2));padding-right:max(14px,calc((100% - 520px)/2))}
 @media(min-width:760px){body.fondo main{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}}
+
+/* 3.38.0: páginas de juego con el mismo fondo (velo por tema) y scroll interno, igual que Estadísticas y Ajustes */
+html:has(body.jfondo){overflow:hidden}
+body.jfondo{height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+body.jfondo .top{position:static;flex:none}
+body.jfondo main{flex:1 1 auto;min-height:0;width:100%;max-width:none;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding-left:max(14px,calc((100% - 520px)/2));padding-right:max(14px,calc((100% - 520px)/2))}
+@media(min-width:760px){body.jfondo main{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}}
+body.jfondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;min-height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}

@@ -43,7 +43,7 @@ const cabTxt = t => {
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), nav = $('#nav');
 // En Estadísticas y Ajustes el scroll va dentro de <main> (la página no se desplaza), así las barras del navegador móvil no cambian el tamaño de la pantalla ni mueven el fondo.
-const scrollInterno = () => document.body.classList.contains('fondo');
+const scrollInterno = () => document.body.classList.contains('fondo') || document.body.classList.contains('jfondo');
 const leerScroll = () => scrollInterno() ? app.scrollTop : scrollY;
 const ponerScroll = y => { if (scrollInterno()) app.scrollTop = y; else scrollTo(0, y); };
 const RUTAS = [
@@ -405,6 +405,7 @@ async function render() {
   app.innerHTML = '';
   document.body.classList.toggle('fijo', r.v === 'inicio');
   document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes');
+  document.body.classList.toggle('jfondo', r.v === 'juego');                 // páginas de juego: mismo fondo y scroll interno
   { const tp = document.querySelector('.top'); if (tp) document.documentElement.style.setProperty('--htop', tp.offsetHeight + 'px'); }   // mismo fondo que las categorías          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
   if (r.v === 'inicio') { vInicio(r.cat); if (r.cat) colorearFichas(); } else ({ stats: vStats, ajustes: vAjustes })[r.v]();

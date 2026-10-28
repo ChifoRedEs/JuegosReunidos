@@ -104,7 +104,7 @@ function armar() {
 function encajar() {            // tablero fijo: ocupa todo el ancho y todo el alto que quede libre (sin hacer scroll)
   const z = $('#vaZona'); if (!z) return;
   z.style.width = '100%'; const pw = z.parentElement.getBoundingClientRect().width, zr = z.getBoundingClientRect(), ult = (root.closest('main') || root).getBoundingClientRect();
-  const top = zr.top + scrollY, extra = ult.bottom - zr.bottom, h = innerHeight - top - extra - 2;
+  const top = zr.top + (document.getElementById('app')?.scrollTop || 0), extra = ult.bottom - zr.bottom, h = innerHeight - top - extra - 2;
   z.style.width = Math.floor(Math.max(220, Math.min(pw, h * M.W / M.H))) + 'px';
 }
 function ajustarTamano() {
