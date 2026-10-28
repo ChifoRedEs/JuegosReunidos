@@ -275,3 +275,10 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;min-height:0}
 .ini-t b{font:800 clamp(17px,2.45vh,22px)/1.05 'Baloo 2',system-ui,sans-serif;text-shadow:0 1px 3px rgba(0,0,0,.3)}
 .ini-t small{font-size:13px;font-weight:700;opacity:.92}
 .ini-fl{font:800 34px/1 'Baloo 2',system-ui,sans-serif;opacity:.85}
+
+/* Fondo de las pantallas de categoría: fondo-inicio muy difuminado hacia blanco (tema claro) o hacia el azul oscuro de base (tema oscuro) */
+:root{--velo:rgba(255,255,255,.9)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo:rgba(15,22,48,.88)}}
+:root[data-theme="dark"]{--velo:rgba(15,22,48,.88)}
+body.fijo .cat-seccion{position:relative;isolation:isolate}
+body.fijo .cat-seccion::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}
