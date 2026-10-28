@@ -299,4 +299,8 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 .st-ficha small{font-size:10.5px;font-weight:700;opacity:.92}
 
 /* Ventana de estadísticas de un juego: fondo-ventana con el mismo velo (blanco / azul oscuro) que las pantallas */
-.hoja.hoja-img{--hw:min(100vw,520px);width:var(--hw);height:calc(var(--hw)*.4942 + 40px);max-height:88vh;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-ventana.webp) center/100% 100% no-repeat,var(--card)}
+.hoja.hoja-img{--hw:min(100vw,520px);width:var(--hw);height:calc(var(--hw)*.4942 + 40px);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-ventana.webp) center/100% 100% no-repeat,var(--card)}
+
+.hoja.hoja-img h2{flex:none;margin-bottom:6px}
+.hoja.hoja-img .cuerpo{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.hoja.hoja-img .bar{flex:none;margin-top:8px!important}
