@@ -306,9 +306,11 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 .hoja.hoja-img .bar{flex:none;margin-top:8px!important}
 
 /* 3.36.0 (PRUEBA de diseño): pantallas de categoría con el estilo de la Página Principal */
-:root{--velo-cat:rgba(255,255,255,0);--ficha-a:80%;--ficha-b:70%;--ficha-sombra:32%}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo-cat:rgba(6,10,30,.58);--ficha-a:92%;--ficha-b:80%;--ficha-sombra:55%}}
-:root[data-theme="dark"]{--velo-cat:rgba(6,10,30,.58);--ficha-a:92%;--ficha-b:80%;--ficha-sombra:55%}
-body.fijo .cat-seccion::before{background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+:root{--velo-cat:rgba(255,255,255,0);--ficha-a:66%;--ficha-b:56%;--ficha-sombra:28%}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo-cat:rgba(6,10,30,.58);--ficha-a:80%;--ficha-b:68%;--ficha-sombra:50%}}
+:root[data-theme="dark"]{--velo-cat:rgba(6,10,30,.58);--ficha-a:80%;--ficha-b:68%;--ficha-sombra:50%}
+body.fijo .cat-seccion::before{content:none}
+body.fijo:has(.cat-seccion) main{position:relative;isolation:isolate}
+body.fijo:has(.cat-seccion) main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/100% 100% no-repeat}
 body.fijo .cat-seccion .ficha{background:linear-gradient(145deg,color-mix(in srgb,var(--c) var(--ficha-a),transparent),color-mix(in srgb,var(--c) var(--ficha-b),transparent));box-shadow:0 6px 18px color-mix(in srgb,var(--c) var(--ficha-sombra),transparent);backdrop-filter:blur(2px)}
 body.fijo .cat-seccion>.cat{align-self:flex-start;padding:4px 14px 4px 8px;border-radius:99px;background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:blur(3px)}
