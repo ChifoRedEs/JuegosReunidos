@@ -360,3 +360,8 @@ body.fondo .panel{background:linear-gradient(135deg,color-mix(in srgb,var(--pan1
 
 /* 3.37.3: todas las páginas usan el mismo encuadre de fondo que la Página Principal (imagen a pantalla completa, «cover»); cada tema conserva su velo */
 body.fijo:has(.cat-seccion) main::before,body.fondo main::before{position:fixed;inset:0;top:0;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+
+/* 3.37.4: fondo FIJO. La imagen vive en una capa fija a nivel de página (body::before), fuera de «main», para que no se mueva al hacer scroll en ninguna pantalla. */
+body.fijo .ini::before,body.fijo .cat-seccion::before,body.fijo:has(.cat-seccion) main::before,body.fondo main::before{content:none}
+body.fijo::before,body.fondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+body.fijo:has(.ini)::before{background:url(../img/fondo-inicio.webp) center/cover no-repeat}
