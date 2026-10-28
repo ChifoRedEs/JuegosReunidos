@@ -42,6 +42,10 @@ const cabTxt = t => {
 };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), nav = $('#nav');
+// En Estadísticas y Ajustes el scroll va dentro de <main> (la página no se desplaza), así las barras del navegador móvil no cambian el tamaño de la pantalla ni mueven el fondo.
+const scrollInterno = () => document.body.classList.contains('fondo');
+const leerScroll = () => scrollInterno() ? app.scrollTop : scrollY;
+const ponerScroll = y => { if (scrollInterno()) app.scrollTop = y; else scrollTo(0, y); };
 const RUTAS = [
   ['cat-logica', '🧠', 'Lógica', '#/cat/logica'],
   ['cat-tablero', '🎲', 'Tablero', '#/cat/tablero'],
@@ -404,7 +408,7 @@ async function render() {
   { const tp = document.querySelector('.top'); if (tp) document.documentElement.style.setProperty('--htop', tp.offsetHeight + 'px'); }   // mismo fondo que las categorías          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
   if (r.v === 'inicio') { vInicio(r.cat); if (r.cat) colorearFichas(); } else ({ stats: vStats, ajustes: vAjustes })[r.v]();
-  window.scrollTo(0, 0);
+  window.scrollTo(0, 0); app.scrollTop = 0;
 }
 async function abrirJuego(id, t) {
   const j = JUEGOS.find(x => x.id === id);
@@ -506,7 +510,7 @@ function colorearFichas(sel = '.ficha', paleta = COLORES_FICHA) {
     f.style.setProperty('--c', cola.pop());
   });
 }
-function vStats(catSel = null) { const y = scrollY; vStats_(catSel); colorearFichas('.st-ficha', COLORES_STATS); if (ruta().v === 'stats') scrollTo(0, y); }
+function vStats(catSel = null) { const y = leerScroll(); vStats_(catSel); colorearFichas('.st-ficha', COLORES_STATS); if (ruta().v === 'stats') ponerScroll(y); }
 function vStats_(catSel = null) {
   nombreVista = 'Estadísticas'; cabTxt('Juegos Reunidos');
   const T = stats.todas();
@@ -538,7 +542,7 @@ function vStats_(catSel = null) {
   app.innerHTML = panelLogros + tabs + `<div class="stats-fichas">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar Todas las Estadísticas</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar las estadísticas.</p>`;
   app.querySelectorAll('[data-stat-cat]').forEach(b => b.addEventListener('click', () => {
     history.replaceState(null, '', '#/stats?categoria=' + b.dataset.statCat);      // sin cambiar de pantalla: no salta el scroll
-    const y = scrollY; vStats(b.dataset.statCat); scrollTo(0, y);
+    const y = leerScroll(); vStats(b.dataset.statCat); ponerScroll(y);
   }));
   app.querySelectorAll('[data-stat-juego]').forEach(b => b.addEventListener('click', () => {
     const j = JUEGOS.find(x => x.id === b.dataset.statJuego); if (!j) return;
@@ -574,7 +578,7 @@ async function estadoSinConexion() {
     else { el.textContent = reg && (reg.installing || reg.waiting) ? '⏳ Guardando los juegos para usarlos sin conexión… espera unos segundos.' : '⚠️ El modo sin conexión aún no está listo. Abre la app con internet y pulsa «Volver a intentarlo».'; bar.hidden = false; if (reg && (reg.installing || reg.waiting)) setTimeout(estadoSinConexion, 3000); }
   } catch { el.textContent = '⚠️ No se pudo comprobar el modo sin conexión.'; }
 }
-function vAjustes() { const y = scrollY; vAjustes_(); if (ruta().v === 'ajustes') scrollTo(0, y); }   // al volver a pintar (cambiar un ajuste…) no se salta arriba
+function vAjustes() { const y = leerScroll(); vAjustes_(); if (ruta().v === 'ajustes') ponerScroll(y); }   // al volver a pintar (cambiar un ajuste…) no se salta arriba
 function vAjustes_() {
   nombreVista = 'Ajustes'; cabTxt('Juegos Reunidos');
   const A = aj.ajustes();
@@ -597,7 +601,7 @@ function vAjustes_() {
     <p class="note">Créditos: los dibujos de las caras de «¿Qué Cara Tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
   <p class="version">Juegos Reunidos · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
-    const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = scrollY; vAjustes(); scrollTo(0, y);
+    const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = leerScroll(); vAjustes(); ponerScroll(y);
   }));
   estadoSinConexion();
   $('#gOffRe').addEventListener('click', async () => {

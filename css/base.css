@@ -368,3 +368,11 @@ body.fijo:has(.ini)::before{background:url(../img/fondo-inicio.webp) center/cove
 
 /* 3.37.5: la capa de fondo mide siempre lo que la pantalla grande (sin barras del navegador), así no se estira ni «hace zoom» cuando las barras del móvil se ocultan al hacer scroll */
 body.fijo::before,body.fondo::before{height:100vh;height:100lvh;min-height:100%;bottom:auto}
+
+/* 3.37.6: Estadísticas y Ajustes hacen el scroll DENTRO de <main>; la página no se desplaza. Así el navegador móvil no oculta sus barras ni cambia la altura de la pantalla (que movía el fondo). */
+html:has(body.fondo){overflow:hidden}
+body.fondo{height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+body.fondo .top{position:static;flex:none}
+body.fondo main{flex:1 1 auto;min-height:0;width:100%;max-width:none;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding-left:max(14px,calc((100% - 520px)/2));padding-right:max(14px,calc((100% - 520px)/2))}
+@media(min-width:760px){body.fondo main{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}}
