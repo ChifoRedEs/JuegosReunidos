@@ -385,3 +385,10 @@ body.jfondo main{flex:1 1 auto;min-height:0;width:100%;max-width:none;box-sizing
   padding-left:max(14px,calc((100% - 520px)/2));padding-right:max(14px,calc((100% - 520px)/2))}
 @media(min-width:760px){body.jfondo main{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}}
 body.jfondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;min-height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+
+/* 3.38.1: contraste de los textos sueltos sobre el fondo (fuera de cajas): negro nítido en claro y blanco nítido en oscuro, con un halo suave */
+body.fondo,body.jfondo,body.fijo{--ink:#000;--mut:#000;--halo:0 0 3px rgba(255,255,255,.95),0 0 8px rgba(255,255,255,.75)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(body.fondo,body.jfondo,body.fijo){--ink:#fff;--mut:#F4F7FF;--halo:0 0 3px rgba(5,10,30,.95),0 0 8px rgba(5,10,30,.8)}}
+:root[data-theme="dark"] :is(body.fondo,body.jfondo,body.fijo){--ink:#fff;--mut:#F4F7FF;--halo:0 0 3px rgba(5,10,30,.95),0 0 8px rgba(5,10,30,.8)}
+:is(body.fondo,body.jfondo) :is(.note,.lbl,.msg,.version,.cat){text-shadow:var(--halo)}
+:is(body.fondo,body.jfondo) :is(.panel,.hoja,.ficha,.st-ficha,.btn,.stats-tab) :is(.note,.lbl,.msg,.version){text-shadow:none}
