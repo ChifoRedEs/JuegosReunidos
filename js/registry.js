@@ -45,6 +45,7 @@ export const JUEGOS = [
   { id: 'vuelaalto', nombre: 'Vuela Alto', icono: '🐦', color: '#2CB5E8', categoria: 'arcade', descripcion: 'Mantén pulsado para subir. Niveles e Infinito.', cargar: () => import('./games/vuelaalto/index.js') },
   { id: 'quantix', nombre: 'Quantix', icono: '💠', color: '#7C4DFF', categoria: 'arcade', descripcion: 'Desliza cuadrados y descubre la imagen.', cargar: () => import('./games/quantix/index.js') },
   { id: 'bloques', nombre: 'Bloques', icono: '🧱', color: '#A24DE0', categoria: 'arcade', descripcion: '4 modos de juego y podio de récords.', cargar: () => import('./games/bloques/index.js') },
+  { id: 'catapulta', nombre: 'Catapulta', icono: '🪃', color: '#E8453C', categoria: 'arcade', descripcion: 'Tirachinas con física: derriba las fortalezas de los cerdos piratas.', cargar: () => import('./games/catapulta/index.js') },
   { id: 'ladrillos', nombre: 'Rompe-Ladrillos', icono: '🏓', color: '#FF4757', categoria: 'arcade', descripcion: '12 niveles, premios y editor de niveles propios.', cargar: () => import('./games/ladrillos/index.js') },
   { id: 'airhockey', nombre: 'Air Hockey', icono: '🏒', color: '#1E9BD7', categoria: 'arcade', descripcion: 'Contra la CPU o 2 jugadores en el mismo móvil.', cargar: () => import('./games/airhockey/index.js') },
   { id: 'billar', nombre: 'Billar', icono: '🎱', color: '#1F8A4C', categoria: 'arcade', descripcion: 'Pool 8, Pool 9 y Snooker contra la CPU o entre dos.', cargar: () => import('./games/billar/index.js') },

@@ -1,0 +1,28 @@
+/* Catapulta */
+.cthud{display:flex;gap:6px;margin:4px 0 6px}
+.cthud span{flex:1;min-width:0;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:3px 6px;text-align:center;display:flex;flex-direction:column}
+.cthud small{font-size:10.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.cthud b{font:800 18px 'Baloo 2',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.ctcola{display:flex;gap:4px;align-items:center;justify-content:center;min-height:27px}
+.ctcola i,.ctaves i{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--c);border:2px solid rgba(0,0,0,.35)}
+.ctzona{position:relative;width:min(100%,760px);margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(10,15,50,.4)}
+.ctzona canvas{display:block;width:100%}
+.ctover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,8,30,.5)}
+.ctover[hidden]{display:none}
+.ctover>div{background:var(--card);color:var(--ink);border-radius:18px;padding:12px 18px;text-align:center;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 26px rgba(0,0,0,.35);max-width:90%}
+.ctover b{font:800 20px 'Baloo 2',system-ui,sans-serif}
+.ctover span{font-size:13px;font-weight:700;color:var(--mut)}
+.ctover .g{font:800 18px 'Baloo 2',system-ui,sans-serif;color:var(--purple)}
+.ctover .ctest{font-size:30px;letter-spacing:4px;color:#F5B50A}
+.ctover .rec{color:var(--ok);font-weight:800}
+.ctover .bts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.ctayuda{text-align:center;font-size:12px;min-height:1.4em}
+.ctniv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+.ctniv .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;height:auto}
+.ctniv b{font:800 22px 'Baloo 2',system-ui,sans-serif}
+.ctniv span{font-size:12px;font-weight:700}
+.ctniv i{font-style:normal;color:#F5B50A;letter-spacing:2px;font-size:15px}
+.ctniv small{font-size:11px;color:var(--mut)}
+.ctniv .btn.on i{color:#FFE38A}
+.ctaves{display:flex;flex-direction:column;gap:5px;font-size:13px;margin:8px 0}
+.ctaves span{display:flex;align-items:center;gap:6px}

@@ -133,3 +133,7 @@ Si `api.barra({config})` lleva `pantalla: () => …`, «Configurar partida» abr
 
 ## Apariencia: agrupar secciones
 En un grupo de `api.aspecto([...])`: `tt: true` → el grupo entra en el desplegable único «Tapete y Tablero» (marca así el tapete —`grupoFondo`/`grupoMesa`— y el color del tablero); `junto: 'clave'` → se une como subgrupo al desplegable de otro grupo (p. ej. «Estilo de Edificios»); `etiqueta` = rótulo del subgrupo; `oculto: true` = no aparece (el valor se sigue guardando). `gruposFichas` agrupa solas Color (con leyenda por jugador) y «Estilos de Fichas» (textura/forma/tamaño); un grupo propio de forma se une con `enEstilos: true`. Los grupos `vista` no se muestran: el cambio 2D/3D es el botón flotante de la esquina.
+
+## Juegos con física 2D (Matter.js)
+`js/vendor/matter.min.js` (v0.20.0, MIT, licencia en `matter.LICENSE`) es un script UMD: se carga solo cuando se entra en el juego, con una etiqueta `<script>` dinámica (ver `cargarMatter()` en `games/catapulta/index.js`) y queda en `window.Matter`. El motor del juego (`motor.js`) no toca el DOM y recibe Matter como parámetro, así que `tests/catapulta.mjs` lo ejecuta en Node. Claves de Catapulta: paso fijo de 1/60 s con acumulador, `frictionAir: 0` en el pájaro para poder predecir la trayectoria, daño por impacto = `max(0, velocidad relativa − 4) · masa reducida · 6` (ignorado los primeros 70 pasos, mientras la estructura se asienta) y niveles como datos en `niveles.js`.
+
