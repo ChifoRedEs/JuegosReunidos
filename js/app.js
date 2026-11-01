@@ -102,14 +102,26 @@ async function compartir(texto) {
   try { await navigator.clipboard.writeText(texto + '\n' + url); aviso('📋 Copiado: pégalo donde quieras'); }
   catch { modal('Compartir', `<p>Copia este texto:</p><p><b>${esc(texto)}</b><br>${esc(url)}</p>`); }
 }
+/* Las ventanas emergentes se integran con el botón «Atrás» del móvil: al abrir una se añade una entrada al historial,
+   y «Atrás» cierra la ventana (en vez de salir del juego). Si se cierra con un botón, esa entrada se retira. */
+const pilaModales = []; let saltosHist = 0, idModal = 0;
+window.addEventListener('popstate', e => {
+  if (saltosHist > 0) { saltosHist--; return; }                              // retroceso hecho por nosotros mismos
+  if (pilaModales.length) { pilaModales[pilaModales.length - 1].cerrar(true); return; }   // «Atrás» con una ventana abierta: la cierra
+  if (e.state && e.state.jrModal) { saltosHist++; history.back(); }        // entrada de una ventana ya cerrada: se salta
+});
 function hoja(contenido, alCerrar = null) {
   const m = el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' }, el('div', { class: 'hoja' }, contenido));
-  let cerrada = false;
-  const cerrar = () => { if (cerrada) return; cerrada = true; m.remove(); document.removeEventListener('keydown', esc_); if (alCerrar) alCerrar(); };
+  let cerrada = false; const id = ++idModal;
+  const cerrar = viaAtras => { if (cerrada) return; cerrada = true; m.remove(); document.removeEventListener('keydown', esc_);
+    const i = pilaModales.findIndex(x => x.id === id); if (i >= 0) pilaModales.splice(i, 1);
+    if (viaAtras !== true) setTimeout(() => { if (history.state && history.state.jrModal === id) { saltosHist++; history.back(); } }, 0);   // retira la entrada (si no se ha navegado a otra pantalla)
+    if (alCerrar) alCerrar(); };
   const esc_ = e => { if (e.key === 'Escape' && [...document.querySelectorAll('.modal')].pop() === m) cerrar(); };   // con ventanas apiladas, Esc cierra solo la de encima
   m.addEventListener('click', e => { if (e.target === m) cerrar(); });
   document.addEventListener('keydown', esc_);
   document.body.append(m);
+  try { history.pushState({ jrModal: id }, ''); pilaModales.push({ id, cerrar }); } catch (e) {}
   return cerrar;
 }
 function modal(titulo, html) {
