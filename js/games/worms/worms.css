@@ -71,3 +71,9 @@
 .juego-worms .wmq{width:70px;height:120px}
 .ctpad{touch-action:none;cursor:crosshair;outline-offset:3px;flex:none}
 .ctpad canvas{display:block;width:100%;height:100%}
+
+/* Apariencia: miniaturas de Avatar y Enemigos pequeñas y en rejilla de 4 */
+.ap-rej.ap-cuadrada{grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-cuadrada .ap-ficha img,.ap-cuadrada .ap-azar{width:100%;max-width:64px;height:auto;aspect-ratio:1;object-fit:contain;margin:0 auto;border-radius:10px;box-shadow:none;background:color-mix(in srgb,var(--purple) 8%,var(--card))}
+.ap-cuadrada .ap-azar{display:flex;align-items:center;justify-content:center;font-size:24px}
+.ap-cuadrada .ap-ficha{font-size:10.5px;line-height:1.1;padding:4px}

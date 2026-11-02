@@ -4,9 +4,9 @@ import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { crearPiloto } from './ia.js';
 import { grupoEscenario, ESCENARIOS_GUERRA } from '../../core/aspectos.js';
-import { grupoAvatar, grupoEnemigo } from '../catapulta/grupos.js';
+import { grupoAvatarGusano, grupoEnemigoGusano } from '../catapulta/grupos.js';
 import { img as imgCt } from '../catapulta/imagenes.js';
-import { imgAve, imgEnemigo, valido as setValido } from '../catapulta/avatares.js';
+import { IDS as SETS, imgEnemigo } from '../catapulta/avatares.js';
 import { imagenTapete } from '../../core/cartas.js';
 import { gruposFichas, estilo, rgb, claro, oscuro, pixelTextura } from '../../core/fichas.js';
 
@@ -58,7 +58,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null); if (c0 && typeof c0 === 'object') cfg = { ...cfg, ...limpiarCfg(c0) };
   asp = api.aspecto([
     grupoEscenario('.wmfondo', 'Fondo de Pantalla', ESCENARIOS_GUERRA),
-    grupoAvatar(true), grupoEnemigo(),
+    grupoAvatarGusano(), grupoEnemigoGusano(),
     ...gruposFichas({ titulo: 'Terreno', icono: '⛰️', pocos: true, formas: false, tamano: false }),
   ], () => { if (S) { construirTerreno(); dibujar(); } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./worms.css', import.meta.url));
@@ -397,11 +397,11 @@ function fondo() {
 }
 const spr = (n, x, y, w, ang = 0, vuelta = false) => { const im = ico(n); if (!im) return false; const h = w * im.naturalHeight / im.naturalWidth; ctx.save(); ctx.translate(x, y); if (ang) ctx.rotate(ang); if (vuelta) ctx.scale(-1, 1); ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore(); return true; };
 const colEq = e => M.COLORES[e];
-// Equipo rojo = «Avatar»; equipo azul o CPU = «Enemigos» (las imágenes son las de Catapulta). null = el gusano de siempre.
+// Equipo rojo = «Avatar» (una de las 24 imágenes); equipo azul o CPU = «Enemigos». null = el gusano de siempre.
 function avatar(eq) {
-  const av = asp && asp.valores.avatar; if (!av || av === 'original') return null;
-  if (!eq) return imgAve(av, 'normal');
-  const en = asp.valores.enemigo; return imgEnemigo(!en || en === 'igual' ? av : en);
+  const v = asp && asp.valores[eq ? 'enemigo' : 'avatar'];
+  if (eq) return SETS.includes(v) ? imgEnemigo(v) : null;
+  return /^av-[a-z]+-[1-4]$/.test(v || '') ? v : null;
 }
 
 function dibujarGusano(w, t, esAct) {
