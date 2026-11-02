@@ -42,3 +42,14 @@
 
 .ctraiz{display:flex;flex-direction:column}
 .ctraiz .barra-gen{margin-top:auto}
+
+/* desplegables de dificultad del menú */
+.ctgrps{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.ctgrp{background:var(--card);border:2px solid var(--line);border-radius:14px;overflow:hidden}
+.ctgrp summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;cursor:pointer;list-style:none;font-size:14px}
+.ctgrp summary::-webkit-details-marker{display:none}
+.ctgrp summary::before{content:'▸';margin-right:2px;transition:transform .15s}
+.ctgrp[open] summary::before{transform:rotate(90deg)}
+.ctgrp summary b{flex:1}
+.ctgrp summary small{font-weight:800;color:var(--mut);font-size:11.5px}
+.ctgrp .ctniv{padding:4px 10px 10px}

@@ -2,7 +2,7 @@
 // Apuntas con el círculo táctil del menú flotante (dirección = hacia dónde mueves el punto, fuerza = lo lejos que lo pones).
 import { $, esc } from '../../core/dom.js';
 import * as C from './motor.js';
-import { NIVELES, validarNivel } from './niveles.js';
+import { NIVELES, validarNivel, NUEVO_DE_ANTIGUO } from './niveles.js';
 import { AVATARES, IDS, CLASES, valido, imgAve, imgPieza, imgEnemigo, nombreAve } from './avatares.js';
 import { img, cargar, url, TROZOS } from './imagenes.js';
 import { grupoPantalla, tapeteElegido } from '../../core/aspectos.js';
@@ -24,7 +24,20 @@ function cargarMatter() {
   return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = new URL('../../vendor/matter.min.js', import.meta.url); s.onload = () => ok(window.Matter); s.onerror = () => ko(new Error('matter')); document.head.append(s); });
 }
 const prog = () => { const p = api.pref('prog', []); return Array.isArray(p) ? p.map(x => x && Number.isInteger(x.est) ? { est: Math.min(3, Math.max(0, x.est)), pts: Math.max(0, x.pts | 0) } : { est: 0, pts: 0 }) : []; };
-const nivelMax = () => { const p = prog(); let n = 1; while (n < NIVELES.length && p[n - 1] && p[n - 1].est > 0) n++; return n; };
+const nivelMax = () => { const p = prog(); let u = 0; p.forEach((x, i) => { if (x.est > 0) u = i + 1; }); return Math.min(NIVELES.length, u + 1); };   // se desbloquea el siguiente al último superado
+const DIFICULTADES = ['Principiante', 'Iniciado', 'Normal', 'Avanzado', 'Experto'];       // 5 desplegables de 10 niveles
+let abiertos = new Set();
+// Hasta la 3.44 había 30 pantallas en otro orden: se recolocan el progreso, el nivel elegido y la partida guardada.
+function migrarOrden() {
+  if (api.pref('ordenV', 0) >= 2) return;
+  const viejo = Array.isArray(api.pref('prog', [])) ? api.pref('prog', []) : [], nuevo = [];
+  viejo.forEach((x, i) => { if (i < 30 && x && x.est > 0) nuevo[NUEVO_DE_ANTIGUO(i + 1) - 1] = x; });
+  for (let i = 0; i < nuevo.length; i++) if (!nuevo[i]) nuevo[i] = { est: 0, pts: 0 };
+  api.setPref('prog', nuevo);
+  const c = api.pref('cfg', null); if (c && Number.isInteger(c.nivel) && c.nivel <= 30) { c.nivel = NUEVO_DE_ANTIGUO(c.nivel); api.setPref('cfg', c); }
+  const g = api.cargar(); if (g && Number.isInteger(g.nivel) && g.nivel <= 30) { const n = NUEVO_DE_ANTIGUO(g.nivel); api.guardar({ nivel: n }, resumen({ nivel: n }).texto, false); }
+  api.setPref('ordenV', 2);
+}
 const avatar = () => valido(asp && asp.valores.avatar);
 const enemigo = () => { const e = asp && asp.valores.enemigo; return e && e !== 'igual' ? valido(e) : avatar(); };
 const nombresImg = () => ['mat-madera', 'mat-piedra', 'mat-hielo', 'mat-hierro', 'fx-explosion', 'fx-humo', 'fx-impacto', 'fx-escombros-madera', 'fx-escombros-piedra', 'fx-escombros-hielo', 'lanzador-base', 'lanzador-brazo', imgEnemigo(enemigo()), ...CLASES.map(c => imgAve(avatar(), c)), ...[0, 1, 2].map(i => imgPieza(avatar(), i))];
@@ -43,9 +56,11 @@ export async function mount(r, a) {
   try { M = await cargarMatter(); } catch { root.innerHTML = '<p class="note">No se pudo cargar el motor de física. Comprueba la conexión y vuelve a entrar.</p>'; return; }
   await cargar(nombresImg(), 4000);
   if (cerrando) return;
+  migrarOrden();
   const c0 = api.pref('cfg', null); if (c0 && Number.isInteger(c0.nivel)) cfg.nivel = c0.nivel;
   const m0 = api.pref('mira', null); if (m0 && Number.isFinite(m0.ang) && Number.isFinite(m0.fz)) mira = { ang: Math.min(90, Math.max(0, m0.ang)), fz: Math.min(1, Math.max(.05, m0.fz)) };
   root.addEventListener('click', clic);
+  root.addEventListener('toggle', e => { const d = e.target; if (d.classList && d.classList.contains('ctgrp')) { const g = +d.dataset.g; if (d.open) abiertos.add(g); else abiertos.delete(g); } }, true);
   onVis = () => { if (document.hidden) pausar(); }; document.addEventListener('visibilitychange', onVis);
   onRes = () => { if (cv) { ajustar(); dibujar(); dibujarPad(); } }; addEventListener('resize', onRes);
   onKey = teclado; document.addEventListener('keydown', onKey);
@@ -53,7 +68,7 @@ export async function mount(r, a) {
     salir: () => { pausar(); location.hash = '#/cat/arcade'; },
     pausar: () => { eraJugando = ['apuntar', 'vuelo', 'espera'].includes(fase); pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) seguir(); },
-    config: { valores: () => ({ nivel: cfg.nivel }), grupos: () => [{ clave: 'nivel', titulo: 'Nivel', opciones: NIVELES.map((n, i) => [i + 1, `${i + 1}`]).filter(([i]) => i <= nivelMax()) }], aplicar: v => { cfg.nivel = +v.nivel; api.setPref('cfg', cfg); jugar(cfg.nivel); } } });
+    config: { valores: () => ({ nivel: cfg.nivel }), grupos: () => DIFICULTADES.map((t, gi) => ({ clave: 'nivel', titulo: 'Nivel · ' + t, visible: gi * 10 + 1 <= nivelMax(), opciones: NIVELES.map((n, i) => [i + 1, `${i + 1}`]).filter(([i]) => i > gi * 10 && i <= gi * 10 + 10 && i <= nivelMax()) })), aplicar: v => { cfg.nivel = +v.nivel; api.setPref('cfg', cfg); jugar(cfg.nivel); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); menu(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   const g = api.cargar();
   if (g && g.nivel <= nivelMax()) jugar(g.nivel); else menu();
@@ -74,7 +89,12 @@ function menu() {
   const p = prog(), max = nivelMax(); if (cfg.nivel > max || cfg.nivel < 1) cfg.nivel = max;
   const tot = p.reduce((s, x) => s + x.pts, 0), est = p.reduce((s, x) => s + x.est, 0), s = avatar();
   root.innerHTML = `<p class="note">Aprieta ✨ y 🚀 del menú flotante: mueve el punto del cuarto de círculo para elegir la dirección y la fuerza, y lanza. Derriba las estructuras y vence a los enemigos con las estrellas que puedas.</p>
-    <div class="bar"><span class="lbl">Empezar en</span><div class="seg ctniv">${NIVELES.map((n, i) => { const k = i + 1; return `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-cfg="nivel" data-v="${k}" title="${esc(n.nombre)}" ${k > max ? 'disabled title="Llega a este nivel para desbloquearlo"' : ''}>${k > max ? '🔒' : k}</button>`; }).join('')}</div></div>
+    <div class="ctgrps"><span class="lbl">Empezar en</span>${DIFICULTADES.map((t, gi) => {
+      const a = gi * 10 + 1; if (a > max) return '';
+      const est = p.slice(a - 1, a + 9).reduce((q, x) => q + (x ? x.est : 0), 0), abre = abiertos.has(gi) || (!abiertos.size && cfg.nivel >= a && cfg.nivel < a + 10);
+      const celdas = NIVELES.map((n, i) => i + 1).filter(k => k >= a && k < a + 10 && k <= max).map(k => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-cfg="nivel" data-v="${k}" title="${esc(NIVELES[k - 1].nombre)}">${k}</button>`).join('');
+      return `<details class="ctgrp" data-g="${gi}" ${abre ? 'open' : ''}><summary><b>${t}</b><small>Niveles ${a}–${a + 9} · ★ ${est}/30</small></summary><div class="seg ctniv">${celdas}</div></details>`;
+    }).join('')}</div>
     <div class="ctcaps">${CLASES.map(c => `<span><img src="${url(imgAve(s, c))}" alt=""><b>${esc(nombreAve(s, c))}</b> ${esc(C.AVES[c].hab)}</span>`).join('')}</div>
     ${est || tot ? `<div class="ldrecs"><b>🏆 Tus récords</b><span>Estrellas: <b>${est}/${NIVELES.length * 3}</b></span><span>Puntos: <b>${tot.toLocaleString('es-ES')}</b></span></div>` : ''}
     <div class="bar"><button class="btn on" data-ac="jugar">🪃 ${est || tot ? 'Jugar nivel ' + cfg.nivel : 'Nueva partida'}</button><button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
@@ -355,7 +375,7 @@ function bloque(b) {
   ctx.restore();
 }
 function enemigoDib(c) {
-  const p = c.cuerpo.position, r = c.r, da = 1 - c.vida / c.vida0, s = r * 4.3;
+  const p = c.cuerpo.position, r = c.r, da = 1 - c.vida / c.vida0, s = r * 3.87;
   const ang = Math.max(-.5, Math.min(.5, c.cuerpo.angle * .35));
   if (!sprite(imgEnemigo(enemigo()), p.x, p.y - r * .15, s, s, ang)) { ctx.fillStyle = '#8FD14F'; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.3); ctx.fill(); }
   if (da > .35) { ctx.save(); ctx.translate(p.x, p.y); ctx.strokeStyle = 'rgba(40,10,10,.75)'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(r * .1, -r * .8); ctx.lineTo(r * .35, -r * .35); ctx.lineTo(r * .15, r * .05); if (da > .7) { ctx.moveTo(-r * .5, -r * .5); ctx.lineTo(-r * .2, 0); ctx.lineTo(-r * .45, r * .4); } ctx.stroke(); ctx.restore(); }

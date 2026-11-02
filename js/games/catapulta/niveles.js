@@ -8,7 +8,7 @@ const fila = (m, xs, base) => xs.map(x => B(m, x, base, 40, 40));
 const pila = (m, x, n) => Array.from({ length: n }, (_, i) => B(m, x, S - i * 40, 40, 40));
 const casa = (x, w, h, mp, mt, base = S) => [B(mp, x - w / 2, base, 16, h), B(mp, x + w / 2, base, 16, h), B(mt, x, base - h, w + 16, 14)];
 
-export const NIVELES = [
+export const BASE = [
   { nombre: 'Primer asalto', aves: ['normal', 'normal', 'normal', 'normal'], est: [12000, 19000],
     bloques: [B('madera', 620, S, 16, 70), B('madera', 720, S, 16, 70), B('madera', 670, S - 70, 130, 14)],
     cerdos: [P(670, S), P(670, S - 84)] },
@@ -77,7 +77,53 @@ export const NIVELES = [
     cerdos: [P(640, S - 94), P(760, S - 94), P(620, S), P(780, S)] },
   { nombre: 'El dragón de hierro', aves: 'n d a a b b n', est: [26000, 38500], bloques: [...casa(590, 80, 80, 'hierro', 'piedra'), ...pila('hierro', 700, 3), ...casa(810, 90, 80, 'piedra', 'hierro'), ...casa(810, 60, 50, 'hielo', 'madera', S - 94)],
     cerdos: [P(590, S), P(700, S - 120), P(810, S), P(810, S - 94), P(880, S)] },
+  { nombre: 'Fortín de tres pisos', aves: 'n d a b a', est: [26000, 38000], bloques: [...casa(680, 100, 60, 'hierro', 'piedra'), ...casa(680, 80, 50, 'hielo', 'madera', S - 74), ...casa(680, 60, 50, 'madera', 'hielo', S - 138)],
+    cerdos: [P(680, S), P(680, S - 74), P(680, S - 138), P(840, S)] },
+  { nombre: 'Dos torres unidas', aves: 'n d a b', est: [25000, 36500], bloques: [...pila('piedra', 600, 4), ...pila('piedra', 780, 4), B('madera', 690, S - 160, 260, 14), ...pila('hierro', 690, 2)],
+    cerdos: [P(650, S - 174), P(730, S - 174), P(690, S - 80), P(540, S)] },
+  { nombre: 'Puente colgante', aves: 'n d a b', est: [30000, 44500], bloques: [...pila('madera', 560, 3), ...pila('madera', 840, 3), B('hielo', 700, S - 120, 320, 14), B('hierro', 660, S, 40, 40), B('hierro', 740, S, 40, 40)],
+    cerdos: [P(620, S - 134), P(700, S - 134), P(780, S - 134), P(700, S)] },
+  { nombre: 'Cámara acorazada', aves: 'n d a b a b', est: [26500, 38500], bloques: [...casa(700, 160, 80, 'hierro', 'hierro'), B('piedra', 700, S - 94, 40, 40), B('piedra', 700, S - 134, 40, 40)],
+    cerdos: [P(640, S), P(700, S), P(760, S), P(700, S - 174)] },
+  { nombre: 'Pirámide mixta', aves: 'n d a b', est: [21000, 31000], bloques: [...fila('piedra', [580, 620, 660, 700, 740], S), ...fila('hielo', [600, 640, 680, 720], S - 40), ...fila('madera', [620, 660, 700], S - 80), ...fila('hierro', [640, 680], S - 120), ...fila('piedra', [660], S - 160)],
+    cerdos: [P(660, S - 200), P(800, S), P(860, S)] },
+  { nombre: 'Los tres cerditos', aves: 'n d a b a b', est: [27000, 39000], bloques: [...casa(580, 70, 60, 'madera', 'madera'), ...casa(710, 70, 60, 'piedra', 'piedra'), ...casa(840, 60, 60, 'hierro', 'hierro')],
+    cerdos: [P(580, S), P(710, S), P(840, S), P(710, S - 74)] },
+  { nombre: 'Torre del homenaje', aves: 'n d a b', est: [24500, 36000], bloques: [...pila('piedra', 700, 2), ...casa(700, 90, 60, 'hierro', 'madera', S - 80), B('hielo', 700, S - 154, 40, 40), B('hielo', 700, S - 194, 40, 40)],
+    cerdos: [P(700, S - 80), P(700, S - 234), P(580, S), P(820, S)] },
+  { nombre: 'Cruz de hielo', aves: 'n d a b', est: [28000, 41000], bloques: [...pila('hielo', 700, 2), B('hielo', 700, S - 80, 220, 14), B('hielo', 700, S - 94, 40, 40), B('hielo', 700, S - 134, 40, 40)],
+    cerdos: [P(620, S - 94), P(780, S - 94), P(700, S - 174), P(600, S), P(800, S)] },
+  { nombre: 'Muros escalonados', aves: 'n d a b a', est: [25000, 36500], bloques: [B('hierro', 580, S, 24, 100), B('piedra', 650, S, 24, 130), B('madera', 720, S, 24, 160)],
+    cerdos: [P(615, S), P(685, S), P(790, S), P(850, S)] },
+  { nombre: 'Castillo doble', aves: 'n d a b a b', est: [26000, 38000], bloques: [...casa(600, 90, 80, 'piedra', 'madera'), ...casa(790, 90, 80, 'piedra', 'madera'), B('hierro', 695, S - 94, 100, 14)],
+    cerdos: [P(600, S), P(790, S), P(695, S - 108), P(695, S)] },
+  { nombre: 'Hielo y hierro', aves: 'n d a b', est: [24500, 35500], bloques: [B('hierro', 620, S, 40, 40), B('hielo', 620, S - 40, 40, 40), B('hierro', 620, S - 80, 40, 40), B('hielo', 700, S, 40, 40), B('hierro', 700, S - 40, 40, 40), B('hielo', 700, S - 80, 40, 40), B('hierro', 700, S - 120, 40, 40), B('hierro', 780, S, 40, 40), B('hielo', 780, S - 40, 40, 40), B('hierro', 780, S - 80, 40, 40)],
+    cerdos: [P(620, S - 120), P(700, S - 160), P(780, S - 120), P(860, S)] },
+  { nombre: 'Laberinto II', aves: 'n d a b a b', est: [26000, 38500], bloques: [B('madera', 560, S, 16, 70), B('hielo', 640, S, 16, 70), B('piedra', 720, S, 16, 70), B('hierro', 800, S, 16, 70), B('piedra', 880, S, 16, 70), B('madera', 600, S - 70, 104, 14), B('hielo', 680, S - 70, 104, 14), B('madera', 760, S - 70, 104, 14), B('hielo', 840, S - 70, 104, 14)],
+    cerdos: [P(600, S), P(680, S), P(760, S), P(840, S)] },
+  { nombre: 'Fortaleza flotante', aves: 'n d a b a b', est: [26500, 39000], bloques: [B('hierro', 620, S, 24, 120), B('hierro', 780, S, 24, 120), B('piedra', 700, S - 120, 220, 16), ...casa(700, 100, 50, 'madera', 'hielo', S - 136)],
+    cerdos: [P(700, S - 136), P(700, S), P(850, S), P(550, S)] },
+  { nombre: 'Pesadilla de piedra', aves: 'n d a b', est: [27500, 40500], bloques: [...pila('piedra', 620, 3), ...pila('piedra', 700, 5), ...pila('piedra', 780, 3)],
+    cerdos: [P(620, S - 120), P(780, S - 120), P(700, S - 200), P(560, S), P(860, S)] },
+  { nombre: 'Telaraña', aves: 'n d a b a', est: [26000, 38000], bloques: [...pila('madera', 600, 3), ...pila('hielo', 700, 3), ...pila('piedra', 800, 3), B('hierro', 650, S - 120, 96, 14), B('hierro', 750, S - 120, 96, 14), B('madera', 650, S - 134, 40, 40), B('madera', 750, S - 134, 40, 40)],
+    cerdos: [P(650, S - 174), P(750, S - 174), P(650, S), P(750, S)] },
+  { nombre: 'Torre de Babel', aves: 'n d a b', est: [21500, 31000], bloques: [B('piedra', 700, S, 160, 30), B('hielo', 700, S - 30, 130, 30), B('madera', 700, S - 60, 100, 30), B('hierro', 700, S - 90, 70, 30), B('piedra', 700, S - 120, 40, 30)],
+    cerdos: [P(700, S - 150), P(560, S), P(840, S)] },
+  { nombre: 'Corral de hierro', aves: 'n d a b a', est: [25000, 36500], bloques: [B('hierro', 600, S, 20, 100), B('hierro', 700, S, 20, 100), B('hierro', 800, S, 20, 100), B('madera', 700, S - 100, 220, 14)],
+    cerdos: [P(650, S), P(750, S), P(650, S - 114), P(750, S - 114)] },
+  { nombre: 'Gran muralla', aves: 'n d a b a b', est: [29000, 43000], bloques: [B('piedra', 560, S, 24, 120), B('hierro', 640, S, 24, 120), B('piedra', 720, S, 24, 120), B('hielo', 800, S, 24, 120), B('madera', 680, S - 120, 260, 14)],
+    cerdos: [P(600, S), P(680, S), P(760, S), P(600, S - 134), P(760, S - 134)] },
+  { nombre: 'Fortaleza final', aves: 'n d a b a b', est: [29500, 43000], bloques: [...casa(600, 90, 80, 'hierro', 'piedra'), ...casa(790, 90, 80, 'hierro', 'piedra'), ...pila('piedra', 695, 3), B('hielo', 695, S - 120, 200, 14)],
+    cerdos: [P(600, S), P(790, S), P(640, S - 134), P(750, S - 134), P(695, S)] },
+  { nombre: 'El Rey Cerdo', aves: 'n d a b a b n', est: [31000, 45500], bloques: [...casa(570, 70, 70, 'piedra', 'hierro'), ...casa(700, 100, 70, 'hierro', 'piedra'), ...casa(700, 70, 60, 'hielo', 'madera', S - 84), ...casa(840, 60, 70, 'madera', 'piedra')],
+    cerdos: [P(570, S), P(700, S), P(700, S - 84), P(700, S - 158), P(840, S)] },
   ].map(n => ({ ...n, aves: n.aves.split(' ').map(c => ({ n: 'normal', d: 'divisible', a: 'acelerador', b: 'bomba' })[c]) })),
 ];
+
+// Orden de juego: de más fácil a más difícil (índices de BASE, que conserva el orden en que se fueron creando).
+export const ORDEN = [6,  20,  1,  8,  37,  16,  0,  5,  12,  7,  14,  10,  23,  3,  32,  36,  2,  22,  30,  17,  45,  9,  25,  15,  28,  38,  41,  4,  13,  26,  39,  21,  27,  43,  11,  44,  35,  34,  46,  18,  31,  47,  33,  24,  40,  42,  49,  48,  19,  29];
+export const NIVELES = ORDEN.map(i => BASE[i]);
+// Nivel nuevo que ocupa ahora el sitio que tenía cada nivel en las versiones anteriores a 3.45.0 (solo había 30 pantallas, en el orden de BASE).
+export const NUEVO_DE_ANTIGUO = n => ORDEN.indexOf(n - 1) + 1;
 
 export const validarNivel = n => Number.isInteger(n) && n >= 1 && n <= NIVELES.length;
