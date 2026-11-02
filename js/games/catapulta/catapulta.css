@@ -2,7 +2,10 @@
 .cthud{display:flex;gap:6px;margin:4px 0 6px}
 .cthud span{flex:1;min-width:0;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:3px 6px;text-align:center;display:flex;flex-direction:column}
 .cthud small{font-size:10.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
-.cthud b{font:800 18px 'Baloo 2',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.cthud span:not(:last-child){flex:0 0 auto;padding:3px 7px}
+.cthud span:last-child{flex:1 1 0;min-width:0}
+.cthud small{font-size:9.5px!important}
+.cthud b{font:800 16px 'Baloo 2',system-ui,sans-serif;font-variant-numeric:tabular-nums}
 .ctcola{display:flex;gap:4px;align-items:center;justify-content:center;min-height:27px}
 .ctzona{position:relative;left:50%;transform:translateX(-50%);width:min(calc(100vw - 8px),1000px);margin:0;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(10,15,50,.4)}
 .ctzona canvas{display:block;width:100%}
@@ -23,9 +26,10 @@
 .ctcaps img{width:34px;height:34px;object-fit:contain;flex:none}
 .ldrecs{display:flex;flex-wrap:wrap;gap:6px 12px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin:8px 0;font-size:13px}
 .ldrecs>b{width:100%}
-.ctcola img{width:24px;height:24px;object-fit:contain}
+.ctcola{flex-wrap:nowrap;gap:2px}
+.ctcola img{flex:1 1 0;min-width:0;max-width:26px;aspect-ratio:1;object-fit:contain}
 .ctenem{display:flex;align-items:center;justify-content:center;gap:4px;min-height:27px}
-.ctenem img{width:24px;height:24px;object-fit:contain}
+.ctenem img{width:18px;height:18px;object-fit:contain}
 /* círculo táctil del menú flotante */
 .ctpad{width:116px;height:116px;flex:none;touch-action:none;cursor:crosshair;outline-offset:3px}
 .ctpad canvas{display:block;width:100%;height:100%}

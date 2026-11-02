@@ -61,6 +61,7 @@ export const JUEGOS = [
 export const GRUPOS = [
   { id: 'solitarios', nombre: 'Solitarios', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Klondike (siempre con solución y modo Vegas), Spider (104 cartas, de 1 a 4 palos) o Carta Blanca (FreeCell).', juegos: ['klondike', 'spider', 'freecell'] },
   { id: 'parchis-oca', nombre: 'Partxis & Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Partxis y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
+  { id: 'serpiente-vuelaalto', nombre: 'Serpiente & Vuela Alto', icono: '🐍', color: '#4E7CF6', categoria: 'arcade', descripcion: 'Serpiente (4 modos) o Vuela Alto (mantén pulsado para subir).', juegos: ['serpiente', 'vuelaalto'] },
   { id: 'ajedrez-damas', nombre: 'Ajedrez & Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
   { id: 'buscaminas-klotski', nombre: 'Bombardeo & Deslizadas', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Bombardeo (sin adivinar, reto del día) o Deslizadas (bloques deslizantes y números).', juegos: ['buscaminas', 'klotski'] },
   { id: 'tresenraya-conecta4', nombre: 'Cuatro en Línea &\nTres en Raya', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: 'Dos duelos de líneas: 3 en raya y Cuatro en Línea, contra la CPU.', juegos: ['tresenraya', 'conecta4'] },

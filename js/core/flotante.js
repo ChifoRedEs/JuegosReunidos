@@ -11,7 +11,7 @@ export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot
   // Con `centro: true` el menú lleva en medio un hueco (panel.querySelector('.flcentro')) para un control propio del juego (p. ej. el círculo táctil de Catapulta);
   // los botones con `lado: 'izq'` o `lado: 'der'` se colocan a cada lado del hueco.
   panel.innerHTML = `<div class="flasa" title="Arrastra para mover los controles"><span aria-hidden="true"></span><small>${titulo}</small></div>` + (centro
-    ? `<div class="flcuerpo"><div class="flcol">${botones.filter(b => b.lado !== 'der').map(btn).join('')}</div><div class="flcentro"></div><div class="flcol">${botones.filter(b => b.lado === 'der').map(btn).join('')}</div></div>`
+    ? `<div class="flcuerpo${botones.some(b => b.lado !== 'der') ? '' : ' fl1'}">${botones.some(b => b.lado !== 'der') ? `<div class="flcol">${botones.filter(b => b.lado !== 'der').map(btn).join('')}</div>` : ''}<div class="flcentro"></div><div class="flcol">${botones.filter(b => b.lado === 'der').map(btn).join('')}</div></div>`
     : `<div class="flbtns" style="--nb:${botones.length}">${botones.map(btn).join('')}</div>`);
   document.body.append(panel);
   const hueco = document.createElement('div'); hueco.className = 'flhueco'; ancla.after(hueco);

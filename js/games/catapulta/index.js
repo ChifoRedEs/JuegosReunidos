@@ -101,7 +101,7 @@ function jugar(n) {
   cv = $('#ctCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3); ajustar();
   $('#ctZona').addEventListener('pointerdown', () => { if (fase === 'vuelo') habilidad(); });
   fl = crearFlotante(api, { ancla: $('#ctZona'), raiz: root, centro: true, clave: 'flotCt',
-    botones: [{ id: 'hab', texto: '✨ Habilidad', lado: 'izq' }, { id: 'lanzar', texto: '🚀 Lanzar', lado: 'der' }],
+    botones: [{ id: 'hab', texto: '✨ Habilidad', lado: 'der' }, { id: 'lanzar', texto: '🚀 Lanzar', lado: 'der' }],
     alClic: id => { if (id === 'lanzar') lanzar(); else if (id === 'hab') habilidad(); } });
   fl.marcar('lanzar', true);
   construirPad();

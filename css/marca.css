@@ -140,6 +140,7 @@ button.ficha{display:flex}
 .flhueco{width:100%}
 /* variante con círculo táctil en medio (Catapulta) */
 .flcuerpo{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center}
+.flcuerpo.fl1{grid-template-columns:auto minmax(0,1fr)}
 .flcol{display:flex;flex-direction:column;gap:6px}
 .flcol .btn{padding:10px 3px;font-size:13.5px;line-height:1.15;min-height:48px;white-space:normal;touch-action:manipulation}
 .flcol .btn.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
