@@ -19,7 +19,7 @@ export const AVES = {
   bomba: { r: 24, dens: .0033, mult: 1.25, hab: 'Toca en el aire (o al chocar): explota.' },
 };
 export const DANO_ACEL = 3.1;                                 // multiplicador de daño del acelerador una vez activada la habilidad
-export const CERDO = { r: 27, vida: 45, dens: .0013, pts: 5000 };
+export const CERDO = { r: 19, vida: 40, dens: .002, pts: 5000 };
 export const PTS_AVE = 10000;
 
 export function crear(M, n) {

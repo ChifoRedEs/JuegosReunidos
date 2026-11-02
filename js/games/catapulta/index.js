@@ -125,7 +125,7 @@ function siguienteAve() {
 /* ---------- el círculo táctil ---------- */
 function construirPad() {
   const c = fl.centro;
-  c.innerHTML = `<div class="ctpad" id="ctPad" tabindex="0" role="application" aria-label="Cuarto de círculo de puntería: dirección y fuerza del disparo. Flechas arriba y abajo cambian el ángulo; izquierda y derecha, la fuerza."><canvas></canvas></div><small class="ctlec" id="ctLec"></small>`;
+  c.innerHTML = `<div class="ctpad" id="ctPad" tabindex="0" role="application" aria-label="Cuarto de círculo de puntería: dirección y fuerza del disparo. Flechas arriba y abajo cambian el ángulo; izquierda y derecha, la fuerza."><canvas></canvas></div>`;
   const pad = $('#ctPad'); padCv = pad.querySelector('canvas');
   let id = null;
   const punto = e => {                                          // el origen del cuarto de círculo está en su esquina inferior izquierda
@@ -140,10 +140,10 @@ function construirPad() {
   pad.addEventListener('pointerup', fin); pad.addEventListener('pointercancel', fin);
   dibujarPad(); pintarLectura();
 }
-function pintarLectura() { const l = $('#ctLec'); if (l) l.textContent = `${mira.ang}° · fuerza ${Math.round(mira.fz * 100)}%`; }
+function pintarLectura() { /* la lectura se dibuja dentro del propio círculo */ }
 function dibujarPad() {
   const c = padCv; if (!c || !c.isConnected) return;
-  const s = c.clientWidth || 150, d = Math.min(window.devicePixelRatio || 1, 3); const px = Math.round(s * d); if (c.width !== px || c.height !== px) { c.width = px; c.height = px; }
+  const s = c.clientWidth || 116, d = Math.min(window.devicePixelRatio || 1, 3); const px = Math.round(s * d); if (c.width !== px || c.height !== px) { c.width = px; c.height = px; }
   const g = c.getContext('2d'), cs = getComputedStyle(c), col = n => (cs.getPropertyValue(n) || '').trim();
   const purple = col('--purple') || '#7A4DFF', blue = col('--blue') || '#2F6BFF', line = col('--line') || '#C9D2F0', card = col('--card') || '#fff', mut = col('--mut') || '#6B7490';
   g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, s, s);
@@ -156,6 +156,7 @@ function dibujarPad() {
   for (const a of [15, 30, 45, 60, 75]) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a * RAD) * R, cy - Math.sin(a * RAD) * R); g.stroke(); }
   g.setLineDash([]); g.fillStyle = mut; g.font = '700 10px Nunito, sans-serif'; g.textAlign = 'center';
   for (const a of [0, 30, 60, 90]) { const rr = R - (a === 0 ? 13 : a === 90 ? 2 : 14); g.fillText(a + '°', Math.min(s - 12, cx + Math.cos(a * RAD) * rr + (a === 90 ? 14 : 0)), Math.max(11, cy - Math.sin(a * RAD) * rr + (a === 0 ? -4 : a === 90 ? 10 : 4))); }
+  g.fillStyle = mut; g.font = '800 11px Nunito, sans-serif'; g.textAlign = 'right'; g.fillText(mira.ang + '°', s - 3, 12); g.fillText(Math.round(mira.fz * 100) + '%', s - 3, 25); g.textAlign = 'center';
   const a = mira.ang * RAD, kx = cx + Math.cos(a) * R * mira.fz, ky = cy - Math.sin(a) * R * mira.fz;
   const gr = g.createLinearGradient(cx, cy, kx, ky); gr.addColorStop(0, purple); gr.addColorStop(1, blue);
   g.strokeStyle = gr; g.lineWidth = 6; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(kx, ky); g.stroke();

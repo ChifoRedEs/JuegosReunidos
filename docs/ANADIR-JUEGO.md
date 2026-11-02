@@ -144,3 +144,5 @@ En un grupo de `api.aspecto([...])`: `tt: true` → el grupo entra en el despleg
 - **Nuevo grupo de Apariencia con miniaturas cuadradas**: `forma: 'cuadrada'` (CSS en `catapulta.css`).
 - Los escenarios nuevos se ofrecen también en Guerra de Orugas mediante `ESCENARIOS_GUERRA` (Quantix mantiene los 8 originales).
 
+
+Catapulta (3.42.0): `niveles.js` tiene 20 pantallas; las nuevas se escriben con los ayudantes `fila`, `pila` y `casa` y los pájaros como letras (`n d a b`). Para calibrar una pantalla: `node tests/catapulta.mjs` (estabilidad) y un solucionador voraz que simule tiros y fije `aves` y `est` (≈60 % y ≈88 % del óptimo con pájaros sobrantes). Los cerdos miden r = 19 (`P()` y `CERDO` en `motor.js`).
