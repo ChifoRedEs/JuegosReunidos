@@ -143,16 +143,16 @@ function armar() {
         <button class="btn wmarma" id="wmArma" data-ac="armas" aria-label="Elegir arma"></button>
         <button class="btn wmmini" id="wmTemp" data-ac="temp" aria-label="Tiempo de la mecha" hidden></button>
         <button class="btn wmmini" data-ac="centrar" aria-label="Centrar en mi gusano">🎯</button>
+        <button class="btn wmpasar" data-ac="pasar">⏭️ Pasar turno</button>
       </div>
       <div class="wmmandos">
         <div class="wmpad">
-          <button class="btn wmb" data-hold="izq" aria-label="Izquierda">◀</button><button class="btn wmb" data-hold="der" aria-label="Derecha">▶</button>
+          <div class="btn wmdesl" id="wmDesl" role="slider" aria-label="Andar: desliza el dedo a la izquierda o a la derecha sin soltarlo"><span id="wmDI">◀</span><span id="wmDD">▶</span></div>
           <button class="btn wmb" data-ac="salto" aria-label="Saltar hacia delante">⤴️</button><button class="btn wmb" data-ac="alto" aria-label="Saltar hacia arriba">⤒</button>
         </div>
         <div class="flotante flfijo wmdisp"><div class="flcuerpo fl2">
           <div class="flcol">
             <button class="wmfuego" id="wmFuego" data-hold="fuego" aria-label="Disparar"><i id="wmPot"></i><span id="wmFTxt">FUEGO</span></button>
-            <button class="btn wmpasar" data-ac="pasar">⏭️ Pasar turno</button>
           </div>
           <div class="flcentro"><div class="ctpad wmq" id="wmQ" tabindex="0" role="application" aria-label="Ángulo de puntería: arriba y abajo cambian el ángulo"><canvas></canvas></div></div>
         </div></div>
@@ -165,7 +165,7 @@ function armar() {
   zona.addEventListener('wheel', e => { e.preventDefault(); zoomPor(e.deltaY > 0 ? 1.15 : 1 / 1.15); }, { passive: false });
   const holdIni = e => { const b = e.target.closest('[data-hold]'); if (!b || !root || !root.contains(b)) return; e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch { /* nada */ } hold(b.dataset.hold, true); };
   const holdFin = e => { const b = e.target.closest('[data-hold]'); if (b) hold(b.dataset.hold, false); };
-  construirQ();
+  construirQ(); construirDesl();
   const panel = $('#wmPanel'); panel.addEventListener('pointerdown', holdIni); panel.addEventListener('pointerup', holdFin); panel.addEventListener('pointercancel', holdFin); panel.addEventListener('lostpointercapture', holdFin);
   panel.addEventListener('contextmenu', e => e.preventDefault());
 }
@@ -601,4 +601,18 @@ function dibujarQ() {
   g.beginPath(); g.arc(cx, cy, 3.5, 0, 6.2832); g.fillStyle = purple; g.fill();
   g.beginPath(); g.arc(kx, ky, 8, 0, 6.2832); g.fillStyle = gr; g.fill(); g.lineWidth = 2; g.strokeStyle = '#fff'; g.stroke();
   if (cuerda) { g.fillStyle = mut; g.font = '800 9px Nunito, sans-serif'; g.fillText('cuerda', cx, cy + R * .45); }
+}
+
+/* ---------- andar deslizando: el dedo a la izquierda o a la derecha del centro de la tira, sin tener que soltarlo ---------- */
+function construirDesl() {
+  const d = $('#wmDesl'); if (!d) return; let id = null;
+  const poner = e => {
+    const r = d.getBoundingClientRect(), x = (e.clientX - (r.left + r.width / 2)) / (r.width / 2), li = x < -.14, ld = x > .14;
+    hold('izq', li); hold('der', ld); $('#wmDI').classList.toggle('on', li); $('#wmDD').classList.toggle('on', ld);
+  };
+  const suelta = () => { id = null; hold('izq', false); hold('der', false); $('#wmDI').classList.remove('on'); $('#wmDD').classList.remove('on'); };
+  d.addEventListener('pointerdown', e => { id = e.pointerId; try { d.setPointerCapture(id); } catch { /* nada */ } e.preventDefault(); poner(e); });
+  d.addEventListener('pointermove', e => { if (e.pointerId === id) poner(e); });
+  d.addEventListener('pointerup', e => { if (e.pointerId === id) suelta(); }); d.addEventListener('pointercancel', e => { if (e.pointerId === id) suelta(); });
+  d.addEventListener('lostpointercapture', () => { if (id !== null) suelta(); });
 }
