@@ -48,13 +48,14 @@ for (let n = 1; n <= NIVELES.length; n++) {
 { const m = simular(1, [[20, .95]]); assert.ok(m.puntos > 0, 'el primer nivel no puntúa con un tiro razonable'); }
 // 4) Habilidades
 { const m = C.crear(M, 2); for (let i = 0; i < 100; i++) C.paso(m); m.cola = ['divisible']; C.lanzar(m, 9, -6); for (let i = 0; i < 10; i++) C.paso(m);
-  assert.ok(C.habilidad(m)); assert.equal(m.vuelan.length, 3); }
-{ const m = C.crear(M, 2); m.cola = ['acelerador']; const o = C.lanzar(m, 9, -6); for (let i = 0; i < 10; i++) C.paso(m); const v0 = o.cuerpo.speed; C.habilidad(m); assert.ok(o.cuerpo.speed > v0 * 1.5); }
+  assert.ok(C.habilidad(m)); assert.equal(m.vuelan.length, 3); assert.deepEqual(m.vuelan.map(o => o.pieza).sort(), [0, 1, 2], 'cada pieza lleva su imagen'); }
+{ const m = C.crear(M, 2); m.cola = ['acelerador']; const o = C.lanzar(m, 9, -6); for (let i = 0; i < 10; i++) C.paso(m); const v0 = o.cuerpo.speed; C.habilidad(m); assert.ok(o.cuerpo.speed > v0 * 1.5); assert.ok(o.mult >= 2 * C.AVES.normal.mult, 'el acelerador activado hace mucho más daño'); }
 { const m = C.crear(M, 3); for (let i = 0; i < 100; i++) C.paso(m); m.cola = ['bomba']; const o = C.lanzar(m, 9, -6); for (let i = 0; i < 5; i++) C.paso(m); C.habilidad(m); C.paso(m); assert.equal(m.vuelan.length, 0); }
 // 4b) El hierro es el material más duro y todos los avatares tienen sus imágenes
 { const V = C.MATERIALES; assert.ok(V.hierro.vida > V.piedra.vida && V.piedra.vida > V.madera.vida && V.madera.vida > V.hielo.vida); }
 { const { existsSync } = await import('node:fs'); const { AVATARES, imgAve, imgEnemigo, CLASES } = await import('../js/games/catapulta/avatares.js');
-  for (const id of Object.keys(AVATARES)) { assert.ok(existsSync(new URL(`../img/catapulta/${imgEnemigo(id)}.webp`, import.meta.url)), imgEnemigo(id)); assert.ok(existsSync(new URL(`../img/catapulta/mosaico-${id}.webp`, import.meta.url)));
+  const { imgPieza } = await import('../js/games/catapulta/avatares.js');
+  for (const id of Object.keys(AVATARES)) { for (let i = 0; i < 3; i++) assert.ok(existsSync(new URL(`../img/catapulta/${imgPieza(id, i)}.webp`, import.meta.url)), imgPieza(id, i)); assert.ok(existsSync(new URL(`../img/catapulta/${imgEnemigo(id)}.webp`, import.meta.url)), imgEnemigo(id)); assert.ok(existsSync(new URL(`../img/catapulta/mosaico-${id}.webp`, import.meta.url)));
     for (const c of CLASES) assert.ok(existsSync(new URL(`../img/catapulta/${imgAve(id, c)}.webp`, import.meta.url)), imgAve(id, c)); }
   for (const f of ['mat-madera', 'mat-piedra', 'mat-hielo', 'mat-hierro', 'fx-explosion', 'fx-humo', 'fx-impacto', 'fx-escombros-madera', 'fx-escombros-piedra', 'fx-escombros-hielo', 'lanzador-base', 'lanzador-brazo']) assert.ok(existsSync(new URL(`../img/catapulta/${f}.webp`, import.meta.url)), f); }
 // 5) Estrellas y puntuación

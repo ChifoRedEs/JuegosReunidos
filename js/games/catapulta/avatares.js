@@ -15,3 +15,4 @@ export const valido = id => (AVATARES[id] ? id : 'pajaros');
 export const imgAve = (set, clase) => `av-${valido(set)}-${CLASES.indexOf(clase) + 1}`;
 export const imgEnemigo = set => `en-${valido(set)}`;
 export const nombreAve = (set, clase) => AVATARES[valido(set)].aves[CLASES.indexOf(clase)];
+export const imgPieza = (set, i) => `av-${valido(set)}-2-div-${i + 1}`;      // las 3 piezas del proyectil divisible al activar la habilidad

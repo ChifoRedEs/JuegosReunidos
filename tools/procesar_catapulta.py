@@ -116,6 +116,11 @@ def main(entrada):
         t = quitar_magenta(im)
         if n.startswith('fx-escombros'): info['trozos'][n[3:]] = trozos(t, n); continue
         if n.startswith(('en-piratas', 'en-acuaticos')): t = quitar_aro(t, n.startswith('en-acuaticos'))
+        if n == 'av-objetos-2': t = quitar_aro(t)
+        if n.endswith('-div'):                                   # hoja con las 3 piezas del proyectil divisible: se corta en tercios → <nombre>-1…3
+            w = t.width // 3
+            for i in range(3): guardar(recortar(t.crop((i * w, 0, (i + 1) * w, t.height)), True), '%s-%d' % (n, i + 1), 256)
+            continue
         if n.startswith('lanzador'):
             t = recortar(t, False); guardar(t, n, 384); info['tam'][n] = [t.width, t.height]; continue
         t = recortar(t, True)

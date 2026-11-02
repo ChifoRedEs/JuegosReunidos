@@ -3,7 +3,7 @@
 import { $, esc } from '../../core/dom.js';
 import * as C from './motor.js';
 import { NIVELES, validarNivel } from './niveles.js';
-import { AVATARES, IDS, CLASES, valido, imgAve, imgEnemigo, nombreAve } from './avatares.js';
+import { AVATARES, IDS, CLASES, valido, imgAve, imgPieza, imgEnemigo, nombreAve } from './avatares.js';
 import { img, cargar, url, TROZOS } from './imagenes.js';
 import { grupoPantalla, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
@@ -27,7 +27,7 @@ const prog = () => { const p = api.pref('prog', []); return Array.isArray(p) ? p
 const nivelMax = () => { const p = prog(); let n = 1; while (n < NIVELES.length && p[n - 1] && p[n - 1].est > 0) n++; return n; };
 const avatar = () => valido(asp && asp.valores.avatar);
 const enemigo = () => { const e = asp && asp.valores.enemigo; return e && e !== 'igual' ? valido(e) : avatar(); };
-const nombresImg = () => ['mat-madera', 'mat-piedra', 'mat-hielo', 'mat-hierro', 'fx-explosion', 'fx-humo', 'fx-impacto', 'fx-escombros-madera', 'fx-escombros-piedra', 'fx-escombros-hielo', 'lanzador-base', 'lanzador-brazo', imgEnemigo(enemigo()), ...CLASES.map(c => imgAve(avatar(), c))];
+const nombresImg = () => ['mat-madera', 'mat-piedra', 'mat-hielo', 'mat-hierro', 'fx-explosion', 'fx-humo', 'fx-impacto', 'fx-escombros-madera', 'fx-escombros-piedra', 'fx-escombros-hielo', 'lanzador-base', 'lanzador-brazo', imgEnemigo(enemigo()), ...CLASES.map(c => imgAve(avatar(), c)), ...[0, 1, 2].map(i => imgPieza(avatar(), i))];
 const refrescar = () => { patrones.clear(); hudAnt = ''; if (cv && m) { dibujar(); pintarHud(); } };
 
 /* ---------- ciclo de vida ---------- */
@@ -73,7 +73,7 @@ function menu() {
   cancelAnimationFrame(raf); raf = 0; fase = 'menu'; cv = null; quitarFl(); limpiarMundo(); m = null;
   const p = prog(), max = nivelMax(); if (cfg.nivel > max || cfg.nivel < 1) cfg.nivel = max;
   const tot = p.reduce((s, x) => s + x.pts, 0), est = p.reduce((s, x) => s + x.est, 0), s = avatar();
-  root.innerHTML = `<p class="note">Aprieta ✨ y 🚀 del menú flotante: mueve el punto del círculo para elegir la dirección y la fuerza, y lanza. Derriba las estructuras y vence a los enemigos con las estrellas que puedas.</p>
+  root.innerHTML = `<p class="note">Aprieta ✨ y 🚀 del menú flotante: mueve el punto del cuarto de círculo para elegir la dirección y la fuerza, y lanza. Derriba las estructuras y vence a los enemigos con las estrellas que puedas.</p>
     <div class="bar"><span class="lbl">Empezar en</span><div class="seg ctniv">${NIVELES.map((n, i) => { const k = i + 1; return `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-cfg="nivel" data-v="${k}" title="${esc(n.nombre)}" ${k > max ? 'disabled title="Llega a este nivel para desbloquearlo"' : ''}>${k > max ? '🔒' : k}</button>`; }).join('')}</div></div>
     <div class="ctcaps">${CLASES.map(c => `<span><img src="${url(imgAve(s, c))}" alt=""><b>${esc(nombreAve(s, c))}</b> ${esc(C.AVES[c].hab)}</span>`).join('')}</div>
     ${est || tot ? `<div class="ldrecs"><b>🏆 Tus récords</b><span>Estrellas: <b>${est}/${NIVELES.length * 3}</b></span><span>Puntos: <b>${tot.toLocaleString('es-ES')}</b></span></div>` : ''}
@@ -81,7 +81,7 @@ function menu() {
 }
 function reglas() {
   const s = avatar();
-  api.modal('Catapulta', `<ul><li>Mueve el punto del <b>círculo táctil</b> del menú flotante: hacia dónde lo muevas es la dirección del disparo y cuanto más lejos del centro, más fuerza. Con teclado: ↑ ↓ cambian el ángulo y ← → la fuerza.</li>
+  api.modal('Catapulta', `<ul><li>Mueve el punto del <b>cuarto de círculo</b> del menú flotante (de 0° a 90°): hacia dónde lo muevas es la dirección del disparo y cuanto más lejos de la esquina, más fuerza. Con teclado: ↑ ↓ cambian el ángulo y ← → la fuerza.</li>
     <li>Pulsa <b>🚀 Lanzar</b>. La línea de puntos muestra cómo empieza la trayectoria.</li>
     <li><b>✨ Habilidad</b> (o toca el campo) en pleno vuelo:</li>
     <li style="list-style:none"><ul>${CLASES.map(c => `<li><b>${esc(nombreAve(s, c))}</b>: ${esc(C.AVES[c].hab)}</li>`).join('')}</ul></li>
@@ -125,11 +125,11 @@ function siguienteAve() {
 /* ---------- el círculo táctil ---------- */
 function construirPad() {
   const c = fl.centro;
-  c.innerHTML = `<div class="ctpad" id="ctPad" tabindex="0" role="application" aria-label="Círculo de puntería: dirección y fuerza del disparo. Flechas arriba y abajo cambian el ángulo; izquierda y derecha, la fuerza."><canvas></canvas></div><small class="ctlec" id="ctLec"></small>`;
+  c.innerHTML = `<div class="ctpad" id="ctPad" tabindex="0" role="application" aria-label="Cuarto de círculo de puntería: dirección y fuerza del disparo. Flechas arriba y abajo cambian el ángulo; izquierda y derecha, la fuerza."><canvas></canvas></div><small class="ctlec" id="ctLec"></small>`;
   const pad = $('#ctPad'); padCv = pad.querySelector('canvas');
   let id = null;
-  const punto = e => {
-    const r = padCv.getBoundingClientRect(), R = r.width / 2 - 6, dx = e.clientX - (r.left + r.width / 2), dy = (r.top + r.height / 2) - e.clientY;
+  const punto = e => {                                          // el origen del cuarto de círculo está en su esquina inferior izquierda
+    const r = padCv.getBoundingClientRect(), R = r.width - 14, dx = e.clientX - (r.left + 7), dy = (r.bottom - 7) - e.clientY;
     let ang = Math.atan2(dy, dx) / RAD; const d = Math.hypot(dx, dy);
     if (ang > 90 || ang < -90) ang = ang > 90 ? 90 : 0; else if (ang < 0) ang = 0;       // solo se dispara hacia la derecha y hacia arriba
     mira = { ang: Math.round(ang), fz: Math.min(1, Math.max(.05, d / R)) }; dibujarPad(); pintarLectura();
@@ -143,23 +143,24 @@ function construirPad() {
 function pintarLectura() { const l = $('#ctLec'); if (l) l.textContent = `${mira.ang}° · fuerza ${Math.round(mira.fz * 100)}%`; }
 function dibujarPad() {
   const c = padCv; if (!c || !c.isConnected) return;
-  const s = c.clientWidth || 128, d = Math.min(window.devicePixelRatio || 1, 3); if (c.width !== Math.round(s * d)) { c.width = c.height = Math.round(s * d); }
+  const s = c.clientWidth || 150, d = Math.min(window.devicePixelRatio || 1, 3); const px = Math.round(s * d); if (c.width !== px || c.height !== px) { c.width = px; c.height = px; }
   const g = c.getContext('2d'), cs = getComputedStyle(c), col = n => (cs.getPropertyValue(n) || '').trim();
   const purple = col('--purple') || '#7A4DFF', blue = col('--blue') || '#2F6BFF', line = col('--line') || '#C9D2F0', card = col('--card') || '#fff', mut = col('--mut') || '#6B7490';
   g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, s, s);
-  const cx = s / 2, cy = s / 2, R = s / 2 - 6;
-  g.beginPath(); g.arc(cx, cy, R, 0, 6.2832); g.fillStyle = card; g.fill(); g.lineWidth = 3; g.strokeStyle = line; g.stroke();
-  // zona útil: de 0° a 90° (arriba a la derecha)
-  g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, -Math.PI / 2, 0); g.closePath(); g.fillStyle = 'rgba(122,77,255,.13)'; g.fill();
+  const cx = 7, cy = s - 7, R = s - 14;                          // cuarto de círculo: de 0° (derecha) a 90° (arriba)
+  g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, -Math.PI / 2, 0); g.closePath(); g.fillStyle = card; g.fill();
+  const rel = g.createRadialGradient(cx, cy, 0, cx, cy, R); rel.addColorStop(0, 'rgba(122,77,255,.04)'); rel.addColorStop(1, 'rgba(122,77,255,.2)'); g.fillStyle = rel; g.fill();
+  g.lineWidth = 3; g.strokeStyle = line; g.stroke();
   g.strokeStyle = line; g.lineWidth = 1.5; g.setLineDash([3, 4]);
-  for (const f of [1 / 3, 2 / 3]) { g.beginPath(); g.arc(cx, cy, R * f, 0, 6.2832); g.stroke(); }
-  g.setLineDash([]); g.beginPath(); g.moveTo(cx - R, cy); g.lineTo(cx + R, cy); g.moveTo(cx, cy - R); g.lineTo(cx, cy + R); g.stroke();
-  g.fillStyle = mut; g.font = '700 9px Nunito, sans-serif'; g.textAlign = 'center'; g.fillText('0°', cx + R - 9, cy - 4); g.fillText('90°', cx + 12, cy - R + 11);
+  for (const f of [1 / 3, 2 / 3]) { g.beginPath(); g.arc(cx, cy, R * f, -Math.PI / 2, 0); g.stroke(); }
+  for (const a of [15, 30, 45, 60, 75]) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a * RAD) * R, cy - Math.sin(a * RAD) * R); g.stroke(); }
+  g.setLineDash([]); g.fillStyle = mut; g.font = '700 10px Nunito, sans-serif'; g.textAlign = 'center';
+  for (const a of [0, 30, 60, 90]) { const rr = R - (a === 0 ? 13 : a === 90 ? 2 : 14); g.fillText(a + '°', Math.min(s - 12, cx + Math.cos(a * RAD) * rr + (a === 90 ? 14 : 0)), Math.max(11, cy - Math.sin(a * RAD) * rr + (a === 0 ? -4 : a === 90 ? 10 : 4))); }
   const a = mira.ang * RAD, kx = cx + Math.cos(a) * R * mira.fz, ky = cy - Math.sin(a) * R * mira.fz;
   const gr = g.createLinearGradient(cx, cy, kx, ky); gr.addColorStop(0, purple); gr.addColorStop(1, blue);
-  g.strokeStyle = gr; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(kx, ky); g.stroke();
-  g.beginPath(); g.arc(cx, cy, 4, 0, 6.2832); g.fillStyle = purple; g.fill();
-  g.beginPath(); g.arc(kx, ky, 11, 0, 6.2832); g.fillStyle = gr; g.fill(); g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke();
+  g.strokeStyle = gr; g.lineWidth = 6; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(kx, ky); g.stroke();
+  g.beginPath(); g.arc(cx, cy, 5, 0, 6.2832); g.fillStyle = purple; g.fill();
+  g.beginPath(); g.arc(kx, ky, 13, 0, 6.2832); g.fillStyle = gr; g.fill(); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke();
 }
 function teclado(e) {
   if (!m || !cv || document.querySelector('.modal,.hoja') || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
@@ -310,7 +311,7 @@ function dibujar() {
   catapulta();
   for (const b of m.bloques) bloque(b);
   for (const c of m.cerdos) if (c.vivo) enemigoDib(c);
-  for (const o of m.vuelan) sprite(imgAve(avatar(), o.clase), o.cuerpo.position.x, o.cuerpo.position.y, o.r * 2.5, o.r * 2.5, o.cuerpo.angle);
+  for (const o of m.vuelan) { const t = o.pieza != null ? o.r * (o.hijo ? 3.6 : 3.33) : o.r * 3.33; sprite(o.pieza != null ? imgPieza(avatar(), o.pieza) : imgAve(avatar(), o.clase), o.cuerpo.position.x, o.cuerpo.position.y, t, t, o.cuerpo.angle); }
   for (const p of part) {
     ctx.globalAlpha = p.a * (p.alfa || 1);
     if (p.tipo === 'trozo') { const im = img('fx-' + p.hoja); if (im) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); const q = p.r, e = p.s / Math.max(q[2], q[3]); ctx.drawImage(im, q[0], q[1], q[2], q[3], -q[2] * e / 2, -q[3] * e / 2, q[2] * e, q[3] * e); ctx.restore(); } }
@@ -332,7 +333,7 @@ function catapulta() {
   }
   if (brazo) { ctx.save(); ctx.translate(PIV.x, PIV.y); ctx.rotate(armAng); if (Math.cos(armAng) < 0) ctx.scale(1, -1); ctx.drawImage(brazo, -105 * ESC, -42 * ESC, 384 * ESC, 100 * ESC); ctx.restore(); }
   const clase = fase === 'tirando' && anim ? anim.clase : apuntando ? m.cola[0] : null;
-  if (clase) { const p = punta(armAng), r = C.AVES[clase].r; sprite(imgAve(avatar(), clase), p.x, p.y - r * .3, r * 2.5); }
+  if (clase) { const p = punta(armAng), r = C.AVES[clase].r; sprite(imgAve(avatar(), clase), p.x, p.y - r * .35, r * 3); }
 }
 function patron(mat) {
   let p = patrones.get(mat); if (p) return p;
@@ -352,7 +353,7 @@ function bloque(b) {
   ctx.restore();
 }
 function enemigoDib(c) {
-  const p = c.cuerpo.position, r = c.r, da = 1 - c.vida / c.vida0, s = r * 3.2;
+  const p = c.cuerpo.position, r = c.r, da = 1 - c.vida / c.vida0, s = r * 4.3;
   const ang = Math.max(-.5, Math.min(.5, c.cuerpo.angle * .35));
   if (!sprite(imgEnemigo(enemigo()), p.x, p.y - r * .15, s, s, ang)) { ctx.fillStyle = '#8FD14F'; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.3); ctx.fill(); }
   if (da > .35) { ctx.save(); ctx.translate(p.x, p.y); ctx.strokeStyle = 'rgba(40,10,10,.75)'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(r * .1, -r * .8); ctx.lineTo(r * .35, -r * .35); ctx.lineTo(r * .15, r * .05); if (da > .7) { ctx.moveTo(-r * .5, -r * .5); ctx.lineTo(-r * .2, 0); ctx.lineTo(-r * .45, r * .4); } ctx.stroke(); ctx.restore(); }

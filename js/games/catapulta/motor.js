@@ -13,12 +13,13 @@ export const MATERIALES = {
 };
 // Las 4 clases de proyectil (el dibujo y el nombre dependen del avatar elegido: avatares.js)
 export const AVES = {
-  normal: { r: 14, dens: .004, hab: 'Sin habilidad: pura fuerza.' },
-  divisible: { r: 12, dens: .0035, hab: 'Toca en el aire: se divide en tres.' },
-  acelerador: { r: 13, dens: .004, hab: 'Toca en el aire: sale disparado hacia delante.' },
-  bomba: { r: 16, dens: .005, hab: 'Toca en el aire (o al chocar): explota.' },
+  normal: { r: 21, dens: .0027, mult: 1.25, hab: 'Sin habilidad: pura fuerza.' },
+  divisible: { r: 18, dens: .0023, mult: 1.2, hab: 'Toca en el aire: se divide en tres.' },
+  acelerador: { r: 19.5, dens: .0027, mult: 1.25, hab: 'Toca en el aire: sale disparado y arrasa con todo (daño ×2,5).' },
+  bomba: { r: 24, dens: .0033, mult: 1.25, hab: 'Toca en el aire (o al chocar): explota.' },
 };
-export const CERDO = { r: 18, vida: 40, dens: .002, pts: 5000 };
+export const DANO_ACEL = 3.1;                                 // multiplicador de daño del acelerador una vez activada la habilidad
+export const CERDO = { r: 27, vida: 45, dens: .0013, pts: 5000 };
 export const PTS_AVE = 10000;
 
 export function crear(M, n) {
@@ -52,7 +53,7 @@ function choques(m, e) {
     if (!ja || !jb) continue;
     const rv = Math.hypot(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
     if (rv <= UMBRAL) continue;
-    const d = (rv - UMBRAL) * masaRed(a, b) * FACTOR;
+    const d = (rv - UMBRAL) * masaRed(a, b) * FACTOR * Math.max(ja.tipo === 'ave' ? ja.mult || 1 : 1, jb.tipo === 'ave' ? jb.mult || 1 : 1);
     if (ja.dano !== undefined) ja.dano += d;
     if (jb.dano !== undefined) jb.dano += d;
     if (ja.tipo === 'ave' && ja.bomba && !ja.usada) ja.estalla = true;
@@ -71,7 +72,7 @@ export function lanzar(m, vx, vy) {
   const tipo = m.cola.shift(); if (!tipo) return null;
   const M = m.M, d = AVES[tipo];
   const c = M.Bodies.circle(HONDA.x, HONDA.y, d.r, { density: d.dens, friction: .5, restitution: .15, frictionAir: 0 });
-  const o = { tipo: 'ave', cuerpo: c, clase: tipo, r: d.r, edad: 0, usada: false, bomba: tipo === 'bomba' };
+  const o = { tipo: 'ave', cuerpo: c, clase: tipo, r: d.r, edad: 0, usada: false, bomba: tipo === 'bomba', mult: d.mult, pieza: null };
   c.plugin.jr = o; M.Composite.add(m.engine.world, c);
   M.Body.setVelocity(c, { x: vx, y: vy });
   m.vuelan.push(o); m.tVuelo = 0; m.tQuieto = 0; m.lanzado = o;
@@ -82,14 +83,15 @@ export function lanzar(m, vx, vy) {
 export function habilidad(m) {
   const o = m.lanzado; if (!o || o.usada || !m.vuelan.includes(o)) return false;
   const M = m.M, c = o.cuerpo, v = c.velocity; o.usada = true;
-  if (o.clase === 'acelerador') { M.Body.setVelocity(c, { x: v.x * 1.7, y: v.y * 1.7 }); m.ev.push({ t: 'hab', clase: 'acelerador', x: c.position.x, y: c.position.y }); }
+  if (o.clase === 'acelerador') { M.Body.setVelocity(c, { x: v.x * 1.7, y: v.y * 1.7 }); o.mult = DANO_ACEL; m.ev.push({ t: 'hab', clase: 'acelerador', x: c.position.x, y: c.position.y }); }
   else if (o.clase === 'divisible') {
-    for (const ang of [-.26, .26]) {
-      const cs = Math.cos(ang), sn = Math.sin(ang), r = 9;
-      const h = M.Bodies.circle(c.position.x, c.position.y + (ang < 0 ? -8 : 8), r, { density: .0035, friction: .5, restitution: .15, frictionAir: 0 });
-      const oh = { tipo: 'ave', cuerpo: h, clase: 'divisible', r, edad: 0, usada: true, hijo: true };
+    o.pieza = 0;
+    [-.26, .26].forEach((ang, i) => {
+      const cs = Math.cos(ang), sn = Math.sin(ang), r = AVES.divisible.r * .75;
+      const h = M.Bodies.circle(c.position.x, c.position.y + (ang < 0 ? -r : r), r, { density: AVES.divisible.dens, friction: .5, restitution: .15, frictionAir: 0 });
+      const oh = { tipo: 'ave', cuerpo: h, clase: 'divisible', r, edad: 0, usada: true, hijo: true, mult: AVES.divisible.mult, pieza: i + 1 };
       h.plugin.jr = oh; M.Composite.add(m.engine.world, h); M.Body.setVelocity(h, { x: v.x * cs - v.y * sn, y: v.x * sn + v.y * cs }); m.vuelan.push(oh);
-    }
+    });
     m.ev.push({ t: 'hab', clase: 'divisible', x: c.position.x, y: c.position.y });
   } else if (o.clase === 'bomba') o.estalla = true;
   else return (o.usada = false);
@@ -103,7 +105,7 @@ function explotar(m, o) {
     const dx = b.position.x - p.x, dy = b.position.y - p.y, d = Math.hypot(dx, dy);
     if (d > R + 30) continue;
     const f = Math.max(0, 1 - d / R), j = b.plugin.jr;
-    if (j && j.dano !== undefined) j.dano += 150 * f;
+    if (j && j.dano !== undefined) j.dano += 210 * f;
     const k = 9 * f / Math.sqrt(b.mass), n = d || 1;
     M.Body.setVelocity(b, { x: b.velocity.x + dx / n * k, y: b.velocity.y + dy / n * k - f * 2 });
   }

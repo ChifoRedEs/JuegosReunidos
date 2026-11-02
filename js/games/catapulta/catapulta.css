@@ -27,8 +27,8 @@
 .ctenem{display:flex;align-items:center;justify-content:center;gap:4px;min-height:27px}
 .ctenem img{width:24px;height:24px;object-fit:contain}
 /* círculo táctil del menú flotante */
-.ctpad{width:132px;height:132px;border-radius:50%;touch-action:none;cursor:crosshair;outline-offset:3px}
-.ctpad canvas{display:block;width:100%;height:100%;border-radius:50%}
+.ctpad{width:150px;height:150px;flex:none;touch-action:none;cursor:crosshair;outline-offset:3px}
+.ctpad canvas{display:block;width:100%;height:100%}
 .ctlec{font-size:11.5px;font-weight:800;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* miniaturas cuadradas en 🎨 Apariencia (Avatar y Personaje) */
 .ap-rej.ap-cuadrada{grid-template-columns:repeat(3,1fr)}
