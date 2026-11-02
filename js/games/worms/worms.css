@@ -86,3 +86,7 @@
 .juego-worms .wmdesl{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;padding:0 4px;font-size:18px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize}
 .juego-worms .wmdesl span{flex:1;text-align:center;border-radius:10px;line-height:52px;opacity:.85}
 .juego-worms .wmdesl span.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;opacity:1}
+
+/* tiempo por turno: los 5 botones en una sola fila */
+.wmtiempo .seg,.seg:has(> [data-k="tiempo"]){flex-wrap:nowrap;gap:4px}
+.wmtiempo .seg .btn,.seg > [data-k="tiempo"]{flex:1 1 0;min-width:0;padding-left:2px;padding-right:2px;white-space:nowrap}

@@ -105,7 +105,7 @@ function ajustes() {
   cancelAnimationFrame(raf); raf = 0; cv = null; zona = null; S = null; piloto = null; cargando = false; Object.keys(teclas).forEach(k => teclas[k] = false);
   const hay = api.cargar(), sigue = hay && hay.s.ganador === null;
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${cfg[k] === v ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  const fila = (t, k, ops) => `<div class="bar"><span class="lbl">${t}</span>${seg(k, ops)}</div>`;
+  const fila = (t, k, ops) => `<div class="bar ${k === 'tiempo' ? 'wmtiempo' : ''}"><span class="lbl">${t}</span>${seg(k, ops)}</div>`;
   root.innerHTML = `<p class="note">Guerra de Orugas: dos ejércitos de gusanos se turnan para disparar, balancearse con la cuerda gancho y volar el terreno por los aires. Gana el último equipo en pie.</p>
     ${fila('Modo', 'modo', [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']])}
     ${cfg.modo === 'cpu' ? fila('Nivel', 'nivel', M.NIVELES.map((n, i) => [i, n])) : ''}
