@@ -70,7 +70,7 @@ function quitarFl() { if (fl) { fl.destruir(); fl = null; } padCv = null; }
 /* ---------- pantallas ---------- */
 const estr = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 function menu() {
-  cancelAnimationFrame(raf); raf = 0; fase = 'menu'; cv = null; quitarFl(); limpiarMundo(); m = null;
+  cancelAnimationFrame(raf); raf = 0; fase = 'menu'; cv = null; quitarFl(); root.classList.remove('ctraiz'); root.style.minHeight = ''; limpiarMundo(); m = null;
   const p = prog(), max = nivelMax(); if (cfg.nivel > max || cfg.nivel < 1) cfg.nivel = max;
   const tot = p.reduce((s, x) => s + x.pts, 0), est = p.reduce((s, x) => s + x.est, 0), s = avatar();
   root.innerHTML = `<p class="note">Aprieta ✨ y 🚀 del menú flotante: mueve el punto del cuarto de círculo para elegir la dirección y la fuerza, y lanza. Derriba las estructuras y vence a los enemigos con las estrellas que puedas.</p>
@@ -98,9 +98,10 @@ function jugar(n) {
   root.innerHTML = `<div class="cthud" id="ctHud"></div>
     <div class="ctzona" id="ctZona"><canvas id="ctCv" aria-label="Campo de juego"></canvas><div class="ctover" id="ctOver" hidden></div></div>
     <p class="note ctayuda" id="ctAyuda"></p>${api.barraHtml()}`;
+  root.classList.add('ctraiz'); root.style.minHeight = Math.max(0, innerHeight - root.getBoundingClientRect().top - 104) + 'px';
   cv = $('#ctCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3); ajustar();
   $('#ctZona').addEventListener('pointerdown', () => { if (fase === 'vuelo') habilidad(); });
-  fl = crearFlotante(api, { ancla: $('#ctZona'), raiz: root, centro: true, clave: 'flotCt',
+  fl = crearFlotante(api, { ancla: $('#ctZona'), raiz: root, centro: true, clave: 'flotCt', fijo: true,
     botones: [{ id: 'hab', texto: '✨ Habilidad', lado: 'der' }, { id: 'lanzar', texto: '🚀 Lanzar', lado: 'der' }],
     alClic: id => { if (id === 'lanzar') lanzar(); else if (id === 'hab') habilidad(); } });
   fl.marcar('lanzar', true);

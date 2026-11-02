@@ -19,8 +19,8 @@
 .ctover .rec{color:var(--ok);font-weight:800}
 .ctover .bts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
 .ctayuda{text-align:center;font-size:12px;min-height:1.4em}
-.ctniv{flex-wrap:wrap}
-.ctniv .btn{min-width:40px;padding:6px 8px}
+.ctniv{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.ctniv .btn{min-width:0;padding:8px 0;width:100%;flex:none}
 .ctcaps{display:flex;flex-direction:column;gap:6px;margin:8px 0;font-size:13px}
 .ctcaps span{display:flex;align-items:center;gap:8px;line-height:1.25}
 .ctcaps img{width:34px;height:34px;object-fit:contain;flex:none}
@@ -39,3 +39,6 @@
 .ap-cuadrada .ap-azar{display:flex;align-items:center;justify-content:center;font-size:30px}
 
 .flcol .btn{min-height:44px}
+
+.ctraiz{display:flex;flex-direction:column}
+.ctraiz .barra-gen{margin-top:auto}

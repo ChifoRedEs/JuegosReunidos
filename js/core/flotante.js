@@ -4,8 +4,9 @@
 //   const fl = crearFlotante(api, { ancla: elemento, botones: [{ id, texto }], alClic: id => …, raiz: root });
 //   fl.marcar(id, true|false)      resalta un botón (modos)      fl.activar(id, true|false)   habilita / deshabilita
 //   centro: true → hueco central (fl.centro) con botones a los lados (lado: 'izq' | 'der').   titulo: texto del asa (por defecto «Mover»).
+//   fijo: true → el panel no flota: queda fijo en la pantalla justo debajo de `ancla`, sin asa ni arrastre.
 //   fl.destruir()                  quitar en unmount
-export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot', centro = false, titulo = 'Mover' }) {
+export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot', centro = false, titulo = 'Mover', fijo = false }) {
   const panel = document.createElement('div'); panel.className = 'flotante'; panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Controles');
   const btn = b => `<button type="button" class="btn" data-fl="${b.id}">${b.texto}</button>`;
   // Con `centro: true` el menú lleva en medio un hueco (panel.querySelector('.flcentro')) para un control propio del juego (p. ej. el círculo táctil de Catapulta);
@@ -13,8 +14,14 @@ export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot
   panel.innerHTML = `<div class="flasa" title="Arrastra para mover los controles"><span aria-hidden="true"></span><small>${titulo}</small></div>` + (centro
     ? `<div class="flcuerpo${botones.some(b => b.lado !== 'der') ? '' : ' fl1'}">${botones.some(b => b.lado !== 'der') ? `<div class="flcol">${botones.filter(b => b.lado !== 'der').map(btn).join('')}</div>` : ''}<div class="flcentro"></div><div class="flcol">${botones.filter(b => b.lado === 'der').map(btn).join('')}</div></div>`
     : `<div class="flbtns" style="--nb:${botones.length}">${botones.map(btn).join('')}</div>`);
-  document.body.append(panel);
   const hueco = document.createElement('div'); hueco.className = 'flhueco'; ancla.after(hueco);
+  if (fijo) {
+    panel.classList.add('flfijo'); panel.querySelector('.flasa').remove(); ancla.after(panel); hueco.remove();
+    panel.addEventListener('click', e => { const b = e.target.closest('[data-fl]'); if (b && !b.disabled) alClic(b.dataset.fl); });
+    return { panel, centro: panel.querySelector('.flcentro'), marcar(id, v) { const b = panel.querySelector(`[data-fl="${id}"]`); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', String(!!v)); } },
+      activar(id, v) { const b = panel.querySelector(`[data-fl="${id}"]`); if (b) b.disabled = !v; }, recolocar() {}, destruir() { panel.remove(); } };
+  }
+  document.body.append(panel);
   let pos = null, arr = null; const p0 = api.pref(clave, null); if (p0 && Number.isFinite(p0.x) && Number.isFinite(p0.y)) pos = { x: p0.x, y: p0.y };
   const cabecera = () => { const t = document.querySelector('.top'); return t ? t.getBoundingClientRect().bottom : 0; };
   function colocar() {
