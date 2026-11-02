@@ -3,10 +3,12 @@
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { crearPiloto } from './ia.js';
-import { grupoEscenario, grupoPersonaje, ESCENARIOS_GUERRA } from '../../core/aspectos.js';
+import { grupoEscenario, ESCENARIOS_GUERRA } from '../../core/aspectos.js';
+import { grupoAvatar, grupoEnemigo } from '../catapulta/grupos.js';
+import { img as imgCt } from '../catapulta/imagenes.js';
+import { imgAve, imgEnemigo, valido as setValido } from '../catapulta/avatares.js';
 import { imagenTapete } from '../../core/cartas.js';
 import { gruposFichas, estilo, rgb, claro, oscuro, pixelTextura } from '../../core/fichas.js';
-import { FICHAS } from '../../core/personajes.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, cv = null, ctx = null, dpr = 1, cw = 360, ch = 280, zona = null;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, piloto = null, pausa = false, terCv = null, finMostrado = false, hudAnt = '', panelAnt = '';
@@ -56,8 +58,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null); if (c0 && typeof c0 === 'object') cfg = { ...cfg, ...limpiarCfg(c0) };
   asp = api.aspecto([
     grupoEscenario('.wmfondo', 'Fondo de Pantalla', ESCENARIOS_GUERRA),
-    { ...grupoPersonaje('Personajes · equipo Rojo'), clave: 'pj' },
-    { ...grupoPersonaje('Personajes · equipo Azul o CPU'), clave: 'pj2' },
+    grupoAvatar(true), grupoEnemigo(),
     ...gruposFichas({ titulo: 'Terreno', icono: '⛰️', pocos: true, formas: false, tamano: false }),
   ], () => { if (S) { construirTerreno(); dibujar(); } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./worms.css', import.meta.url));
@@ -136,25 +137,27 @@ function empezar() {
 function armar() {
   root.innerHTML = `<div class="wmfondo wmjuego" id="wmJ">
     <div class="wmhud" id="wmHud"></div>
-    <div class="wmzona" id="wmZona"><canvas id="wmCv" aria-label="Campo de batalla"></canvas><div class="wmban" id="wmBan" aria-live="polite"></div><div class="wmcpu" id="wmCpu" hidden>🤖 La CPU está jugando…</div><div class="wmpausa" id="wmPausa" hidden data-ac="seguirpausa"><b>⏸️ Pausa</b><small>Toca para seguir</small></div><div class="wmfin" id="wmFin" hidden></div></div>
+    <div class="wmzona" id="wmZona"><canvas id="wmCv" aria-label="Campo de batalla"></canvas><div class="wmban" id="wmBan" aria-live="polite"></div><div class="wmcpu" id="wmCpu" hidden>🤖 La CPU está jugando…</div><div class="wmpausa" id="wmPausa" hidden data-ac="seguirpausa"><b>⏸️ Pausa</b><small>Toca para seguir</small></div><div class="wmfin" id="wmFin" hidden></div><div class="wmzoom" aria-label="Zoom"><small>Zoom</small><button type="button" class="btn" data-ac="zmenos" aria-label="Alejar">−</button><button type="button" class="btn" data-ac="zmas" aria-label="Acercar">+</button></div></div>
     <div class="wmpanel" id="wmPanel">
       <div class="wmfila">
         <button class="btn wmarma" id="wmArma" data-ac="armas" aria-label="Elegir arma"></button>
-        <button class="btn" id="wmTemp" data-ac="temp" aria-label="Tiempo de la mecha" hidden></button>
-        <button class="btn wmz" data-ac="zmenos" aria-label="Alejar">➖</button><button class="btn wmz" data-ac="zmas" aria-label="Acercar">➕</button><button class="btn wmz" data-ac="centrar" aria-label="Centrar en mi gusano">🎯</button>
+        <button class="btn wmmini" id="wmTemp" data-ac="temp" aria-label="Tiempo de la mecha" hidden></button>
+        <button class="btn wmmini" data-ac="centrar" aria-label="Centrar en mi gusano">🎯</button>
       </div>
       <div class="wmmandos">
         <div class="wmpad">
           <button class="btn wmb" data-hold="izq" aria-label="Izquierda">◀</button><button class="btn wmb" data-hold="der" aria-label="Derecha">▶</button>
           <button class="btn wmb" data-ac="salto" aria-label="Saltar hacia delante">⤴️</button><button class="btn wmb" data-ac="alto" aria-label="Saltar hacia arriba">⤒</button>
         </div>
-        <div class="wmpad2">
-          <button class="btn wmb" data-hold="arr" aria-label="Apuntar arriba o acortar cuerda">▲</button>
-          <button class="btn wmb" data-hold="aba" aria-label="Apuntar abajo o alargar cuerda">▼</button>
-          <button class="wmfuego" id="wmFuego" data-hold="fuego" aria-label="Disparar"><i id="wmPot"></i><span id="wmFTxt">FUEGO</span></button>
-        </div>
+        <div class="flotante flfijo wmdisp"><small class="wmdt">Disparo</small><div class="flcuerpo fl2">
+          <div class="flcol">
+            <button class="wmfuego" id="wmFuego" data-hold="fuego" aria-label="Disparar"><i id="wmPot"></i><span id="wmFTxt">FUEGO</span></button>
+            <button class="btn wmpasar" data-ac="pasar">⏭️ Pasar turno</button>
+          </div>
+          <div class="flcentro"><div class="ctpad wmq" id="wmQ" tabindex="0" role="application" aria-label="Ángulo de puntería: arriba y abajo cambian el ángulo"><canvas></canvas></div></div>
+        </div></div>
       </div>
-      <div class="bar wmbajo"><button class="btn" data-ac="pasar">⏭️ Pasar turno</button></div>${api.barraHtml()}
+      ${api.barraHtml()}
       <p class="note wmayuda">Teclado: ← → andar · ↑ ↓ apuntar · Intro salto · Retroceso salto alto (con ← → sale inclinado) · Espacio (mantén) fuego · Tab armas · +/− zoom · 1–9 armas</p>
     </div></div>`;
   cv = $('#wmCv'); ctx = cv.getContext('2d'); zona = $('#wmZona'); ajustar();
@@ -162,6 +165,7 @@ function armar() {
   zona.addEventListener('wheel', e => { e.preventDefault(); zoomPor(e.deltaY > 0 ? 1.15 : 1 / 1.15); }, { passive: false });
   const holdIni = e => { const b = e.target.closest('[data-hold]'); if (!b || !root || !root.contains(b)) return; e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch { /* nada */ } hold(b.dataset.hold, true); };
   const holdFin = e => { const b = e.target.closest('[data-hold]'); if (b) hold(b.dataset.hold, false); };
+  construirQ();
   const panel = $('#wmPanel'); panel.addEventListener('pointerdown', holdIni); panel.addEventListener('pointerup', holdFin); panel.addEventListener('pointercancel', holdFin); panel.addEventListener('lostpointercapture', holdFin);
   panel.addEventListener('contextmenu', e => e.preventDefault());
 }
@@ -247,7 +251,7 @@ function teclaArriba(e) {
 function zoomPor(f) { vistaW = Math.max(ZOOM_MIN, Math.min(S ? S.W : 2000, vistaW * f)); }
 function aMundo(e) { const r = cv.getBoundingClientRect(), k = escala(); return { x: (e.clientX - r.left - cw / 2) / k + cam.x, y: (e.clientY - r.top - ch / 2) / k + cam.y }; }
 function ptrAbajo(e) {
-  if (e.target.closest('.wmfin,.wmpausa')) return;
+  if (e.target.closest('.wmfin,.wmpausa,.wmzoom')) return;
   try { zona.setPointerCapture(e.pointerId); } catch { /* nada */ }
   punteros.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: performance.now(), mov: false });
   if (punteros.size === 2) { const [a, b] = [...punteros.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), w: vistaW }; }
@@ -393,7 +397,12 @@ function fondo() {
 }
 const spr = (n, x, y, w, ang = 0, vuelta = false) => { const im = ico(n); if (!im) return false; const h = w * im.naturalHeight / im.naturalWidth; ctx.save(); ctx.translate(x, y); if (ang) ctx.rotate(ang); if (vuelta) ctx.scale(-1, 1); ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore(); return true; };
 const colEq = e => M.COLORES[e];
-function avatar(eq) { const id = asp && asp.valores[eq ? 'pj2' : 'pj']; return id && id !== 'auto' && FICHAS[id] ? FICHAS[id].e : null; }
+// Equipo rojo = «Avatar»; equipo azul o CPU = «Enemigos» (las imágenes son las de Catapulta). null = el gusano de siempre.
+function avatar(eq) {
+  const av = asp && asp.valores.avatar; if (!av || av === 'original') return null;
+  if (!eq) return imgAve(av, 'normal');
+  const en = asp.valores.enemigo; return imgEnemigo(!en || en === 'igual' ? av : en);
+}
 
 function dibujarGusano(w, t, esAct) {
   if (!w.vivo) return;
@@ -403,8 +412,8 @@ function dibujarGusano(w, t, esAct) {
   ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, -.5, 8.5, 3, 0, 0, 7); ctx.stroke();
   const rebote = w.est === 'camina' ? -Math.abs(Math.sin(t * 15)) * 1.6 : 0, inc = w.vuela || w.est === 'cuerda' ? Math.max(-.5, Math.min(.5, w.vx / 500)) : 0;
   ctx.translate(0, rebote); ctx.rotate(inc);
-  if (emo) { ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -11, 12.5, 0, 7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#000'; ctx.font = `20px ${FUENTE_EMOJI}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.scale(w.dir, 1); if (muriendo) ctx.globalAlpha = .7; ctx.fillText(emo, 0, -10.5); ctx.restore(); }
+  const im = emo ? imgCt(emo, () => dibujar()) : null;
+  if (im) { ctx.save(); ctx.scale(w.eq ? -w.dir : w.dir, 1); if (muriendo) ctx.globalAlpha = .7; ctx.drawImage(im, -15, -29, 30, 30); ctx.restore(); }
   else {
     ctx.scale(w.dir, 1);
     const g = ctx.createLinearGradient(-6, -18, 6, -1); g.addColorStop(0, muriendo ? '#c9c9c9' : '#FFB3C8'); g.addColorStop(1, muriendo ? '#8d8d8d' : '#F0789B');
@@ -530,6 +539,7 @@ function interfaz() {
     const tb = $('#wmTemp'); tb.hidden = !A.temp; tb.textContent = `⏱${T.temp}`;
     $('#wmFTxt').innerHTML = fuego; $('#wmPanel').classList.toggle('off', !h2);
   }
+  dibujarQ();
   const pot = $('#wmPot'); if (pot) pot.style.height = Math.round((cargando ? T.pot : 0) * 100) + '%';
   const fb = $('#wmFuego'); if (fb) fb.classList.toggle('lista', h2 && M.puedeDisparar(S));
 }
@@ -546,4 +556,46 @@ function final() {
   const f = $('#wmFin'); if (!f) return;
   f.innerHTML = `<div class="wmfintarj"><h2>${g === -1 ? '🤝' : '🏆'} ${quien}</h2><p>${S.turnos} turnos · ronda ${S.ronda} · ${Math.round(S.reloj / 60)} min</p>${vivosG ? `<ul class="wmsup">${vivosG}</ul>` : ''}<div class="bar"><button class="btn on" data-ac="otra">🪱 Otra partida</button><button class="btn" data-ac="menu">Ajustes</button></div></div>`;
   f.hidden = false;
+}
+
+/* ---------- el quesito del ángulo (como el de Catapulta, en medio círculo: se puede apuntar hacia arriba y hacia abajo) ---------- */
+let qCv = null, qAnt = '';
+function construirQ() {
+  const q = $('#wmQ'); if (!q) return; qCv = q.querySelector('canvas'); qAnt = '';
+  let id = null;
+  const punto = e => {
+    if (!S || !humano()) return;
+    const r = qCv.getBoundingClientRect(), dx = e.clientX - (r.left + 6), dy = (r.top + r.height / 2) - e.clientY;
+    const a = Math.max(-80, Math.min(88, Math.round(Math.atan2(dy, Math.max(1, dx)) * 180 / Math.PI)));
+    const w = M.activo(S);
+    if (w && w.est === 'cuerda') { teclas.arr = a > 8; teclas.aba = a < -8; return; }       // colgado de la cuerda: arriba acorta y abajo alarga
+    M.apuntar(S, a - S.turno.ang);
+  };
+  q.addEventListener('pointerdown', e => { e.stopPropagation(); id = e.pointerId; try { q.setPointerCapture(id); } catch { /* nada */ } punto(e); e.preventDefault(); });
+  q.addEventListener('pointermove', e => { if (e.pointerId === id) punto(e); });
+  const fin = e => { if (e.pointerId !== id) return; id = null; teclas.arr = false; teclas.aba = false; };
+  q.addEventListener('pointerup', fin); q.addEventListener('pointercancel', fin);
+}
+function dibujarQ() {
+  const c = qCv; if (!c || !c.isConnected || !S) return;
+  const ang = Math.round(S.turno.ang), w = M.activo(S), cuerda = !!(w && w.est === 'cuerda'), key = ang + '|' + cuerda;
+  const sw = c.clientWidth || 68, sh = c.clientHeight || 120, d = Math.min(window.devicePixelRatio || 1, 3);
+  const pw = Math.round(sw * d), ph = Math.round(sh * d); if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; qAnt = ''; }
+  if (key === qAnt) return; qAnt = key;
+  const g = c.getContext('2d'), cs = getComputedStyle(c), col = n => (cs.getPropertyValue(n) || '').trim();
+  const purple = col('--purple') || '#7A4DFF', blue = col('--blue') || '#2F6BFF', line = col('--line') || '#C9D2F0', card = col('--card') || '#fff', mut = col('--mut') || '#6B7490';
+  g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, sw, sh);
+  const cx = 6, cy = sh / 2, R = Math.min(sw - 8, sh / 2 - 4), A = Math.PI / 180;
+  g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, -Math.PI / 2, Math.PI / 2); g.closePath(); g.fillStyle = card; g.fill();
+  const rel = g.createRadialGradient(cx, cy, 0, cx, cy, R); rel.addColorStop(0, 'rgba(122,77,255,.04)'); rel.addColorStop(1, 'rgba(122,77,255,.2)'); g.fillStyle = rel; g.fill();
+  g.lineWidth = 3; g.strokeStyle = line; g.stroke();
+  g.lineWidth = 1.2; g.setLineDash([3, 4]); for (const a of [-60, -30, 0, 30, 60]) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a * A) * R, cy - Math.sin(a * A) * R); g.stroke(); }
+  g.setLineDash([]); g.fillStyle = mut; g.font = '700 9px Nunito, sans-serif'; g.textAlign = 'center';
+  g.fillText('90°', cx + 14, cy - R + 11); g.fillText('0°', cx + R - 11, cy + 3); g.fillText('-80°', cx + 20, cy + R - 4);
+  const k = Math.max(-80, Math.min(88, ang)) * A, kx = cx + Math.cos(k) * R * .82, ky = cy - Math.sin(k) * R * .82;
+  const gr = g.createLinearGradient(cx, cy, kx, ky); gr.addColorStop(0, purple); gr.addColorStop(1, blue);
+  g.strokeStyle = gr; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(kx, ky); g.stroke();
+  g.beginPath(); g.arc(cx, cy, 4, 0, 6.2832); g.fillStyle = purple; g.fill();
+  g.beginPath(); g.arc(kx, ky, 10, 0, 6.2832); g.fillStyle = gr; g.fill(); g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke();
+  g.fillStyle = mut; g.font = '800 11px Nunito, sans-serif'; g.textAlign = 'right'; g.fillText(cuerda ? 'cuerda' : ang + '°', sw - 2, 12);
 }

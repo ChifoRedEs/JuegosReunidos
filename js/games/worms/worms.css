@@ -32,15 +32,12 @@
 /* panel de mandos */
 .juego-worms .wmpanel{display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.85);border-radius:12px;padding:6px}
 .juego-worms .wmpanel.off .wmmandos,.juego-worms .wmpanel.off #wmArma,.juego-worms .wmpanel.off #wmTemp{opacity:.45;pointer-events:none}
-.juego-worms .wmfila{display:flex;gap:6px;align-items:stretch}
-.juego-worms .wmarma{flex:1;display:flex;align-items:center;gap:6px;justify-content:flex-start;min-width:0;padding:4px 8px}
-.juego-worms .wmarma img{width:32px;height:32px;object-fit:contain;flex:none}
-.juego-worms .wmarma span{font-size:13px;line-height:1.1;white-space:normal!important;font-weight:800;flex:1;text-align:left;overflow:hidden}
+.juego-worms .wmfila{display:flex;gap:5px;align-items:stretch;justify-content:flex-start}
+.juego-worms .wmarma{flex:0 1 auto;display:flex;align-items:center;gap:5px;justify-content:flex-start;min-width:0;padding:2px 8px;min-height:36px}
+.juego-worms .wmarma img{width:24px;height:24px;object-fit:contain;flex:none}
+.juego-worms .wmarma span{font-size:12px;line-height:1.1;white-space:normal!important;font-weight:800;flex:1;text-align:left;overflow:hidden}
 .juego-worms .wmarma i{font-style:normal;font-weight:800;opacity:.75}
-.juego-worms .wmz{padding:0 10px;min-width:40px}
 .juego-worms .wmmandos{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.juego-worms .wmpad,.juego-worms .wmpad2{display:grid;grid-template-columns:repeat(2,56px);grid-auto-rows:50px;gap:6px}
-.juego-worms .wmpad2{grid-template-columns:repeat(2,56px)}
 .juego-worms .wmb{padding:0;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}
 .juego-worms .wmfuego{grid-column:1/3;position:relative;overflow:hidden;border:0;border-radius:14px;background:linear-gradient(180deg,#ff6b4a,#d62a2a);color:#fff;font:800 14px/1.1 'Baloo 2',system-ui,sans-serif;box-shadow:0 3px 0 #8f1717;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
 .juego-worms .wmfuego.lista{animation:wmlat .9s infinite alternate}
@@ -58,5 +55,19 @@
 .wmarmas .wmar i{grid-area:c;font-style:normal;font-weight:800;font-size:12px}
 .wmarmas .wmar small{grid-area:d;font-size:11px;line-height:1.2;opacity:.8}
 @media (max-width:360px){.wmarmas{grid-template-columns:1fr}}
-.juego-worms .wmbajo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:2px}
-.juego-worms .wmbajo .btn{flex:1 1 40%;padding:8px 6px;font-size:13px}
+
+.juego-worms .wmmini{padding:0 9px;min-width:36px;min-height:36px;font-size:13px}
+.juego-worms .wmpad{display:grid;grid-template-columns:repeat(2,56px);grid-auto-rows:54px;gap:6px;flex:none}
+/* casilla de zoom, arriba a la izquierda de la pantalla de juego */
+.juego-worms .wmzoom{position:absolute;left:6px;top:6px;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.88);border:2px solid rgba(0,0,0,.25);border-radius:12px;padding:2px 4px 2px 8px;z-index:3;touch-action:manipulation}
+.juego-worms .wmzoom small{font-size:11px;font-weight:800;color:#333}
+.juego-worms .wmzoom .btn{padding:0;min-width:30px;min-height:30px;font-size:18px;line-height:1;border-radius:9px}
+/* menú de Disparo (el mismo aspecto que el de Catapulta) */
+.juego-worms .wmdisp.flfijo{margin:0;flex:1 1 auto;min-width:0;padding:4px 8px 8px}
+.juego-worms .wmdt{display:block;text-align:center;font-size:11px;font-weight:800;color:var(--mut);margin-bottom:2px}
+.juego-worms .flcuerpo.fl2{grid-template-columns:minmax(0,1fr) auto}
+.juego-worms .wmdisp .wmfuego{min-height:64px;grid-column:auto}
+.juego-worms .wmpasar{min-height:44px;padding:6px 4px;font-size:13px}
+.juego-worms .wmq{width:70px;height:120px}
+.ctpad{touch-action:none;cursor:crosshair;outline-offset:3px;flex:none}
+.ctpad canvas{display:block;width:100%;height:100%}

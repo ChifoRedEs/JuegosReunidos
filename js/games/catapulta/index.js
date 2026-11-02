@@ -8,6 +8,8 @@ import { img, cargar, url, TROZOS } from './imagenes.js';
 import { grupoPantalla, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 import { crearFlotante } from '../../core/flotante.js';
+import { COLORES } from '../../core/fichas.js';
+import { grupoAvatar, grupoEnemigo } from './grupos.js';
 
 let api = null, asp = null, root = null, M = null, m = null, cv = null, ctx = null, dpr = 1, escala = 1, fl = null, padCv = null;
 let raf = 0, tPrev = 0, acum = 0, fase = 'menu', nivel = 1, part = [], textos = [], onVis = null, onRes = null, onKey = null, cerrando = false, finTimer = 0, hudAnt = '';
@@ -24,7 +26,7 @@ function cargarMatter() {
   return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = new URL('../../vendor/matter.min.js', import.meta.url); s.onload = () => ok(window.Matter); s.onerror = () => ko(new Error('matter')); document.head.append(s); });
 }
 const prog = () => { const p = api.pref('prog', []); return Array.isArray(p) ? p.map(x => x && Number.isInteger(x.est) ? { est: Math.min(3, Math.max(0, x.est)), pts: Math.max(0, x.pts | 0) } : { est: 0, pts: 0 }) : []; };
-const nivelMax = () => { const p = prog(); let u = 0; p.forEach((x, i) => { if (x.est > 0) u = i + 1; }); return Math.min(NIVELES.length, u + 1); };   // se desbloquea el siguiente al último superado
+const nivelMax = () => { const p = prog(); let n = 1; while (n < NIVELES.length && p[n - 1] && p[n - 1].est > 0) n++; return n; };   // se desbloquea el siguiente al superar el anterior
 const DIFICULTADES = ['Principiante', 'Iniciado', 'Normal', 'Avanzado', 'Experto'];       // 5 desplegables de 10 niveles
 let abiertos = new Set();
 // Hasta la 3.44 había 30 pantallas en otro orden: se recolocan el progreso, el nivel elegido y la partida guardada.
@@ -38,6 +40,7 @@ function migrarOrden() {
   const g = api.cargar(); if (g && Number.isInteger(g.nivel) && g.nivel <= 30) { const n = NUEVO_DE_ANTIGUO(g.nivel); api.guardar({ nivel: n }, resumen({ nivel: n }).texto, false); }
   api.setPref('ordenV', 2);
 }
+const colParabola = () => { const c = COLORES.find(x => x.id === (asp && asp.valores.parabola)); return c ? c.hex : '#FFFFFF'; };
 const avatar = () => valido(asp && asp.valores.avatar);
 const enemigo = () => { const e = asp && asp.valores.enemigo; return e && e !== 'igual' ? valido(e) : avatar(); };
 const nombresImg = () => ['mat-madera', 'mat-piedra', 'mat-hielo', 'mat-hierro', 'fx-explosion', 'fx-humo', 'fx-impacto', 'fx-escombros-madera', 'fx-escombros-piedra', 'fx-escombros-hielo', 'lanzador-base', 'lanzador-brazo', imgEnemigo(enemigo()), ...CLASES.map(c => imgAve(avatar(), c)), ...[0, 1, 2].map(i => imgPieza(avatar(), i))];
@@ -48,8 +51,8 @@ export async function mount(r, a) {
   api = a; root = r; cerrando = false; part = []; textos = []; fase = 'menu';
   asp = api.aspecto([
     { ...grupoPantalla(''), def: 't-pradera' },
-    { clave: 'avatar', titulo: 'Avatar', icono: '🎯', ventana: true, forma: 'cuadrada', def: 'pajaros', opciones: IDS.map(id => ({ id, nombre: AVATARES[id].nombre, img: url('mosaico-' + id) })) },
-    { clave: 'enemigo', titulo: 'Personaje (enemigos)', icono: '🐷', ventana: true, forma: 'cuadrada', def: 'igual', opciones: [{ id: 'igual', nombre: 'El del avatar', icono: '🔗' }, ...IDS.map(id => ({ id, nombre: AVATARES[id].enemigo, img: url('en-' + id) }))] },
+    grupoAvatar(), grupoEnemigo(),
+    { clave: 'parabola', titulo: 'Parábola', icono: '〰️', def: 'blanco', soloColor: true, opciones: COLORES.map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] })) },
   ], () => { cargar(nombresImg()).then(refrescar); refrescar(); if (fase === 'menu') menu(); });
   await api.css(new URL('./catapulta.css', import.meta.url));
   root.innerHTML = '<p class="note">Cargando el motor de física…</p>';
@@ -68,7 +71,7 @@ export async function mount(r, a) {
     salir: () => { pausar(); location.hash = '#/cat/arcade'; },
     pausar: () => { eraJugando = ['apuntar', 'vuelo', 'espera'].includes(fase); pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) seguir(); },
-    config: { valores: () => ({ nivel: cfg.nivel }), grupos: () => DIFICULTADES.map((t, gi) => ({ clave: 'nivel', titulo: 'Nivel · ' + t, visible: gi * 10 + 1 <= nivelMax(), opciones: NIVELES.map((n, i) => [i + 1, `${i + 1}`]).filter(([i]) => i > gi * 10 && i <= gi * 10 + 10 && i <= nivelMax()) })), aplicar: v => { cfg.nivel = +v.nivel; api.setPref('cfg', cfg); jugar(cfg.nivel); } } });
+    config: { pantalla: () => menu() } });
   api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); menu(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
   const g = api.cargar();
   if (g && g.nivel <= nivelMax()) jugar(g.nivel); else menu();
@@ -350,7 +353,7 @@ function catapulta() {
   const apuntando = fase === 'apuntar' && m.cola.length;
   if (apuntando) {
     const v = mira.fz * C.ARRASTRE * C.K_LANZ, a = mira.ang * RAD;
-    ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.strokeStyle = 'rgba(40,40,60,.4)'; ctx.lineWidth = 1;
+    ctx.fillStyle = colParabola(); ctx.strokeStyle = 'rgba(40,40,60,.55)'; ctx.lineWidth = 1;
     C.trayectoria(Math.cos(a) * v, -Math.sin(a) * v, 16, 4).forEach((p, i) => { ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, 5 - i * .18), 0, 6.3); ctx.fill(); ctx.stroke(); });
   }
   if (brazo) { ctx.save(); ctx.translate(PIV.x, PIV.y); ctx.rotate(armAng); if (Math.cos(armAng) < 0) ctx.scale(1, -1); ctx.drawImage(brazo, -105 * ESC, -42 * ESC, 384 * ESC, 100 * ESC); ctx.restore(); }

@@ -146,3 +146,5 @@ En un grupo de `api.aspecto([...])`: `tt: true` → el grupo entra en el despleg
 
 
 Catapulta (3.42.0): `niveles.js` tiene 50 pantallas: `BASE` las guarda en orden de creación y `ORDEN` las coloca de más fácil a más difícil (dificultad = tiros que necesita el simulador, enemigos y dureza de la estructura); el selector las agrupa en 5 desplegables de 10 (Principiante a Experto) y `migrarOrden()` recoloca el progreso guardado antiguo; las nuevas se escriben con los ayudantes `fila`, `pila` y `casa` y los pájaros como letras (`n d a b`). Para calibrar una pantalla: `node tests/catapulta.mjs` (estabilidad) y un solucionador voraz que simule tiros y fije `aves` y `est` (≈60 % y ≈88 % del óptimo con pájaros sobrantes). Los cerdos miden r = 19 (`P()` y `CERDO` en `motor.js`).
+
+Guerra de Orugas (3.46.0): su Apariencia usa las secciones «Avatar» y «Enemigos» de Catapulta (`js/games/catapulta/grupos.js`, con la opción «Gusano original» como valor por defecto) y su panel de disparo reutiliza el aspecto del menú de Catapulta (`.flotante.flfijo`, `.ctpad`).
