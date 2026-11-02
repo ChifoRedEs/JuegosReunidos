@@ -36,3 +36,11 @@ s = re.sub(r"/\*ARCHIVOS-INICIO\*/.*?/\*ARCHIVOS-FIN\*/", "/*ARCHIVOS-INICIO*/\n
 s = re.sub(r"const VERSION = '[^']*';", "const VERSION = '%s';" % version, s)
 open(ruta, 'w', encoding='utf-8').write(s)
 print('sw.js actualizado: %d archivos, versión %s' % (len(archivos) + 1, version))
+
+# La primera línea del README lleva la versión de js/version.js (así se actualiza sola al regenerar el service worker).
+v = re.search(r"VERSION = '([^']+)'", open(os.path.join(RAIZ, 'js', 'version.js'), encoding='utf-8').read())
+if v:
+    rd = os.path.join(RAIZ, 'README.md'); t = open(rd, encoding='utf-8').read()
+    t2 = re.sub(r'\A# Juegos Reunidos[^\n]*', '# Juegos Reunidos ' + v.group(1), t, count=1)
+    if t2 != t: open(rd, 'w', encoding='utf-8').write(t2)
+    print('README.md: versión %s' % v.group(1))
