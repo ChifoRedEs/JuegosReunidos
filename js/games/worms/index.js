@@ -149,7 +149,7 @@ function armar() {
           <button class="btn wmb" data-hold="izq" aria-label="Izquierda">◀</button><button class="btn wmb" data-hold="der" aria-label="Derecha">▶</button>
           <button class="btn wmb" data-ac="salto" aria-label="Saltar hacia delante">⤴️</button><button class="btn wmb" data-ac="alto" aria-label="Saltar hacia arriba">⤒</button>
         </div>
-        <div class="flotante flfijo wmdisp"><small class="wmdt">Disparo</small><div class="flcuerpo fl2">
+        <div class="flotante flfijo wmdisp"><div class="flcuerpo fl2">
           <div class="flcol">
             <button class="wmfuego" id="wmFuego" data-hold="fuego" aria-label="Disparar"><i id="wmPot"></i><span id="wmFTxt">FUEGO</span></button>
             <button class="btn wmpasar" data-ac="pasar">⏭️ Pasar turno</button>
@@ -558,18 +558,21 @@ function final() {
   f.hidden = false;
 }
 
-/* ---------- el quesito del ángulo (como el de Catapulta, en medio círculo: se puede apuntar hacia arriba y hacia abajo) ---------- */
+/* ---------- el círculo de puntería: 360°, se toca o arrastra hacia donde se quiere disparar ---------- */
 let qCv = null, qAnt = '';
+const absAng = () => { const w = M.activo(S), a = S.turno.ang; return w && w.dir < 0 ? 180 - a : a; };     // ángulo real (0° = derecha, 90° = arriba, 180° = izquierda)
 function construirQ() {
   const q = $('#wmQ'); if (!q) return; qCv = q.querySelector('canvas'); qAnt = '';
   let id = null;
   const punto = e => {
     if (!S || !humano()) return;
-    const r = qCv.getBoundingClientRect(), dx = e.clientX - (r.left + 6), dy = (r.top + r.height / 2) - e.clientY;
-    const a = Math.max(-80, Math.min(88, Math.round(Math.atan2(dy, Math.max(1, dx)) * 180 / Math.PI)));
-    const w = M.activo(S);
-    if (w && w.est === 'cuerda') { teclas.arr = a > 8; teclas.aba = a < -8; return; }       // colgado de la cuerda: arriba acorta y abajo alarga
-    M.apuntar(S, a - S.turno.ang);
+    const r = qCv.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = (r.top + r.height / 2) - e.clientY;
+    if (Math.hypot(dx, dy) < 5) return;
+    const w = M.activo(S); if (!w) return;
+    let th = Math.atan2(dy, dx) * 180 / Math.PI;                                    // -180…180
+    if (w.est === 'cuerda') { teclas.arr = th > 15 && th < 165; teclas.aba = th < -15 && th > -165; return; }   // colgado: arriba acorta la cuerda y abajo la alarga
+    const dir = Math.abs(th) > 90 ? -1 : 1, rel = dir < 0 ? 180 - (th < 0 ? th + 360 : th) : th;     // elevación respecto a hacia donde mira
+    M.dirigir(S, dir); M.apuntar(S, Math.max(-80, Math.min(88, Math.round(rel))) - S.turno.ang); qAnt = '';
   };
   q.addEventListener('pointerdown', e => { e.stopPropagation(); id = e.pointerId; try { q.setPointerCapture(id); } catch { /* nada */ } punto(e); e.preventDefault(); });
   q.addEventListener('pointermove', e => { if (e.pointerId === id) punto(e); });
@@ -578,24 +581,24 @@ function construirQ() {
 }
 function dibujarQ() {
   const c = qCv; if (!c || !c.isConnected || !S) return;
-  const ang = Math.round(S.turno.ang), w = M.activo(S), cuerda = !!(w && w.est === 'cuerda'), key = ang + '|' + cuerda;
-  const sw = c.clientWidth || 68, sh = c.clientHeight || 120, d = Math.min(window.devicePixelRatio || 1, 3);
-  const pw = Math.round(sw * d), ph = Math.round(sh * d); if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; qAnt = ''; }
+  const w = M.activo(S), cuerda = !!(w && w.est === 'cuerda'), th = Math.round(absAng()), key = th + '|' + cuerda;
+  const sz = c.clientWidth || 92, d = Math.min(window.devicePixelRatio || 1, 3), px = Math.round(sz * d);
+  if (c.width !== px || c.height !== px) { c.width = px; c.height = px; qAnt = ''; }
   if (key === qAnt) return; qAnt = key;
   const g = c.getContext('2d'), cs = getComputedStyle(c), col = n => (cs.getPropertyValue(n) || '').trim();
   const purple = col('--purple') || '#7A4DFF', blue = col('--blue') || '#2F6BFF', line = col('--line') || '#C9D2F0', card = col('--card') || '#fff', mut = col('--mut') || '#6B7490';
-  g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, sw, sh);
-  const cx = 6, cy = sh / 2, R = Math.min(sw - 8, sh / 2 - 4), A = Math.PI / 180;
-  g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, -Math.PI / 2, Math.PI / 2); g.closePath(); g.fillStyle = card; g.fill();
+  g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, sz, sz);
+  const cx = sz / 2, cy = sz / 2, R = sz / 2 - 3, A = Math.PI / 180;
+  g.beginPath(); g.arc(cx, cy, R, 0, 6.2832); g.fillStyle = card; g.fill();
   const rel = g.createRadialGradient(cx, cy, 0, cx, cy, R); rel.addColorStop(0, 'rgba(122,77,255,.04)'); rel.addColorStop(1, 'rgba(122,77,255,.2)'); g.fillStyle = rel; g.fill();
   g.lineWidth = 3; g.strokeStyle = line; g.stroke();
-  g.lineWidth = 1.2; g.setLineDash([3, 4]); for (const a of [-60, -30, 0, 30, 60]) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a * A) * R, cy - Math.sin(a * A) * R); g.stroke(); }
-  g.setLineDash([]); g.fillStyle = mut; g.font = '700 9px Nunito, sans-serif'; g.textAlign = 'center';
-  g.fillText('90°', cx + 14, cy - R + 11); g.fillText('0°', cx + R - 11, cy + 3); g.fillText('-80°', cx + 20, cy + R - 4);
-  const k = Math.max(-80, Math.min(88, ang)) * A, kx = cx + Math.cos(k) * R * .82, ky = cy - Math.sin(k) * R * .82;
+  g.lineWidth = 1.2; g.setLineDash([3, 4]); for (const a of [0, 45, 90, 135]) { g.beginPath(); g.moveTo(cx - Math.cos(a * A) * R, cy + Math.sin(a * A) * R); g.lineTo(cx + Math.cos(a * A) * R, cy - Math.sin(a * A) * R); g.stroke(); }
+  g.setLineDash([]); g.fillStyle = mut; g.font = '800 9px Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('◀', 8, cy); g.fillText('▶', sz - 8, cy); g.fillText('▲', cx, 8); g.fillText('▼', cx, sz - 8);
+  const k = th * A, kx = cx + Math.cos(k) * R * .72, ky = cy - Math.sin(k) * R * .72;
   const gr = g.createLinearGradient(cx, cy, kx, ky); gr.addColorStop(0, purple); gr.addColorStop(1, blue);
-  g.strokeStyle = gr; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(kx, ky); g.stroke();
-  g.beginPath(); g.arc(cx, cy, 4, 0, 6.2832); g.fillStyle = purple; g.fill();
-  g.beginPath(); g.arc(kx, ky, 10, 0, 6.2832); g.fillStyle = gr; g.fill(); g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke();
-  g.fillStyle = mut; g.font = '800 11px Nunito, sans-serif'; g.textAlign = 'right'; g.fillText(cuerda ? 'cuerda' : ang + '°', sw - 2, 12);
+  g.strokeStyle = gr; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(kx, ky); g.stroke();
+  g.beginPath(); g.arc(cx, cy, 3.5, 0, 6.2832); g.fillStyle = purple; g.fill();
+  g.beginPath(); g.arc(kx, ky, 8, 0, 6.2832); g.fillStyle = gr; g.fill(); g.lineWidth = 2; g.strokeStyle = '#fff'; g.stroke();
+  if (cuerda) { g.fillStyle = mut; g.font = '800 9px Nunito, sans-serif'; g.fillText('cuerda', cx, cy + R * .45); }
 }
