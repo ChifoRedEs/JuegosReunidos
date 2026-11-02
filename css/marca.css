@@ -138,6 +138,13 @@ button.ficha{display:flex}
 .flbtns .btn.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
 .flbtns .btn:disabled{opacity:.4}
 .flhueco{width:100%}
+/* variante con círculo táctil en medio (Catapulta) */
+.flcuerpo{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.flcol{display:flex;flex-direction:column;gap:6px}
+.flcol .btn{padding:10px 4px;font-size:13.5px;line-height:1.15;min-height:48px;touch-action:manipulation}
+.flcol .btn.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
+.flcol .btn:disabled{opacity:.4}
+.flcentro{display:flex;flex-direction:column;align-items:center;gap:4px}
 
 /* Cabecera: banner 8:1 con los dos logos en los extremos; el nombre va encima, en el centro blanco */
 .top h1{position:relative;display:flex;align-items:center;justify-content:center;flex:1 1 100%;width:100%;max-width:1000px;margin:0 auto;padding:0;aspect-ratio:8/1;background:#fff url(../img/banner-cabecera.webp) center/100% 100% no-repeat;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(20,10,80,.25)}

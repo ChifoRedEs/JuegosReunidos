@@ -211,6 +211,11 @@
    "archivo": "fondos/ciudad.webp"
   },
   {
+   "id": "t-cueva",
+   "nombre": "Cueva de cristales",
+   "archivo": "fondos/cueva.webp"
+  },
+  {
    "id": "t-deportivo",
    "nombre": "Deportivo",
    "archivo": "fondos/deportivo.webp"
@@ -226,14 +231,29 @@
    "archivo": "fondos/espacio.webp"
   },
   {
+   "id": "t-mar",
+   "nombre": "Fondo marino",
+   "archivo": "fondos/mar.webp"
+  },
+  {
    "id": "t-galaxia",
    "nombre": "Galaxia",
    "archivo": "fondos/galaxia.webp"
   },
   {
+   "id": "t-huerto",
+   "nombre": "Huerto",
+   "archivo": "fondos/huerto.webp"
+  },
+  {
    "id": "t-infierno",
    "nombre": "Infierno",
    "archivo": "fondos/infierno.webp"
+  },
+  {
+   "id": "t-isla",
+   "nombre": "Isla pirata",
+   "archivo": "fondos/isla.webp"
   },
   {
    "id": "t-lago",
@@ -244,6 +264,16 @@
    "id": "t-medieval",
    "nombre": "Medieval",
    "archivo": "fondos/medieval.webp"
+  },
+  {
+   "id": "t-pradera",
+   "nombre": "Pradera",
+   "archivo": "fondos/pradera.webp"
+  },
+  {
+   "id": "t-pajaros",
+   "nombre": "Valle de montaña",
+   "archivo": "fondos/pajaros.webp"
   }
  ]
 }

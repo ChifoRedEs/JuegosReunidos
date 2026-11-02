@@ -9,12 +9,14 @@ export const MATERIALES = {
   madera: { nombre: 'Madera', vida: 60, dens: .0015, pts: 500, fric: .6, rest: .05 },
   piedra: { nombre: 'Piedra', vida: 170, dens: .004, pts: 800, fric: .7, rest: .02 },
   hielo: { nombre: 'Hielo', vida: 30, dens: .0009, pts: 300, fric: .08, rest: .05 },
+  hierro: { nombre: 'Hierro', vida: 420, dens: .006, pts: 1200, fric: .45, rest: .03 },
 };
+// Las 4 clases de proyectil (el dibujo y el nombre dependen del avatar elegido: avatares.js)
 export const AVES = {
-  normal: { nombre: 'Pepa', r: 14, dens: .004, color: '#E8453C', hab: 'Sin habilidad: pura fuerza.' },
-  divisible: { nombre: 'Trino', r: 12, dens: .0035, color: '#2F80ED', hab: 'Toca en el aire: se divide en tres.' },
-  acelerador: { nombre: 'Rayo', r: 13, dens: .004, color: '#FFC21A', hab: 'Toca en el aire: sale disparado hacia delante.' },
-  bomba: { nombre: 'Bombón', r: 16, dens: .005, color: '#2B2F3A', hab: 'Toca en el aire (o al chocar): explota.' },
+  normal: { r: 14, dens: .004, hab: 'Sin habilidad: pura fuerza.' },
+  divisible: { r: 12, dens: .0035, hab: 'Toca en el aire: se divide en tres.' },
+  acelerador: { r: 13, dens: .004, hab: 'Toca en el aire: sale disparado hacia delante.' },
+  bomba: { r: 16, dens: .005, hab: 'Toca en el aire (o al chocar): explota.' },
 };
 export const CERDO = { r: 18, vida: 40, dens: .002, pts: 5000 };
 export const PTS_AVE = 10000;

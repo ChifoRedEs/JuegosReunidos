@@ -3,7 +3,7 @@
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { crearPiloto } from './ia.js';
-import { grupoEscenario, grupoPersonaje } from '../../core/aspectos.js';
+import { grupoEscenario, grupoPersonaje, ESCENARIOS_GUERRA } from '../../core/aspectos.js';
 import { imagenTapete } from '../../core/cartas.js';
 import { gruposFichas, estilo, rgb, claro, oscuro, pixelTextura } from '../../core/fichas.js';
 import { FICHAS } from '../../core/personajes.js';
@@ -26,6 +26,12 @@ const PAL = {
   infierno:  { top: [255, 122, 42], tope: [255, 176, 72], mid: [112, 38, 30], deep: [54, 18, 16], agua: ['rgba(240,84,18,.78)', '#ffc66b'] },
   lago:      { top: [112, 192, 74], tope: [154, 224, 104], mid: [142, 106, 64], deep: [88, 64, 40], agua: ['rgba(46,150,224,.6)', '#a6e2ff'] },
   medieval:  { top: [118, 172, 82], tope: [152, 204, 110], mid: [150, 140, 118], deep: [96, 88, 72], agua: ['rgba(60,122,184,.62)', '#a6d0f0'] },
+  pradera:   { top: [118, 190, 84], tope: [160, 222, 112], mid: [146, 108, 66], deep: [92, 66, 42], agua: ['rgba(46,150,224,.6)', '#a6e2ff'] },
+  huerto:    { top: [124, 170, 76], tope: [162, 204, 104], mid: [138, 92, 56], deep: [86, 56, 36], agua: ['rgba(60,140,200,.6)', '#a8dcf5'] },
+  isla:      { top: [236, 200, 138], tope: [252, 226, 168], mid: [196, 150, 96], deep: [140, 98, 64], agua: ['rgba(40,170,200,.62)', '#a4e8f0'] },
+  cueva:     { top: [124, 120, 150], tope: [164, 160, 192], mid: [84, 80, 108], deep: [48, 46, 66], agua: ['rgba(80,110,210,.62)', '#a6b8ff'] },
+  mar:       { top: [232, 224, 190], tope: [250, 244, 214], mid: [186, 170, 128], deep: [130, 118, 88], agua: ['rgba(30,170,200,.55)', '#9deaf2'] },
+  pajaros:   { top: [110, 178, 90], tope: [150, 212, 116], mid: [128, 104, 76], deep: [80, 66, 48], agua: ['rgba(60,140,210,.6)', '#a8dcf8'] },
 };
 const paletaBase = () => PAL[String((asp && asp.valores.esc) || '').slice(2)] || PAL.bosque;
 // 🎨 Terreno: si se elige un color, la tierra se tiñe de él (superficie, capas y fondo) y se conserva el agua del escenario
@@ -49,7 +55,7 @@ export async function mount(r, a) {
   api = a; root = r; S = null; finMostrado = false; pausa = false; anims = []; parts = []; shake = 0;
   const c0 = api.pref('cfg', null); if (c0 && typeof c0 === 'object') cfg = { ...cfg, ...limpiarCfg(c0) };
   asp = api.aspecto([
-    grupoEscenario('.wmfondo'),
+    grupoEscenario('.wmfondo', 'Fondo de Pantalla', ESCENARIOS_GUERRA),
     { ...grupoPersonaje('Personajes · equipo Rojo'), clave: 'pj' },
     { ...grupoPersonaje('Personajes · equipo Azul o CPU'), clave: 'pj2' },
     ...gruposFichas({ titulo: 'Terreno', icono: '⛰️', pocos: true, formas: false, tamano: false }),

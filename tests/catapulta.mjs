@@ -51,6 +51,12 @@ for (let n = 1; n <= NIVELES.length; n++) {
   assert.ok(C.habilidad(m)); assert.equal(m.vuelan.length, 3); }
 { const m = C.crear(M, 2); m.cola = ['acelerador']; const o = C.lanzar(m, 9, -6); for (let i = 0; i < 10; i++) C.paso(m); const v0 = o.cuerpo.speed; C.habilidad(m); assert.ok(o.cuerpo.speed > v0 * 1.5); }
 { const m = C.crear(M, 3); for (let i = 0; i < 100; i++) C.paso(m); m.cola = ['bomba']; const o = C.lanzar(m, 9, -6); for (let i = 0; i < 5; i++) C.paso(m); C.habilidad(m); C.paso(m); assert.equal(m.vuelan.length, 0); }
+// 4b) El hierro es el material más duro y todos los avatares tienen sus imágenes
+{ const V = C.MATERIALES; assert.ok(V.hierro.vida > V.piedra.vida && V.piedra.vida > V.madera.vida && V.madera.vida > V.hielo.vida); }
+{ const { existsSync } = await import('node:fs'); const { AVATARES, imgAve, imgEnemigo, CLASES } = await import('../js/games/catapulta/avatares.js');
+  for (const id of Object.keys(AVATARES)) { assert.ok(existsSync(new URL(`../img/catapulta/${imgEnemigo(id)}.webp`, import.meta.url)), imgEnemigo(id)); assert.ok(existsSync(new URL(`../img/catapulta/mosaico-${id}.webp`, import.meta.url)));
+    for (const c of CLASES) assert.ok(existsSync(new URL(`../img/catapulta/${imgAve(id, c)}.webp`, import.meta.url)), imgAve(id, c)); }
+  for (const f of ['mat-madera', 'mat-piedra', 'mat-hielo', 'mat-hierro', 'fx-explosion', 'fx-humo', 'fx-impacto', 'fx-escombros-madera', 'fx-escombros-piedra', 'fx-escombros-hielo', 'lanzador-base', 'lanzador-brazo']) assert.ok(existsSync(new URL(`../img/catapulta/${f}.webp`, import.meta.url)), f); }
 // 5) Estrellas y puntuación
 assert.equal(C.estrellas(1, 1000), 1); assert.equal(C.estrellas(1, NIVELES[0].est[0]), 2); assert.equal(C.estrellas(1, NIVELES[0].est[1]), 3);
 console.log('catapulta: OK');

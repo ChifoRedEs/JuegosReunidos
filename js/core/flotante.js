@@ -3,10 +3,16 @@
 //
 //   const fl = crearFlotante(api, { ancla: elemento, botones: [{ id, texto }], alClic: id => …, raiz: root });
 //   fl.marcar(id, true|false)      resalta un botón (modos)      fl.activar(id, true|false)   habilita / deshabilita
+//   centro: true → hueco central (fl.centro) con botones a los lados (lado: 'izq' | 'der').   titulo: texto del asa (por defecto «Mover»).
 //   fl.destruir()                  quitar en unmount
-export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot' }) {
+export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot', centro = false, titulo = 'Mover' }) {
   const panel = document.createElement('div'); panel.className = 'flotante'; panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Controles');
-  panel.innerHTML = `<div class="flasa" title="Arrastra para mover los controles"><span aria-hidden="true"></span><small>Mover</small></div><div class="flbtns" style="--nb:${botones.length}">${botones.map(b => `<button type="button" class="btn" data-fl="${b.id}">${b.texto}</button>`).join('')}</div>`;
+  const btn = b => `<button type="button" class="btn" data-fl="${b.id}">${b.texto}</button>`;
+  // Con `centro: true` el menú lleva en medio un hueco (panel.querySelector('.flcentro')) para un control propio del juego (p. ej. el círculo táctil de Catapulta);
+  // los botones con `lado: 'izq'` o `lado: 'der'` se colocan a cada lado del hueco.
+  panel.innerHTML = `<div class="flasa" title="Arrastra para mover los controles"><span aria-hidden="true"></span><small>${titulo}</small></div>` + (centro
+    ? `<div class="flcuerpo"><div class="flcol">${botones.filter(b => b.lado !== 'der').map(btn).join('')}</div><div class="flcentro"></div><div class="flcol">${botones.filter(b => b.lado === 'der').map(btn).join('')}</div></div>`
+    : `<div class="flbtns" style="--nb:${botones.length}">${botones.map(btn).join('')}</div>`);
   document.body.append(panel);
   const hueco = document.createElement('div'); hueco.className = 'flhueco'; ancla.after(hueco);
   let pos = null, arr = null; const p0 = api.pref(clave, null); if (p0 && Number.isFinite(p0.x) && Number.isFinite(p0.y)) pos = { x: p0.x, y: p0.y };
@@ -49,7 +55,7 @@ export function crearFlotante(api, { ancla, botones, alClic, raiz, clave = 'flot
   const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(on) : null; if (ro) ro.observe(raiz || ancla.parentElement);
   colocar(); requestAnimationFrame(colocar);
   return {
-    panel,
+    panel, centro: panel.querySelector('.flcentro'),
     marcar(id, v) { const b = panel.querySelector(`[data-fl="${id}"]`); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', String(!!v)); } },
     activar(id, v) { const b = panel.querySelector(`[data-fl="${id}"]`); if (b) b.disabled = !v; },
     recolocar: colocar,

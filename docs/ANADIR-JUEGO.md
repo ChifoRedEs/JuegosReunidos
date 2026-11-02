@@ -137,3 +137,10 @@ En un grupo de `api.aspecto([...])`: `tt: true` → el grupo entra en el despleg
 ## Juegos con física 2D (Matter.js)
 `js/vendor/matter.min.js` (v0.20.0, MIT, licencia en `matter.LICENSE`) es un script UMD: se carga solo cuando se entra en el juego, con una etiqueta `<script>` dinámica (ver `cargarMatter()` en `games/catapulta/index.js`) y queda en `window.Matter`. El motor del juego (`motor.js`) no toca el DOM y recibe Matter como parámetro, así que `tests/catapulta.mjs` lo ejecuta en Node. Claves de Catapulta: paso fijo de 1/60 s con acumulador, `frictionAir: 0` en el pájaro para poder predecir la trayectoria, daño por impacto = `max(0, velocidad relativa − 4) · masa reducida · 6` (ignorado los primeros 70 pasos, mientras la estructura se asienta) y niveles como datos en `niveles.js`.
 
+### Catapulta: avatares, imágenes y menú flotante con control central
+- **Imágenes** (`img/catapulta/`): avatares `av-<id>-1…4` (normal, divisible, acelerador, bomba), enemigos `en-<id>`, miniaturas `mosaico-<id>`, texturas `mat-*` (repetibles), efectos `fx-*`, `lanzador-base`/`lanzador-brazo`. Los originales son JPG con fondo magenta liso: `python tools/procesar_catapulta.py CARPETA` quita el fondo (con transparencia suave) y deja los WebP; los fondos `fondo-*` van a `img/cartas/fondos/` y `python tools/generar_barajas.py` los da de alta en 🎨 Apariencia de los juegos de Arcade.
+- **Avatares** (`avatares.js`): para añadir una temática basta una entrada en `AVATARES` y sus 4 + 1 imágenes. El grupo `Personaje (enemigos)` puede elegir otro distinto del avatar.
+- **Menú flotante con control central**: `crearFlotante(api, { ancla, raiz, centro: true, botones: [{ id, texto, lado: 'izq' | 'der' }], alClic })` deja un hueco `fl.centro` donde el juego pinta su propio control (en Catapulta, el círculo táctil: el pointerdown del control hace `stopPropagation()` para que no arrastre el menú).
+- **Nuevo grupo de Apariencia con miniaturas cuadradas**: `forma: 'cuadrada'` (CSS en `catapulta.css`).
+- Los escenarios nuevos se ofrecen también en Guerra de Orugas mediante `ESCENARIOS_GUERRA` (Quantix mantiene los 8 originales).
+

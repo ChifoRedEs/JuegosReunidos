@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-f0b2b0d096';
+const VERSION = 'jr-85e267236c';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -92,7 +92,9 @@ const ARCHIVOS = [
 './js/games/buscaminas/buscaminas.css',
 './js/games/buscaminas/index.js',
 './js/games/buscaminas/motor.js',
+'./js/games/catapulta/avatares.js',
 './js/games/catapulta/catapulta.css',
+'./js/games/catapulta/imagenes.js',
 './js/games/catapulta/index.js',
 './js/games/catapulta/motor.js',
 './js/games/catapulta/niveles.js',

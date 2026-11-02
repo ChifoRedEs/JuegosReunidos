@@ -4,7 +4,6 @@
 .cthud small{font-size:10.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .cthud b{font:800 18px 'Baloo 2',system-ui,sans-serif;font-variant-numeric:tabular-nums}
 .ctcola{display:flex;gap:4px;align-items:center;justify-content:center;min-height:27px}
-.ctcola i,.ctaves i{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--c);border:2px solid rgba(0,0,0,.35)}
 .ctzona{position:relative;width:min(100%,760px);margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(10,15,50,.4)}
 .ctzona canvas{display:block;width:100%}
 .ctover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,8,30,.5)}
@@ -17,12 +16,21 @@
 .ctover .rec{color:var(--ok);font-weight:800}
 .ctover .bts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
 .ctayuda{text-align:center;font-size:12px;min-height:1.4em}
-.ctniv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
-.ctniv .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;height:auto}
-.ctniv b{font:800 22px 'Baloo 2',system-ui,sans-serif}
-.ctniv span{font-size:12px;font-weight:700}
-.ctniv i{font-style:normal;color:#F5B50A;letter-spacing:2px;font-size:15px}
-.ctniv small{font-size:11px;color:var(--mut)}
-.ctniv .btn.on i{color:#FFE38A}
-.ctaves{display:flex;flex-direction:column;gap:5px;font-size:13px;margin:8px 0}
-.ctaves span{display:flex;align-items:center;gap:6px}
+.ctniv{flex-wrap:wrap}
+.ctniv .btn{min-width:40px;padding:6px 8px}
+.ctcaps{display:flex;flex-direction:column;gap:6px;margin:8px 0;font-size:13px}
+.ctcaps span{display:flex;align-items:center;gap:8px;line-height:1.25}
+.ctcaps img{width:34px;height:34px;object-fit:contain;flex:none}
+.ldrecs{display:flex;flex-wrap:wrap;gap:6px 12px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin:8px 0;font-size:13px}
+.ldrecs>b{width:100%}
+.ctcola img{width:24px;height:24px;object-fit:contain}
+.ctenem{display:flex;align-items:center;justify-content:center;gap:4px;min-height:27px}
+.ctenem img{width:24px;height:24px;object-fit:contain}
+/* círculo táctil del menú flotante */
+.ctpad{width:132px;height:132px;border-radius:50%;touch-action:none;cursor:crosshair;outline-offset:3px}
+.ctpad canvas{display:block;width:100%;height:100%;border-radius:50%}
+.ctlec{font-size:11.5px;font-weight:800;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* miniaturas cuadradas en 🎨 Apariencia (Avatar y Personaje) */
+.ap-rej.ap-cuadrada{grid-template-columns:repeat(3,1fr)}
+.ap-cuadrada .ap-ficha img,.ap-cuadrada .ap-azar{aspect-ratio:1;object-fit:contain;box-shadow:none;background:color-mix(in srgb,var(--purple) 8%,var(--card));border-radius:10px}
+.ap-cuadrada .ap-azar{display:flex;align-items:center;justify-content:center;font-size:30px}

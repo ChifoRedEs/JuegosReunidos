@@ -43,5 +43,7 @@ export const tapeteElegido = asp => { const V = (asp && asp.valores) || {}; for 
 
 // «Escenario» de Guerra de Orugas: solo los tapetes con ambientación de campo de batalla (el juego los pinta de fondo y colorea el terreno a juego).
 export const ESCENARIOS_WORMS = ['t-bosque', 't-ciudad', 't-deportivo', 't-desierto', 't-espacio', 't-infierno', 't-lago', 't-medieval'];
-export const grupoEscenario = (sel, titulo = 'Fondo de Pantalla') => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
-  opciones: [AZAR, ...BARAJAS.fondos.filter(t => ESCENARIOS_WORMS.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
+// Escenarios que se añadieron después (pensados para Catapulta): Guerra de Orugas también los ofrece. Quantix sigue con los ocho de siempre (su lista decide qué imagen sale en cada nivel).
+export const ESCENARIOS_GUERRA = [...ESCENARIOS_WORMS, 't-pradera', 't-huerto', 't-isla', 't-cueva', 't-mar', 't-pajaros'];
+export const grupoEscenario = (sel, titulo = 'Fondo de Pantalla', lista = ESCENARIOS_WORMS) => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
+  opciones: [AZAR, ...BARAJAS.fondos.filter(t => lista.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });

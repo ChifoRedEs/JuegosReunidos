@@ -1,11 +1,17 @@
 {
  "bosque": "Bosque",
  "ciudad": "Ciudad",
+ "cueva": "Cueva de cristales",
  "deportivo": "Deportivo",
  "desierto": "Desierto",
  "espacio": "Espacio",
  "galaxia": "Galaxia",
+ "huerto": "Huerto",
  "infierno": "Infierno",
+ "isla": "Isla pirata",
  "lago": "Lago",
- "medieval": "Medieval"
+ "mar": "Fondo marino",
+ "medieval": "Medieval",
+ "pajaros": "Valle de montaña",
+ "pradera": "Pradera"
 }
