@@ -43,10 +43,8 @@
 /* Bingo Mobile */
 .juego-bingomobile .bgHud{grid-template-columns:1fr auto}
 .juego-bingomobile .bmPrem{grid-column:1/-1;justify-content:flex-start}
-.juego-bingomobile .bmEsc{position:relative;width:100%;height:clamp(250px,38vh,360px);border-radius:16px;overflow:hidden;background:radial-gradient(120% 100% at 50% 0%,#24365f 0,#0c1426 70%);box-shadow:0 10px 26px rgba(10,15,50,.4)}
+.juego-bingomobile .bmEsc{position:relative;width:100%;height:clamp(300px,46vh,430px);border-radius:16px;overflow:hidden;background:radial-gradient(120% 100% at 50% 0%,#24365f 0,#0c1426 70%);box-shadow:0 10px 26px rgba(10,15,50,.4)}
 .juego-bingomobile .bmFi{background:#FFF1B8;border-color:#D4AF37;color:#5a4300}
-.juego-bingomobile .bmAcc{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:6px;margin:8px 0 4px}
-.juego-bingomobile .bmAcc .btn{min-height:50px;padding:6px;font-size:14px;line-height:1.1;white-space:normal}
 .juego-bingomobile .bmAcc .bmL{background:#FFB020;border-color:#E89A00;color:#3a2600}
 .juego-bingomobile .bmAcc .bmB{background:#E5322D;border-color:#C42621;color:#fff}
 .juego-bingomobile .bmAcc .btn:disabled{opacity:.45}
@@ -62,3 +60,7 @@
 .juego-bingomobile .bmFila small{grid-column:3;font-size:12px;color:var(--mut)}
 .juego-bingomobile .bmFila em{grid-column:3;font-style:normal;font-weight:800;font-size:12px;color:#1E9E5A}
 .juego-bingomobile .bmFila b{grid-column:2}
+
+.juego-bingomobile .bmWrap{position:relative}
+.juego-bingomobile .bmAcc{position:absolute;top:8px;right:8px;width:128px;display:flex;flex-direction:column;gap:5px;z-index:3}
+.juego-bingomobile .bmAcc .btn{width:100%;min-height:40px;padding:4px 8px;font-size:13.5px;line-height:1.1;white-space:nowrap}

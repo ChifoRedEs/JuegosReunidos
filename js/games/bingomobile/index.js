@@ -70,8 +70,8 @@ function alCambiar() {
 /* ---------- pantalla ---------- */
 function armar() {
   root.innerHTML = `<div class="bgHud" id="bmHud"></div>
-    <div class="bgEsc bmEsc" id="bmEsc"></div>
-    <div class="bmAcc" id="bmAcc"><button class="btn on" id="bmSacar" data-ac="sacar">🎱 Sacar bola</button><button class="btn bmL" id="bmLinea" data-ac="linea">🙋 ¡Línea!</button><button class="btn bmB" id="bmBingo" data-ac="bingo">🏆 ¡Bingo!</button></div>
+    <div class="bmWrap"><div class="bgEsc bmEsc" id="bmEsc"></div>
+    <div class="bmAcc" id="bmAcc"><button class="btn on" id="bmSacar" data-ac="sacar">🎱 Sacar bola</button><button class="btn bmL" id="bmLinea" data-ac="linea">🙋 ¡Línea!</button><button class="btn bmB" id="bmBingo" data-ac="bingo">🏆 ¡Bingo!</button></div></div>
     <p class="note bgNota" id="bmNota"></p>
     <div class="bmCar" id="bmCar"></div>
     <div class="bmJug" id="bmJug"></div>${api.barraHtml()}`;
@@ -81,7 +81,7 @@ async function montarVistas() {
   for (const x of [V, CV]) if (x) { try { x.destruir(); } catch { /* nada */ } }
   V = CV = null; h1.innerHTML = ''; h2.innerHTML = ''; calAnt = val('calidad');
   const mk = async f => { try { return await f(val('calidad')); } catch { return await f('2d'); } };
-  const v = await mk(c => crearVista(h1, { calidad: c, paleta: val('bolas') || 'clasico', alTocarBombo: () => sacar() }));
+  const v = await mk(c => crearVista(h1, { calidad: c, paleta: val('bolas') || 'clasico', escala: .62, zonaArribaPx: 138, reservaPx: 150, alDisponer: colocarBotones, alTocarBombo: () => sacar() }));
   const cv = await mk(c => crearCartones(h2, { calidad: c, colorMarca: COLORES_MARCA[val('marca')] || COLORES_MARCA.rojo, alTocar: tocarCelda }));
   if (!vivo || mio !== tok) { v.destruir(); cv.destruir(); return; }
   V = v; CV = cv;
@@ -90,6 +90,11 @@ function restaurar() {
   if (!G || !V || !CV) return;
   G.orden.slice(0, G.n).forEach(n => V.encender(n));
   CV.poner(yo().cartones); yo().cartones.forEach((_, i) => CV.marcas(i, new Set(yo().marcas[i])));
+}
+// Los botones van encima del panel, a la derecha del bombo (uno encima del otro)
+function colocarBotones(i) {
+  const a = $('#bmAcc'); if (!a) return;
+  if (i.vertical) { a.style.left = ''; a.style.right = '8px'; a.style.top = '8px'; a.style.transform = ''; } else { a.style.right = ''; a.style.left = Math.round(i.izqPx) + 'px'; a.style.top = '50%'; a.style.transform = 'translateY(-55%)'; }
 }
 const cacheTex = new Map();
 function fondoBola(hex) {

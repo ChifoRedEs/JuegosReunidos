@@ -74,7 +74,7 @@ export async function crearVista(cont, o = {}) {
   /* ----- bombo ----- */
   const bombo = new T.Group(); esc.add(bombo);
   const drum = new T.Group(); bombo.add(drum);
-  const R = 2.4;
+  const ESC = o.escala || 1, R = 2.4 * ESC;                   // escala < 1 = bombo más pequeño (Bingo Mobile)
   const jaula = new T.LineSegments(new T.EdgesGeometry(new T.IcosahedronGeometry(R, alta ? 2 : 1)), new T.LineBasicMaterial({ color: 0xcfd8e6 })); drum.add(jaula);
   const cristal = new T.Mesh(new T.SphereGeometry(R * .99, 24, 16), new T.MeshStandardMaterial({ color: 0x9fd4ff, transparent: true, opacity: .13, roughness: .2, depthWrite: false })); drum.add(cristal);
   const aro = new T.Mesh(new T.TorusGeometry(R, .06, 8, 40), new T.MeshStandardMaterial({ color: 0xc9a227, metalness: .6, roughness: .35 })); drum.add(aro);
@@ -82,7 +82,7 @@ export async function crearVista(cont, o = {}) {
   const pata1 = patas.clone(), pata2 = patas.clone(); pata1.position.set(-R * .55, -R * 1.2, 0); pata1.rotation.z = .35; pata2.position.set(R * .55, -R * 1.2, 0); pata2.rotation.z = -.35; bombo.add(pata1, pata2);
   const manivela = new T.Mesh(new T.BoxGeometry(R * .7, .12, .12), new T.MeshStandardMaterial({ color: 0xc9a227, metalness: .5, roughness: .4 })); manivela.position.set(R * 1.05, 0, 0); drum.add(manivela);
   const boca = new T.Mesh(new T.CylinderGeometry(.42, .55, .7, 16, 1, true), new T.MeshStandardMaterial({ color: 0xb8c2d0, metalness: .5, roughness: .35, side: T.DoubleSide })); bombo.add(boca);
-  const interiores = [], nI = alta ? 18 : 8, geoI = new T.SphereGeometry(.36, 14, 10);
+  const interiores = [], nI = alta ? 18 : 8, geoI = new T.SphereGeometry(.36 * ESC, 14, 10);
   for (let i = 0; i < nI; i++) { const m = new T.Mesh(geoI, new T.MeshStandardMaterial({ color: new T.Color(COLORES_FILA[i % 9]), roughness: .4 })); m.userData = { a: Math.random() * 6.28, r: .5 + Math.random() * (R - 1), w: (Math.random() < .5 ? -1 : 1) * (.6 + Math.random() * .8), z: (Math.random() - .5) * 1.6, ph: Math.random() * 6 }; drum.add(m); interiores.push(m); }
 
   /* ----- carril ----- */
@@ -95,7 +95,7 @@ export async function crearVista(cont, o = {}) {
     if (vertical) { Wv = 12.4; Hv = Wv / asp; } else { Hv = 13; Wv = Hv * asp; }
     const m = .25;
     if (vertical) {
-      const yD = Hv / 2 - R - .35, yTop = yD - R * 1.35;
+      const yD = Hv / 2 - R - .35, yTop = Math.min(yD - R * 1.35, o.zonaArribaPx ? Hv / 2 - o.zonaArribaPx * Hv / Math.max(1, r.height) : 99);   // zonaArribaPx: hueco arriba a la derecha para botones
       bombo.position.set(-Wv / 2 + R + .9, yD, 0);
       caja = { x0: -Wv / 2 + m, x1: Wv / 2 - m, y0: -Hv / 2 + m, y1: yTop };
     } else {
@@ -109,7 +109,7 @@ export async function crearVista(cont, o = {}) {
     const bx = vertical ? (caja.x0 + caja.x1) / 2 : caja.x1 - Wb / 2, by = vertical ? caja.y0 + Hb / 2 : (caja.y0 + caja.y1) / 2;
     tablero.position.set(bx, by, 0); rejilla(px, py, Wb, Hb);
     const bp = bombo.position, sal = new T.Vector3(bp.x + R * .52, bp.y - R * .98, .6);
-    const fin = new T.Vector3(vertical ? Math.min(bx + Wb / 2 - 1.5, bp.x + 5.5) : bx - Wb / 2 - .2, vertical ? by + Hb / 2 + 1.1 : by + Hb / 2 - 1.2, .6);
+    const fin = new T.Vector3(vertical ? Math.min(bx + Wb / 2 - 1.5, bp.x + R * 2.3) : bx - Wb / 2 - .2, vertical ? by + Hb / 2 + 1.1 : by + Hb / 2 - 1.2, .6);
     L = { vertical, sal, fin };
     boca.position.set(sal.x - .2, sal.y + .25, .2); boca.rotation.z = .35;
     pata1.position.y = pata2.position.y = -R * 1.2;
