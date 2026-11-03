@@ -46,7 +46,7 @@ export function definiciones(cat) {
     ['v500', '🐉', 'Invencible', 'Gana 500 partidas.', T => sum(T, 'victorias') >= 500],
     ['racha20', '☄️', 'Racha legendaria', 'Gana 20 partidas seguidas a un mismo juego.', T => Object.values(T).some(s => s.mejorRacha >= 20)],
     ['explor40', '🔭', 'Casi completo', 'Termina partidas en 40 juegos distintos.', T => jugados(T) >= 40],
-    ['todos50', '🎖️', 'Completista', 'Termina partidas en los 52 juegos.', T => jugados(T) >= 52],
+    ['todos50', '🎖️', 'Completista', 'Termina partidas en los 53 juegos.', T => jugados(T) >= 53],
     ['gana10', '🎭', 'Polivalente', 'Gana al menos una vez en 10 juegos distintos.', T => ganadosDistintos(T) >= 10],
     ['gana25', '🦸', 'Campeón de campeones', 'Gana al menos una vez en 25 juegos distintos.', T => ganadosDistintos(T) >= 25],
     ['logica25', '💡', 'Mente brillante', 'Gana 25 partidas en juegos de Lógica.', T => sumCat(T, cat.logica, 'victorias') >= 25],

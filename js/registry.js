@@ -54,6 +54,7 @@ export const JUEGOS = [
   { id: 'parchis',  v1: 'parchis',  nombre: 'Partxis',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
   { id: 'magnate', nombre: 'Magnate Urbano', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
   { id: 'bingolive', nombre: 'Bingo Live', icono: '🎱', color: '#E8453C', categoria: 'tablero', descripcion: 'Bingo de 90 bolas para sala: bombo y tablero en 3D, bolas cantadas con voz y comprobación de cartones.', cargar: () => import('./games/bingolive/index.js') },
+  { id: 'bingomobile', nombre: 'Bingo Mobile', icono: '📱', color: '#E8453C', categoria: 'tablero', descripcion: 'Bingo de 90 bolas en el móvil: tus cartones en 3D, hasta 8 CPU que cantan línea y bingo, fichas y apuestas.', cargar: () => import('./games/bingomobile/index.js') },
   { id: 'hotel', nombre: 'Hotel', icono: '🏨', color: '#E0457B', categoria: 'tablero', descripcion: 'Compra terrenos, levanta hoteles por fases, abre entradas y cobra las noches. Tablero 3D.', cargar: () => import('./games/hotel/index.js') },
 ];
 
@@ -63,6 +64,7 @@ export const GRUPOS = [
   { id: 'solitarios', nombre: 'Solitarios', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Klondike (siempre con solución y modo Vegas), Spider (104 cartas, de 1 a 4 palos) o Carta Blanca (FreeCell).', juegos: ['klondike', 'spider', 'freecell'] },
   { id: 'parchis-oca', nombre: 'Partxis & Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Partxis y el Juego de la Oca.', juegos: ['parchis', 'oca'] },
   { id: 'serpiente-vuelaalto', nombre: 'Serpiente & Vuela Alto', icono: '🐍', color: '#4E7CF6', categoria: 'arcade', descripcion: 'Serpiente (4 modos) o Vuela Alto (mantén pulsado para subir).', juegos: ['serpiente', 'vuelaalto'] },
+  { id: 'bingos', nombre: "Bingo's", icono: '🎱', color: '#E8453C', categoria: 'tablero', descripcion: 'Dos bingos de 90 bolas: Bingo Live (sala, cartones de papel y voz) y Bingo Mobile (cartones 3D, CPU y apuestas).', juegos: ['bingolive', 'bingomobile'] },
   { id: 'magnate-hotel', nombre: 'Magnate & Hotel', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Dos juegos de compra y venta: Magnate Urbano (empresas) y Hotel (terrenos y hoteles en 3D).', juegos: ['magnate', 'hotel'] },
   { id: 'ajedrez-damas', nombre: 'Ajedrez & Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
   { id: 'buscaminas-klotski', nombre: 'Bombardeo & Deslizadas', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Bombardeo (sin adivinar, reto del día) o Deslizadas (bloques deslizantes y números).', juegos: ['buscaminas', 'klotski'] },
