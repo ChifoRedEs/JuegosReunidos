@@ -100,7 +100,7 @@ export async function crearVista(cont, o = {}) {
       caja = { x0: -Wv / 2 + m, x1: Wv / 2 - m, y0: -Hv / 2 + m, y1: yTop };
     } else {
       const xD = -Wv / 2 + R + .6;
-      bombo.position.set(xD, 0, 0);
+      bombo.position.set(xD, o.bomboAbajo ? -Hv / 2 + R * 1.75 + .3 : 0, 0);              // bomboAbajo: el bombo va abajo a la izquierda y los botones encima (Bingo Mobile en horizontal)
       caja = { x0: xD + R + 1.9 + (o.reservaPx || 0) * Wv / Math.max(1, r.width), x1: Wv / 2 - m, y0: -Hv / 2 + m, y1: Hv / 2 - m };
     }
     if (o.alDisponer) o.alDisponer({ vertical, izqPx: (bombo.position.x + R + .5 + Wv / 2) / Wv * r.width });
