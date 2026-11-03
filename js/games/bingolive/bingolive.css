@@ -12,8 +12,9 @@
 .juego-bingolive .bgChip.ok{background:#1E9E5A;border-color:#1E9E5A;color:#fff}
 .juego-bingolive .bgEsc{position:relative;width:100%;height:clamp(420px,68vh,860px);border-radius:16px;overflow:hidden;background:radial-gradient(120% 100% at 50% 0%,#24365f 0,#0c1426 70%);box-shadow:0 10px 26px rgba(10,15,50,.4)}
 @media (orientation:landscape) and (min-width:700px){.juego-bingolive .bgEsc{height:clamp(320px,72vh,820px)}}
-.juego-bingolive .bgAcc{margin-top:8px}
-.juego-bingolive .bgAcc .btn{flex:1;min-height:48px}
+.juego-bingolive .bgWrap{position:relative}
+.juego-bingolive .bgAcc{position:absolute;top:10px;right:8px;width:134px;display:flex;flex-direction:column;gap:8px;z-index:3}
+.juego-bingolive .bgAcc .btn{width:100%;min-height:54px;font-size:14px;line-height:1.15;padding:6px 8px;white-space:normal}
 .juego-bingolive .bgNota{text-align:center;margin:2px 0}
 /* comprobar cartón (panel táctil) */
 .bgModo{margin-bottom:4px}

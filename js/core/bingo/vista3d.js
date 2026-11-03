@@ -101,8 +101,9 @@ export async function crearVista(cont, o = {}) {
     } else {
       const xD = -Wv / 2 + R + .6;
       bombo.position.set(xD, 0, 0);
-      caja = { x0: xD + R + 1.9, x1: Wv / 2 - m, y0: -Hv / 2 + m, y1: Hv / 2 - m };
+      caja = { x0: xD + R + 1.9 + (o.reservaPx || 0) * Wv / Math.max(1, r.width), x1: Wv / 2 - m, y0: -Hv / 2 + m, y1: Hv / 2 - m };
     }
+    if (o.alDisponer) o.alDisponer({ vertical, izqPx: (bombo.position.x + R + .5 + Wv / 2) / Wv * r.width });
     let Wb = caja.x1 - caja.x0, Hb = caja.y1 - caja.y0, px = (Wb - .7) / 10, py = (Hb - .7) / 9;
     if (px > py * 1.7) { px = py * 1.7; Wb = px * 10 + .7; } else if (py > px * 1.7) { py = px * 1.7; Hb = py * 9 + .7; }
     const bx = vertical ? (caja.x0 + caja.x1) / 2 : caja.x1 - Wb / 2, by = vertical ? caja.y0 + Hb / 2 : (caja.y0 + caja.y1) / 2;

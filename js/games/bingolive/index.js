@@ -79,8 +79,8 @@ function configuracion() {
 /* ---------- pantalla ---------- */
 function armar() {
   root.innerHTML = `<div class="bgHud" id="bgHud"></div>
-    <div class="bgEsc" id="bgEsc"></div>
-    <div class="bar bgAcc"><button class="btn on" id="bgSacar" data-ac="sacar">🎱 Sacar bola</button><button class="btn" data-ac="comprobar">🔍 Comprobar cartón</button></div>
+    <div class="bgWrap"><div class="bgEsc" id="bgEsc"></div>
+    <div class="bgAcc" id="bgAcc"><button class="btn on" id="bgSacar" data-ac="sacar">🎱 Sacar bola</button><button class="btn" data-ac="comprobar">🔍 Comprobar</button></div></div>
     <p class="note bgNota" id="bgNota"></p>${api.barraHtml()}`;
 }
 async function montarVista() {
@@ -88,9 +88,14 @@ async function montarVista() {
   if (V) { try { V.destruir(); } catch { /* nada */ } V = null; }
   host.innerHTML = ''; calAnt = val('calidad');
   let v = null;
-  try { v = await crearVista(host, { calidad: val('calidad'), paleta: val('bolas') || 'clasico', alTocarBombo: () => sacar() }); } catch { v = await crearVista(host, { calidad: '2d' }); }
+  try { v = await crearVista(host, { calidad: val('calidad'), paleta: val('bolas') || 'clasico', reservaPx: 150, alDisponer: colocarBotones, alTocarBombo: () => sacar() }); } catch { v = await crearVista(host, { calidad: '2d' }); }
   if (!vivo || mio !== tok) { try { v.destruir(); } catch { /* nada */ } return; }
   V = v; S.orden.slice(0, S.n).forEach(n => V.encender(n));
+}
+// Los botones van encima del panel, a la derecha del bombo (en vertical, arriba a la derecha)
+function colocarBotones(i) {
+  const a = $('#bgAcc'); if (!a) return;
+  if (i.vertical) { a.style.left = ''; a.style.right = '8px'; a.style.top = '10px'; a.style.transform = ''; } else { a.style.right = ''; a.style.left = Math.round(i.izqPx) + 'px'; a.style.top = '50%'; a.style.transform = 'translateY(-60%)'; }
 }
 const fraseDe = n => B.frase(n, val('apodos') || 'tombola', APODOS[n - 1]);
 function hud() {
