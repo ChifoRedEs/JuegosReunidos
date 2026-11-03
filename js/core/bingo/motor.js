@@ -74,3 +74,14 @@ export function frase(n, apodos, apodo = '') {
   if (apodos === 'tombola' && apodo) return `${base}. ${apodo}`;
   return n > 9 ? `${base}. ${cifras(n)}` : base;
 }
+
+// Comprobación con una lista de números (5 de una línea o los 15 del cartón): todos tienen que haber salido.
+export function validarNumeros(nums, cuantos) {
+  const vacios = nums.filter(n => !n).length;
+  if (nums.length !== cuantos || vacios) return `Faltan ${vacios || cuantos} números por elegir (hacen falta ${cuantos}).`;
+  if (nums.some(n => !Number.isInteger(n))) return 'Número no válido.';
+  if (nums.some(n => n < 1 || n > N)) return 'Los números van del 1 al 90.';
+  if (new Set(nums).size !== nums.length) return 'Hay números repetidos.';
+  return null;
+}
+export function comprobarNumeros(nums, salidos) { const faltan = nums.filter(n => !salidos.has(n)).sort((a, b) => a - b); return { ok: faltan.length === 0, faltan }; }

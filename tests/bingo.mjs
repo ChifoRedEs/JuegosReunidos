@@ -34,6 +34,12 @@ await t('comprobar: línea, bingo y faltantes', () => {
   assert.ok(B.validarFilas([[1, 1, 2, 3, 4], filas[1], filas[2]]));
   assert.ok(B.validarFilas([[0, 2, 3, 4, 5], filas[1], filas[2]]));
 });
+await t('línea (5 números) y bingo (15): validar y comprobar', () => {
+  assert.ok(B.validarNumeros([1, 2, 3, 0, 0], 5)); assert.ok(B.validarNumeros([1, 2, 3, 4, 4], 5)); assert.ok(B.validarNumeros([1, 2, 3, 4, 91], 5)); assert.equal(B.validarNumeros([1, 2, 3, 4, 5], 5), null);
+  const out = new Set([1, 2, 3, 4]); let r = B.comprobarNumeros([1, 2, 3, 4, 5], out); assert.equal(r.ok, false); assert.deepEqual(r.faltan, [5]);
+  out.add(5); assert.equal(B.comprobarNumeros([1, 2, 3, 4, 5], out).ok, true);
+  const q = Array.from({ length: 15 }, (_, i) => i + 1); assert.equal(B.validarNumeros(q, 15), null); assert.equal(B.comprobarNumeros(q, new Set(q.slice(1))).faltan.length, 1);
+});
 await t('partida guardada: validar y resumen', () => {
   const d = { orden: B.nuevoBombo(), n: 5, lineas: 1, bingo: false, reg: false };
   assert.ok(validar(d)); assert.equal(validar({ ...d, orden: [1, 2] }), null); assert.equal(validar({ ...d, n: 99 }), null);
