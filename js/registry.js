@@ -53,6 +53,7 @@ export const JUEGOS = [
   { id: 'trivial', nombre: 'Trivia Quesitos', icono: '🧠', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/trivial/index.js') },
   { id: 'parchis',  v1: 'parchis',  nombre: 'Partxis',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/parchis/index.js') },
   { id: 'magnate', nombre: 'Magnate Urbano', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra empresas y arruina a tus rivales.', cargar: () => import('./games/magnate/index.js') },
+  { id: 'bingolive', nombre: 'Bingo Live', icono: '🎱', color: '#E8453C', categoria: 'tablero', descripcion: 'Bingo de 90 bolas para sala: bombo y tablero en 3D, bolas cantadas con voz y comprobación de cartones.', cargar: () => import('./games/bingolive/index.js') },
   { id: 'hotel', nombre: 'Hotel', icono: '🏨', color: '#E0457B', categoria: 'tablero', descripcion: 'Compra terrenos, levanta hoteles por fases, abre entradas y cobra las noches. Tablero 3D.', cargar: () => import('./games/hotel/index.js') },
 ];
 

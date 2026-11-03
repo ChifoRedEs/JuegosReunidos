@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-cf795efe42';
+const VERSION = 'jr-926240a7b5';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -62,6 +62,10 @@ const ARCHIVOS = [
 './js/core/teclado.js',
 './js/core/undo.js',
 './js/core/victoria.js',
+'./js/core/bingo/apodos.js',
+'./js/core/bingo/motor.js',
+'./js/core/bingo/vista3d.js',
+'./js/core/bingo/voz.js',
 './js/core/ia/minimax.js',
 './js/core/ia/remoto.js',
 './js/core/ia/trabajador.js',
@@ -79,6 +83,8 @@ const ARCHIVOS = [
 './js/games/billar/index.js',
 './js/games/billar/motor.js',
 './js/games/billar/vista3d.js',
+'./js/games/bingolive/bingolive.css',
+'./js/games/bingolive/index.js',
 './js/games/blackjack/blackjack.css',
 './js/games/blackjack/index.js',
 './js/games/blackjack/motor.js',

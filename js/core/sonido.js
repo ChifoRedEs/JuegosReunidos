@@ -37,6 +37,8 @@ const S = {
   avion: () => { tono(110, 0.7, 0, 'sawtooth', 0.05); tono(113, 0.7, 0, 'sawtooth', 0.04); },
   caja: () => { tono(660, 0.07, 0, 'triangle', 0.1); tono(990, 0.12, 0.07, 'triangle', 0.1); },
   tic: () => tono(1000, 0.03, 0, 'square', 0.04),
+  bombo: () => { for (let i = 0; i < 9; i++) ruido(0.06, i * 0.09, 0.14, 2600 - i * 120, 500); tono(120, 0.5, 0, 'triangle', 0.04); },
+  bola: () => { tono(880, 0.07, 0, 'sine', 0.1); tono(1320, 0.1, 0.06, 'sine', 0.08); },
   perder: () => [392, 330, 262].forEach((f, i) => tono(f, 0.22, i * 0.15, 'triangle', 0.1)),
 };
 export function play(nombre) {
