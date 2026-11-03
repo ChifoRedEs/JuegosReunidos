@@ -62,5 +62,7 @@
 .juego-bingomobile .bmFila b{grid-column:2}
 
 .juego-bingomobile .bmWrap{position:relative}
-.juego-bingomobile .bmAcc{position:absolute;top:8px;right:8px;width:128px;display:flex;flex-direction:column;gap:5px;z-index:3}
-.juego-bingomobile .bmAcc .btn{width:100%;min-height:40px;padding:4px 8px;font-size:13.5px;line-height:1.1;white-space:nowrap}
+.juego-bingomobile .bmAcc{position:absolute;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.2fr 1fr;gap:5px;z-index:3;overflow:hidden}
+.juego-bingomobile .bmAcc .btn{min-width:0;min-height:0!important;height:100%;margin:0;padding:2px 4px;font-size:13px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:clip;display:flex;align-items:center;justify-content:center}
+.juego-bingomobile .bmAcc #bmSacar{grid-column:1/-1;font-size:15px}
+.juego-bingomobile .bmAcc .bmL[hidden]~.bmB{grid-column:1/-1}

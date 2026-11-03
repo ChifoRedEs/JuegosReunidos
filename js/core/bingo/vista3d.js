@@ -103,14 +103,18 @@ export async function crearVista(cont, o = {}) {
       bombo.position.set(xD, o.bomboAbajo ? -Hv / 2 + R * 1.75 + .3 : 0, 0);              // bomboAbajo: el bombo va abajo a la izquierda y los botones encima (Bingo Mobile en horizontal)
       caja = { x0: xD + R + 1.9 + (o.reservaPx || 0) * Wv / Math.max(1, r.width), x1: Wv / 2 - m, y0: -Hv / 2 + m, y1: Hv / 2 - m };
     }
-    if (o.alDisponer) o.alDisponer({ vertical, izqPx: (bombo.position.x + R + .5 + Wv / 2) / Wv * r.width });
     let Wb = caja.x1 - caja.x0, Hb = caja.y1 - caja.y0, px = (Wb - .7) / 10, py = (Hb - .7) / 9;
     if (px > py * 1.7) { px = py * 1.7; Wb = px * 10 + .7; } else if (py > px * 1.7) { py = px * 1.7; Hb = py * 9 + .7; }
     const bx = vertical ? (caja.x0 + caja.x1) / 2 : caja.x1 - Wb / 2, by = vertical ? caja.y0 + Hb / 2 : (caja.y0 + caja.y1) / 2;
     tablero.position.set(bx, by, 0); rejilla(px, py, Wb, Hb);
     const bp = bombo.position, sal = new T.Vector3(bp.x + R * .52, bp.y - R * .98, .6);
-    const fin = new T.Vector3(vertical ? Math.min(bx + Wb / 2 - 1.5, bp.x + R * 2.3) : bx - Wb / 2 - .2, vertical ? by + Hb / 2 + 1.1 : by + Hb / 2 - 1.2, .6);
+    const fin = new T.Vector3(vertical ? Math.min(bx + Wb / 2 - 1.5, bp.x + R * 1.3) : bx - Wb / 2 - .2, vertical ? by + Hb / 2 + 1.1 : by + Hb / 2 - 1.2, .6);
     L = { vertical, sal, fin };
+    if (o.alDisponer) {                                      // hueco libre (en píxeles) para botones: a la derecha del bombo, o encima del bombo en horizontal con bomboAbajo
+      const X = w => (w + Wv / 2) / Wv * r.width, Y = w => (Hv / 2 - w) / Hv * r.height;
+      const z = vertical ? { left: X(bp.x + R * 1.5), top: 8, right: r.width - 8, bottom: Y(by + Hb / 2 + .25) - 5 } : { left: 8, top: 8, right: X(caja.x0 - 1.2), bottom: Y(bp.y + R * 1.3) - 4 };
+      o.alDisponer({ vertical, izqPx: X(bp.x + R + .5), zona: z.right - z.left > 70 && z.bottom - z.top > 50 ? { left: Math.round(z.left), top: Math.round(z.top), width: Math.round(z.right - z.left), height: Math.round(z.bottom - z.top) } : null });
+    }
     boca.position.set(sal.x - .2, sal.y + .25, .2); boca.rotation.z = .35;
     pata1.position.y = pata2.position.y = -R * 1.2;
     // carril: del pico del bombo hasta encima del tablero
