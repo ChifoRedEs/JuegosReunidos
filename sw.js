@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-978459cdf6';
+const VERSION = 'jr-fd8307bb10';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -152,6 +152,9 @@ const ARCHIVOS = [
 './js/games/freecell/motor.js',
 './js/games/freecell/solver.js',
 './js/games/freecell/solver.worker.js',
+'./js/games/hijoputa/hijoputa.css',
+'./js/games/hijoputa/index.js',
+'./js/games/hijoputa/motor.js',
 './js/games/holdem/holdem.css',
 './js/games/holdem/index.js',
 './js/games/holdem/motor.js',

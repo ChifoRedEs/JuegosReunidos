@@ -1,0 +1,56 @@
+/* Hijoputa · usa css/cartas.css (mesa, dorso y baraja española) */
+.juego-hijoputa{--hw:min(64px,calc((min(100vw,520px) - 44px) / 4.6))}
+.hptop{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:13.5px;margin:6px 0;color:var(--mut)}
+.hpm{color:#fff;padding:10px 6px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.hpops{display:grid;grid-template-columns:repeat(var(--no),minmax(0,1fr));gap:6px}
+.hpseat{position:relative;font:inherit;color:#fff;cursor:pointer;background:rgba(0,0,0,.28);border:3px solid transparent;border-radius:14px;padding:5px 4px 8px;text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center}
+.hpseat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.hpseat.pilla{border-color:#FF5A4F;animation:hppilla .7s ease-in-out infinite alternate}
+@keyframes hppilla{to{background:rgba(255,90,79,.35)}}
+.hpseat .nom{font-weight:800;font-size:13px}
+.hpseat .cs{display:flex;justify-content:center;margin:4px 0;min-height:calc(26px * 1.55)}
+.hpseat .carta{--cw:26px;margin:0 -10px}
+.hpseat .n{font-size:11.5px;font-weight:800;color:#FFE08A}
+.hpseat .bocadillo{position:absolute;left:50%;top:-6px;transform:translateX(-50%);background:#fff;color:#C0261B;font:800 12px Nunito,sans-serif;padding:3px 10px;border-radius:99px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.35);z-index:2}
+.hpseat .acusa{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);background:#FF5A4F;color:#fff;font:800 11.5px Nunito,sans-serif;padding:2px 9px;border-radius:99px;white-space:nowrap;z-index:2}
+.hpcentro{display:flex;justify-content:center;align-items:center;gap:18px;padding:6px 0}
+.hpmazo{position:relative;border:0;background:none;padding:0;cursor:pointer;border-radius:10px;--cw:58px}
+.hpmazo .carta{--cw:58px;box-shadow:3px 3px 0 #0006,6px 6px 0 #0004}
+.hpmazo .cnt{position:absolute;right:-8px;top:-8px;background:#fff;color:#1B2340;border-radius:99px;padding:1px 7px;font-size:12px}
+.hpmazo:disabled{cursor:default}
+.hpmazo.vale .carta{box-shadow:0 0 0 3px #3DDC97,0 0 16px #3DDC97;animation:hpvale 1s ease-in-out infinite alternate}
+@keyframes hpvale{to{transform:translateY(-4px)}}
+.hpdesc .carta{--cw:66px;box-shadow:0 6px 12px rgba(0,0,0,.35)}
+.hppalo{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;min-width:64px}
+.hppalo .pbadge{width:46px;height:46px;border-radius:50%;background:#fff;border:4px solid var(--c);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.hppalo .pbadge svg{width:28px;height:28px}
+.hppalo small{font-weight:800;font-size:11.5px;text-transform:capitalize}
+.hppalo .cast{position:absolute;top:-10px;right:-4px;background:#E5322D;color:#fff;border-radius:99px;padding:2px 8px;font-size:14px;box-shadow:0 3px 8px rgba(0,0,0,.4);animation:hpcast .6s ease-in-out infinite alternate}
+@keyframes hpcast{to{transform:scale(1.14)}}
+.hpmsg{text-align:center;font-weight:800;font-size:14.5px;min-height:20px}
+.hpmano{display:flex;justify-content:center;align-items:flex-end;padding:18px 4px 8px;min-height:calc(var(--hw) * 1.55 + 30px)}
+.hpc{border:0;background:none;padding:0;margin-left:calc(var(--hw) * -.5);transform:rotate(var(--r)) translateY(var(--y));transform-origin:50% 130%;transition:transform .16s,filter .16s;cursor:default;touch-action:manipulation}
+.hpmano[style*="--n:1;"] .hpc,.hpc:first-child{margin-left:0}
+.hpc .carta{--cw:var(--hw);display:block;box-shadow:0 4px 8px rgba(0,0,0,.35)}
+.hpmano.turno .hpc{cursor:pointer}
+.hpmano.turno .hpc:not(.vale) .carta{filter:brightness(.7)}
+.hpmano.turno .hpc.vale .carta{box-shadow:0 0 0 3px #3DDC97,0 6px 12px rgba(0,0,0,.4)}
+.hpc:hover,.hpc:focus-visible{transform:rotate(var(--r)) translateY(calc(var(--y) - 16px));z-index:5;outline:none}
+.hpacc{justify-content:center}
+.hpacc[hidden]{display:none}
+.hpgrito{background:#E5322D!important;border-color:#C42621!important;color:#fff!important;font-size:17px;animation:hpgrito .55s ease-in-out infinite alternate}
+@keyframes hpgrito{to{transform:scale(1.07)}}
+.hplog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
+.hplog li:first-child{color:var(--ink);font-weight:800}
+.hpres{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px;margin:10px 0}
+.hpres h3{font-size:20px;margin-bottom:8px}
+.hpres table{width:100%;border-collapse:collapse;font-size:14px}
+.hpres th{font-size:12px;color:var(--mut);text-align:right}
+.hpres th:first-child{text-align:left}
+.hpres td{padding:5px 0;border-top:1px solid var(--line);text-align:right;font-weight:700}
+.hpres td:first-child{text-align:left}
+.hpres tr.gana td{color:var(--purple);font-weight:800}
+.hppalos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hpelige{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:16px;border:3px solid var(--c);background:var(--card);font:800 15px Nunito,sans-serif;text-transform:capitalize;color:var(--ink);cursor:pointer}
+.hpelige svg{width:42px;height:42px}
+.hpelige:active{background:var(--c);color:#fff}
