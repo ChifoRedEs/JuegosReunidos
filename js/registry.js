@@ -71,6 +71,7 @@ export const GRUPOS = [
   { id: 'buscaminas-klotski', nombre: 'Bombardeo & Deslizadas', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Bombardeo (sin adivinar, reto del día) o Deslizadas (bloques deslizantes y números).', juegos: ['buscaminas', 'klotski'] },
   { id: 'tresenraya-conecta4', nombre: 'Cuatro en Línea &\nTres en Raya', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: 'Dos duelos de líneas: 3 en raya y Cuatro en Línea, contra la CPU.', juegos: ['tresenraya', 'conecta4'] },
   { id: 'domino-rummy', nombre: 'Dominó & Rummy', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Dos juegos de fichas: Dominó (varias modalidades) y Rummy.', juegos: ['domino', 'rummy'] },
+  { id: 'cinquillo-corazones', nombre: 'Cinquillo & Corazones', icono: '♥️', color: '#C0392B', categoria: 'cartas', descripcion: 'Dos juegos de cartas contra la CPU: Cinquillo (baraja española) y Corazones (baraja francesa).', juegos: ['cinquillo', 'corazones'] },
   { id: 'poker', nombre: 'Poker & BlackJack', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em, Póker cubierto o BlackJack contra la banca.", juegos: ['holdem', 'pokercub', 'blackjack'] },
   { id: 'sopa-crucigramas', nombre: 'Sopa & Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopa', 'crucigrama'] },
 ];
