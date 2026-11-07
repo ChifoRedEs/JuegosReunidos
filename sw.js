@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-ff5162071c';
+const VERSION = 'jr-af94e1747a';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -135,6 +135,7 @@ const ARCHIVOS = [
 './js/games/crystalogic/index.js',
 './js/games/crystalogic/motor.js',
 './js/games/crystalogic/niveles.js',
+'./js/games/crystalogic/tutorial.js',
 './js/games/damas/damas.css',
 './js/games/damas/ia.js',
 './js/games/damas/index.js',

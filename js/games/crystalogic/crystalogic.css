@@ -72,3 +72,15 @@
 .crycod{width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--card);color:var(--ink)}
 .cryreglas{padding-left:18px;font-size:14px;line-height:1.45}
 .cryreglas li{margin:6px 0}
+
+/* ayudas para entender el juego */
+.cryintro{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-size:14.5px;line-height:1.4;margin:4px 0 8px}
+.cryintro ol{margin:6px 0 0;padding-left:20px}
+.crytexto{background:#FFF7D6;color:#3b2f00;border:2px solid #F2C94C;border-radius:14px;padding:10px 12px;font-size:14.5px;line-height:1.45;margin:6px 0}
+.cryobj{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.cryobj .chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13.5px}
+.cryguia{background:color-mix(in srgb,var(--purple) 12%,var(--card));border:2px solid color-mix(in srgb,var(--purple) 45%,var(--line));border-radius:12px;padding:8px 10px;font-size:14px;line-height:1.35;margin:6px 0}
+.cryguia[hidden]{display:none}
+.cry .cryh4{margin:12px 2px 2px;font-size:14px}
+.cry .cryh4 small{font-weight:600;color:var(--mut)}
+.cryetq{paint-order:stroke;stroke:#fff;stroke-width:1.1px;stroke-linejoin:round}

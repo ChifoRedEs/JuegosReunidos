@@ -1,9 +1,10 @@
-// Crystalogic: programa a tu avatar. Pon las fichas en el pergamino para que recoja todos los cristales y termine sobre el portal.
+// Crystalogic: programa a tu avatar. Pon las fichas en el programa para que recoja todos los cristales y termine sobre el portal.
 // Campaña de 50 niveles (5 tramos), niveles aleatorios, reto del día y editor con códigos para compartir. Reglas y solucionador en motor.js.
 import { $, esc } from '../../core/dom.js';
 import { grupoFondo } from '../../core/aspectos.js';
 import * as M from './motor.js';
 import { NIVELES } from './niveles.js';
+import { TUTO } from './tutorial.js';
 
 const PAL = {
   vivo: { nombre: 'Vivos', c: { r: '#E5383B', g: '#25B35A', b: '#2F6BFF' } }, pastel: { nombre: 'Pastel', c: { r: '#FF8A8F', g: '#6FCF97', b: '#8DB3FF' } },
@@ -19,13 +20,13 @@ let api = null, asp = null, root = null, D = null, V = {};
 let vista = 'menu', cur = null, sel = { tok: null, slot: null }, undo = [], run = null, auto = false, tmr = 0, vel = 1, ED = null, ocupado = false, generando = 0;
 
 /* ---------- datos guardados ---------- */
-const nuevosDatos = () => ({ v: 1, prog: {}, cur: null, mis: [], racha: { ult: '', n: 0 }, diario: { f: '', e: 0 } });
+const nuevosDatos = () => ({ v: 1, tuto: 0, prog: {}, cur: null, mis: [], racha: { ult: '', n: 0 }, diario: { f: '', e: 0 } });
 const idsCamp = () => M.TRAMOS.flatMap(t => NIVELES[t.id].map((_, i) => t.id + (i + 1)));
 const nivelCamp = id => { const t = NIVELES[id[0]]; return t ? t[+id.slice(1) - 1] || null : null; };
 function validarCur(c) {
   if (!c || typeof c !== 'object') return null;
-  const L = c.tipo === 'camp' ? nivelCamp(String(c.id)) : M.validar(c.L);
-  if (!L || !['camp', 'azar', 'diario', 'mio'].includes(c.tipo)) return null;
+  const L = c.tipo === 'camp' ? nivelCamp(String(c.id)) : c.tipo === 'tuto' ? (TUTO[+String(c.id).slice(1) - 1] || {}).L : M.validar(c.L);
+  if (!L || !['camp', 'azar', 'diario', 'mio', 'tuto'].includes(c.tipo)) return null;
   const A = Array.isArray(c.A) && c.A.length === L.sc.length ? c.A.map((x, i) => (Number.isInteger(x) && (L.sc[i].k === 'a' ? x >= 0 && x <= 2 : x >= -2 && x <= M.MAX_CRIS) ? x : null)) : L.sc.map(() => null);
   const R = { tipo: c.tipo, id: String(c.id || ''), L, A, h: Math.max(0, c.h | 0), n: Math.max(0, c.n | 0), ok: !!c.ok, e: Math.max(0, Math.min(3, c.e | 0)), p: Math.max(0, c.p | 0) };
   if (c.tr && M.TRAMOS.some(t => t.id === c.tr)) R.tr = c.tr;
@@ -35,6 +36,7 @@ export function validar(d) {
   if (!d || typeof d !== 'object') return null;
   const R = nuevosDatos();
   for (const id of idsCamp()) { const p = d.prog && d.prog[id]; if (p && Number.isInteger(p.e) && p.e >= 1 && p.e <= 3) R.prog[id] = { e: p.e, p: Math.max(0, p.p | 0) }; }
+  R.tuto = Math.max(0, Math.min(TUTO.length, d.tuto | 0));
   R.cur = validarCur(d.cur);
   if (Array.isArray(d.mis)) for (const q of d.mis.slice(0, SOL_MAX)) { const L = M.validar(q); if (L) R.mis.push(L); }
   if (d.racha && typeof d.racha.ult === 'string') R.racha = { ult: d.racha.ult.slice(0, 10), n: Math.max(0, d.racha.n | 0) };
@@ -70,6 +72,7 @@ export async function mount(r, a) {
   api.menu([{ texto: '🗺️ Niveles', accion: () => irMenu() }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas },
     { texto: '🗑️ Borrar progreso', peligro: true, accion: () => { if (api.confirmar('¿Borrar todo el progreso y «Mis niveles»?')) { D = nuevosDatos(); guardar(); irMenu(); } } }]);
   if (D.cur && !D.cur.ok) { cur = D.cur; vista = 'menu'; }
+  if (!D.tuto && !Object.keys(D.prog).length && !D.mis.length) { abrirTuto(1); return; }   // primera vez: directo al tutorial
   pintarMenu();
 }
 export function unmount() {
@@ -91,6 +94,7 @@ function abrir(tipo, id, L, extra) {
   D.cur = cur; guardar(); vista = 'juego'; pintarJuego();
 }
 function abrirCamp(id) { abrir('camp', id, nivelCamp(id)); }
+function abrirTuto(k) { abrir('tuto', 't' + k, TUTO[k - 1].L); }
 const hoyKey = () => api.reto.fecha();
 const tramoDiario = () => ['n', 'a', 'e', 'i', 'n', 'a', 'e'][new Date().getDay()];
 function generarYAbrir(tipo, tramo, semilla, id) {
@@ -121,7 +125,9 @@ function pintarMenu() {
   const mis = D.mis.map((L, i) => `<div class="crymi"><b>${esc(L.nombre || 'Nivel ' + (i + 1))}</b><span class="note">${L.n.length} lugares · ${M.huecosA(L).length + M.huecosC(L).length} huecos</span>
     <span class="crybtns"><button class="btn on" data-ac="mio" data-i="${i}">▶️</button><button class="btn" data-ac="editmio" data-i="${i}">✏️</button><button class="btn" data-ac="compmio" data-i="${i}">📤</button><button class="btn danger" data-ac="delmio" data-i="${i}">🗑️</button></span></div>`).join('');
   root.innerHTML = `<div class="cry cry-menu" id="cryRoot">
-    <p class="note">Tu avatar recorre un <b>mapa de lugares unidos por caminos de colores</b>. Tú escribes el programa con fichas en el <b>pergamino</b>: debe recoger <b>todos los cristales</b> y terminar <b>sobre el portal</b>.</p>
+    <div class="cryintro"><b>¿De qué va?</b> Un mago 🧙 recorre un mapa. Tú <b>le programas el camino</b> con fichas de colores. <b>Objetivo:</b> que recoja todos los cristales 💎 y termine en el portal 🌀.
+      <ol><li>Mira el <b>mapa</b>: lugares unidos por caminos de colores.</li><li>Elige <b>fichas</b> de color y ponlas en los huecos del <b>programa</b>.</li><li>Pulsa <b>▶️ Ejecutar</b> y mira si lo consigue.</li></ol></div>
+    <div class="bar"><button class="btn ${D.tuto >= TUTO.length ? '' : 'on'}" data-ac="tuto" data-k="${Math.min(D.tuto + 1, TUTO.length)}">🎓 ${D.tuto >= TUTO.length ? 'Repetir el tutorial' : D.tuto ? 'Seguir el tutorial (' + (D.tuto + 1) + '/' + TUTO.length + ')' : 'Aprende a jugar (tutorial de 4 niveles)'}</button></div>
     ${cur && !cur.ok ? '<div class="bar"><button class="btn on" data-ac="volver">▶️ Volver al nivel que dejaste</button></div>' : ''}
     <div class="bar"><span class="lbl">Retos</span>
       <button class="btn ${dHecho ? '' : 'on'}" data-ac="diario">🗓️ Reto del día (${tD.icono} ${tD.nombre}) ${dHecho ? estrellasHtml(D.diario.e) : ''}</button>
@@ -186,6 +192,7 @@ function svgMapa(L, o = {}) {
     const [x, y] = pos(L, i), esP = i === L.p, esS = i === L.s;
     if (esP) h += `<circle class="cryportal" cx="${x}" cy="${y}" r="8.3" fill="none" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="3 2"/><circle cx="${x}" cy="${y}" r="7" fill="#C4B5FD" fill-opacity=".55"/>`;
     if (esS) h += `<circle cx="${x}" cy="${y}" r="7.4" fill="none" stroke="#16A34A" stroke-width=".9" stroke-dasharray="1.4 1.6"/>`;
+    if (!o.ed && (esS || esP)) h += `<text class="cryetq" x="${x}" y="${y + 12.6}" text-anchor="middle" font-size="3.6" font-weight="900" fill="${esP ? '#6D28D9' : '#15803D'}">${esP ? (esS ? 'SALIDA Y PORTAL' : 'PORTAL') : 'SALIDA'}</text>`;
     h += `<g class="crynodo ${o.aSel === i ? 'sel' : ''}" data-n="${i}"><circle cx="${x}" cy="${y}" r="5.7" fill="${esP ? '#EDE9FE' : '#fff'}" stroke="#2b3566" stroke-width=".9"/><text x="${x}" y="${y + 1.9}" text-anchor="middle" font-size="5.4" font-weight="800" fill="#1d2b53">${i + 1}</text></g>`;
   });
   L.n.forEach((_, i) => {
@@ -210,7 +217,7 @@ function svgPergamino(L, A, o = {}) {
   const P = pal(), sc = L.sc, maxY = Math.max(...sc.map(s => s.y)), H = TOP + (maxY + 1) * RH + 36;
   let h = `<svg class="crysvg crysc" viewBox="0 0 300 ${H}" role="group" aria-label="Pergamino con ${sc.length} huecos"><defs><marker id="cryfl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker></defs>`;
   const flecha = (d, cls = '') => `<path d="${d}" class="cryfl ${cls}" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#cryfl)"/>`;
-  const s0 = sc[0]; h += `<text x="${sx(s0)}" y="14" text-anchor="middle" font-size="12" font-weight="800" fill="#475569">▶ INICIO</text>${flecha(`M${sx(s0)} 20 V${sy(s0) - (s0.k === 'a' ? 22 : 24)}`)}`;
+  const s0 = sc[0]; h += `<text x="${sx(s0)}" y="14" text-anchor="middle" font-size="12" font-weight="800" fill="#475569">▶ EMPIEZA AQUÍ</text>${flecha(`M${sx(s0)} 20 V${sy(s0) - (s0.k === 'a' ? 22 : 24)}`)}`;
   sc.forEach((s, i) => {
     const x = sx(s), y = sy(s), r = s.k === 'a' ? 20 : 22;
     const hacia = (t, etq, cls) => {
@@ -256,32 +263,54 @@ function bandeja() {
 function pintarJuego() {
   if (!root || !cur) return; vista = 'juego';
   const L = cur.L, tr = cur.tipo === 'camp' ? M.TRAMOS.find(t => t.id === cur.id[0]) : M.TRAMOS.find(t => t.id === cur.tr);
-  const titulo = cur.tipo === 'camp' ? `${tr.icono} ${tr.nombre} · Nivel ${cur.id.slice(1)}` : cur.tipo === 'diario' ? '🗓️ Reto del día' : cur.tipo === 'azar' ? `🎲 Aleatorio${tr ? ' · ' + tr.nombre : ''}` : `✏️ ${esc(L.nombre || 'Mi nivel')}`;
+  const tu = cur.tipo === 'tuto' ? +cur.id.slice(1) : 0;
+  const titulo = cur.tipo === 'tuto' ? `🎓 Tutorial ${tu}/${TUTO.length} · ${TUTO[tu - 1].titulo}` : cur.tipo === 'camp' ? `${tr.icono} ${tr.nombre} · Nivel ${cur.id.slice(1)}` : cur.tipo === 'diario' ? '🗓️ Reto del día' : cur.tipo === 'azar' ? `🎲 Aleatorio${tr ? ' · ' + tr.nombre : ''}` : `✏️ ${esc(L.nombre || 'Mi nivel')}`;
   const I = M.info(L);
   root.innerHTML = `<div class="cry cry-juego" id="cryRoot">
     <div class="crycab"><b>${titulo}</b><span id="cryInfo" class="note"></span></div>
+    ${tu ? `<div class="crytexto">${TUTO[tu - 1].texto}</div>` : ''}
+    <div class="cryobj" id="cryObj"></div>
     <div class="crymapa" id="cryMapa"></div>
     <p class="crymsg" id="cryMsg" role="status" aria-live="polite"></p>
     <div class="crybar">
       <button class="btn on" data-ac="run" id="cryRun">▶️ Ejecutar</button><button class="btn" data-ac="paso" id="cryPaso">⏭ Paso</button><button class="btn" data-ac="reset" id="cryReset" aria-label="Reiniciar la ejecución">⟲</button>
-      <button class="btn" data-ac="undo" id="cryUndo" aria-label="Deshacer">↩️ Deshacer</button><button class="btn" data-ac="vaciar" aria-label="Vaciar el pergamino">🧹 Vaciar</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="vel" id="cryVel" aria-label="Velocidad">⏩ ×${vel}</button>
+      <button class="btn" data-ac="undo" id="cryUndo" aria-label="Deshacer">↩️ Deshacer</button><button class="btn" data-ac="vaciar" aria-label="Vaciar el programa">🧹 Vaciar</button><button class="btn" data-ac="pista">💡 Pista</button><button class="btn" data-ac="vel" id="cryVel" aria-label="Velocidad">⏩ ×${vel}</button>
     </div>
+    <div class="cryguia" id="cryGuia"></div>
+    <h4 class="cryh4">🧩 Fichas <small>(toca una y luego un hueco)</small></h4>
     <div class="crytray" id="cryTray"></div>
+    <h4 class="cryh4">📜 Programa <small>(se lee de arriba abajo)</small></h4>
     <div class="cryscwrap"><div class="cryscroll" id="cryScroll"></div></div>
     <div id="cryRes"></div>
   </div>${api.barraHtml()}`;
   $('#cryMapa').innerHTML = svgMapa(L, { av: run ? run.nodo : null, cr: run ? run.cr : I.cr });
-  repintarProg(); info();
+  objetivo(); repintarProg(); info();
   if (cur.ok) mostrarRes(); else msg(mensajeInicial());
 }
-function mensajeInicial() { const I = M.info(cur.L); return I.total ? `Recoge ${I.total === 1 ? 'el cristal' : 'los ' + I.total + ' cristales'} y termina en el portal 🌀 (lugar ${cur.L.p + 1}). Rellena los huecos del pergamino.` : `No hay cristales: solo tienes que terminar en el portal 🌀 (lugar ${cur.L.p + 1}).`; }
+function mensajeInicial() { const I = M.info(cur.L); return I.total ? `Recoge ${I.total === 1 ? 'el cristal' : 'los ' + I.total + ' cristales'} y termina en el portal 🌀 (lugar ${cur.L.p + 1}). Rellena los huecos del programa.` : `No hay cristales: solo tienes que terminar en el portal 🌀 (lugar ${cur.L.p + 1}).`; }
+function objetivo() {
+  const o = $('#cryObj'); if (!o || !cur) return; const L = cur.L, I = M.info(L);
+  o.innerHTML = `<span class="chip">🧙 Empiezas en el <b>${L.s + 1}</b></span><span class="chip">${I.total ? `💎 Recoge <b>${I.total}</b>` : '💎 Sin cristales'}</span><span class="chip">🌀 Acaba en el <b>${L.p + 1}</b></span>`;
+}
+function guia() {
+  const g = $('#cryGuia'); if (!g || !cur) return;
+  let t = '';
+  if (cur.ok) t = '';
+  else if (run && !run.fin) t = '⏳ Ejecutando… mira cómo se mueve el mago por el mapa.';
+  else if (llena()) t = '✅ Programa completo. Pulsa <b>▶️ Ejecutar</b> (o ⏭ Paso para ir despacio).';
+  else if (sel.tok) t = '👉 Ahora toca un <b>hueco numerado</b> del programa para poner la ficha.';
+  else if (sel.slot != null) t = `👉 Toca una <b>ficha de abajo</b> para ponerla en el hueco ${sel.slot + 1}.`;
+  else t = '👉 <b>Paso 1:</b> toca una ficha de abajo. <b>Paso 2:</b> toca un hueco numerado del programa. Repite hasta llenarlos todos.';
+  g.innerHTML = t; g.hidden = !t;
+}
 function msg(t, cls = '') { const m = $('#cryMsg'); if (m) { m.className = 'crymsg ' + cls; m.innerHTML = t; } }
-function info() { const e = $('#cryInfo'); if (!e || !cur) return; const par = cur.L.par; e.textContent = `${cur.n ? cur.n + ' intentos · ' : ''}${par ? 'mejor posible: ' + par + ' pasos' : ''}`; }
+function info() { const e = $('#cryInfo'); if (!e || !cur) return; const par = cur.L.par; e.textContent = cur.tipo === 'tuto' ? '' : `${cur.n ? cur.n + (cur.n === 1 ? ' intento' : ' intentos') + ' · ' : ''}${par ? 'mejor posible: ' + par + (par === 1 ? ' paso' : ' pasos') : ''}`; }
 function repintarProg() {
   const sc = $('#cryScroll'), tray = $('#cryTray'); if (!sc || !cur) return;
   sc.innerHTML = svgPergamino(cur.L, cur.A, { sel: sel.slot, act: run && !run.fin ? run.pc : null });
   tray.innerHTML = bandeja();
   const u = $('#cryUndo'); if (u) u.disabled = !undo.length;
+  guia();
 }
 const llena = () => cur.A.every(v => v != null);
 
@@ -327,7 +356,7 @@ function actualizarBotones() {
 function ejecutar() {
   if (cur.ok) return;
   if (auto) { auto = false; clearTimeout(tmr); tmr = 0; actualizarBotones(); return; }
-  if (!llena()) { const j = cur.A.findIndex(v => v == null); sel.slot = j; repintarProg(); msg('⚠️ Rellena <b>todos</b> los huecos del pergamino antes de ejecutar.', 'mal'); api.sonido('error'); return; }
+  if (!llena()) { const j = cur.A.findIndex(v => v == null); sel.slot = j; repintarProg(); msg('⚠️ Rellena <b>todos</b> los huecos del programa antes de ejecutar.', 'mal'); api.sonido('error'); return; }
   if (!run || run.fin) { reiniciar(true); crearRun(); }
   auto = true; actualizarBotones(); avanzar();
 }
@@ -373,7 +402,7 @@ function textoError(r) {
   if (r.err === 'camino') return `El hueco ${r.slot + 1} pide <b>${M.NOMBRE_COL[r.col].toLowerCase()}</b>, pero desde el lugar ${r.desde + 1} no sale ningún camino de ese color (o va en sentido contrario).`;
   if (r.err === 'noportal') return `El programa terminó en el lugar ${r.nodo + 1}, pero el portal está en el ${L.p + 1}.`;
   if (r.err === 'faltan') return `Llegaste al portal, pero faltan <b>${r.faltan}</b> ${r.faltan === 1 ? 'cristal' : 'cristales'}. El programa siempre se ejecuta entero.`;
-  if (r.err === 'bucle') return 'El programa se repite sin parar. Revisa las condiciones del pergamino.';
+  if (r.err === 'bucle') return 'El programa se repite sin parar. Revisa las condiciones del programa.';
   return 'Falta alguna ficha.';
 }
 function resultado(r) {
@@ -385,6 +414,7 @@ function resultado(r) {
 function ganar(r) {
   const par = cur.L.par || r.pasos, sinAyuda = cur.h === 0, e = 1 + (sinAyuda ? 1 : 0) + (sinAyuda && r.pasos <= par ? 1 : 0);
   cur.ok = true; cur.e = e; cur.p = r.pasos;
+  if (cur.tipo === 'tuto') { D.tuto = Math.max(D.tuto, +cur.id.slice(1)); D.cur = cur; guardar(); api.sonido('ganar'); mostrarRes(); return; }
   if (cur.tipo === 'camp') { const p = D.prog[cur.id]; if (!p || e > p.e || (e === p.e && r.pasos < p.p)) D.prog[cur.id] = { e: Math.max(e, p ? p.e : 0), p: p && e < p.e ? p.p : r.pasos }; }
   if (cur.tipo === 'diario') {
     const hoy = hoyKey(); D.diario = { f: hoy, e: Math.max(e, D.diario.f === hoy ? D.diario.e : 0) };
@@ -401,6 +431,12 @@ function siguienteId() {
   const ids = idsCamp(), k = ids.indexOf(cur.id); return k >= 0 && k + 1 < ids.length ? ids[k + 1] : null;
 }
 function mostrarRes() {
+  if (cur.tipo === 'tuto') {
+    const k = +cur.id.slice(1), ultimo = k >= TUTO.length;
+    msg('🎉 <b>¡Muy bien!</b> ' + (ultimo ? 'Has terminado el tutorial. ¡Ya sabes jugar!' : 'Pasa al siguiente paso del tutorial.'), 'bien');
+    const R = $('#cryRes'); if (R) R.innerHTML = `<div class="bar">${ultimo ? '<button class="btn on" data-ac="camp" data-id="p1">▶️ Empezar la campaña</button>' : `<button class="btn on" data-ac="tuto" data-k="${k + 1}">▶️ Siguiente (${k + 1}/${TUTO.length})</button>`}<button class="btn" data-ac="repetir">🔁 Repetir</button><button class="btn" data-ac="menu">🗺️ Niveles</button></div>`;
+    const rb = $('#cryRun'); if (rb) rb.disabled = true; return;
+  }
   const e = cur.e || (cur.p ? 1 : 1), nx = cur.tipo === 'camp' ? siguienteId() : null;
   msg(`🎉 <b>¡Nivel superado!</b> ${estrellasHtml(Math.min(3, e))} · ${cur.p || '?'} ${cur.p === 1 ? 'paso' : 'pasos'}${cur.L.par ? ` (mejor posible: ${cur.L.par})` : ''}`, 'bien');
   const R = $('#cryRes'); if (!R) return;
@@ -445,14 +481,14 @@ function pintarEditor() {
       : `<div class="cryblo"><span>Bucle de</span><button class="btn" data-ac="blq" data-k="${k}" data-d="-1">−</button><b>${b[1]}</b><button class="btn" data-ac="blq" data-k="${k}" data-d="1">+</button><span>acciones</span><button class="btn danger" data-ac="blqdel" data-k="${k}">✕</button></div>`).join('');
   root.innerHTML = `<div class="cry cry-ed" id="cryRoot">
     <div class="crycab"><b>✏️ Editor de niveles</b><span class="note">${L.n.length} lugares · ${sc.length} huecos</span></div>
-    <p class="note">1) Dibuja el <b>mapa</b>: lugares y caminos (color + sentido). 2) Coloca cristales, trolls, la <b>salida</b> y el <b>portal</b>. 3) Monta el <b>pergamino</b> y escribe una <b>solución</b> tocando los huecos. 4) Prueba y guarda: otras personas tendrán que adivinar tu solución con las fichas que uses.</p>
+    <p class="note">1) Dibuja el <b>mapa</b>: lugares y caminos (color + sentido). 2) Coloca cristales, trolls, la <b>salida</b> y el <b>portal</b>. 3) Monta el <b>programa</b> y escribe una <b>solución</b> tocando los huecos. 4) Prueba y guarda: otras personas tendrán que adivinar tu solución con las fichas que uses.</p>
     <div class="seg crytools">${herr.map(([k, t]) => `<button class="btn ${ED.tool === k ? 'on' : ''}" data-ac="herr" data-k="${k}">${t}</button>`).join('')}</div>
     ${ED.tool === 'camino' ? `<div class="bar"><span class="lbl">Camino</span><div class="seg">${M.COLS.map(c => `<button class="btn ${ED.col === c ? 'on' : ''}" data-ac="edcol" data-c="${c}"><span style="color:${P[c]}">■</span> ${M.NOMBRE_COL[c]} ${GLIFO[c]}</button>`).join('')}</div>
       <div class="seg"><button class="btn ${ED.dir === 0 ? 'on' : ''}" data-ac="eddir" data-d="0">↔ Ida y vuelta</button><button class="btn ${ED.dir === 1 ? 'on' : ''}" data-ac="eddir" data-d="1">→ Un sentido</button></div>
       <p class="note">Toca un lugar y luego otro vecino (también en diagonal). Tocar el mismo lugar dos veces crea un <b>bucle</b>. Cada lugar solo puede tener <b>un camino de cada color</b>.</p></div>` : ''}
     <div class="crymapa ed" id="cryMapa">${svgMapa(L, { ed: true, aSel: ED.a })}</div>
     <p class="crymsg" id="cryMsg" role="status">${ED.msg || ''}</p>
-    <h3 class="cryh">Pergamino</h3>
+    <h3 class="cryh">Programa</h3>
     ${bloquesH}
     <div class="bar"><button class="btn" data-ac="blqadd" data-t="s">+ Acciones</button><button class="btn" data-ac="blqadd" data-t="i">+ Si / no</button><button class="btn" data-ac="blqadd" data-t="l">+ Bucle</button></div>
     <p class="note">Toca un hueco para ir cambiando su ficha (correr → deslizar → saltar → vacío; en las condiciones: troll naranja, troll morado, =0, =1…). Esa será la <b>solución</b>.</p>
@@ -513,7 +549,7 @@ function nivelDesdeED() {
   if (L.s < 0) return { err: 'Falta la <b>salida</b> 🚩 (donde empieza el avatar).' };
   if (L.p < 0) return { err: 'Falta el <b>portal</b> 🌀.' };
   if (L.e.length < 1) return { err: 'Une los lugares con caminos.' };
-  if (A.some(v => v == null)) return { err: 'Escribe la solución: pon una ficha en <b>todos</b> los huecos del pergamino.' };
+  if (A.some(v => v == null)) return { err: 'Escribe la solución: pon una ficha en <b>todos</b> los huecos del programa.' };
   const f = [0, 0, 0], k = []; sc.forEach((s, i) => { if (s.k === 'a') f[A[i]]++; else k.push(A[i]); });
   const N = M.validar({ n: L.n, e: L.e, l: L.l, c: L.c, t: L.t, s: L.s, p: L.p, sc, f, k, nombre: ED.nombre || '', bl: ED.bloques });
   if (!N) return { err: 'El nivel no es válido (revisa los caminos).' };
@@ -546,6 +582,7 @@ function clic(e) {
 async function accion(a, d) {
   switch (a) {
     case 'camp': abrirCamp(d.id); break;
+    case 'tuto': abrirTuto(+d.k); break;
     case 'azar': generarYAbrir('azar', d.t, (Math.random() * 4e9) >>> 0); break;
     case 'diario': {
       const hoy = hoyKey(), t = tramoDiario();
@@ -583,7 +620,7 @@ async function accion(a, d) {
     case 'blqdel': if (ED.bloques.length > 1) { ED.bloques.splice(+d.k, 1); ED.A = scED().map(() => null); pintarEditor(); } break;
     case 'blqadd': {
       const nb = d.t === 's' ? ['s', 1] : d.t === 'i' ? ['i', 1, 1] : ['l', 2], copia = [...ED.bloques.map(x => x.slice()), nb];
-      if (nHuecos(copia) > M.MAX_HUECOS) { edMsg('El pergamino admite como mucho ' + M.MAX_HUECOS + ' huecos.', 'mal'); break; }
+      if (nHuecos(copia) > M.MAX_HUECOS) { edMsg('El programa admite como mucho ' + M.MAX_HUECOS + ' huecos.', 'mal'); break; }
       ED.bloques = copia; ED.A = scED().map(() => null); pintarEditor(); break;
     }
     case 'edprobar': edProbar(false); break;
@@ -610,15 +647,15 @@ async function importar() {
   D.mis.push(L); guardar(); pintarMenu(); api.aviso('Nivel importado');
 }
 function reglas() {
-  api.modal('Crystalogic', `<ul class="cryreglas">
-    <li>Tu avatar empieza en la <b>salida</b> (anillo verde). Debe <b>recoger todos los cristales</b> 💎 y <b>terminar sobre el portal</b> 🌀.</li>
-    <li>Los lugares están unidos por <b>caminos de colores</b>: <b>rojo</b> = correr »; <b>verde</b> = deslizar ≈; <b>azul</b> = saltar ^. Una flecha indica un camino de <b>un solo sentido</b>. Un círculo pequeño es un <b>bucle</b>: te deja en el mismo lugar.</li>
-    <li>El <b>programa</b> se escribe en el <b>pergamino</b>: un diagrama de flujo con huecos. Rellena <b>todos</b> con las fichas del nivel (cada ficha se usa una vez) y pulsa ▶️ Ejecutar.</li>
-    <li>Cada ficha de acción mueve al avatar por el camino de su color que salga del lugar donde está. Si no hay, el programa falla.</li>
-    <li>Las <b>condiciones</b> (hexágonos) hacen una pregunta: «¿llevo exactamente N cristales?», «¿hay un troll naranja/morado en este lugar?». Si es <b>sí ✔</b> sigues una flecha; si es <b>no ✘</b>, la otra. Una flecha que vuelve atrás crea un <b>bucle</b>.</li>
-    <li>Al pisar un lugar con cristal se recoge <b>uno</b>; si hay varios, hay que volver a pasar.</li>
-    <li>Si llegas al portal antes de acabar, el programa <b>sigue</b>: solo cuenta dónde termina.</li>
-    <li><b>Estrellas</b>: ★ resolver · ★★ sin usar pistas · ★★★ sin pistas y con los pasos mínimos.</li>
-    <li>Toca una ficha de la bandeja y luego los huecos (o un hueco y luego la ficha). Toca una ficha colocada para quitarla. ⏭ ejecuta paso a paso.</li>
-    <li><b>Reto del día</b>, niveles <b>aleatorios</b> (siempre con solución) y un <b>editor</b> para crear y compartir tus niveles con un código.</li></ul>`);
+  api.modal('Cómo se juega', `<ul class="cryreglas">
+    <li><b>Objetivo:</b> programar al mago 🧙 para que <b>recoja todos los cristales</b> 💎 y <b>termine sobre el portal</b> 🌀.</li>
+    <li><b>El mapa:</b> círculos numerados (lugares) unidos por <b>caminos de colores</b>. El mago empieza en la <b>SALIDA</b> (anillo verde).</li>
+    <li><b>Las fichas:</b> cada una mueve al mago por el camino de <b>su color</b> que salga del lugar donde está: <b>rojo » correr</b>, <b>verde ≈ deslizar</b>, <b>azul ^ saltar</b>. Los caminos con flecha solo se recorren en ese sentido; un círculo pequeño en un lugar es un camino que te deja donde estás.</li>
+    <li><b>El programa</b> (abajo) tiene <b>huecos numerados</b>. Empieza por el ① («EMPIEZA AQUÍ») y sigue las flechas. Rellena <b>todos</b> los huecos usando las fichas que te dan (cada una, una vez).</li>
+    <li><b>Cómo se ponen:</b> toca una ficha y luego un hueco (o al revés). Tocar una ficha ya puesta la quita.</li>
+    <li>Pulsa <b>▶️ Ejecutar</b> para ver al mago seguir tu programa, o <b>⏭ Paso</b> para ir ficha a ficha. Si falla, el mensaje te dice dónde: cambia fichas y prueba otra vez.</li>
+    <li><b>Hexágonos:</b> son preguntas. «=2» = «¿llevo exactamente 2 cristales?»; 🟠/🟣 = «¿hay un troll naranja/morado en este lugar?». <b>✔ sí</b> sigue por una flecha y <b>✘ no</b> por la otra. Si una flecha vuelve hacia arriba, el programa se repite.</li>
+    <li>Un lugar con varios cristales da <b>uno</b> por visita. Si pasas por el portal antes del final, el programa <b>sigue</b>: cuenta dónde termina.</li>
+    <li><b>Estrellas:</b> ★ resolver · ★★ sin pistas · ★★★ sin pistas y con los pasos mínimos. 💡 Pista te coloca una ficha.</li>
+    <li>Además: <b>reto del día</b>, niveles <b>aleatorios</b> y un <b>editor</b> para crear niveles y compartirlos con un código.</li></ul>`);
 }
