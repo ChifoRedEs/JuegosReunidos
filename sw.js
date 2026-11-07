@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-7501a9b65c';
+const VERSION = 'jr-ff5162071c';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -131,6 +131,10 @@ const ARCHIVOS = [
 './js/games/crucigrama/generador.js',
 './js/games/crucigrama/index.js',
 './js/games/crucigrama/pistas.js',
+'./js/games/crystalogic/crystalogic.css',
+'./js/games/crystalogic/index.js',
+'./js/games/crystalogic/motor.js',
+'./js/games/crystalogic/niveles.js',
 './js/games/damas/damas.css',
 './js/games/damas/ia.js',
 './js/games/damas/index.js',
