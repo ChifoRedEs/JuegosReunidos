@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-af94e1747a';
+const VERSION = 'jr-f31fdd8647';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -10,6 +10,7 @@ const ARCHIVOS = [
 './css/cartas.css',
 './css/fichas.css',
 './css/marca.css',
+'./css/tutorial.css',
 './data/diccionario/indice.json',
 './data/nonogramas/pixelart.json',
 './icons/icon-192.png',
@@ -60,6 +61,7 @@ const ARCHIVOS = [
 './js/core/stats.js',
 './js/core/storage.js',
 './js/core/teclado.js',
+'./js/core/tutorial.js',
 './js/core/undo.js',
 './js/core/victoria.js',
 './js/core/bingo/apodos.js',
@@ -283,6 +285,25 @@ const ARCHIVOS = [
 './js/games/worms/index.js',
 './js/games/worms/motor.js',
 './js/games/worms/worms.css',
+'./js/tutoriales/bingolive.js',
+'./js/tutoriales/bingomobile.js',
+'./js/tutoriales/buscaminas.js',
+'./js/tutoriales/chinchon.js',
+'./js/tutoriales/cinquillo.js',
+'./js/tutoriales/continental.js',
+'./js/tutoriales/hijoputa.js',
+'./js/tutoriales/hotel.js',
+'./js/tutoriales/indice.js',
+'./js/tutoriales/kakuro.js',
+'./js/tutoriales/kenken.js',
+'./js/tutoriales/klotski.js',
+'./js/tutoriales/magnate.js',
+'./js/tutoriales/mastermind.js',
+'./js/tutoriales/mus.js',
+'./js/tutoriales/nonogram.js',
+'./js/tutoriales/rummy.js',
+'./js/tutoriales/sokoban.js',
+'./js/tutoriales/sudoku.js',
 './js/vendor/matter.min.js',
 './js/vendor/three.module.min.js'
 /*ARCHIVOS-FIN*/

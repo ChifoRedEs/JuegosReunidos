@@ -9,6 +9,7 @@ import { BARAJAS, urlTapete, buscarFondo, cargarBarajas, precargarSeleccion } fr
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION } from './version.js';
+import { TUTORIALES } from './tutoriales/indice.js';
 
 // «Palabras Cruzadas» (el nombre más largo) ocupa justo la zona clara del banner (50 % de su ancho); los demás, más cortos, caben siempre
 function ajustarCabecera() {
@@ -160,6 +161,31 @@ function crearApi(j, ent, mod, root) {
     return origen => { try { if (activo && c && !c.activo) c.iniciar(); defBarra && defBarra.reanudar && defBarra.reanudar(origen); } catch (e) { console.error(e); } };
   };
   const pausaTemp = fn => { const seguir = parar_(); fn(() => seguir('aux')); };
+  // Tutorial del juego (js/tutoriales/<id>.js): ventana con pasos; se pausa la partida mientras dura.
+  async function lanzarTutorial() {
+    if (!TUTORIALES[id]) return;
+    try {
+      const [mt, core] = await Promise.all([TUTORIALES[id](), import('./core/tutorial.js')]);
+      if (!document.getElementById('cssTutorial')) { const l = el('link', { rel: 'stylesheet', href: 'css/tutorial.css', id: 'cssTutorial' }); l.dataset.juego = '*'; document.head.append(l); }
+      pausaTemp(volver => {
+        let cerrar; const cont = core.crearTutorial(mt.TUTORIAL, { cerrar: () => cerrar && cerrar(), hecho: () => aj.setPref(id, '_tutoHecho', true) });
+        cerrar = hoja([cont], volver);
+      });
+    } catch (e) { console.error(e); aviso('No se pudo abrir el tutorial.'); }
+  }
+  // Primera vez en el juego (sin partida guardada): se ofrece el tutorial como mucho dos veces.
+  function ofrecerTutorial() {
+    if (!TUTORIALES[id] || aj.pref(id, '_tutoHecho', false) || (aj.pref(id, '_tutoOf', 0) || 0) >= 2 || ent) return;
+    setTimeout(() => {
+      if (!root.isConnected) return;
+      aj.setPref(id, '_tutoOf', (aj.pref(id, '_tutoOf', 0) || 0) + 1);
+      let cerrar;
+      const b1 = el('button', { class: 'btn on', style: 'margin:4px', onclick: () => { cerrar(); lanzarTutorial(); } }, '🎓 Sí, enséñame'),
+        b2 = el('button', { class: 'btn', style: 'margin:4px', onclick: () => cerrar() }, 'Ahora no'),
+        b3 = el('button', { class: 'btn', style: 'margin:4px', onclick: () => { aj.setPref(id, '_tutoOf', 9); cerrar(); } }, 'No preguntar más');
+      cerrar = hoja([el('h2', {}, '🎓 ¿Quieres un tutorial rápido?'), el('p', { class: 'note' }, `Te explico cómo se juega a ${j.nombre} paso a paso, con ejercicios cortos. Lo tendrás siempre en «Reglas».`), el('div', { style: 'display:flex;flex-wrap:wrap;justify-content:center' }, b1, b2, b3)]);
+    }, 700);
+  }
   function abrirConfig() {
     const c = defBarra && defBarra.config; if (!c) return;
     if (c.pantalla) { c.pantalla(); return; }       // el juego usa su propia pantalla de configuración (la inicial)
@@ -203,10 +229,16 @@ function crearApi(j, ent, mod, root) {
       if (ac === 'nueva') { if (defBarra.nueva) defBarra.nueva(); }
       else if (ac === 'config') abrirConfig();
       else if (ac === 'aspecto') { if (abrirAsp) pausaTemp(volver => abrirAsp(volver)); }
-      else if (ac === 'reglas') { const r = itemReglas(); if (r) r.accion(); }
+      else if (ac === 'reglas') {
+        const r = itemReglas();
+        if (!TUTORIALES[id]) { if (r) r.accion(); return; }
+        // Con tutorial: se elige entre leer las reglas o hacerlo
+        let cerrar; const b1 = el('button', { class: 'item', onclick: () => { cerrar(); if (r) r.accion(); } }, '📖 Ver las reglas'), b2 = el('button', { class: 'item', onclick: () => { cerrar(); lanzarTutorial(); } }, '🎓 Hacer el tutorial (paso a paso)');
+        cerrar = hoja([el('h2', {}, nombreVista), b2, ...(r ? [b1] : [])]);
+      }
       else if (ac === 'salir') preguntarSalir();
     },
-    id, root,
+    id, root, tutorial: () => lanzarTutorial(), ofrecerTutorial,
     cargar() { if (!ent) return null; try { return mod.validar(ent.datos) || null; } catch { return null; } },
     guardar: (datos, resumen = null, fin = false) => store.setJuego(id, datos, resumen, fin),
     borrar: () => store.borrarJuego(id),
@@ -438,7 +470,8 @@ async function abrirJuego(id, t) {
   const api = crearApi(j, store.getJuego(id), mod, root);
   actual = { j, mod, api };
   window.scrollTo(0, 0);                                    // arriba al entrar (antes de montar: un montaje lento no debe devolver al jugador arriba cuando ya ha bajado)
-  try { await mod.mount(root, api); } catch (e) { console.error(e); root.innerHTML = '<p class="msg err">Error al abrir el juego.</p>'; }
+  try { await mod.mount(root, api); } catch (e) { console.error(e); root.innerHTML = '<p class="msg err">Error al abrir el juego.</p>'; return; }
+  api.ofrecerTutorial();
 }
 window.addEventListener('hashchange', render);
 /* Deslizar a izquierda/derecha cambia de pantalla en el orden del menú superior (Lógica → … → Ajustes).
