@@ -76,3 +76,17 @@ export function ciclo(btn, max, cb = () => {}) {
   btn.onclick = () => { pon((v + 1) % (max + 1)); cb(v); };
   return { set: x => { pon(x); cb(v); }, get: () => v };
 }
+// Tablero de casillas tocables. filas: matriz de celdas (texto/HTML o {h,bg,col}); ok: [[fila,col],…]
+// multi=true: hay que marcar justo todas las de `ok`; si no, basta tocar una de ellas.
+export function pincha(zona, filas, ok, ctx, { okMsg = '', malMsg = '❌ Ahí no.', multi = false, tam = 40 } = {}) {
+  const C = filas[0].length, claves = new Set(ok.map(([r, c]) => r + ',' + c));
+  zona.innerHTML = `<div class="tt-g" style="grid-template-columns:repeat(${C},${tam}px)">${filas.map((f, r) => f.map((x, c) => { const o = typeof x === 'string' ? { h: x } : x; return `<button type="button" class="tt-k" data-p="${r},${c}" style="width:${tam}px;height:${tam}px;padding:0;${o.bg ? `background:${o.bg};` : ''}${o.col ? `color:${o.col};` : ''}">${o.h || ''}</button>`; }).join('')).join('')}</div>`;
+  const bs = [...zona.querySelectorAll('button')], sel = new Set();
+  bs.forEach(b => b.onclick = () => {
+    const k = b.dataset.p;
+    if (!multi) { if (claves.has(k)) { b.classList.add('sel'); ctx.ok(okMsg); } else ctx.mal(malMsg); return; }
+    if (sel.has(k)) { sel.delete(k); b.classList.remove('sel'); } else { sel.add(k); b.classList.add('sel'); }
+    if (sel.size === claves.size && [...sel].every(x => claves.has(x))) ctx.ok(okMsg); else ctx.info('');
+  });
+  return { ver: () => bs.forEach(b => { if (claves.has(b.dataset.p) && (!multi || !b.classList.contains('sel'))) b.click(); }) };
+}
