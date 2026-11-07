@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-06b489bed8';
+const VERSION = 'jr-111da4f50c';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -285,6 +285,7 @@ const ARCHIVOS = [
 './js/games/worms/index.js',
 './js/games/worms/motor.js',
 './js/games/worms/worms.css',
+'./js/tutoriales/_demos.js',
 './js/tutoriales/ahorcado.js',
 './js/tutoriales/airhockey.js',
 './js/tutoriales/ajedrez.js',

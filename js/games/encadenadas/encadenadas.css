@@ -20,7 +20,7 @@
 .enw .pri{text-decoration:underline;text-decoration-color:var(--e1);text-decoration-thickness:3px;text-underline-offset:3px}
 .enw.ultima{border-color:var(--e1);background:color-mix(in srgb,var(--e1) 10%,var(--card));animation:enllega .35s ease-out}
 .enw.ultima b{font-size:21px}
-.enw.ini{border-style:dashed}
+.enw.enini{border-style:dashed}
 @keyframes enllega{from{transform:translateX(16px) scale(.9);opacity:0}}
 .enflecha{flex:none;color:var(--mut);font-weight:800}
 .enreq{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;text-align:center;margin:6px 0;font-weight:700}

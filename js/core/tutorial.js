@@ -90,3 +90,18 @@ export function pincha(zona, filas, ok, ctx, { okMsg = '', malMsg = '❌ Ahí no
   });
   return { ver: () => bs.forEach(b => { if (claves.has(b.dataset.p) && (!multi || !b.classList.contains('sel'))) b.click(); }) };
 }
+// Demostración animada: lista de marcos {h: html de la escena, c: texto explicativo}. Se reproduce sola; ⏮ ⏭ para ir a mano.
+export function pase(zona, marcos, ctx, { ms = 3200 } = {}) {
+  let i = 0, t = null;
+  zona.innerHTML = `<div class="tt-pase"><div class="tt-pq" aria-live="polite"></div><p class="tt-pc"></p><div class="tt-fila"><button type="button" class="btn" data-a="p" aria-label="Anterior">⏮</button><button type="button" class="btn on" data-a="play">⏸ Pausa</button><button type="button" class="btn" data-a="n" aria-label="Siguiente">⏭</button></div><small class="tt-pn"></small></div>`;
+  const q = s => zona.querySelector(s), bp = q('[data-a=play]');
+  const pinta = () => { const m = marcos[i]; q('.tt-pq').innerHTML = m.h; q('.tt-pc').innerHTML = m.c || ''; q('.tt-pn').textContent = `${i + 1} / ${marcos.length}`; };
+  const para = () => { clearInterval(t); t = null; bp.textContent = '▶ Reproducir'; };
+  const sigue = () => { if (!zona.isConnected) { clearInterval(t); return; } i = (i + 1) % marcos.length; pinta(); };
+  const arranca = () => { clearInterval(t); t = setInterval(sigue, ms); bp.textContent = '⏸ Pausa'; };
+  q('[data-a=p]').onclick = () => { para(); i = (i + marcos.length - 1) % marcos.length; pinta(); };
+  q('[data-a=n]').onclick = () => { para(); i = (i + 1) % marcos.length; pinta(); };
+  bp.onclick = () => { if (t) para(); else arranca(); };
+  pinta(); arranca();
+  return { ver: () => { para(); i = 0; pinta(); arranca(); } };
+}

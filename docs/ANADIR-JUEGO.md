@@ -157,3 +157,5 @@ Crystalogic (3.62.0): `js/games/crystalogic/` — `motor.js` (lógica pura: mapa
 
 
 Tutoriales (3.63.0): para dar un tutorial a un juego, crea `js/tutoriales/<id>.js` con `export const TUTORIAL = { titulo, pasos:[{ t, h, demo?, req? }] }` y añade el id en `js/tutoriales/indice.js`. `demo(zona, ctx)` pinta un ejercicio y devuelve `{ ver() }` (botón «Muéstrame»); `ctx.ok/mal/info` dan la respuesta y, si el paso tiene `req`, «Siguiente» se bloquea hasta resolverlo. Ayudas en `js/core/tutorial.js`: `cartaEs`, `cartaFr`, `ficha`, `fila`, `marcar`, `elige`, `ciclo`, `pincha` (tablero de casillas tocables). Todo juego nuevo debería llevar el suyo. `app.js` ofrece el tutorial las 2 primeras veces (sin partida guardada) y desde 📖 Reglas. Crystalogic tiene el suyo propio.
+
+Demostración animada en un tutorial (3.63.1): `js/tutoriales/_demos.js` guarda `DEMOS[id] = { h, marcos: [[escena, explicación], …] }`; `indice.js` la inserta como 2.º paso («Así se juega») con el helper `pase`. Cuidado con los nombres de clase CSS de los juegos: no reutilices los de la app (por ejemplo `.ini` de la pantalla de inicio, que pinta el fondo JR).

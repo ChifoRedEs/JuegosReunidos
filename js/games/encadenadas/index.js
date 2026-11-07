@@ -156,7 +156,7 @@ function pintar() {
   $('#enJug').innerHTML = S.jug.map((J, k) => `<div class="enj ${k === S.turno && !fin ? 'turno' : ''} ${J.vidas ? '' : 'fuera'}"><b>${J.cpu ? '🤖 ' : ''}${esc(J.nombre)}</b><span>${'❤️'.repeat(J.vidas)}${'🤍'.repeat(E.VIDAS - J.vidas)}</span><small>${J.palabras} palabra${J.palabras === 1 ? '' : 's'}</small>${k === S.turno && J.cpu && bocadillo ? `<div class="enbo">${esc(bocadillo)}</div>` : ''}</div>`).join('')
     + (S.modo === 'solo' ? `<div class="enj"><b>Cadena</b><span>${S.cadena.filter(c => !c.inicio).length}</span><small>récord ${Math.max(marcador.record, S.mejorCadena)}</small></div>` : '');
   const vis = S.cadena.slice(-5);
-  $('#enCadena').innerHTML = vis.map((c, i) => `<div class="enw ${i === vis.length - 1 ? 'ultima' : ''} ${c.inicio ? 'ini' : ''}">${c.inicio ? '<small>Empieza la cadena</small>' : `<small>${esc(S.jug[c.j] ? S.jug[c.j].nombre : '')}</small>`}<b>${palabraHTML(c.w, i > 0 && !c.inicio)}</b></div>`).join('<span class="enflecha">→</span>');
+  $('#enCadena').innerHTML = vis.map((c, i) => `<div class="enw ${i === vis.length - 1 ? 'ultima' : ''} ${c.inicio ? 'enini' : ''}">${c.inicio ? '<small>Empieza la cadena</small>' : `<small>${esc(S.jug[c.j] ? S.jug[c.j].nombre : '')}</small>`}<b>${palabraHTML(c.w, i > 0 && !c.inicio)}</b></div>`).join('<span class="enflecha">→</span>');
   const el = $('#enCadena'); el.scrollLeft = el.scrollWidth;
   $('#enReq').innerHTML = fin ? '' : `<span>${S.jug[S.turno].cpu ? 'La CPU busca una palabra que empiece por' : `${S.modo === 'grupo' ? `<b>${esc(S.jug[S.turno].nombre)}</b>: ` : ''}Empieza por`}</span><b class="sil">${esc(S.req.toUpperCase())}</b>${S.ajuste ? `<small>${esc(S.ajuste)}</small>` : ''}`;
   pintarBarra(); pintarResp();
