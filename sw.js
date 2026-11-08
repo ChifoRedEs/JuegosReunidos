@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-1394041a2f';
+const VERSION = 'jr-d2e11d0ed1';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -133,11 +133,6 @@ const ARCHIVOS = [
 './js/games/crucigrama/generador.js',
 './js/games/crucigrama/index.js',
 './js/games/crucigrama/pistas.js',
-'./js/games/crystalogic/crystalogic.css',
-'./js/games/crystalogic/index.js',
-'./js/games/crystalogic/motor.js',
-'./js/games/crystalogic/niveles.js',
-'./js/games/crystalogic/tutorial.js',
 './js/games/damas/damas.css',
 './js/games/damas/ia.js',
 './js/games/damas/index.js',
@@ -159,6 +154,10 @@ const ARCHIVOS = [
 './js/games/freecell/motor.js',
 './js/games/freecell/solver.js',
 './js/games/freecell/solver.worker.js',
+'./js/games/hashi/hashi.css',
+'./js/games/hashi/index.js',
+'./js/games/hashi/mini.js',
+'./js/games/hashi/motor.js',
 './js/games/hijoputa/hijoputa.css',
 './js/games/hijoputa/index.js',
 './js/games/hijoputa/motor.js',
@@ -309,6 +308,7 @@ const ARCHIVOS = [
 './js/tutoriales/encadenadas.js',
 './js/tutoriales/flota.js',
 './js/tutoriales/freecell.js',
+'./js/tutoriales/hashi.js',
 './js/tutoriales/hijoputa.js',
 './js/tutoriales/holdem.js',
 './js/tutoriales/hotel.js',

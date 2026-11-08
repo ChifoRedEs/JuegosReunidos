@@ -1,5 +1,6 @@
 // Demostraciones animadas («Así se juega») que se insertan como 2.º paso de los tutoriales. Cada una: { h: texto previo, marcos: [[escena, explicación], …] }
 import { cartaEs as E, cartaFr as F, ficha, fila } from '../core/tutorial.js';
+import { escena as HE } from '../games/hashi/mini.js';
 const R = (l, h) => `<div class="tt-esc"><small>${l}</small>${h}</div>`;
 const M = (...r) => r.join('');
 const mesa = h => R('Mesa', fila(h));
@@ -244,4 +245,13 @@ DEMOS.worms = { h: '<p>Un turno:</p>', marcos: [
   [R('Apuntas', '<span class="grande">🎯 ▲ ▼</span>'), 'Eliges arma y apuntas con ▲ ▼. El viento influye.'],
   [R('Disparas', '<span class="grande">🚀 💥</span>'), 'Mantienes FUEGO para dar potencia y sueltas.'],
   [R('Te pones a salvo', '<span class="grande">🏃 unos segundos</span>'), 'Después de atacar, te mueves a un sitio seguro y pasa el turno.'],
+] };
+
+const HI = [[0, 0, 2], [0, 2, 3], [2, 0, 2], [2, 2, 3]];
+DEMOS.hashi = { h: '<p>Mira cómo se resuelve un archipiélago pequeño, paso a paso.</p>', marcos: [
+  [HE(HI), 'Cuatro islas. El número de cada una dice cuántos <b>puentes</b> salen de ella.'],
+  [HE(HI, [[0, 1, 1]], { sel: 0 }), 'Tocas una isla y luego otra en línea recta: se tiende un <b>puente</b>.'],
+  [HE(HI, [[0, 1, 1], [1, 3, 2]]), 'Tocando otra vez, el puente se <b>dobla</b>. Entre dos islas caben como mucho 2.'],
+  [HE(HI, [[0, 1, 1], [1, 3, 2], [0, 2, 1]]), 'Cuando una isla llega a su número se pone <b>verde</b>: ya está completa.'],
+  [HE(HI, [[0, 1, 1], [1, 3, 2], [0, 2, 1], [2, 3, 1]]), '¡Todas completas y unidas en una sola red! Los puentes nunca se cruzan: <b>resuelto</b>.'],
 ] };

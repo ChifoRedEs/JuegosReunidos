@@ -69,3 +69,15 @@
 .tt-esc>small{font-weight:800;color:var(--mut)}
 .tt-esc .tt-fila{justify-content:center}
 .tt-esc .grande{font-size:30px;line-height:1.2}
+/* Puentes Hashi (js/games/hashi/mini.js) */
+.mh-esc{display:flex;justify-content:center;padding:8px;border-radius:14px;background:#7fd3d8 url(../js/games/hashi/img/mar.webp) 0 0/200px 200px;margin:4px auto}
+.mh{display:block;max-width:100%;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.mh .mh-p{filter:drop-shadow(0 4px 3px rgba(20,60,70,.45))}
+.mh .mh-p.mal{filter:drop-shadow(0 0 5px #ff3b30) saturate(1.6)}
+.mh-hit{fill:transparent;cursor:pointer}
+.mh-i{cursor:pointer}.mh-i image{filter:drop-shadow(0 4px 3px rgba(20,60,70,.45))}
+.mh-halo{fill:transparent}
+.mh-n{font:800 56px 'Baloo 2',Nunito,system-ui,sans-serif;fill:#fffdf0;stroke:#3d2a12;stroke-width:9;paint-order:stroke;stroke-linejoin:round;pointer-events:none}
+.mh-i.ok .mh-halo{fill:rgba(111,230,120,.55)}.mh-i.ok .mh-n{fill:#c9f7b0;stroke:#1f5a2c}
+.mh-i.mal .mh-halo{fill:rgba(255,70,60,.6)}.mh-i.mal .mh-n{fill:#ffc4bf;stroke:#7a1411}
+.mh-i.sel .mh-halo{fill:rgba(255,214,64,.85)}

@@ -1,0 +1,48 @@
+/* Puentes Hashi: mar, marco e islas con imágenes propias (js/games/hashi/img) y puentes en SVG */
+.juego-hashi{--hs-mw:clamp(18px,5.2vw,28px)}
+.hs-wrap{width:min(100%,460px);margin:10px auto;box-sizing:border-box;border:var(--hs-mw) solid transparent;border-image:url(img/marco.webp) 11% / var(--hs-mw) stretch;filter:drop-shadow(0 6px 10px rgba(0,0,0,.28))}
+.hs-mar{position:relative;overflow:hidden;margin:calc(var(--hs-mw) * -.35);background:#7fd3d8 url(img/mar.webp) 0 0/230px 230px;border-radius:6px;padding:calc(var(--hs-mw) * .35);animation:hs-oleaje 40s linear infinite}
+@keyframes hs-oleaje{to{background-position:230px 115px}}
+#hsSvg{display:block;width:100%;height:auto;position:relative;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.hs-p{filter:drop-shadow(0 4px 3px rgba(20,60,70,.45))}
+.hs-p.pop{animation:hs-pop .28s ease-out}
+.hs-p.mal{filter:drop-shadow(0 0 5px #ff3b30) saturate(1.6) hue-rotate(-18deg)}
+.hs-p.ok{animation:hs-brillo 1.6s ease-in-out infinite}
+.hs-hit{fill:transparent;cursor:pointer}
+.hs-i{cursor:pointer}
+.hs-i image{filter:drop-shadow(0 4px 3px rgba(20,60,70,.45));transition:transform .15s;transform-box:fill-box;transform-origin:center}
+.hs-halo{fill:transparent;transition:fill .2s}
+.hs-n{font:800 56px 'Baloo 2',Nunito,system-ui,sans-serif;fill:#fffdf0;stroke:#3d2a12;stroke-width:9;paint-order:stroke;stroke-linejoin:round;pointer-events:none}
+.hs-i.ok .hs-halo{fill:rgba(111,230,120,.55)}
+.hs-i.ok .hs-n{fill:#c9f7b0;stroke:#1f5a2c}
+.hs-i.mal .hs-halo{fill:rgba(255,70,60,.6)}
+.hs-i.mal .hs-n{fill:#ffc4bf;stroke:#7a1411}
+.hs-i.sel .hs-halo{fill:rgba(255,214,64,.85);animation:hs-pulso .9s ease-in-out infinite}
+.hs-i.vec .hs-halo{fill:rgba(255,255,255,.55);animation:hs-pulso 1.2s ease-in-out infinite}
+.hs-i.pis .hs-halo{fill:rgba(90,170,255,.8);animation:hs-pulso .6s ease-in-out infinite}
+.hs-i:hover image{transform:scale(1.04)}
+.hs-i.fin image{animation:hs-salto 1.2s ease-in-out infinite;animation-delay:var(--d)}
+.hs-boya{pointer-events:none;transform-box:fill-box;transform-origin:center;animation:hs-boya 3s ease-in-out infinite;filter:drop-shadow(0 3px 2px rgba(20,60,70,.4))}
+.hs-boya.pop{animation:hs-pop .3s ease-out,hs-boya 3s ease-in-out .3s infinite}
+@keyframes hs-pop{0%{opacity:.2;transform:scale(.7)}60%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes hs-pulso{50%{opacity:.45}}
+@keyframes hs-boya{50%{transform:translateY(3px) rotate(4deg)}}
+@keyframes hs-salto{50%{transform:scale(1.06)}}
+@keyframes hs-brillo{50%{filter:drop-shadow(0 0 6px #ffe066)}}
+/* adornos: pasean por el mar, detrás del tablero */
+.hs-ad{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hs-ad img{position:absolute;opacity:.92;filter:drop-shadow(0 4px 4px rgba(20,60,70,.35))}
+.ad-barco{width:16%;top:12%;left:-20%;animation:hs-barco 46s linear infinite}
+.ad-tortuga{width:11%;top:70%;left:-14%;animation:hs-tortuga 58s linear 8s infinite}
+.ad-gaviotas{width:12%;top:30%;left:-16%;animation:hs-gaviotas 30s linear 14s infinite;opacity:.85}
+@keyframes hs-barco{to{left:112%;top:30%}}
+@keyframes hs-tortuga{0%{top:84%}50%{top:62%}to{left:112%;top:76%}}
+@keyframes hs-gaviotas{to{left:112%;top:8%}}
+.juego-hashi[data-adornos="no"] .hs-ad{display:none}
+@media (prefers-reduced-motion:reduce){.hs-ad img,.hs-mar,.hs-boya,.hs-i image,.hs-p,.hs-i .hs-halo{animation:none!important}}
+.hs-acc{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;width:min(100%,460px);margin:7px auto}
+.hs-acc .acc{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 1px;font:800 11.5px/1.1 Nunito,sans-serif;white-space:nowrap;background:var(--card);border:2px solid var(--tb-line);border-radius:14px;min-height:46px;color:var(--ink);box-shadow:0 3px 0 var(--tb-line)}
+.hs-acc .acc:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tb-line)}
+.hs-acc .acc.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
+.hs-acc .acc:disabled{opacity:.45}
+.hs-acc .acc i{font-style:normal;font-size:19px;line-height:1}
