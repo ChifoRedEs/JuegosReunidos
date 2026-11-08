@@ -12,6 +12,16 @@ const TEMAS = { tropical: ['isla1', 'isla2', 'isla3'], hielo: ['hielo1', 'hielo2
 const navidadActiva = () => { const m = new Date().getMonth(); return m === 11 || m === 0; };
 const temasAuto = () => Object.keys(TEMAS).filter(t => t !== 'navidad' || navidadActiva());
 let semilla = 0;
+// Adornos que pasean por el mar: [imagen, ancho en % del tablero, segundos en cruzar, ondula]. Cada puzle sortea 3 (o 1).
+const ADORNOS = [['adorno-barco', 16, 46, 0], ['adorno-tortuga', 11, 70, 0], ['adorno-gaviotas', 12, 30, 0], ['adorno-manta', 22, 80, 1], ['adorno-delfin', 16, 24, 1], ['adorno-tiburon', 30, 95, 0], ['adorno-peces', 20, 55, 1], ['adorno-paddle', 17, 85, 0], ['adorno-buzo1', 15, 62, 1], ['adorno-buzo2', 15, 66, 1]];
+function ponerAdornos() {
+  const c = document.getElementById('hsAd'); if (!c || !root) return;
+  const modo = root.dataset.adornos, n = modo === 'no' ? 0 : modo === 'pocos' ? 1 : 3, l = ADORNOS.slice(), r = (a, b) => a + Math.random() * (b - a);
+  c.innerHTML = Array.from({ length: n }, () => {
+    const [img, w, seg, onda] = l.splice(Math.random() * l.length | 0, 1)[0], t = Math.round(seg * r(.85, 1.2)), y0 = Math.round(r(4, 78)), y1 = Math.max(2, Math.min(84, y0 + Math.round(r(-14, 14))));
+    return `<span class="ad${Math.random() < .5 ? ' rev' : ''}" style="--w:${w}%;--y0:${y0}%;--y1:${y1}%;--t:${t}s;--d:-${Math.round(r(0, t))}s"><img class="${onda ? 'onda' : ''}" src="${IMG(img)}" alt=""></span>`;
+  }).join('');
+}
 function imgIsla(r, c, n, modo) {
   const l = temasAuto(), tema = TEMAS[modo] ? modo : modo === 'revuelto' ? l[(r * 5 + c * 3 + n) % l.length] : l[semilla % l.length];
   return TEMAS[tema][(r * 7 + c * 13 + n) % 3];
@@ -46,15 +56,15 @@ export async function mount(r, a) {
   api = a; root = r; ocupado = false; boyas = false; sel = -1; ultimo = -1; malas = new Set(); pista_ = null; arr = null; rehacer = [];
   asp = api.aspecto([
     { clave: 'islas', titulo: 'Islas', icono: '🏝️', def: 'mezcla', opciones: [{ id: 'mezcla', nombre: 'Mezcladas (un tema por puzle)' }, { id: 'revuelto', nombre: 'Revueltas (todos los temas)' }, { id: 'tropical', nombre: 'Tropical', img: IMG('isla1') }, { id: 'hielo', nombre: 'Helada', img: IMG('hielo1') }, { id: 'volcan', nombre: 'Volcánica', img: IMG('volcan1') }, { id: 'desierto', nombre: 'Desierto', img: IMG('desierto1') }, { id: 'otono', nombre: 'Otoño', img: IMG('otono1') }, { id: 'navidad', nombre: 'Navidad', img: IMG('navidad1') }] },
-    { clave: 'adornos', titulo: 'Adornos del mar', icono: '⛵', def: 'si', opciones: [{ id: 'si', nombre: 'Con adornos' }, { id: 'no', nombre: 'Sin adornos' }] },
-  ], () => { if (S) pintar(); });
+    { clave: 'adornos', titulo: 'Adornos del mar', icono: '⛵', def: 'si', opciones: [{ id: 'si', nombre: 'Con adornos (3)' }, { id: 'pocos', nombre: 'Pocos adornos (1)' }, { id: 'no', nombre: 'Sin adornos' }] },
+  ], () => { ponerAdornos(); if (S) pintar(); });
   await api.css(new URL('./hashi.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, done: resuelto(construir(g.isl), g.cur) } : null;
   hist = new Pila(80, g ? g.hist : []);
   root.innerHTML = `<div id="hsReto"></div>
     <div class="info"><span class="mut" id="hsInfo"></span><span id="hsCrono" aria-label="Tiempo">0:00</span></div>
-    <div class="hs-wrap" id="hsWrap"><div class="hs-mar"><div class="hs-ad" aria-hidden="true"><img class="ad-barco" src="${IMG('adorno-barco')}" alt=""><img class="ad-tortuga" src="${IMG('adorno-tortuga')}" alt=""><img class="ad-gaviotas" src="${IMG('adorno-gaviotas')}" alt=""></div>
+    <div class="hs-wrap" id="hsWrap"><div class="hs-mar"><div class="hs-ad" id="hsAd" aria-hidden="true"></div>
       <svg id="hsSvg" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Tablero de Puentes Hashi" preserveAspectRatio="xMidYMid meet"></svg></div></div>
     <div class="msg" id="hsMsg" role="status" aria-live="polite"></div>
     <div class="hs-acc" id="hsAcc"><button class="acc" data-ac="undo"><i>↶</i>Deshacer</button><button class="acc" data-ac="redo"><i>↷</i>Rehacer</button><button class="acc" data-ac="boya" aria-pressed="false"><i>🛟</i>Boyas</button><button class="acc" data-ac="pista"><i>💡</i>Pista</button><button class="acc" data-ac="comprobar"><i>✔</i>Comprobar</button></div>${api.barraHtml()}`;
@@ -88,6 +98,7 @@ function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.de
 function preparar() {
   semilla = S.isl.reduce((a, x) => (a * 31 + x[0] * 17 + x[1] * 7 + x[2]) >>> 0, 7); P = construir(S.isl); par = new Map(); P.E.forEach((e, k) => { par.set(e.a * 1000 + e.b, k); par.set(e.b * 1000 + e.a, k); });
   const w = Math.max(...S.isl.map(x => x[1])) + 1, h = Math.max(...S.isl.map(x => x[0])) + 1, svg = $('#hsSvg');
+  ponerAdornos();
   svg.setAttribute('viewBox', `0 0 ${w * U} ${h * U}`); svg.style.aspectRatio = `${w} / ${h}`; $('#hsWrap').style.setProperty('--w', w); $('#hsWrap').style.setProperty('--h', h);
 }
 

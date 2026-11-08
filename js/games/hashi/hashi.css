@@ -29,17 +29,17 @@
 @keyframes hs-boya{50%{transform:translateY(3px) rotate(4deg)}}
 @keyframes hs-salto{50%{transform:scale(1.06)}}
 @keyframes hs-brillo{50%{filter:drop-shadow(0 0 6px #ffe066)}}
-/* adornos: pasean por el mar, detrás del tablero */
+/* adornos: pasean por el mar, detrás del tablero (se sortean en index.js) */
 .hs-ad{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.hs-ad img{position:absolute;opacity:.92;filter:drop-shadow(0 4px 4px rgba(20,60,70,.35))}
-.ad-barco{width:16%;top:12%;left:-20%;animation:hs-barco 46s linear infinite}
-.ad-tortuga{width:11%;top:70%;left:-14%;animation:hs-tortuga 58s linear 8s infinite}
-.ad-gaviotas{width:12%;top:30%;left:-16%;animation:hs-gaviotas 30s linear 14s infinite;opacity:.85}
-@keyframes hs-barco{to{left:112%;top:30%}}
-@keyframes hs-tortuga{0%{top:84%}50%{top:62%}to{left:112%;top:76%}}
-@keyframes hs-gaviotas{to{left:112%;top:8%}}
+.hs-ad .ad{position:absolute;width:var(--w);left:-40%;top:var(--y0);animation:hs-nada var(--t) linear var(--d) infinite}
+.hs-ad .ad.rev{transform:scaleX(-1);animation-name:hs-nada-r}
+.hs-ad .ad img{display:block;width:100%;height:auto;opacity:.93;filter:drop-shadow(0 4px 4px rgba(20,60,70,.35))}
+.hs-ad .ad img.onda{animation:hs-onda 2.8s ease-in-out infinite}
+@keyframes hs-nada{from{left:-40%;top:var(--y0)}to{left:115%;top:var(--y1)}}
+@keyframes hs-nada-r{from{left:115%;top:var(--y0)}to{left:-40%;top:var(--y1)}}
+@keyframes hs-onda{50%{transform:translateY(8%) rotate(3deg)}}
 .juego-hashi[data-adornos="no"] .hs-ad{display:none}
-@media (prefers-reduced-motion:reduce){.hs-ad img,.hs-mar,.hs-boya,.hs-i image,.hs-p,.hs-i .hs-halo{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.hs-ad{display:none}.hs-mar,.hs-boya,.hs-i image,.hs-p,.hs-i .hs-halo{animation:none!important}}
 .hs-acc{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;width:min(100%,460px);margin:7px auto}
 .hs-acc .acc{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 1px;font:800 11.5px/1.1 Nunito,sans-serif;white-space:nowrap;background:var(--card);border:2px solid var(--tb-line);border-radius:14px;min-height:46px;color:var(--ink);box-shadow:0 3px 0 var(--tb-line)}
 .hs-acc .acc:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tb-line)}
