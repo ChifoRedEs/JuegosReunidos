@@ -1,8 +1,9 @@
 // Índice de tutoriales: id del juego → módulo con `export const TUTORIAL = { titulo, pasos }`
-// Si hay demostración animada en _demos.js, se inserta como paso 2 («Así se juega»).
+// Si hay demostración animada en demos.js, se inserta como paso 2 («Así se juega»).
 const t = n => async () => {
   const m = await import(`./${n}.js`);
-  const { DEMOS } = await import('./_demos.js'), d = DEMOS[n];
+  let d = null;
+  try { d = (await import('./demos.js')).DEMOS[n]; } catch (e) { console.warn('Sin demostración animada:', e); }
   if (!d || m.TUTORIAL.pasos.some(p => p.demo && p.demoPase)) return m;
   const { pase } = await import('../core/tutorial.js');
   const paso = { t: d.t || 'Así se juega', h: d.h || '', demoPase: true, demo: (z, ctx) => pase(z, d.marcos.map(([h, c]) => ({ h, c })), ctx) };
