@@ -7,6 +7,15 @@ const U = 100, PH = 99, RETO = { dif: 'normal' };
 const IMG = n => new URL(`./img/${n}.webp`, import.meta.url).href;
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, rehacer = [], P = null, par = null, ocupado = false, boyas = false, sel = -1, ultimo = -1, malas = new Set(), pista_ = null, tPista = 0, onKey = null, arr = null;
 const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
+// Temas de islas (3 dibujos cada uno). «Mezcladas» elige un tema por puzle y «Revueltas» los mezcla en el mismo tablero; Navidad solo sale sola en diciembre y enero.
+const TEMAS = { tropical: ['isla1', 'isla2', 'isla3'], hielo: ['hielo1', 'hielo2', 'hielo3'], volcan: ['volcan1', 'volcan2', 'volcan3'], desierto: ['desierto1', 'desierto2', 'desierto3'], otono: ['otono1', 'otono2', 'otono3'], navidad: ['navidad1', 'navidad2', 'navidad3'] };
+const navidadActiva = () => { const m = new Date().getMonth(); return m === 11 || m === 0; };
+const temasAuto = () => Object.keys(TEMAS).filter(t => t !== 'navidad' || navidadActiva());
+let semilla = 0;
+function imgIsla(r, c, n, modo) {
+  const l = temasAuto(), tema = TEMAS[modo] ? modo : modo === 'revuelto' ? l[(r * 5 + c * 3 + n) % l.length] : l[semilla % l.length];
+  return TEMAS[tema][(r * 7 + c * 13 + n) % 3];
+}
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -36,7 +45,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; boyas = false; sel = -1; ultimo = -1; malas = new Set(); pista_ = null; arr = null; rehacer = [];
   asp = api.aspecto([
-    { clave: 'islas', titulo: 'Islas', icono: '🏝️', def: 'mezcla', opciones: [{ id: 'mezcla', nombre: 'Mezcladas' }, { id: 'isla1', nombre: 'Palmeras', img: IMG('isla1') }, { id: 'isla2', nombre: 'Rocas', img: IMG('isla2') }, { id: 'isla3', nombre: 'Flores', img: IMG('isla3') }] },
+    { clave: 'islas', titulo: 'Islas', icono: '🏝️', def: 'mezcla', opciones: [{ id: 'mezcla', nombre: 'Mezcladas (un tema por puzle)' }, { id: 'revuelto', nombre: 'Revueltas (todos los temas)' }, { id: 'tropical', nombre: 'Tropical', img: IMG('isla1') }, { id: 'hielo', nombre: 'Helada', img: IMG('hielo1') }, { id: 'volcan', nombre: 'Volcánica', img: IMG('volcan1') }, { id: 'desierto', nombre: 'Desierto', img: IMG('desierto1') }, { id: 'otono', nombre: 'Otoño', img: IMG('otono1') }, { id: 'navidad', nombre: 'Navidad', img: IMG('navidad1') }] },
     { clave: 'adornos', titulo: 'Adornos del mar', icono: '⛵', def: 'si', opciones: [{ id: 'si', nombre: 'Con adornos' }, { id: 'no', nombre: 'Sin adornos' }] },
   ], () => { if (S) pintar(); });
   await api.css(new URL('./hashi.css', import.meta.url));
@@ -77,7 +86,7 @@ export function unmount() {
 }
 function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.detener(); $('#hsCrono').textContent = fmtTiempo(S.t); }
 function preparar() {
-  P = construir(S.isl); par = new Map(); P.E.forEach((e, k) => { par.set(e.a * 1000 + e.b, k); par.set(e.b * 1000 + e.a, k); });
+  semilla = S.isl.reduce((a, x) => (a * 31 + x[0] * 17 + x[1] * 7 + x[2]) >>> 0, 7); P = construir(S.isl); par = new Map(); P.E.forEach((e, k) => { par.set(e.a * 1000 + e.b, k); par.set(e.b * 1000 + e.a, k); });
   const w = Math.max(...S.isl.map(x => x[1])) + 1, h = Math.max(...S.isl.map(x => x[0])) + 1, svg = $('#hsSvg');
   svg.setAttribute('viewBox', `0 0 ${w * U} ${h * U}`); svg.style.aspectRatio = `${w} / ${h}`; $('#hsWrap').style.setProperty('--w', w); $('#hsWrap').style.setProperty('--h', h);
 }
@@ -135,7 +144,7 @@ function pintar() {
   });
   const vecinos = new Set(); if (sel >= 0) P.inc[sel].forEach(e => { const o = P.E[e].a === sel ? P.E[e].b : P.E[e].a; if (S.cur[e] > 0 || !bloqueada(P, S.cur, e)) vecinos.add(o); });
   S.isl.forEach(([r, c, n], i) => {
-    const cx = c * U + U / 2, cy = r * U + U / 2, ok = g[i] === n, mal = g[i] > n, v = mezcla && mezcla !== 'mezcla' ? mezcla : 'isla' + ((r * 7 + c * 13 + n) % 3 + 1);
+    const cx = c * U + U / 2, cy = r * U + U / 2, ok = g[i] === n, mal = g[i] > n, v = imgIsla(r, c, n, mezcla);
     const cls = (ok ? 'ok ' : '') + (mal ? 'mal ' : '') + (i === sel ? 'sel ' : '') + (vecinos.has(i) ? 'vec ' : '') + (pista_ && pista_.includes(i) ? 'pis ' : '') + (S.done ? 'fin ' : '');
     capaI += `<g class="hs-i ${cls}" data-i="${i}" style="--d:${(i % 7) * 60}ms"><circle class="hs-halo" cx="${cx}" cy="${cy}" r="52"/><image href="${IMG(v)}" x="${cx - 46}" y="${cy - 46}" width="92" height="92"/><text class="hs-n" x="${cx}" y="${cy + 3}" text-anchor="middle" dominant-baseline="central">${n}</text><circle cx="${cx}" cy="${cy}" r="60" fill="transparent"/><title>Isla ${n}: ${g[i]} puente${g[i] === 1 ? '' : 's'} de ${n}</title></g>`;
   });
