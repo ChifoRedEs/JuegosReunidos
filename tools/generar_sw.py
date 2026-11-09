@@ -41,6 +41,6 @@ print('sw.js actualizado: %d archivos, versión %s' % (len(archivos) + 1, versio
 v = re.search(r"VERSION = '([^']+)'", open(os.path.join(RAIZ, 'js', 'version.js'), encoding='utf-8').read())
 if v:
     rd = os.path.join(RAIZ, 'README.md'); t = open(rd, encoding='utf-8').read()
-    t2 = re.sub(r'\A# Juegos Reunidos[^\n]*', '# Juegos Reunidos ' + v.group(1), t, count=1)
+    t2 = re.sub(r'\A# (?:Juegos Reunidos|JugamiGO)[^\n]*', '# JugamiGO ' + v.group(1), t, count=1)
     if t2 != t: open(rd, 'w', encoding='utf-8').write(t2)
     print('README.md: versión %s' % v.group(1))

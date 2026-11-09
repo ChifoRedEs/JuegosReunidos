@@ -267,7 +267,7 @@ body.fijo .cat-seccion>.cat{margin:4px 2px 8px;flex:none}
 body.fijo .cat-seccion .rejilla{flex:1 1 auto;min-height:0;grid-auto-rows:minmax(0,1fr);gap:10px}
 body.fijo .cat-seccion .ficha{aspect-ratio:auto;min-height:0}
 .ini{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:10px;isolation:isolate}
-.ini::before{content:"";position:fixed;inset:0;z-index:-1;background:url(../img/fondo-inicio.webp) center/cover no-repeat;opacity:1;pointer-events:none}
+.ini::before{content:"";position:fixed;inset:0;z-index:-1;background:url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat;opacity:1;pointer-events:none}
 .ini-cat{flex:1 1 0;min-height:0;display:flex;align-items:center;gap:14px;padding:0 18px;border-radius:24px;color:#fff;text-decoration:none;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 80%,transparent),color-mix(in srgb,var(--c) 70%,transparent));box-shadow:0 6px 18px color-mix(in srgb,var(--c) 32%,transparent);backdrop-filter:blur(2px);overflow:hidden}
 .ini-cat:active{transform:scale(.985)}
 .ini-ico{font-size:clamp(34px,6.5vh,52px);line-height:1;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
@@ -281,7 +281,7 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;min-height:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--velo:rgba(15,22,48,.82)}}
 :root[data-theme="dark"]{--velo:rgba(15,22,48,.82)}
 body.fijo .cat-seccion,body.fondo main{position:relative;isolation:isolate}
-body.fijo .cat-seccion::before,body.fondo main::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+body.fijo .cat-seccion::before,body.fondo main::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo),var(--velo)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
 
 /* Tarjetas de Estadísticas y Ajustes: en vez de blanco liso, degradado morado → azul de la cabecera, casi imperceptible (claro) o muy oscuro (oscuro) */
 :root{--pan1:color-mix(in srgb,var(--head1) 7%,#fff);--pan2:color-mix(in srgb,var(--head2) 9%,#fff)}
@@ -299,7 +299,7 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 .st-ficha small{font-size:10.5px;font-weight:700;opacity:.92}
 
 /* Ventana de estadísticas de un juego: fondo-ventana con el mismo velo (blanco / azul oscuro) que las pantallas */
-.hoja.hoja-img{--hw:min(100vw,520px);width:var(--hw);height:calc(var(--hw)*.4942 + 40px);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(var(--velo),var(--velo)),url(../img/fondo-ventana.webp) center/100% 100% no-repeat,var(--card)}
+.hoja.hoja-img{--hw:min(100vw,520px);width:var(--hw);height:calc(var(--hw)*.4942 + 40px);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(var(--velo),var(--velo)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat,var(--card)}
 
 .hoja.hoja-img h2{flex:none;margin-bottom:6px}
 .hoja.hoja-img .cuerpo{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
@@ -311,15 +311,15 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 :root[data-theme="dark"]{--velo-cat:rgba(10,16,44,.68);--ficha-a:94%;--ficha-b:84%;--ficha-sombra:55%}
 body.fijo .cat-seccion::before{content:none}
 body.fijo:has(.cat-seccion) main{position:relative;isolation:isolate}
-body.fijo:has(.cat-seccion) main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/100% 100% no-repeat}
+body.fijo:has(.cat-seccion) main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
 body.fijo .cat-seccion .ficha{background:linear-gradient(145deg,color-mix(in srgb,var(--c) var(--ficha-a),transparent),color-mix(in srgb,var(--c) var(--ficha-b),transparent));box-shadow:0 6px 18px color-mix(in srgb,var(--c) var(--ficha-sombra),transparent);backdrop-filter:blur(2px)}
 body.fijo .cat-seccion>.cat{align-self:flex-start;padding:4px 18px 4px 8px;border-radius:99px;background:linear-gradient(90deg,#F5B91E 0%,#F5B91E 14%,#3E6FE0 100%);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);box-shadow:0 3px 10px rgba(30,50,160,.3)}
 
 /* 3.36.3 (y 3.37.1 también en oscuro): Estadísticas y Ajustes con el fondo de las categorías: imagen completa bajo el menú */
-body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/100% 100% no-repeat}
+body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
 
 /* 3.36.7: ventana «¿A qué quieres jugar?» con el banner de fondo (velo blanco 50 % en claro; el de las pantallas en oscuro) */
-.hoja.hoja-elegir{--vl:rgba(255,255,255,.5);background:linear-gradient(var(--vl),var(--vl)),url(../img/fondo-ventana-cuadrada.webp) center/cover no-repeat,var(--card)}
+.hoja.hoja-elegir{--vl:rgba(255,255,255,.5);background:linear-gradient(var(--vl),var(--vl)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat,var(--card)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hoja.hoja-elegir{--vl:var(--velo)}}
 :root[data-theme="dark"] .hoja.hoja-elegir{--vl:var(--velo)}
 
@@ -359,12 +359,12 @@ body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--vel
 body.fondo .panel{background:linear-gradient(135deg,color-mix(in srgb,var(--pan1) 90%,transparent),color-mix(in srgb,var(--pan2) 90%,transparent))}
 
 /* 3.37.3: todas las páginas usan el mismo encuadre de fondo que la Página Principal (imagen a pantalla completa, «cover»); cada tema conserva su velo */
-body.fijo:has(.cat-seccion) main::before,body.fondo main::before{position:fixed;inset:0;top:0;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+body.fijo:has(.cat-seccion) main::before,body.fondo main::before{position:fixed;inset:0;top:0;background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
 
 /* 3.37.4: fondo FIJO. La imagen vive en una capa fija a nivel de página (body::before), fuera de «main», para que no se mueva al hacer scroll en ninguna pantalla. */
 body.fijo .ini::before,body.fijo .cat-seccion::before,body.fijo:has(.cat-seccion) main::before,body.fondo main::before{content:none}
-body.fijo::before,body.fondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
-body.fijo:has(.ini)::before{background:url(../img/fondo-inicio.webp) center/cover no-repeat}
+body.fijo::before,body.fondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
+body.fijo:has(.ini)::before{background:url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
 
 /* 3.37.5: la capa de fondo mide siempre lo que la pantalla grande (sin barras del navegador), así no se estira ni «hace zoom» cuando las barras del móvil se ocultan al hacer scroll */
 body.fijo::before,body.fondo::before{height:100vh;height:100lvh;min-height:100%;bottom:auto}
@@ -384,7 +384,7 @@ body.jfondo .top{position:static;flex:none}
 body.jfondo main{flex:1 1 auto;min-height:0;width:100%;max-width:none;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
   padding-left:max(14px,calc((100% - 520px)/2));padding-right:max(14px,calc((100% - 520px)/2))}
 @media(min-width:760px){body.jfondo main{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}}
-body.jfondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;min-height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/fondo-inicio.webp) center/cover no-repeat}
+body.jfondo::before{content:"";position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;min-height:100%;z-index:-1;pointer-events:none;transform:translateZ(0);background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
 
 /* 3.38.1: contraste de los textos sueltos sobre el fondo (fuera de cajas): negro nítido en claro y blanco nítido en oscuro, con un halo suave */
 body.fondo,body.jfondo,body.fijo{--ink:#000;--mut:#000;--halo:0 0 3px rgba(255,255,255,.95),0 0 8px rgba(255,255,255,.75)}

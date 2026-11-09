@@ -1,0 +1,103 @@
+/* ===== JugamiGO · Pasaporte =====
+   Identidad visual 2026: el pasaporte (papel crema, tinta azul, sello coral).
+   Se carga la última: sustituye la paleta (modo claro «Papel» y modo oscuro «Noche») y restyla cabecera, navegación,
+   inicio, fichas, botones y tarjetas. Los juegos usan estos mismos tokens, así que heredan la nueva paleta.
+   Guía: docs/MARCA.md */
+
+/* ---------- paleta ---------- */
+:root{
+  --bg:#F4EBD9;--bg2:#EDE0C6;--ink:#14213D;--mut:#4A5470;--card:#FFFDF7;--line:#D6C7A8;
+  --red:#D93A3A;--blue:#B5381A;--yel:#F2B134;--ok:#0F9B62;--purple:#D4481F;--orange:#E4572E;--pink:#D9487A;--teal:#1B998B;
+  --sel:#F4E2B0;--bad:#FFDCD3;--same:#E9D9B5;--head1:#14213D;--head2:#1F3159;
+  --borde:#14213D;--duro:0 3px 0 #14213D;--sello:#B8401F;--lima:#C6FF3D;--velo:rgba(244,235,217,.35);--velo-cat:rgba(244,235,217,.25);
+  --pan1:color-mix(in srgb,var(--head1) 4%,#FFFDF7);--pan2:color-mix(in srgb,var(--head2) 6%,#FFFDF7);
+  --sombra-s:0 2px 0 rgba(20,33,61,.18);--sombra-m:0 3px 0 rgba(20,33,61,.28);--sombra-marca:0 3px 0 #7E2410;
+  --grad-marca:linear-gradient(135deg,#D4481F,#B5381A);
+  --f-titulo:'Fraunces','Baloo 2',Georgia,serif;
+  color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E0B1F;--bg2:#17123A;--ink:#F2F0FF;--mut:#B9B3E0;--card:#1D1840;--line:#3A3466;
+  --blue:#5B3FD6;--purple:#7C5CFF;--ok:#4BE39A;--yel:#C6FF3D;--pink:#FF5C8A;--teal:#35D6E8;
+  --sel:#2C2660;--bad:#5A2432;--same:#3B3478;--head1:#1D1840;--head2:#15112E;
+  --borde:#4B4575;--duro:0 3px 0 rgba(0,0,0,.6);--sello:#C6FF3D;--velo:rgba(14,11,31,.9);--velo-cat:rgba(14,11,31,.93);
+  --pan1:color-mix(in srgb,var(--head1) 70%,var(--card));--pan2:var(--card);
+  --sombra-s:0 2px 0 rgba(0,0,0,.45);--sombra-m:0 3px 0 rgba(0,0,0,.55);--sombra-marca:0 3px 0 #2D1A8C;
+  --grad-marca:linear-gradient(135deg,#7C5CFF,#5B3FD6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E0B1F;--bg2:#17123A;--ink:#F2F0FF;--mut:#B9B3E0;--card:#1D1840;--line:#3A3466;
+  --blue:#5B3FD6;--purple:#7C5CFF;--ok:#4BE39A;--yel:#C6FF3D;--pink:#FF5C8A;--teal:#35D6E8;
+  --sel:#2C2660;--bad:#5A2432;--same:#3B3478;--head1:#1D1840;--head2:#15112E;
+  --borde:#4B4575;--duro:0 3px 0 rgba(0,0,0,.6);--sello:#C6FF3D;--velo:rgba(14,11,31,.9);--velo-cat:rgba(14,11,31,.93);
+  --pan1:color-mix(in srgb,var(--head1) 70%,var(--card));--pan2:var(--card);
+  --sombra-s:0 2px 0 rgba(0,0,0,.45);--sombra-m:0 3px 0 rgba(0,0,0,.55);--sombra-marca:0 3px 0 #2D1A8C;
+  --grad-marca:linear-gradient(135deg,#7C5CFF,#5B3FD6);color-scheme:dark}
+
+/* en las pantallas con fondo de papel el texto va en tinta (antes negro con halo) */
+body.fondo,body.jfondo,body.fijo{--ink:#14213D;--mut:#34405F;--halo:0 0 3px rgba(255,253,247,.95),0 0 8px rgba(255,253,247,.7)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(body.fondo,body.jfondo,body.fijo){--ink:#F2F0FF;--mut:#D6D1F5;--halo:0 0 3px rgba(14,11,31,.95),0 0 8px rgba(14,11,31,.8)}}
+:root[data-theme="dark"] :is(body.fondo,body.jfondo,body.fijo){--ink:#F2F0FF;--mut:#D6D1F5;--halo:0 0 3px rgba(14,11,31,.95),0 0 8px rgba(14,11,31,.8)}
+
+body{font-family:Nunito,system-ui,sans-serif;background:linear-gradient(180deg,var(--bg),var(--bg2)) fixed}
+h1,h2,h3{font-family:var(--f-titulo);font-weight:800;letter-spacing:-.01em}
+:focus-visible{outline:3px solid var(--sello);outline-offset:2px}
+
+/* ---------- cabecera: banner de papel con sellos y el nombre en tinta ---------- */
+.top{background:linear-gradient(120deg,var(--head1),var(--head2));box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.top h1{background:#FFF8EC url(../img/marca/banner.webp) center/100% 100% no-repeat;border:2px solid var(--borde);box-shadow:var(--duro);border-radius:14px}
+.top h1 #titulotxt{color:#14213D;font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:var(--tit-fs,clamp(15px,4.5vw,30px));letter-spacing:-.02em;text-shadow:0 0 4px #FFF8EC,0 0 10px #FFF8EC,0 0 14px #FFF8EC}
+.top h1 #titulotxt .go{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-left:.12em;width:1.45em;height:1.45em;border-radius:50%;background:#E4572E;color:#FFF8EC;font-size:.8em;letter-spacing:0;line-height:1;text-shadow:none;box-shadow:0 0 0 .1em #FFF8EC,0 0 0 .15em #B8401F;transform:rotate(-8deg)}
+.top h1 #titulotxt .cj,.top h1 #titulotxt .cr{color:#14213D}
+
+/* navegación por rutas */
+.top #nav a{border-color:rgba(255,248,236,.28);color:rgba(255,248,236,.92);border-radius:14px}
+.top #nav a.on{background:#FFF8EC;color:#14213D;border-color:#FFF8EC;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+:root[data-theme="dark"] .top #nav a.on{background:var(--lima);border-color:var(--lima);color:#0E0B1F}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .top #nav a.on{background:var(--lima);border-color:var(--lima);color:#0E0B1F}}
+.top #nav a img{width:clamp(22px,6.2vw,30px);height:clamp(22px,6.2vw,30px);display:block;object-fit:contain}
+.top #nav a span.im{display:flex;align-items:center;justify-content:center;height:clamp(22px,6.2vw,30px)}
+
+/* ---------- botones y tarjetas: tinta y sombra dura, como un sello ---------- */
+.btn{border-color:var(--borde);box-shadow:var(--duro);font-family:Nunito,system-ui,sans-serif}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--borde)}
+.btn.on{background:var(--grad-marca);border-color:var(--borde);color:#fff;box-shadow:var(--duro)}
+.btn:hover:not(:disabled):not(.on){border-color:var(--sello)}
+.panel,.chk,.ops,.jugfila,.catd,.ap-det{border-color:var(--borde);box-shadow:var(--sombra-m)}
+.stats-tab{border-color:var(--borde);box-shadow:0 2px 0 rgba(20,33,61,.25)}
+.stats-tab.on{background:var(--grad-marca);box-shadow:var(--duro)}
+.hoja{border-top:3px solid var(--borde);box-shadow:0 -6px 0 rgba(0,0,0,.12)}
+.barra-gen button{border-color:var(--borde);box-shadow:0 2px 0 rgba(20,33,61,.25);font-family:Nunito,system-ui,sans-serif}
+.barra-gen button[data-gen="nueva"]{border-color:var(--sello);box-shadow:0 2px 0 var(--sello)}
+.cat::before{background:linear-gradient(var(--sello),var(--blue))}
+.cat,.cnom{font-family:var(--f-titulo);font-weight:900}
+.cico{background:none;width:44px;height:44px;border-radius:0}
+.cico img{width:44px;height:44px;display:block;object-fit:contain;filter:drop-shadow(0 2px 0 rgba(20,33,61,.3))}
+.cact{background:var(--sello);color:#FFF8EC}
+:root[data-theme="dark"] .cact{color:#0E0B1F}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cact{color:#0E0B1F}}
+
+/* ---------- inicio: una «ruta» del pasaporte por categoría ---------- */
+.ini::before{background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
+body.fijo:has(.ini)::before{background:linear-gradient(var(--velo-cat),var(--velo-cat)),url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat}
+.ini-cat{position:relative;gap:14px;padding:0 16px 0 12px;border-radius:22px;color:var(--ink);background:var(--card);border:2px solid var(--borde);box-shadow:var(--duro);backdrop-filter:none}
+.ini-cat::after{content:"";position:absolute;inset:6px;border:2px dashed color-mix(in srgb,var(--borde) 28%,transparent);border-radius:16px;pointer-events:none}
+.ini-cat:active{transform:translateY(2px);box-shadow:0 1px 0 var(--borde)}
+.ini-ico{height:min(100%,92px);width:auto;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;filter:none}
+.ini-ico img{height:clamp(56px,10.5vh,84px);width:clamp(56px,10.5vh,84px);display:block;object-fit:contain;transform:rotate(-6deg);filter:drop-shadow(0 3px 0 rgba(20,33,61,.3))}
+.ini-t b{font-family:var(--f-titulo);font-weight:900;color:var(--ink);text-shadow:none;font-size:clamp(18px,2.7vh,24px)}
+.ini-t small{color:var(--mut);opacity:1}
+.ini-fl{color:var(--sello);font-family:var(--f-titulo)}
+
+/* ---------- fichas de juego ---------- */
+.ficha{border:2px solid var(--borde);border-radius:20px;box-shadow:var(--duro);background:linear-gradient(145deg,color-mix(in srgb,var(--c) 88%,#fff),var(--c) 72%)}
+.ficha::after{border-radius:50%;background:none;border:3px dashed rgba(255,255,255,.4);right:-22px;top:-22px;width:92px;height:92px}
+.ficha b{font-family:var(--f-titulo);font-weight:900}
+.ficha:active{transform:translateY(2px);box-shadow:0 1px 0 var(--borde)}
+.st-ficha{border:2px solid var(--borde);box-shadow:0 2px 0 rgba(20,33,61,.3)}
+.eleg{border:2px solid var(--borde);box-shadow:var(--duro)}
+
+/* versión y firma */
+.version{font-family:var(--f-titulo);font-weight:700}
+
+/* título de categoría: etiqueta de papel con su sello */
+body.fijo .cat-seccion>.cat{background:var(--card);color:var(--ink);text-shadow:none;border:2px solid var(--borde);box-shadow:var(--duro);padding:4px 18px 4px 8px;border-radius:99px}
+body.fijo .cat-seccion>.cat::before{display:none}

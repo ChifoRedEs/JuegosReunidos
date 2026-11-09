@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-336a614370';
+const VERSION = 'jr-46661ad4ae';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -10,6 +10,7 @@ const ARCHIVOS = [
 './css/cartas.css',
 './css/fichas.css',
 './css/marca.css',
+'./css/pasaporte.css',
 './css/tutorial.css',
 './data/diccionario/indice.json',
 './data/nonogramas/pixelart.json',

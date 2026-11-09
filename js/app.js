@@ -14,7 +14,7 @@ import { TUTORIALES } from './tutoriales/indice.js';
 // «Palabras Cruzadas» (el nombre más largo) ocupa justo la zona clara del banner (50 % de su ancho); los demás, más cortos, caben siempre
 function ajustarCabecera() {
   const h = document.getElementById('titulo'); if (!h || !h.clientWidth) return;
-  const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:400 100px Chewy,"Baloo 2",system-ui,sans-serif;letter-spacing:.2px'; m.textContent = 'Palabras Cruzadas';
+  const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:900 100px Fraunces,Georgia,serif;letter-spacing:-.02em'; m.textContent = 'Palabras Cruzadas';
   document.body.appendChild(m); const w = m.getBoundingClientRect().width; m.remove(); if (!w) return;
   h.style.setProperty('--tit-fs', Math.min(0.5 * h.clientWidth / w * 100, h.clientHeight * 0.78).toFixed(1) + 'px');
 }
@@ -31,15 +31,13 @@ function ajustarCabecera() {
   window.removeEventListener = function (tipo, fn, op) { return remOrig(tipo, tipo === 'resize' && env.has(fn) ? env.get(fn) : fn, op); };
 }
 window.addEventListener('resize', ajustarCabecera); ajustarCabecera();
-if (document.fonts) { document.fonts.load('40px Chewy').then(ajustarCabecera).catch(() => {}); document.fonts.ready.then(ajustarCabecera); }
-// Título de la cabecera: «Juegos» (amarillo) y «Reunidos» (azul) como en el logo; el nombre de cada juego cambia de color al azar (todos con buen contraste sobre blanco)
-const COLORES_TITULO = ['#C62828', '#1565C0', '#2E7D32', '#6A1B9A', '#D84315', '#00796B', '#AD1457', '#283593', '#8D4B00', '#00838F'];
-let colorTitulo = '';
+if (document.fonts) { document.fonts.load('900 40px Fraunces').then(ajustarCabecera).catch(() => {}); document.fonts.ready.then(ajustarCabecera); }
+// Título de la cabecera: «JugamiGO» con el sello GO; en cada juego, su nombre en tinta
 const cabTxt = t => {
   const e = document.getElementById('titulotxt'); if (!e) return;
-  if (t === 'Juegos Reunidos') { e.innerHTML = '<span class="cj">Juegos</span> <span class="cr">Reunidos</span>'; e.style.color = ''; return; }
-  let c; do { c = COLORES_TITULO[Math.random() * COLORES_TITULO.length | 0]; } while (c === colorTitulo && COLORES_TITULO.length > 1);
-  colorTitulo = c; e.textContent = t; e.style.color = c;
+  e.style.color = '';
+  if (t === 'JugamiGO') { e.innerHTML = 'Jugami<span class="go">GO</span>'; return; }
+  e.textContent = t;
 };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
 const app = $('#app'), nav = $('#nav');
@@ -48,11 +46,11 @@ const scrollInterno = () => document.body.classList.contains('fondo') || documen
 const leerScroll = () => scrollInterno() ? app.scrollTop : scrollY;
 const ponerScroll = y => { if (scrollInterno()) app.scrollTop = y; else scrollTo(0, y); };
 const RUTAS = [
-  ['cat-logica', '🧠', 'Lógica', '#/cat/logica'],
-  ['cat-tablero', '🎲', 'Tablero', '#/cat/tablero'],
-  ['cat-cartas', '🃏', 'Cartas', '#/cat/cartas'],
-  ['cat-palabras', '🔤', 'Palabras', '#/cat/palabras'],
-  ['cat-arcade', '🕹️', 'Arcade', '#/cat/arcade'],
+  ['cat-logica', 'img:ruta-logica', 'Lógica', '#/cat/logica'],
+  ['cat-tablero', 'img:ruta-tablero', 'Tablero', '#/cat/tablero'],
+  ['cat-cartas', 'img:ruta-cartas', 'Cartas', '#/cat/cartas'],
+  ['cat-palabras', 'img:ruta-palabras', 'Palabras', '#/cat/palabras'],
+  ['cat-arcade', 'img:ruta-arcade', 'Arcade', '#/cat/arcade'],
   ['stats', '📊', 'Estadísticas', '#/stats'],
   ['ajustes', '⚙️', 'Ajustes', '#/ajustes']
 ];
@@ -98,7 +96,7 @@ function pedirTexto(titulo, { valor = '', max = 14, nota = '', tipo = 'text', pl
 async function compartir(texto) {
   const url = location.href.split('#')[0];
   try {
-    if (navigator.share) { await navigator.share({ title: 'Juegos Reunidos', text: texto, url }); return; }
+    if (navigator.share) { await navigator.share({ title: 'JugamiGO', text: texto, url }); return; }
   } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(texto + '\n' + url); aviso('📋 Copiado: pégalo donde quieras'); }
   catch { modal('Compartir', `<p>Copia este texto:</p><p><b>${esc(texto)}</b><br>${esc(url)}</p>`); }
@@ -258,7 +256,7 @@ function crearApi(j, ent, mod, root) {
       menuItems = (items || []).slice();
       if (menuItems.length) menuItems.push({ texto: '📤 Compartir resultado', accion: () => {
         const r = store.getResumen(id);
-        compartir(`${j.icono} ${j.nombre}${r && r.resumen ? ': ' + r.resumen + (r.fin ? '' : ' (en juego)') : ''} · Juegos Reunidos`);
+        compartir(`${j.icono} ${j.nombre}${r && r.resumen ? ': ' + r.resumen + (r.fin ? '' : ' (en juego)') : ''} · JugamiGO`);
       } });
     },
     // Reto del día: el mismo tablero para todo el mundo (generado con semilla fecha + juego)
@@ -444,7 +442,7 @@ async function render() {
   // Dentro de un juego queda marcada la pestaña de su categoría
   nav.innerHTML = RUTAS.map(([k, ic, tx, h]) => {
     const activa = k === 'cat-' + (r.cat || '') ? (r.v === 'inicio' || r.v === 'juego') : k === r.v;
-    return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span aria-hidden="true">${ic}</span><b>${tx}</b></a>`;
+    return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span class="${ic.startsWith('img:') ? 'im' : ''}" aria-hidden="true">${ic.startsWith('img:') ? `<img src="img/marca/${ic.slice(4)}.webp" alt="" width="30" height="30">` : ic}</span><b>${tx}</b></a>`;
   }).join('');
   app.innerHTML = '';
   document.body.classList.toggle('fijo', r.v === 'inicio');
@@ -521,16 +519,16 @@ function elegirJuego(gid) {
   const h = [...document.querySelectorAll('.modal > .hoja')].pop(); if (h) h.classList.add('hoja-elegir');
 }
 // Inicio por categorías plegables: solo se abre una a la vez y se recuerda la última abierta.
-const COLOR_CAT = { logica: '#6B4DE0', tablero: '#E0553D', cartas: '#C8243E', palabras: '#D98A00', arcade: '#2F6BFF' };
+const COLOR_CAT = { logica: '#6D5FD9', tablero: '#E4572E', cartas: '#1B998B', palabras: '#F2B134', arcade: '#2F7BD9' };
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio(filtro = null) {
   const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
-  nombreVista = nombreFiltro || 'Juegos Reunidos'; cabTxt('Juegos Reunidos');
+  nombreVista = nombreFiltro || 'JugamiGO'; cabTxt('JugamiGO');
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
   if (!filtro) {                                                    // Pantalla de inicio: el logo de fondo y las categorías a todo el alto (sin desplazamiento)
     app.innerHTML = `<div class="ini" role="navigation" aria-label="Categorías de juegos">${cats.map(([k, n]) => {
       const js = JUEGOS.filter(j => j.categoria === k), enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
-      return `<a class="ini-cat" href="#/cat/${k}" style="--c:${COLOR_CAT[k] || '#6B4DE0'}"><span class="ini-ico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="ini-t"><b>Juegos de ${esc(n)}</b><small>${js.length} juegos${enCurso ? ` · ${enCurso} en curso` : ''}</small></span><span class="ini-fl" aria-hidden="true">›</span></a>`;
+      return `<a class="ini-cat" href="#/cat/${k}" style="--c:${COLOR_CAT[k] || '#6B4DE0'}"><span class="ini-ico" aria-hidden="true"><img src="img/marca/ruta-${k}.webp" alt="" width="84" height="84"></span><span class="ini-t"><b>Juegos de ${esc(n)}</b><small>${js.length} juegos${enCurso ? ` · ${enCurso} en curso` : ''}</small></span><span class="ini-fl" aria-hidden="true">›</span></a>`;
     }).join('')}</div>`;
     return;
   }
@@ -538,17 +536,17 @@ function vInicio(filtro = null) {
     const es = entradas(k), js = JUEGOS.filter(j => j.categoria === k);
     const enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
     return `<section class="cat-seccion" data-cat="${k}">
-      <h2 class="cat"><span class="cico" aria-hidden="true">${ICONO_CAT[k] || '🎮'}</span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}</h2>
+      <h2 class="cat"><span class="cico" aria-hidden="true"><img src="img/marca/ruta-${k}.webp" alt="" width="44" height="44"></span><span class="cnom">${esc(n)}</span>${enCurso ? `<span class="cact" title="Partidas en curso">${enCurso} en curso</span>` : ''}</h2>
       <div class="rejilla">${es.map(x => x.tipo === 'grupo' ? fichaGrupo(x.g, x.js) : ficha(x.j)).join('')}</div></section>`;
   }).join('');
   app.innerHTML = grupos + '';
 }
 
 /* ---------- estadísticas ---------- */
-/* Las fichas de juegos (categorías y Estadísticas) toman al azar uno de estos 8 colores cada vez que se pinta la pantalla.
+/* Las fichas de juegos (categorías y Estadísticas) toman al azar uno de estos colores del pasaporte cada vez que se pinta la pantalla.
    Se reparten en tandas barajadas, así que en cada pantalla se repiten lo menos posible y nunca salen otros colores. */
-const COLORES_FICHA = ['#2CB5E8' /* azul cian */, '#FFC21A' /* amarillo */, '#E0356E' /* magenta */, '#7A5BC7' /* morado */, '#E5622B' /* naranja */, '#0E9FA6' /* turquesa */, '#1D3A8A' /* azul marino */, '#1F8A4C' /* verde oscuro */];
-const COLORES_STATS = [...COLORES_FICHA, '#F48FB1' /* rosa claro */, '#6B4426' /* marrón */, '#D40511' /* rojo ferrari */, '#3CC8B4' /* aguamarina */];
+const COLORES_FICHA = ['#C9441C' /* coral */, '#137A6F' /* mar */, '#5B4FCF' /* ultramar */, '#2563C9' /* cielo */, '#14213D' /* tinta */, '#9A3412' /* sello */];
+const COLORES_STATS = [...COLORES_FICHA, '#7A3E9D' /* ciruela */, '#0F766E' /* pino */, '#A16207' /* ocre */, '#B91C1C' /* carmín */];
 function colorearFichas(sel = '.ficha', paleta = COLORES_FICHA) {
   let cola = [];
   app.querySelectorAll(sel).forEach(f => {
@@ -558,7 +556,7 @@ function colorearFichas(sel = '.ficha', paleta = COLORES_FICHA) {
 }
 function vStats(catSel = null) { const y = leerScroll(); vStats_(catSel); colorearFichas('.st-ficha', COLORES_STATS); if (ruta().v === 'stats') ponerScroll(y); }
 function vStats_(catSel = null) {
-  nombreVista = 'Estadísticas'; cabTxt('Juegos Reunidos');
+  nombreVista = 'Estadísticas'; cabTxt('JugamiGO');
   const T = stats.todas();
   revisarLogros();
   const G = logros.conseguidos(), defs = logros.definiciones(CAT_IDS), nG = defs.filter(d => G[d.id]).length;
@@ -626,7 +624,7 @@ async function estadoSinConexion() {
 }
 function vAjustes() { const y = leerScroll(); vAjustes_(); if (ruta().v === 'ajustes') ponerScroll(y); }   // al volver a pintar (cambiar un ajuste…) no se salta arriba
 function vAjustes_() {
-  nombreVista = 'Ajustes'; cabTxt('Juegos Reunidos');
+  nombreVista = 'Ajustes'; cabTxt('JugamiGO');
   const A = aj.ajustes();
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="btn ${A[k] === v ? 'on' : ''}" data-set="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   app.innerHTML = `
@@ -643,9 +641,9 @@ function vAjustes_() {
       <button class="btn danger" id="gBor">Borrar partidas</button></div>
     <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
   <div class="panel"><h3>Sin conexión</h3><p class="note" id="gOff" role="status">Comprobando…</p><div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
-  <div class="panel"><h3>Acerca de</h3><p class="note">Juegos Reunidos · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p>
+  <div class="panel"><h3>Acerca de</h3><p class="note">JugamiGO · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p>
     <p class="note">Créditos: los dibujos de las caras de «¿Qué Cara Tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
-  <p class="version">Juegos Reunidos · versión ${VERSION} · by ChifoRedEs</p>`;
+  <p class="version">JugamiGO · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = leerScroll(); vAjustes(); ponerScroll(y);
   }));
@@ -690,7 +688,7 @@ async function ingestar(j, datos, desdeV1) {
   return true;
 }
 async function importar(o) {
-  if (!o || typeof o !== 'object' || o.app !== 'juegos-reunidos') throw new Error('El archivo no es una copia de Juegos Reunidos.');
+  if (!o || typeof o !== 'object' || o.app !== 'juegos-reunidos') throw new Error('El archivo no es una copia de JugamiGO.');
   const got = [];
   for (const j of JUEGOS) {
     try {
@@ -702,7 +700,7 @@ async function importar(o) {
     stats.importar(o.stats); aj.importar(o.ajustes); logros.importar(o.logros); logros.importarRetos(o.retos);
     if (o.podios && typeof o.podios === 'object') for (const j of JUEGOS) importarPodio(j.id, o.podios[j.id]);
   }
-  if (!got.length && o.version !== 2) throw new Error('El archivo no contiene partidas reconocibles de Juegos Reunidos.');
+  if (!got.length && o.version !== 2) throw new Error('El archivo no contiene partidas reconocibles de JugamiGO.');
   return got;
 }
 // Podio (top 10) de un juego: se mezcla con el de este dispositivo

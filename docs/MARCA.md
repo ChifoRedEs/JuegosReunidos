@@ -1,3 +1,11 @@
+# JugamiGO · identidad «Pasaporte» (3.67.0)
+
+- Concepto: la app es un pasaporte. Juegos = destinos, victorias = sellos, categorías = rutas, estadísticas = diario de viaje, «Modo avión» = funciona sin conexión.
+- Colores y modos: `css/pasaporte.css` (se carga el último). Modo claro «Papel»: crema `#F4EBD9`, tinta `#14213D`, sello coral `#E4572E`, mar `#1B998B`, oro `#F2B134`. Modo oscuro «Noche»: `#0E0B1F`, tarjeta `#1D1840`, lima `#C6FF3D`, violeta `#7C5CFF`.
+- Los juegos siguen usando los tokens de siempre (`--purple`, `--blue`, `--ink`, `--card`…): en claro son coral, en oscuro violeta. Tokens nuevos: `--borde` (tinta), `--duro` (sombra dura), `--sello`, `--lima`, `--f-titulo` (Fraunces).
+- Tipografías: Fraunces (títulos y sellos) y Nunito (texto).
+- Imágenes de marca en `img/marca/` (WebP con transparencia): sello, portada, goli, adorno-*, ruta-* (una por categoría), banner, fondo-papel.
+
 # Marca · Juegos Reunidos
 
 Una sola identidad visual para los 41 juegos. Vive en `css/marca.css` (se carga después de `css/base.css`).
