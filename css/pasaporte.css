@@ -9,7 +9,7 @@
   --bg:#F4EBD9;--bg2:#EDE0C6;--ink:#14213D;--mut:#4A5470;--card:#FFFDF7;--line:#D6C7A8;
   --red:#D93A3A;--blue:#B5381A;--yel:#F2B134;--ok:#0F9B62;--purple:#D4481F;--orange:#E4572E;--pink:#D9487A;--teal:#1B998B;
   --sel:#F4E2B0;--bad:#FFDCD3;--same:#E9D9B5;--head1:#14213D;--head2:#1F3159;
-  --fondo-tile:url(../img/marca/fondo-papel.webp) 0 0/380px 380px repeat;--banner:url(../img/marca/banner.webp);--borde:#14213D;--duro:0 3px 0 #14213D;--sello:#B8401F;--lima:#C6FF3D;--velo:rgba(244,235,217,.35);--velo-cat:rgba(244,235,217,.25);
+  --fondo-tile:url(../img/marca/fondo-papel.webp) 0 0/460px 460px repeat;--banner:url(../img/marca/banner.webp);--borde:#14213D;--duro:0 3px 0 #14213D;--sello:#B8401F;--lima:#C6FF3D;--velo:rgba(244,235,217,.12);--velo-cat:rgba(244,235,217,.06);
   --pan1:color-mix(in srgb,var(--head1) 4%,#FFFDF7);--pan2:color-mix(in srgb,var(--head2) 6%,#FFFDF7);
   --sombra-s:0 2px 0 rgba(20,33,61,.18);--sombra-m:0 3px 0 rgba(20,33,61,.28);--sombra-marca:0 3px 0 #7E2410;
   --grad-marca:linear-gradient(135deg,#D4481F,#B5381A);
