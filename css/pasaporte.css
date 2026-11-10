@@ -110,3 +110,45 @@ body.fijo .cat-seccion>.cat::before{display:none}
 .prog{height:14px;border:2px solid var(--borde);border-radius:99px;overflow:hidden;background:var(--card);margin:8px 0}
 .prog i{display:block;height:100%;width:0;background:var(--grad-marca);transition:width .25s}
 .panel [hidden]{display:none!important}
+
+/* ---------- pantalla de bienvenida (una vez por sesión) ---------- */
+#splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--fondo-tile),var(--bg);color:var(--ink);animation:spOut .5s ease 1.5s forwards}
+#splash .sp-sello{position:relative;width:132px;height:132px;animation:spSello .8s cubic-bezier(.2,1.5,.4,1) .15s both}
+#splash .sp-sello img{width:100%;height:100%;display:block;filter:drop-shadow(0 5px 0 rgba(0,0,0,.25))}
+#splash .sp-sello b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 46px 'Fraunces',Georgia,serif;color:#FFF8EC;transform:rotate(-8deg)}
+#splash .sp-n{margin:8px 0 0;font:900 clamp(34px,10vw,48px)/1 'Fraunces',Georgia,serif;letter-spacing:-.03em;color:#14213D}
+:root[data-theme="dark"] #splash .sp-n{color:#FFF8EC}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #splash .sp-n{color:#FFF8EC}}
+#splash .sp-n span{color:var(--sello)}
+#splash .sp-l{margin:0;font-weight:800;color:var(--mut);font-size:14px}
+@keyframes spSello{from{transform:scale(2.6) rotate(-35deg);opacity:0}55%{opacity:1}to{transform:none;opacity:1}}
+@keyframes spOut{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){#splash{animation:spOut .01s ease .6s forwards}#splash .sp-sello{animation:none}}
+
+/* ---------- Diario de viaje (estadísticas) ---------- */
+.pasaporte{padding:14px}
+.pas-cab{display:flex;gap:14px;align-items:center}
+.pas-cab img{width:76px;height:auto;flex:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));transform:rotate(-4deg)}
+.pas-cab>div{flex:1;min-width:0}
+.pas-cab h3{margin:0 0 2px;font-size:22px}
+.pas-n{margin:0 0 8px;font-size:15px}.pas-n b{font:900 24px var(--f-titulo);color:var(--sello)}
+.pas-bar{display:block;height:10px;border-radius:99px;border:2px solid var(--borde);background:color-mix(in srgb,var(--borde) 12%,transparent);overflow:hidden}
+.pas-bar u{display:block;height:100%;background:var(--grad-marca);text-decoration:none}
+.pas-bar.grande{height:14px}
+.pas-num{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px;text-align:center}
+.pas-num>div{border:2px dashed color-mix(in srgb,var(--borde) 45%,transparent);border-radius:14px;padding:8px 4px}
+.pas-num b{display:block;font:900 22px var(--f-titulo)}
+.pas-num small{font-size:11px;color:var(--mut);font-weight:700}
+.pas-rutas{display:grid;gap:8px;margin-top:10px}
+.pas-ruta{display:grid;grid-template-columns:40px 1fr 74px;align-items:center;gap:10px}
+.pas-ruta img{width:40px;height:40px;object-fit:contain}
+.pas-ruta span{display:flex;flex-direction:column;line-height:1.15}
+.pas-ruta b{font-size:14px}.pas-ruta small{font-size:12px;color:var(--mut)}
+.st-ficha{position:relative}
+.st-sello{position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;border:2px dashed rgba(255,255,255,.85);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;transform:rotate(-10deg)}
+.ajcab{display:flex;gap:14px;align-items:center}
+.ajcab img{width:64px;height:auto;flex:none;transform:rotate(-4deg);filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
+.ajcab h3{margin:0 0 4px;font-size:20px}.ajcab .note{margin:0}
+.panel h3{display:flex;align-items:center;gap:8px}
+.panel h3::after{content:"";flex:1;border-top:2px dashed color-mix(in srgb,var(--borde) 35%,transparent);margin-left:6px;transform:translateY(1px)}
+.pas-cab h3::after,.ajcab h3::after,.plog summary h3::after{display:none}

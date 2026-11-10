@@ -29,11 +29,19 @@ const BASE = new URL('../../img/victoria/', import.meta.url);
 const CSS = `
 .vic{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,10,50,.62);animation:vicIn .25s ease-out}
 .vic-card{position:relative;z-index:2;width:min(92vw,380px);background:var(--card,#fff);color:var(--ink,#222);border-radius:26px;padding:18px 16px 16px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.45);animation:vicPop .5s cubic-bezier(.2,1.4,.4,1)}
-.vic-t{font-family:var(--f-titulo,inherit);font-weight:800;font-size:clamp(28px,8.5vw,38px);line-height:1.05;margin:0;background:linear-gradient(90deg,#ff5a5f,#ffb400,#2ec4b6,#4361ee,#b5179e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.vic-t{font-family:var(--f-titulo,inherit);font-weight:800;font-size:clamp(28px,8.5vw,38px);line-height:1.05;margin:0;background:linear-gradient(90deg,#E4572E,#F2B134,#1B998B);-webkit-background-clip:text;background-clip:text;color:transparent}
 .vic-s{margin:4px 0 12px;font-size:14px;opacity:.75}
 .vic-m{height:min(42vh,250px);border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .vic-m img{max-width:100%;max-height:100%;object-fit:contain}
 .vic-m b{font-size:96px;line-height:1;animation:vicBota 1.1s ease-in-out infinite alternate}
+.vic-sello{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;text-align:left}
+.vic-sello-i{position:relative;width:64px;height:64px;flex:none;animation:vicSello .7s .55s cubic-bezier(.2,1.5,.4,1) both}
+.vic-sello-i img{width:100%;height:100%;display:block}
+.vic-sello-i b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 22px 'Fraunces',Georgia,serif;color:#FFF8EC;transform:rotate(-8deg)}
+.vic-sello span{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.vic-sello strong{font:900 22px 'Fraunces',Georgia,serif}
+.vic-sello small{font-size:12px;opacity:.8;font-weight:700}
+@keyframes vicSello{from{transform:scale(2.4) rotate(-30deg);opacity:0}60%{opacity:1}to{transform:rotate(-8deg);opacity:1}}
 .vic-b{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .vic-b .btn{width:100%}
 .vic-fx{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
@@ -45,7 +53,7 @@ const CSS = `
 @keyframes vicBota{from{transform:translateY(8px) rotate(-6deg)}to{transform:translateY(-8px) rotate(6deg)}}
 @keyframes vicCae{to{transform:translateY(125vh) rotate(360deg)}}
 @keyframes vicSube{to{transform:translateY(-125vh) rotate(-300deg)}}
-@media (prefers-reduced-motion:reduce){.vic-card,.vic,.vic-m b{animation:none}}
+@media (prefers-reduced-motion:reduce){.vic-card,.vic,.vic-m b,.vic-sello-i{animation:none}}
 `;
 
 // Confeti de colores a pantalla completa (canvas), ~4 s
@@ -79,8 +87,8 @@ function lluvia(capa, emojis, sube) {
   setTimeout(() => { for (const e of capa.querySelectorAll('.vic-e')) e.remove(); }, 6500);
 }
 
-/** Muestra la celebración. opciones: { nueva: () => void, etiqueta: 'Nueva partida' } */
-export function celebrar({ nueva = null, etiqueta = 'Nueva partida' } = {}) {
+/** Muestra la celebración. opciones: { nueva: () => void, etiqueta: 'Nueva partida', sello: { n, juego } (el sello que se estampa en el pasaporte) } */
+export function celebrar({ nueva = null, etiqueta = 'Nueva partida', sello = null } = {}) {
   if (typeof document === 'undefined' || document.querySelector('.vic')) return null;
   if (!document.getElementById('jr-victoria')) { const s = document.createElement('style'); s.id = 'jr-victoria'; s.textContent = CSS; document.head.append(s); }
   const quieta = reducido();
@@ -99,7 +107,16 @@ export function celebrar({ nueva = null, etiqueta = 'Nueva partida' } = {}) {
   const tecla = e => { if (e.key === 'Escape') cerrar(); };
   if (nueva) { const bn = document.createElement('button'); bn.type = 'button'; bn.className = 'btn on grande'; bn.textContent = '🆕 ' + etiqueta; bn.addEventListener('click', () => { cerrar(); nueva(); }); bs.append(bn); }
   const bc = document.createElement('button'); bc.type = 'button'; bc.className = 'btn'; bc.textContent = 'Ver el tablero'; bc.addEventListener('click', cerrar); bs.append(bc);
-  card.append(t, s, m, bs); fondo.append(fx, card);
+  let st = null;
+  if (sello && sello.n) {
+    st = document.createElement('div'); st.className = 'vic-sello'; st.setAttribute('role', 'status');
+    const im = new Image(); im.alt = ''; im.src = new URL('../../img/marca/sello.webp', import.meta.url).href;
+    const go = document.createElement('b'); go.textContent = 'GO'; go.setAttribute('aria-hidden', 'true');
+    const tx = document.createElement('span'); tx.innerHTML = '<small>Sello</small>'; const nn = document.createElement('strong'); nn.textContent = 'n.º ' + sello.n.toLocaleString('es-ES'); tx.append(nn);
+    if (sello.juego) { const g = document.createElement('small'); g.textContent = sello.juego; tx.append(g); }
+    const caja = document.createElement('div'); caja.className = 'vic-sello-i'; caja.append(im, go); st.append(caja, tx);
+  }
+  card.append(t, s, m); if (st) card.append(st); card.append(bs); fondo.append(fx, card);
   fondo.addEventListener('click', e => { if (e.target === fondo) cerrar(); });
   document.addEventListener('keydown', tecla); document.body.append(fondo);
   const primero = bs.firstChild; if (primero) primero.focus({ preventScroll: true });

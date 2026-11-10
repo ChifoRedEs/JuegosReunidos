@@ -51,7 +51,7 @@ const RUTAS = [
   ['cat-cartas', 'img:ruta-cartas', 'Cartas', '#/cat/cartas'],
   ['cat-palabras', 'img:ruta-palabras', 'Palabras', '#/cat/palabras'],
   ['cat-arcade', 'img:ruta-arcade', 'Arcade', '#/cat/arcade'],
-  ['stats', '📊', 'Estadísticas', '#/stats'],
+  ['stats', '📖', 'Diario', '#/stats'],
   ['ajustes', '⚙️', 'Ajustes', '#/ajustes']
 ];
 let actual = null, token = 0, menuItems = [];
@@ -143,12 +143,13 @@ function crearApi(j, ent, mod, root) {
   // Barra inferior común (Nuevo panel / Configurar / Apariencia / Pausa-Salir): cada juego la pide con api.barraHtml() al final de su pantalla de partida.
   const PANEL = ['sopa', 'crucigrama', 'rosco', 'ruleta', 'encadenadas', 'cifrasletras', 'ahorcado'];
   let celebrada = 0;
+  function selloVictoria() { const T = stats.todas(); return { n: Object.values(T).reduce((a, s) => a + (s && s.victorias || 0), 0), juego: (JUEGOS.find(j => j.id === id) || {}).nombre || '' }; }
   function victoria() {
     if (aj.ajustes().celebrar === false || Date.now() - celebrada < 3000) return;
     celebrada = Date.now();
     setTimeout(() => {
       if (!root.isConnected) return;
-      import('./core/victoria.js').then(m => { if (root.isConnected) m.celebrar({ etiqueta: etiquetaNueva(), nueva: defBarra && defBarra.nueva ? () => defBarra.nueva() : null }); }).catch(() => {});
+      import('./core/victoria.js').then(m => { if (root.isConnected) m.celebrar({ sello: selloVictoria(), etiqueta: etiquetaNueva(), nueva: defBarra && defBarra.nueva ? () => defBarra.nueva() : null }); }).catch(() => {});
     }, 900);
   }
   const etiquetaNueva = () => (defBarra && defBarra.etiqueta) || (j.categoria === 'logica' || PANEL.includes(id) ? 'Nuevo panel' : 'Nueva partida');
@@ -556,12 +557,19 @@ function colorearFichas(sel = '.ficha', paleta = COLORES_FICHA) {
 }
 function vStats(catSel = null) { const y = leerScroll(); vStats_(catSel); colorearFichas('.st-ficha', COLORES_STATS); if (ruta().v === 'stats') ponerScroll(y); }
 function vStats_(catSel = null) {
-  nombreVista = 'Estadísticas'; cabTxt('JugamiGO');
+  nombreVista = 'Diario de viaje'; cabTxt('JugamiGO');
   const T = stats.todas();
   revisarLogros();
   const G = logros.conseguidos(), defs = logros.definiciones(CAT_IDS), nG = defs.filter(d => G[d.id]).length;
   const R = logros.todosRetos(), diasR = Object.values(R).filter(l => Array.isArray(l) && l.length).length, totR = Object.values(R).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0);
   const retosHoy = (R[hoy()] || []).map(id => JUEGOS.find(j => j.id === id)).filter(Boolean);
+  const sellado = j => { const x = T[j.id]; return !!(x && x.partidas); };
+  const nSell = JUEGOS.filter(sellado).length, totPart = Object.values(T).reduce((a, x) => a + (x && x.partidas || 0), 0), totVic = Object.values(T).reduce((a, x) => a + (x && x.victorias || 0), 0);
+  const mejorR = Object.values(T).reduce((a, x) => Math.max(a, x && x.mejorRacha || 0), 0);
+  const rutas = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k)).map(([k, n]) => { const js = JUEGOS.filter(j => j.categoria === k), c = js.filter(sellado).length; return `<div class="pas-ruta"><img src="img/marca/ruta-${k}.webp" alt="" width="40" height="40"><span><b>${esc(n)}</b><small>${c} de ${js.length}</small></span><i class="pas-bar"><u style="width:${Math.round(100 * c / js.length)}%"></u></i></div>`; }).join('');
+  const panelPasaporte = `<section class="panel pasaporte" aria-label="Tu pasaporte"><div class="pas-cab"><img src="img/marca/portada.webp" alt="" width="76" height="102"><div><h3>Tu pasaporte</h3><p class="pas-n"><b>${nSell}</b> de ${JUEGOS.length} destinos sellados</p><i class="pas-bar grande"><u style="width:${Math.round(100 * nSell / Math.max(1, JUEGOS.length))}%"></u></i></div></div>
+    <div class="pas-num"><div><b>${totPart.toLocaleString('es-ES')}</b><small>partidas</small></div><div><b>${totVic.toLocaleString('es-ES')}</b><small>victorias</small></div><div><b>${mejorR}</b><small>mejor racha</small></div></div>
+    <div class="pas-rutas">${rutas}</div></section>`;
   const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => d.icono).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span>${G[d.id] ? d.icono : '🔒'}</span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
     <div class="panel"><h3>📅 Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas, Puentes Hashi y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
@@ -581,9 +589,9 @@ function vStats_(catSel = null) {
   };
   const cards = JUEGOS.filter(j => j.categoria === elegida).map(j => {
     const s = T[j.id], n = s && s.partidas ? s.partidas : 0;
-    return `<button type="button" class="st-ficha ${n ? '' : 'vacia'}" data-stat-juego="${j.id}" style="--c:${j.color}" aria-haspopup="dialog"><span class="st-i" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'sin partidas'}</small></button>`;
+    return `<button type="button" class="st-ficha ${n ? '' : 'vacia'}" data-stat-juego="${j.id}" style="--c:${j.color}" aria-haspopup="dialog"><span class="st-i" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'sin partidas'}</small>${n ? `<span class="st-sello" aria-label="Destino sellado">✓</span>` : ''}</button>`;
   }).join('');
-  app.innerHTML = panelLogros + tabs + `<div class="stats-fichas">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar Todas las Estadísticas</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar las estadísticas.</p>`;
+  app.innerHTML = panelPasaporte + panelLogros + tabs + `<div class="stats-fichas">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
   app.querySelectorAll('[data-stat-cat]').forEach(b => b.addEventListener('click', () => {
     history.replaceState(null, '', '#/stats?categoria=' + b.dataset.statCat);      // sin cambiar de pantalla: no salta el scroll
     const y = leerScroll(); vStats(b.dataset.statCat); ponerScroll(y);
@@ -644,8 +652,10 @@ function vAjustes_() {
   nombreVista = 'Ajustes'; cabTxt('JugamiGO');
   const A = aj.ajustes();
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="btn ${A[k] === v ? 'on' : ''}" data-set="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  const TT = stats.todas(), nSell = JUEGOS.filter(j => TT[j.id] && TT[j.id].partidas).length;
   app.innerHTML = `
-  <div class="panel"><h3>Apariencia</h3><div class="fila"><span>Tema</span>${seg('tema', [['auto', 'Auto'], ['claro', 'Claro'], ['oscuro', 'Oscuro']])}</div></div>
+  <section class="panel ajcab"><img src="img/marca/portada.webp" alt="" width="64" height="86"><div><h3>Pasaporte del viajero</h3><p class="note">${nSell} de ${JUEGOS.length} destinos sellados · JugamiGO ${VERSION}</p></div></section>
+  <div class="panel"><h3>Apariencia</h3><div class="fila"><span>Tema</span>${seg('tema', [['auto', 'Auto'], ['claro', 'Papel'], ['oscuro', 'Noche']])}</div><p class="note">Papel: crema y tinta, para el día. Noche: cuero azul y oro, para la oscuridad. «Auto» sigue el modo de tu móvil.</p></div>
   <div class="panel"><h3>Sonido y vibración</h3>
     <div class="fila"><span>Sonidos</span>${seg('sonido', [[true, 'Sí'], [false, 'No']])}</div>
     <div class="fila"><span>Vibración</span>${seg('vibracion', [[true, 'Sí'], [false, 'No']])}</div></div>

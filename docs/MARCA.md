@@ -6,7 +6,7 @@
 - Tipografías: Fraunces (títulos y sellos) y Nunito (texto).
 - Imágenes de marca en `img/marca/` (WebP con transparencia): sello, portada, goli, adorno-*, ruta-* (una por categoría), banner, fondo-papel.
 
-# Marca · Juegos Reunidos
+# Marca · JugamiGO
 
 Una sola identidad visual para los 41 juegos. Vive en `css/marca.css` (se carga después de `css/base.css`).
 
@@ -50,3 +50,8 @@ Estructura que deben seguir las pantallas de «nueva partida»:
 Los juegos con Three.js usan el contenedor `.e3d` (cuadrado, con fondo degradado que sigue los colores de tablero y el modo oscuro) y los botones flotantes `.e3d-cam` (⟳ ⤒ ⌖), definidos en `css/marca.css`. El grupo de Apariencia «Vista del tablero» (3D / 2D) va siempre el primero. Detalles técnicos en `ANADIR-JUEGO.md` («Juegos en 3D»).
 
 - Modo avión: `tools/generar_sw.py` separa lo que va en la instalación inicial (`ARCHIVOS`) de lo que baja el botón «Descargar todo» de Ajustes (`EXTRA`, `CARTAS_TODO`, `DICC_TODO`). Al añadir imágenes basta con ejecutarlo.
+
+## Diario de viaje y bienvenida (3.69.0)
+- **Estadísticas** = «Diario» (📖): pasaporte con destinos sellados (juegos ganados al menos una vez), sellos por ruta y sello en cada ficha ganada.
+- **Ajustes**: cabecera de pasaporte; temas «Papel» / «Noche» / «Auto».
+- **Bienvenida** (`#splash` en index.html): sello + nombre, una vez por sesión (`sessionStorage`), respeta «reducir movimiento».
