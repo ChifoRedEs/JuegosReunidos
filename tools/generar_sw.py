@@ -16,26 +16,45 @@ for base, dirs, files in os.walk(RAIZ):
     # si entraran en la lista, la instalación sin conexión fallaría entera. Además la plantilla no se usa para jugar.
     dirs[:] = sorted(d for d in dirs if d not in EXCLUIR_DIRS and not d.startswith('_') and not d.startswith('.'))
     for f in sorted(files):
-        if f in EXCLUIR_ARCHIVOS or os.path.splitext(f)[1].lower() not in EXT:
+        rel0 = os.path.relpath(os.path.join(base, f), RAIZ).replace(os.sep, '/')
+        marca = rel0.startswith('img/marca/') and re.match(r'(ruta-|banner|fondo-|sello)', f)   # imágenes de marca imprescindibles: van en la instalación inicial
+        if f in EXCLUIR_ARCHIVOS or (os.path.splitext(f)[1].lower() not in EXT and not marca):
             continue
         # El diccionario (~6 MB) no se instala con la app: se baja solo cuando un juego lo pide (caché jr-diccionario)
         if re.fullmatch(r'(es|lemas)-[0-9a-f]{8}\.txt', f) and base.replace(os.sep, '/').endswith('data/diccionario'):
             continue
         archivos.append(os.path.relpath(os.path.join(base, f), RAIZ).replace(os.sep, '/'))
 
+# «Descargar todo»: lo que no va en la instalación inicial (imágenes, sonidos, barajas completas y diccionario)
+EXT_EXTRA = {'.webp', '.jpg', '.jpeg', '.gif', '.avif', '.mp3', '.ogg', '.wav', '.m4a', '.mp4', '.glb'}
+extra, cartas, dicc = [], [], []
+for base, dirs, files in os.walk(RAIZ):
+    dirs[:] = sorted(d for d in dirs if d not in EXCLUIR_DIRS and not d.startswith('_') and not d.startswith('.'))
+    for f in sorted(files):
+        rel = os.path.relpath(os.path.join(base, f), RAIZ).replace(os.sep, '/'); e = os.path.splitext(f)[1].lower()
+        if rel in archivos: continue
+        if re.fullmatch(r'(es|lemas)-[0-9a-f]{8}\.txt', f) and rel.startswith('data/diccionario/'): dicc.append(rel)
+        elif e in EXT_EXTRA and rel.startswith('img/cartas/'): cartas.append(rel)
+        elif e in EXT_EXTRA: extra.append(rel)
+mb = round(sum(os.path.getsize(os.path.join(RAIZ, a)) for a in extra + cartas + dicc) / 1048576)
+
 h = hashlib.sha1()
-for a in archivos:
+for a in archivos + extra + cartas + dicc:
     h.update(a.encode()); h.update(open(os.path.join(RAIZ, a), 'rb').read())
 ruta = os.path.join(RAIZ, 'sw.js')
 s = open(ruta, encoding='utf-8').read()
 # La lógica del propio sw.js también cuenta (sin la lista ni la versión), para que un cambio en él genere versión nueva.
-h.update(re.sub(r"/\*ARCHIVOS-INICIO\*/.*?/\*ARCHIVOS-FIN\*/|const VERSION = '[^']*';", '', s, flags=re.S).encode())
+h.update(re.sub(r"/\*(ARCHIVOS|EXTRA|CARTAS|DICC)-INICIO\*/.*?/\*\1-FIN\*/|/\*MB\*/.*?/\*MB-FIN\*/|const VERSION = '[^']*';", '', s, flags=re.S).encode())
 version = 'jr-' + h.hexdigest()[:10]
 lista = ',\n'.join("'./%s'" % a for a in archivos)
 s = re.sub(r"/\*ARCHIVOS-INICIO\*/.*?/\*ARCHIVOS-FIN\*/", "/*ARCHIVOS-INICIO*/\n'./',\n%s\n/*ARCHIVOS-FIN*/" % lista, s, flags=re.S)
+for nombre, l in (('EXTRA', extra), ('CARTAS', cartas), ('DICC', dicc)):
+    cuerpo = ',\n'.join("'./%s'" % a for a in l)
+    s = re.sub(r"/\*%s-INICIO\*/.*?/\*%s-FIN\*/" % (nombre, nombre), lambda m: "/*%s-INICIO*/\n%s\n/*%s-FIN*/" % (nombre, cuerpo, nombre), s, flags=re.S)
+s = re.sub(r"/\*MB\*/.*?/\*MB-FIN\*/", "/*MB*/%d/*MB-FIN*/" % mb, s)
 s = re.sub(r"const VERSION = '[^']*';", "const VERSION = '%s';" % version, s)
 open(ruta, 'w', encoding='utf-8').write(s)
-print('sw.js actualizado: %d archivos, versión %s' % (len(archivos) + 1, version))
+print('sw.js actualizado: %d archivos + %d para «Descargar todo» (%d MB), versión %s' % (len(archivos) + 1, len(extra) + len(cartas) + len(dicc), mb, version))
 
 # La primera línea del README lleva la versión de js/version.js (así se actualiza sola al regenerar el service worker).
 v = re.search(r"VERSION = '([^']+)'", open(os.path.join(RAIZ, 'js', 'version.js'), encoding='utf-8').read())

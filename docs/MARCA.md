@@ -1,8 +1,8 @@
 # JugamiGO · identidad «Pasaporte» (3.67.0)
 
 - Concepto: la app es un pasaporte. Juegos = destinos, victorias = sellos, categorías = rutas, estadísticas = diario de viaje, «Modo avión» = funciona sin conexión.
-- Colores y modos: `css/pasaporte.css` (se carga el último). Modo claro «Papel»: crema `#F4EBD9`, tinta `#14213D`, sello coral `#E4572E`, mar `#1B998B`, oro `#F2B134`. Modo oscuro «Noche»: `#0E0B1F`, tarjeta `#1D1840`, lima `#C6FF3D`, violeta `#7C5CFF`.
-- Los juegos siguen usando los tokens de siempre (`--purple`, `--blue`, `--ink`, `--card`…): en claro son coral, en oscuro violeta. Tokens nuevos: `--borde` (tinta), `--duro` (sombra dura), `--sello`, `--lima`, `--f-titulo` (Fraunces).
+- Colores y modos: `css/pasaporte.css` (se carga el último). Modo claro «Papel»: crema `#F4EBD9`, tinta `#14213D`, sello coral `#E4572E`, mar `#1B998B`, oro `#F2B134`. Modo oscuro «Pasaporte de noche»: cuero azul `#0F1A33`, tarjeta `#1A2A55`, oro `#F2B134` (bordes `#A8812F`), el mismo coral para los botones. Fondo: `img/marca/fondo-noche.webp`; banner: `banner-noche.webp`.
+- Los juegos siguen usando los tokens de siempre (`--purple`, `--blue`, `--ink`, `--card`…): son coral en claro y en oscuro. Tokens nuevos: `--borde` (tinta), `--duro` (sombra dura), `--sello`, `--lima`, `--f-titulo` (Fraunces).
 - Tipografías: Fraunces (títulos y sellos) y Nunito (texto).
 - Imágenes de marca en `img/marca/` (WebP con transparencia): sello, portada, goli, adorno-*, ruta-* (una por categoría), banner, fondo-papel.
 
@@ -48,3 +48,5 @@ Estructura que deben seguir las pantallas de «nueva partida»:
 
 ## Vistas 3D
 Los juegos con Three.js usan el contenedor `.e3d` (cuadrado, con fondo degradado que sigue los colores de tablero y el modo oscuro) y los botones flotantes `.e3d-cam` (⟳ ⤒ ⌖), definidos en `css/marca.css`. El grupo de Apariencia «Vista del tablero» (3D / 2D) va siempre el primero. Detalles técnicos en `ANADIR-JUEGO.md` («Juegos en 3D»).
+
+- Modo avión: `tools/generar_sw.py` separa lo que va en la instalación inicial (`ARCHIVOS`) de lo que baja el botón «Descargar todo» de Ajustes (`EXTRA`, `CARTAS_TODO`, `DICC_TODO`). Al añadir imágenes basta con ejecutarlo.

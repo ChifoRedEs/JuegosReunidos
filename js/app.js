@@ -622,6 +622,23 @@ async function estadoSinConexion() {
     else { el.textContent = reg && (reg.installing || reg.waiting) ? '⏳ Guardando los juegos para usarlos sin conexión… espera unos segundos.' : '⚠️ El modo sin conexión aún no está listo. Abre la app con internet y pulsa «Volver a intentarlo».'; bar.hidden = false; if (reg && (reg.installing || reg.waiting)) setTimeout(estadoSinConexion, 3000); }
   } catch { el.textContent = '⚠️ No se pudo comprobar el modo sin conexión.'; }
 }
+// «Descargar todo»: el service worker baja imágenes, barajas y diccionario y avisa del avance con mensajes.
+const swEnviar = async m => { try { const r = await navigator.serviceWorker.getRegistration(); if (r && r.active) r.active.postMessage(m); } catch { /* sin service worker */ } };
+function pintarDescarga(m) {
+  const des = $('#gDes'), prog = $('#gProg'), bd = $('#gDesc'), bc = $('#gCanc'), bq = $('#gQuit'); if (!des) return;
+  if (m.tipo === 'descarga') {
+    prog.hidden = false; prog.firstElementChild.style.width = Math.round(100 * m.hecho / m.total) + '%';
+    des.textContent = `Descargando… ${m.hecho} de ${m.total}${m.fallos ? ` (${m.fallos} sin descargar)` : ''}. Puedes seguir jugando.`; bd.hidden = true; bc.hidden = false; bq.hidden = true; return;
+  }
+  if (m.tipo === 'descarga-fin') { prog.hidden = true; bc.hidden = true; return; }
+  if (m.tipo !== 'estado-descarga') return;
+  prog.hidden = !m.descargando; bc.hidden = !m.descargando;
+  if (m.descargando) { des.textContent = 'Descargando…'; bd.hidden = true; bq.hidden = true; return; }
+  const falta = m.total - m.guardados;
+  if (!falta) { des.textContent = '✅ Todo descargado: imágenes, barajas y diccionario. Ya puedes jugar en Modo Avión.'; bd.hidden = true; bq.hidden = false; }
+  else { des.textContent = `Imágenes, barajas y diccionario: ${m.guardados} de ${m.total} guardados. «Descargar todo» baja el resto (unos ${m.mb} MB; mejor con Wi-Fi) para jugar sin conexión con todo su dibujo.`; bd.hidden = !navigator.onLine; bd.textContent = m.guardados ? '⬇️ Terminar la descarga' : '⬇️ Descargar todo'; bq.hidden = !m.guardados; }
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.tipo) pintarDescarga(e.data); });
 function vAjustes() { const y = leerScroll(); vAjustes_(); if (ruta().v === 'ajustes') ponerScroll(y); }   // al volver a pintar (cambiar un ajuste…) no se salta arriba
 function vAjustes_() {
   nombreVista = 'Ajustes'; cabTxt('JugamiGO');
@@ -640,14 +657,20 @@ function vAjustes_() {
       <label class="btn file">Importar .json<input type="file" id="gImp" accept=".json,application/json"></label>
       <button class="btn danger" id="gBor">Borrar partidas</button></div>
     <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
-  <div class="panel"><h3>Sin conexión</h3><p class="note" id="gOff" role="status">Comprobando…</p><div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
+  <div class="panel"><h3>✈️ Modo avión</h3><p class="note" id="gOff" role="status">Comprobando…</p>
+    <div class="prog" id="gProg" hidden><i></i></div><p class="note" id="gDes" role="status"></p>
+    <div class="bar"><button class="btn on" id="gDesc" hidden>⬇️ Descargar todo</button><button class="btn" id="gCanc" hidden>Cancelar</button><button class="btn" id="gQuit" hidden>Quitar descarga</button></div>
+    <div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
   <div class="panel"><h3>Acerca de</h3><p class="note">JugamiGO · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p>
     <p class="note">Créditos: los dibujos de las caras de «¿Qué Cara Tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
   <p class="version">JugamiGO · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = leerScroll(); vAjustes(); ponerScroll(y);
   }));
-  estadoSinConexion();
+  estadoSinConexion(); swEnviar({ tipo: 'estado-descarga' });
+  $('#gDesc').addEventListener('click', () => { $('#gDesc').hidden = true; $('#gDes').textContent = 'Empezando la descarga…'; swEnviar({ tipo: 'descargar-todo' }); });
+  $('#gCanc').addEventListener('click', () => { swEnviar({ tipo: 'cancelar-descarga' }); $('#gDes').textContent = 'Cancelando…'; });
+  $('#gQuit').addEventListener('click', () => { $('#gQuit').hidden = true; swEnviar({ tipo: 'borrar-descarga' }); });
   $('#gOffRe').addEventListener('click', async () => {
     $('#gOff').textContent = 'Descargando los juegos… deja la app abierta unos segundos.';
     try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); else await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }); } catch { /* sin red */ }
