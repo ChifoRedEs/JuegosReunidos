@@ -67,3 +67,6 @@ Los juegos con Three.js usan el contenedor `.e3d` (cuadrado, con fondo degradado
 ## Paleta de tablero «Pasaporte» (3.71.0)
 - `grupoTablero()` (js/core/aspectos.js) ofrece Pasaporte (por defecto), Cielo, Menta, Atardecer y Noche. Los tokens `--tb-*` de «Pasaporte» están en css/pasaporte.css (claro y oscuro). Los juegos que usan `--tb-*` la heredan sin cambios.
 - Los selectores `.seg` de 2 a 4 botones marcan la opción activa en coral.
+
+## Diseño común de la pantalla de juego (3.72.0)
+Solo CSS (final de css/pasaporte.css), válido para todos los juegos: `.juego > p.note:first-child` (billete), `.bar:has(> .lbl) > .lbl` (etiquetas), `.barra-gen` (barra inferior) y las pastillas `.seg` de 4 opciones.
