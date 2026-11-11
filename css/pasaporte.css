@@ -232,3 +232,14 @@ html[data-anim="no"] #splash{display:none}
 .fila-col{flex-direction:column;align-items:stretch;gap:6px}
 .fila-col .seg{width:100%}
 .fila-col .seg .btn{flex:1;min-width:0}
+
+/* ---------- paleta de tablero «Pasaporte» (por defecto en todos los juegos que usan grupoTablero) ---------- */
+.juego,.juego[data-tablero="pasaporte"]{--tb-line:#CDBB8F;--tb-cell:#FFFBF0;--tb-alt:#F3E8CC;--tb-acc:#C9441C;--tb-ink:#14213D;--tb-soft:#EADDB8;--tb-hi:#F2B134;--tb-strong:#14213D}
+:root[data-theme="dark"] :is(.juego,.juego[data-tablero="pasaporte"]){--tb-line:#3A4C80;--tb-cell:#1A2A55;--tb-alt:#22346A;--tb-acc:#F2B134;--tb-ink:#F4EEDC;--tb-soft:#2C417F;--tb-hi:#F2B134;--tb-strong:#A8812F}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(.juego,.juego[data-tablero="pasaporte"]){--tb-line:#3A4C80;--tb-cell:#1A2A55;--tb-alt:#22346A;--tb-acc:#F2B134;--tb-ink:#F4EEDC;--tb-soft:#2C417F;--tb-hi:#F2B134;--tb-strong:#A8812F}}
+.juego-nonogram{--ng-fill:var(--tb-acc)}
+
+/* selectores de modo/nivel (2-4 botones): pastilla de papel con la opción activa en coral */
+.seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))){background:color-mix(in srgb,var(--borde) 8%,transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--borde) 30%,transparent)}
+.seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))) > .btn{color:var(--ink)}
+.seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))) > .btn.on{background:#C9441C;color:#fff;box-shadow:0 3px 0 #7E2610}

@@ -63,3 +63,7 @@ Los juegos con Three.js usan el contenedor `.e3d` (cuadrado, con fondo degradado
 - **Compartir**: `js/core/imagen.js` dibuja un PNG 1080×1080 (sello de victoria o pasaporte) y usa la hoja de compartir del móvil o lo descarga.
 - **Instalar / actualizar**: banda `.banda` (instalar a partir de la 2.ª visita; versión nueva: recarga sola salvo en una partida).
 - **Accesibilidad**: `data-texto`, `data-contraste`, `data-anim` en `<html>`, con estilos al final de `css/pasaporte.css`.
+
+## Paleta de tablero «Pasaporte» (3.71.0)
+- `grupoTablero()` (js/core/aspectos.js) ofrece Pasaporte (por defecto), Cielo, Menta, Atardecer y Noche. Los tokens `--tb-*` de «Pasaporte» están en css/pasaporte.css (claro y oscuro). Los juegos que usan `--tb-*` la heredan sin cambios.
+- Los selectores `.seg` de 2 a 4 botones marcan la opción activa en coral.

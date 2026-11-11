@@ -4,12 +4,13 @@ import { opcionesPersonajes } from './personajes.js';
 // Cada juego declara sus grupos y llama a api.aspecto(defs, alCambiar); el valor elegido de cada grupo
 // se escribe como atributo data-<clave> en el contenedor del juego y se guarda en sus preferencias.
 export const PALETAS = [
+  { id: 'pasaporte', nombre: 'Pasaporte', sw: ['#C9441C', '#F4EBD9'] },
   { id: 'cielo', nombre: 'Cielo', sw: ['#2F6BFF', '#E4EDFF'] },
   { id: 'menta', nombre: 'Menta', sw: ['#0FA971', '#D9F7EA'] },
   { id: 'atardecer', nombre: 'Atardecer', sw: ['#F0572D', '#FFE3D6'] },
   { id: 'noche', nombre: 'Noche', sw: ['#5CE1FF', '#1A2350'] },
 ];
-export const grupoTablero = (titulo = 'Colores del tablero') => ({ clave: 'tablero', titulo, def: 'cielo', opciones: PALETAS });
+export const grupoTablero = (titulo = 'Colores del tablero') => ({ clave: 'tablero', titulo, def: 'pasaporte', opciones: PALETAS });
 
 // Grupos comunes de los juegos de cartas
 // Grupos de los juegos de cartas. `ventana: true` = en 🎨 Apariencia salen como un enlace que abre su propia ventana con las imágenes; `forma` = proporción de las miniaturas.
