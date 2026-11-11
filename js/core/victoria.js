@@ -23,7 +23,7 @@ const ANIMACIONES = [
 ];
 const COLORES = ['#ff5a5f', '#ffb400', '#2ec4b6', '#4361ee', '#b5179e', '#7ae582', '#ff8fab'];
 const R = a => a[Math.floor(Math.random() * a.length)];
-const reducido = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reducido = () => (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || (typeof document !== 'undefined' && document.documentElement.dataset.anim === 'no');
 const BASE = new URL('../../img/victoria/', import.meta.url);
 
 const CSS = `
@@ -106,6 +106,11 @@ export function celebrar({ nueva = null, etiqueta = 'Nueva partida', sello = nul
   const cerrar = () => { parar(); fondo.remove(); document.removeEventListener('keydown', tecla); };
   const tecla = e => { if (e.key === 'Escape') cerrar(); };
   if (nueva) { const bn = document.createElement('button'); bn.type = 'button'; bn.className = 'btn on grande'; bn.textContent = '🆕 ' + etiqueta; bn.addEventListener('click', () => { cerrar(); nueva(); }); bs.append(bn); }
+  if (sello && sello.n) {
+    const bp = document.createElement('button'); bp.type = 'button'; bp.className = 'btn'; bp.textContent = '📤 Compartir mi sello';
+    bp.addEventListener('click', async () => { try { const m = await import('./imagen.js'); await m.compartirImagen({ titulo: sello.juego ? '¡Victoria en ' + sello.juego + '!' : '¡Victoria!', linea: 'Sello n.º ' + sello.n.toLocaleString('es-ES'), pie: 'Otro destino para mi pasaporte', texto: '¡He ganado en JugamiGO!' }); } catch (e) { console.error(e); } });
+    bs.append(bp);
+  }
   const bc = document.createElement('button'); bc.type = 'button'; bc.className = 'btn'; bc.textContent = 'Ver el tablero'; bc.addEventListener('click', cerrar); bs.append(bc);
   let st = null;
   if (sello && sello.n) {

@@ -421,7 +421,7 @@ function ruta() {
   const rutaHash = location.hash.replace(/^#\/?/, '').split('?')[0];
   const [a, b] = rutaHash.split('/');
   if (a === 'juego' && JUEGOS.some(j => j.id === b)) return { v: 'juego', id: b, cat: JUEGOS.find(j => j.id === b).categoria };
-  if (a === 'cat' && Object.keys(CATEGORIAS).includes(b)) return { v: 'inicio', cat: b };
+  if (a === 'cat' && (b === 'favoritos' || Object.keys(CATEGORIAS).includes(b))) return { v: 'inicio', cat: b };
   return { v: a === 'stats' || a === 'ajustes' ? a : 'inicio', cat: null };
 }
 // Botón flotante 2D/3D (solo en los juegos con grupo de Apariencia «vista»): cambia de vista al instante desde cualquier punto de la pantalla.
@@ -446,12 +446,13 @@ async function render() {
     return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span class="${ic.startsWith('img:') ? 'im' : ''}" aria-hidden="true">${ic.startsWith('img:') ? `<img src="img/marca/${ic.slice(4)}.webp" alt="" width="30" height="30">` : ic}</span><b>${tx}</b></a>`;
   }).join('');
   app.innerHTML = '';
-  document.body.classList.toggle('fijo', r.v === 'inicio');
-  document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes');
+  const enFav = r.v === 'inicio' && r.cat === 'favoritos';
+  document.body.classList.toggle('fijo', r.v === 'inicio' && !enFav);
+  document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes' || enFav);
   document.body.classList.toggle('jfondo', r.v === 'juego');                 // páginas de juego: mismo fondo y scroll interno
   { const tp = document.querySelector('.top'); if (tp) document.documentElement.style.setProperty('--htop', tp.offsetHeight + 'px'); }   // mismo fondo que las categorías          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
-  if (r.v === 'inicio') { vInicio(r.cat); if (r.cat) colorearFichas(); } else ({ stats: vStats, ajustes: vAjustes })[r.v]();
+  if (r.v === 'inicio') { if (enFav) vFavoritos(); else { vInicio(r.cat); if (r.cat) colorearFichas(); } } else ({ stats: vStats, ajustes: vAjustes })[r.v]();
   window.scrollTo(0, 0); app.scrollTop = 0;
 }
 async function abrirJuego(id, t) {
@@ -495,7 +496,8 @@ window.addEventListener('hashchange', render);
     const n = RUTAS[i + (dx < 0 ? 1 : -1)]; if (n) location.hash = n[3];
   }, { passive: true });
 })();
-app.addEventListener('click', e => { const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); const g = e.target.closest('[data-gen]'); if (g && actual) actual.api.gen(g.dataset.gen); });
+app.addEventListener('keydown', e => { const fv = e.target.closest && e.target.closest('[data-fav]'); if (fv && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); alternarFav(fv.dataset.fav, fv); } });
+app.addEventListener('click', e => { const fv = e.target.closest('[data-fav]'); if (fv) { e.preventDefault(); e.stopPropagation(); alternarFav(fv.dataset.fav, fv); return; } const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); const g = e.target.closest('[data-gen]'); if (g && actual) actual.api.gen(g.dataset.gen); });
 
 /* ---------- inicio ---------- */
 function enCursoDe(j) { const e = store.getResumen(j.id); return e && !e.fin && e.resumen ? e : null; }
@@ -503,7 +505,41 @@ function ficha(j) {
   const e = store.getResumen(j.id);
   const curso = e && !e.fin && e.resumen;
   const sub = curso ? 'Continuar · ' + esc(e.resumen) : e && e.fin && e.resumen ? esc(e.resumen) : esc(j.descripcion);
-  return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${sub}</small></a>`;
+  return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${sub}</small>${estrella(j.id)}</a>`;
+}
+// Favoritos: se guardan en los ajustes (y van en la copia de seguridad)
+const favs = () => (aj.ajustes().fav || []).filter(id => JUEGOS.some(j => j.id === id));
+const esFav = id => favs().includes(id);
+const estrella = id => { const f = esFav(id); return `<span class="fav ${f ? 'on' : ''}" data-fav="${id}" role="button" tabindex="0" aria-pressed="${f}" aria-label="${f ? 'Quitar de favoritos' : 'Añadir a favoritos'}">${f ? '★' : '☆'}</span>`; };
+function alternarFav(id, nodo) {
+  const j = JUEGOS.find(x => x.id === id); if (!j) return;
+  const l = favs(), ya = l.includes(id), nueva = ya ? l.filter(x => x !== id) : [...l, id];
+  aj.set('fav', nueva); 
+  document.querySelectorAll(`[data-fav="${id}"]`).forEach(n => { n.classList.toggle('on', !ya); n.textContent = ya ? '☆' : '★'; n.setAttribute('aria-pressed', String(!ya)); n.setAttribute('aria-label', ya ? 'Añadir a favoritos' : 'Quitar de favoritos'); });
+  const c = document.getElementById('accFavN'); if (c) c.textContent = nueva.length ? `${nueva.length} juego${nueva.length === 1 ? '' : 's'}` : 'Ninguno aún';
+  aviso(ya ? `☆ ${j.nombre} ya no es favorito` : `★ ${j.nombre} añadido a favoritos`, 1600);
+  if (ruta().cat === 'favoritos' && ya) vFavoritos();
+}
+function vFavoritos() {
+  nombreVista = 'Favoritos'; cabTxt('JugamiGO');
+  const js = favs().map(id => JUEGOS.find(j => j.id === id));
+  app.innerHTML = `<section class="panel"><h3>⭐ Mis favoritos</h3><p class="note">${js.length ? 'Tus juegos preferidos, a un toque. Pulsa la ★ de un juego para quitarlo.' : 'Aún no tienes favoritos. Toca la ☆ de cualquier juego (o de un resultado de la búsqueda) para guardarlo aquí.'}</p></section>`
+    + (js.length ? `<div class="rejilla fav-rej">${js.map(ficha).join('')}</div>` : '') + `<div class="bar" style="margin-top:14px"><a class="btn on" href="#/">‹ Volver al inicio</a></div>`;
+  colorearFichas();
+}
+// Atajos del inicio: continuar la última partida, reto del día y juego al azar
+function ultimoEnCurso() { let b = null, bt = 0; for (const j of JUEGOS) { const e = store.getResumen(j.id); if (e && !e.fin && e.resumen && (e.t || 0) >= bt) { b = j; bt = e.t || 0; } } return b; }
+function retoDeHoy() {
+  const lista = JUEGOS.filter(j => /reto del d[ií]a/i.test(j.descripcion)); if (!lista.length) return null;
+  const f = hoy(); let h = 0; for (const c of f) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const j = lista[h % lista.length]; return { j, hecho: logros.retoHecho(f, j.id) };
+}
+const norm = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function resultadosBusqueda(q) {
+  const ps = norm(q).split(/\s+/).filter(Boolean); if (!ps.length) return '';
+  const r = JUEGOS.filter(j => { const t = norm(`${j.nombre} ${j.descripcion} ${CATEGORIAS[j.categoria]}`); return ps.every(p => t.includes(p)); });
+  if (!r.length) return `<p class="note">Ningún juego coincide con «${esc(q)}».</p>`;
+  return r.map(j => `<a class="res" href="#/juego/${j.id}" style="--c:${j.color}"><span class="res-i" aria-hidden="true">${j.icono}</span><span class="res-t"><b>${esc(j.nombre)}</b><small>${esc(CATEGORIAS[j.categoria])} · ${esc(j.descripcion)}</small></span>${estrella(j.id)}</a>`).join('');
 }
 // Ficha de un grupo de juegos: al pulsarla se abre la ventana para elegir uno
 function fichaGrupo(g, js) {
@@ -527,10 +563,18 @@ function vInicio(filtro = null) {
   nombreVista = nombreFiltro || 'JugamiGO'; cabTxt('JugamiGO');
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
   if (!filtro) {                                                    // Pantalla de inicio: el logo de fondo y las categorías a todo el alto (sin desplazamiento)
-    app.innerHTML = `<div class="ini" role="navigation" aria-label="Categorías de juegos">${cats.map(([k, n]) => {
+    const cont = ultimoEnCurso(), reto = retoDeHoy(), nf = favs().length;
+    const acc = (href, ico, tit, sub, extra = '') => `<${href ? `a href="${href}"` : 'button type="button"'} class="acc" ${extra}><span class="acc-i" aria-hidden="true">${ico}</span><b>${tit}</b><small>${sub}</small></${href ? 'a' : 'button'}>`;
+    const top = `<div class="ini-top"><label class="ini-bus"><span aria-hidden="true">🔎</span><input type="search" id="iniBus" placeholder="Buscar un juego…" autocomplete="off" enterkeyhint="search" aria-label="Buscar un juego"></label>
+      <div class="ini-acc">${cont ? acc('#/juego/' + cont.id, '▶️', 'Continuar', esc(cont.nombre)) : acc('', '🎲', 'Al azar', 'Sorpréndeme', 'id="accAzar"')}${reto ? acc('#/juego/' + reto.j.id, '📅', 'Reto de hoy', esc(reto.j.nombre) + (reto.hecho ? ' ✓' : '')) : ''}${acc('#/cat/favoritos', '⭐', 'Favoritos', `<span id="accFavN">${nf ? nf + (nf === 1 ? ' juego' : ' juegos') : 'Ninguno aún'}</span>`)}</div>
+      <div class="ini-res" id="iniRes" hidden aria-live="polite"></div></div>`;
+    app.innerHTML = `<div class="ini" role="navigation" aria-label="Categorías de juegos">${top}${cats.map(([k, n]) => {
       const js = JUEGOS.filter(j => j.categoria === k), enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
       return `<a class="ini-cat" href="#/cat/${k}" style="--c:${COLOR_CAT[k] || '#6B4DE0'}"><span class="ini-ico" aria-hidden="true"><img src="img/marca/ruta-${k}.webp" alt="" width="84" height="84"></span><span class="ini-t"><b>Juegos de ${esc(n)}</b><small>${js.length} juegos${enCurso ? ` · ${enCurso} en curso` : ''}</small></span><span class="ini-fl" aria-hidden="true">›</span></a>`;
     }).join('')}</div>`;
+    const bus = $('#iniBus'), res = $('#iniRes'), ini = app.querySelector('.ini');
+    bus.addEventListener('input', () => { const q = bus.value.trim(); res.hidden = !q; ini.classList.toggle('buscando', !!q); res.innerHTML = q ? resultadosBusqueda(q) : ''; });
+    const azar = $('#accAzar'); if (azar) azar.addEventListener('click', () => { location.hash = '#/juego/' + JUEGOS[Math.floor(Math.random() * JUEGOS.length)].id; });
     return;
   }
   const grupos = cats.map(([k, n]) => {
@@ -555,7 +599,7 @@ function colorearFichas(sel = '.ficha', paleta = COLORES_FICHA) {
     f.style.setProperty('--c', cola.pop());
   });
 }
-function vStats(catSel = null) { const y = leerScroll(); vStats_(catSel); colorearFichas('.st-ficha', COLORES_STATS); if (ruta().v === 'stats') ponerScroll(y); }
+function vStats(catSel = null) { const y = leerScroll(); vStats_(catSel); if (ruta().v === 'stats') ponerScroll(y); }
 function vStats_(catSel = null) {
   nombreVista = 'Diario de viaje'; cabTxt('JugamiGO');
   const T = stats.todas();
@@ -569,13 +613,13 @@ function vStats_(catSel = null) {
   const rutas = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k)).map(([k, n]) => { const js = JUEGOS.filter(j => j.categoria === k), c = js.filter(sellado).length; return `<div class="pas-ruta"><img src="img/marca/ruta-${k}.webp" alt="" width="40" height="40"><span><b>${esc(n)}</b><small>${c} de ${js.length}</small></span><i class="pas-bar"><u style="width:${Math.round(100 * c / js.length)}%"></u></i></div>`; }).join('');
   const panelPasaporte = `<section class="panel pasaporte" aria-label="Tu pasaporte"><div class="pas-cab"><img src="img/marca/portada.webp" alt="" width="76" height="102"><div><h3>Tu pasaporte</h3><p class="pas-n"><b>${nSell}</b> de ${JUEGOS.length} destinos sellados</p><i class="pas-bar grande"><u style="width:${Math.round(100 * nSell / Math.max(1, JUEGOS.length))}%"></u></i></div></div>
     <div class="pas-num"><div><b>${totPart.toLocaleString('es-ES')}</b><small>partidas</small></div><div><b>${totVic.toLocaleString('es-ES')}</b><small>victorias</small></div><div><b>${mejorR}</b><small>mejor racha</small></div></div>
-    <div class="pas-rutas">${rutas}</div></section>`;
+    <div class="pas-rutas">${rutas}</div><div class="bar"><button class="btn" id="pasComp" type="button">📤 Compartir mi pasaporte</button></div></section>`;
   const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => d.icono).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span>${G[d.id] ? d.icono : '🔒'}</span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
     <div class="panel"><h3>📅 Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas, Puentes Hashi y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
   const solicitada = catSel || new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
   const elegida = cats.some(([k]) => k === solicitada) ? solicitada : cats[0]?.[0];
-  const tabs = `<div class="stats-tabs" role="tablist" aria-label="Categorías de estadísticas">${cats.map(([k, n]) => `<button type="button" role="tab" class="stats-tab ${k === elegida ? 'on' : ''}" aria-selected="${k === elegida}" data-stat-cat="${k}"><span>${ICONO_CAT[k] || '🎮'}</span>${n}</button>`).join('')}</div>`;
+  const tabs = `<div class="stats-tabs" role="tablist" aria-label="Categorías de estadísticas">${cats.map(([k, n]) => `<button type="button" role="tab" class="stats-tab ${k === elegida ? 'on' : ''}" aria-selected="${k === elegida}" data-stat-cat="${k}"><img src="img/marca/ruta-${k}.webp" alt="" width="30" height="30"><span>${n}</span></button>`).join('')}</div>`;
   // Fichas pequeñas de los juegos de la categoría; al pulsar una se abre su estadística en una ventana
   const tabla = j => {
     const s = T[j.id];
@@ -587,11 +631,16 @@ function vStats_(catSel = null) {
       ${s.victorias || s.derrotas || s.tablas ? `<tr><td>Victorias · derrotas · tablas</td><td>${s.victorias} · ${s.derrotas} · ${s.tablas}</td></tr><tr><td>Racha actual · mejor racha</td><td>${s.racha} · ${s.mejorRacha}</td></tr>` : ''}
       ${tiempos}</table>`;
   };
-  const cards = JUEGOS.filter(j => j.categoria === elegida).map(j => {
-    const s = T[j.id], n = s && s.partidas ? s.partidas : 0;
-    return `<button type="button" class="st-ficha ${n ? '' : 'vacia'}" data-stat-juego="${j.id}" style="--c:${j.color}" aria-haspopup="dialog"><span class="st-i" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'sin partidas'}</small>${n ? `<span class="st-sello" aria-label="Destino sellado">✓</span>` : ''}</button>`;
+  const fcorta = t => t ? new Date(t).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+  const cards = JUEGOS.filter(j => j.categoria === elegida).map((j, i) => {
+    const s = T[j.id], n = s && s.partidas ? s.partidas : 0, rot = ((i * 37) % 15) - 7;
+    return `<button type="button" class="st-cas ${n ? 'sellada' : ''}" data-stat-juego="${j.id}" style="--rot:${rot}deg" aria-haspopup="dialog" aria-label="${esc(j.nombre)}: ${n ? 'sellado, ' + n + (n === 1 ? ' partida' : ' partidas') : 'sin sellar'}"><span class="st-sl"><img src="img/marca/ruta-${j.categoria}.webp" alt="" width="64" height="64">${n ? '<i aria-hidden="true">✓</i>' : ''}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'Sin sellar'}</small>${n && s.ultima ? `<small class="st-f">${fcorta(s.ultima)}</small>` : ''}</button>`;
   }).join('');
-  app.innerHTML = panelPasaporte + panelLogros + tabs + `<div class="stats-fichas">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
+  app.innerHTML = panelPasaporte + panelLogros + tabs + `<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
+  $('#pasComp').addEventListener('click', async () => {
+    try { const m = await import('./core/imagen.js'); await m.compartirImagen({ titulo: 'Mi pasaporte JugamiGO', linea: `${nSell} de ${JUEGOS.length} destinos sellados`, pie: `${totVic.toLocaleString('es-ES')} victorias · mejor racha ${mejorR}`, texto: `Llevo ${nSell} de ${JUEGOS.length} destinos sellados en JugamiGO` }, aviso); }
+    catch (e) { console.error(e); aviso('No se pudo crear la imagen'); }
+  });
   app.querySelectorAll('[data-stat-cat]').forEach(b => b.addEventListener('click', () => {
     history.replaceState(null, '', '#/stats?categoria=' + b.dataset.statCat);      // sin cambiar de pantalla: no salta el scroll
     const y = leerScroll(); vStats(b.dataset.statCat); ponerScroll(y);
@@ -661,6 +710,11 @@ function vAjustes_() {
     <div class="fila"><span>Vibración</span>${seg('vibracion', [[true, 'Sí'], [false, 'No']])}</div></div>
   <div class="panel"><h3>Victorias</h3>
     <div class="fila"><span>Celebrar al ganar</span>${seg('celebrar', [[true, 'Sí'], [false, 'No']])}</div></div>
+  <div class="panel"><h3>Accesibilidad</h3>
+    <div class="fila fila-col"><span>Tamaño del texto</span>${seg('texto', [['normal', 'Normal'], ['grande', 'Grande'], ['enorme', 'Enorme']])}</div>
+    <div class="fila"><span>Contraste</span>${seg('contraste', [['normal', 'Normal'], ['alto', 'Alto']])}</div>
+    <div class="fila"><span>Animaciones</span>${seg('anim', [[true, 'Sí'], [false, 'No']])}</div>
+    <p class="note">El texto grande afecta a paneles, listas y ayudas. «Animaciones: No» quita los movimientos y la bienvenida.</p></div>
   <div class="panel"><h3>Copia de seguridad</h3>
     <p class="note">Tus partidas y estadísticas se guardan solo en este navegador. Exporta un archivo .json para pasarlas a otro dispositivo o como copia.</p>
     <div class="bar"><button class="btn on" id="gExp">Exportar .json</button>
@@ -671,12 +725,14 @@ function vAjustes_() {
     <div class="prog" id="gProg" hidden><i></i></div><p class="note" id="gDes" role="status"></p>
     <div class="bar"><button class="btn on" id="gDesc" hidden>⬇️ Descargar todo</button><button class="btn" id="gCanc" hidden>Cancelar</button><button class="btn" id="gQuit" hidden>Quitar descarga</button></div>
     <div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
-  <div class="panel"><h3>Acerca de</h3><p class="note">JugamiGO · ${JUEGOS.length} juegos${matchMedia('(display-mode: standalone)').matches ? '' : '. Puedes instalarla desde el menú del navegador («Añadir a pantalla de inicio»)'}.</p>
+  <div class="panel"><h3>Acerca de</h3><p class="note">JugamiGO · ${JUEGOS.length} juegos${enApp() ? '. ✅ Instalada en este dispositivo.' : '.'}</p>
+    ${enApp() ? '' : promptInstalar ? '<div class="bar"><button class="btn on" id="gInst" type="button">📲 Instalar la app</button></div>' : `<p class="note">${esIOS() ? 'Para instalarla: pulsa Compartir ⬆️ y «Añadir a pantalla de inicio».' : 'Puedes instalarla desde el menú del navegador («Instalar app» o «Añadir a pantalla de inicio»).'}</p>`}
     <p class="note">Créditos: los dibujos de las caras de «¿Qué Cara Tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
   <p class="version">JugamiGO · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = leerScroll(); vAjustes(); ponerScroll(y);
   }));
+  const bi = $('#gInst'); if (bi) bi.addEventListener('click', instalar);
   estadoSinConexion(); swEnviar({ tipo: 'estado-descarga' });
   $('#gDesc').addEventListener('click', () => { $('#gDesc').hidden = true; $('#gDes').textContent = 'Empezando la descarga…'; swEnviar({ tipo: 'descargar-todo' }); });
   $('#gCanc').addEventListener('click', () => { swEnviar({ tipo: 'cancelar-descarga' }); $('#gDes').textContent = 'Cancelando…'; });
@@ -758,13 +814,45 @@ async function migrarV1() {
   store.escribir('migrado', true);
 }
 
+/* ---------- instalar la app y avisar de versiones nuevas ---------- */
+const enApp = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const esIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+let promptInstalar = null;
+function bandaAviso(id, html, botones) {
+  document.getElementById(id)?.remove();
+  const b = el('div', { class: 'banda', id, role: 'region', 'aria-label': 'Aviso' });
+  b.innerHTML = `<span class="banda-t">${html}</span>`;
+  const g = el('span', { class: 'banda-b' }); botones.forEach(([t, f, on]) => g.append(el('button', { class: 'btn' + (on ? ' on' : ''), type: 'button', onclick: () => { b.remove(); f(); } }, t))); b.append(g);
+  document.body.append(b); return b;
+}
+async function instalar() { if (!promptInstalar) return; const p = promptInstalar; promptInstalar = null; p.prompt(); try { await p.userChoice; } catch { /* sin respuesta */ } if (ruta().v === 'ajustes') vAjustes(); }
+function ofrecerInstalar() {
+  if (enApp() || ruta().v === 'juego') return;
+  if (Date.now() - (store.leer('instNo', 0) || 0) < 30 * 864e5) return;
+  if ((store.leer('visitas', 0) || 0) < 2) return;
+  const no = () => store.escribir('instNo', Date.now());
+  if (promptInstalar) bandaAviso('bandaInst', '📲 <b>Instala JugamiGO</b> en tu móvil: se abre como una app y funciona sin conexión.', [['Ahora no', no], ['Instalar', instalar, true]]);
+  else if (esIOS()) bandaAviso('bandaInst', '📲 Para instalarla: pulsa <b>Compartir ⬆️</b> y «Añadir a pantalla de inicio».', [['Entendido', no, true]]);
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInstalar = e; setTimeout(ofrecerInstalar, 1500); });
+window.addEventListener('appinstalled', () => { promptInstalar = null; document.getElementById('bandaInst')?.remove(); aviso('✅ JugamiGO instalada'); });
+try { if (!sessionStorage.getItem('jr2:visita')) { sessionStorage.setItem('jr2:visita', '1'); store.escribir('visitas', (store.leer('visitas', 0) || 0) + 1); } } catch { /* sin sessionStorage */ }
+
 /* ---------- arranque ---------- */
 // Service worker: comprueba si hay versión nueva en cada arranque y, cuando la nueva toma el control, recarga una vez
 // para que se vea al momento (sin esto, la versión nueva solo aparecía en la siguiente apertura de la app).
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   const habiaVersion = !!navigator.serviceWorker.controller;
   let recargado = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaVersion && !recargado) { recargado = true; location.reload(); } });
+  // Versión nueva: se recarga sola si no estás jugando; en una partida se avisa y se espera (la partida ya está guardada).
+  const recargarYa = () => { if (recargado) return; recargado = true; try { sessionStorage.setItem('jr2:upd', '1'); } catch { /* sin sessionStorage */ } location.reload(); };
+  let pendiente = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!habiaVersion || recargado) return;
+    if (ruta().v !== 'juego') return recargarYa();
+    pendiente = true; bandaAviso('bandaUpd', '✨ <b>Hay una versión nueva.</b> Tu partida está guardada.', [['Luego', () => {}], ['Actualizar', recargarYa, true]]);
+  });
+  window.addEventListener('hashchange', () => { if (pendiente && ruta().v !== 'juego') recargarYa(); });
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
   // en segundo plano: guardar las imágenes de los naipes para jugar sin conexión (solo baja las que falten)
   // Como baraja y dorso cambian al azar, se guardan todas las imágenes (~3 MB), salvo con «Ahorro de datos» activado.
@@ -772,4 +860,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   const ahorro = navigator.connection && navigator.connection.saveData;
   if (!ahorro) navigator.serviceWorker.ready.then(r => setTimeout(() => r.active && r.active.postMessage({ tipo: 'guardar-cartas', ids: elegidas() }), 4000)).catch(() => {});
 }
-migrarV1().then(render);
+migrarV1().then(render).then(() => {
+  try { if (sessionStorage.getItem('jr2:upd')) { sessionStorage.removeItem('jr2:upd'); aviso(`✨ JugamiGO se ha actualizado (versión ${VERSION})`, 3200); } } catch { /* sin sessionStorage */ }
+  setTimeout(ofrecerInstalar, 3500);
+});

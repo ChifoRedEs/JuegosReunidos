@@ -152,3 +152,83 @@ body.fijo .cat-seccion>.cat::before{display:none}
 .panel h3{display:flex;align-items:center;gap:8px}
 .panel h3::after{content:"";flex:1;border-top:2px dashed color-mix(in srgb,var(--borde) 35%,transparent);margin-left:6px;transform:translateY(1px)}
 .pas-cab h3::after,.ajcab h3::after,.plog summary h3::after{display:none}
+
+/* pestañas del Diario con el sello de cada ruta */
+.stats-tab img{width:34px;height:34px;object-fit:contain;display:block;transition:transform .15s}
+.stats-tab span{font-size:inherit}
+.stats-tab:not(.on) img{opacity:.8;filter:saturate(.8)}
+.stats-tab.on{background:var(--card);color:var(--ink);border:2px solid var(--borde);box-shadow:0 3px 0 var(--sello);transform:none}
+.stats-tab.on img{transform:scale(1.12) rotate(-6deg)}
+
+/* ---------- Diario: casillas de pasaporte con sello ---------- */
+.stats-sellos{grid-template-columns:repeat(3,1fr);gap:10px}
+.st-cas{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px 9px;border-radius:14px;border:2px dashed color-mix(in srgb,var(--borde) 45%,transparent);background:color-mix(in srgb,var(--card) 82%,transparent);color:var(--ink);font:inherit;text-align:center;cursor:pointer;min-width:0}
+.st-cas:active{transform:translateY(2px)}
+.st-sl{position:relative;width:64px;height:64px;display:block}
+.st-sl img{width:100%;height:100%;object-fit:contain;display:block;filter:grayscale(1);opacity:.28;transform:rotate(var(--rot,0deg))}
+.st-cas.sellada{border-style:solid;border-color:var(--borde);background:var(--card);box-shadow:0 3px 0 color-mix(in srgb,var(--borde) 55%,transparent)}
+.st-cas.sellada .st-sl img{filter:drop-shadow(0 2px 0 rgba(20,33,61,.3));opacity:1}
+.st-sl i{position:absolute;right:-6px;bottom:-4px;width:24px;height:24px;border-radius:50%;background:var(--sello);color:#fff;border:2px solid var(--card);font:900 14px/20px var(--f-titulo);font-style:normal;text-align:center}
+.st-cas b{font:900 13px/1.1 var(--f-titulo);max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:3px}
+.st-cas small{font-size:11px;font-weight:800;color:var(--mut)}
+.st-cas .st-f{font-weight:700;opacity:.85}
+.st-cas:not(.sellada) b{opacity:.65}
+
+/* ---------- Inicio: buscador y atajos ---------- */
+.ini-top{flex:none;display:flex;flex-direction:column;gap:8px}
+.ini-bus{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;border-radius:99px;background:var(--card);border:2px solid var(--borde);box-shadow:var(--duro)}
+.ini-bus input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:800 16px var(--f-texto,Nunito,system-ui,sans-serif)}
+.ini-bus input::placeholder{color:var(--mut);opacity:.8}
+.ini-acc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.acc{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 4px 8px;border-radius:16px;background:var(--card);border:2px solid var(--borde);box-shadow:var(--duro);color:var(--ink);text-decoration:none;font:inherit;cursor:pointer;min-width:0}
+.acc:active{transform:translateY(2px);box-shadow:0 1px 0 var(--borde)}
+.acc-i{font-size:22px;line-height:1.1}
+.acc b{font:900 13px/1.1 var(--f-titulo)}
+.acc small{font-size:11px;font-weight:800;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ini-res{max-height:calc(100dvh - 230px);overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px 2px 8px}
+.ini.buscando{overflow:hidden}
+.ini.buscando .ini-cat{display:none}
+.ini.buscando .ini-top{flex:1 1 auto;min-height:0}
+.ini.buscando .ini-res{flex:1 1 auto;max-height:none}
+.res{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:var(--card);border:2px solid var(--borde);box-shadow:0 3px 0 color-mix(in srgb,var(--c) 70%,var(--borde));color:var(--ink);text-decoration:none}
+.res-i{font-size:30px;line-height:1;flex:none}
+.res-t{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.15}
+.res-t b{font:900 16px var(--f-titulo)}
+.res-t small{font-size:12px;color:var(--mut);font-weight:700;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ini-res .note{margin:8px 4px}
+
+/* ---------- favoritos (estrella) ---------- */
+.fav{position:absolute;right:8px;top:6px;z-index:3;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:22px;line-height:1;color:#fff;background:rgba(20,33,61,.32);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.fav.on{color:#F2B134;background:rgba(20,33,61,.55)}
+.res .fav{position:static;flex:none;color:var(--mut);background:transparent;border:2px solid color-mix(in srgb,var(--borde) 40%,transparent)}
+.res .fav.on{color:#F2B134;background:var(--borde);border-color:var(--borde)}
+.fav:focus-visible{outline:3px solid var(--sello);outline-offset:2px}
+.fav-rej{margin-top:6px}
+
+/* ---------- avisos: instalar y versión nueva ---------- */
+.banda{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:90;display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:18px;background:var(--card);color:var(--ink);border:2px solid var(--borde);box-shadow:var(--duro),0 10px 30px rgba(0,0,0,.25);animation:bandaIn .3s ease-out;max-width:520px;margin:0 auto}
+.banda-t{font-size:14px;font-weight:700;line-height:1.3}
+.banda-b{display:flex;gap:8px;justify-content:flex-end}
+.banda-b .btn{padding:8px 14px;min-height:0}
+@keyframes bandaIn{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- accesibilidad ---------- */
+html[data-texto="grande"] :is(.note,.tabla td,.res-t small,.acc small,.st-cas small,.pas-ruta small,.pas-num small,.banda-t){font-size:16.5px}
+html[data-texto="grande"] :is(.fila span,.btn,.res-t b,.acc b,.st-cas b,.pas-ruta b,.ini-bus input){font-size:18px}
+html[data-texto="grande"] :is(.ficha small,.ini-t small){font-size:14px}
+html[data-texto="enorme"] :is(.note,.tabla td,.res-t small,.acc small,.st-cas small,.pas-ruta small,.pas-num small,.banda-t){font-size:19px}
+html[data-texto="enorme"] :is(.fila span,.btn,.res-t b,.acc b,.st-cas b,.pas-ruta b,.ini-bus input){font-size:21px}
+html[data-texto="enorme"] :is(.ficha small,.ini-t small){font-size:16px}
+html[data-texto="enorme"] .ficha b{font-size:clamp(19px,5.2vw,24px)}
+html[data-contraste="alto"]{--velo:rgba(244,235,217,.8);--velo-cat:rgba(244,235,217,.8)}
+html[data-contraste="alto"] body.fondo,html[data-contraste="alto"] body.jfondo,html[data-contraste="alto"] body.fijo{--mut:var(--ink)}
+html[data-contraste="alto"] :is(.panel,.ficha,.ini-cat,.acc,.res,.st-cas,.btn,.stats-tab,.ini-bus){border-width:3px;border-style:solid;border-color:var(--borde)}
+html[data-contraste="alto"] .ficha small{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:99px}
+html[data-contraste="alto"] .st-cas:not(.sellada) .st-sl img{opacity:.5}
+:root[data-theme="dark"][data-contraste="alto"]{--velo:rgba(15,26,51,.85);--velo-cat:rgba(15,26,51,.85)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"])[data-contraste="alto"]{--velo:rgba(15,26,51,.85);--velo-cat:rgba(15,26,51,.85)}}
+html[data-anim="no"] *,html[data-anim="no"] *::before,html[data-anim="no"] *::after{animation-duration:.001s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+html[data-anim="no"] #splash{display:none}
+.fila-col{flex-direction:column;align-items:stretch;gap:6px}
+.fila-col .seg{width:100%}
+.fila-col .seg .btn{flex:1;min-width:0}

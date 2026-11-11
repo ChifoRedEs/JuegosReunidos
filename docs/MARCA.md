@@ -55,3 +55,11 @@ Los juegos con Three.js usan el contenedor `.e3d` (cuadrado, con fondo degradado
 - **Estadísticas** = «Diario» (📖): pasaporte con destinos sellados (juegos ganados al menos una vez), sellos por ruta y sello en cada ficha ganada.
 - **Ajustes**: cabecera de pasaporte; temas «Papel» / «Noche» / «Auto».
 - **Bienvenida** (`#splash` en index.html): sello + nombre, una vez por sesión (`sessionStorage`), respeta «reducir movimiento».
+
+## Pasaporte, segunda parte (3.70.0)
+- **Favoritos**: `ajustes.fav` (lista de ids, va en la copia de seguridad). Ruta `#/cat/favoritos`.
+- **Inicio**: buscador (`#iniBus`), y atajos «Continuar / Al azar», «Reto de hoy» (juego según la fecha entre los que dicen «reto del día» en el registro) y «Favoritos».
+- **Diario**: casillas `.st-cas` con el sello de la ruta. Para dar un sello propio a cada juego, ver `img/marca/sellos/<id>.webp` (pendiente: hoy todos usan el de su ruta).
+- **Compartir**: `js/core/imagen.js` dibuja un PNG 1080×1080 (sello de victoria o pasaporte) y usa la hoja de compartir del móvil o lo descarga.
+- **Instalar / actualizar**: banda `.banda` (instalar a partir de la 2.ª visita; versión nueva: recarga sola salvo en una partida).
+- **Accesibilidad**: `data-texto`, `data-contraste`, `data-anim` en `<html>`, con estilos al final de `css/pasaporte.css`.
