@@ -24,7 +24,7 @@
 Además: el minimax poda más cuando no hay ruido; el Inicio lee un índice ligero en vez de todas las partidas guardadas; la rejilla de Bloques, el fondo de la Serpiente y los ladrillos se pintan en capas que se reutilizan; sin `shadowBlur` en cada fotograma; las fuentes ya no bloquean el primer pintado; `arrastrar.js` mide las cartas solo cuando cambian de sitio.
 
 ## Código sin uso eliminado
-Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (kenken), `todoArriba` (klondike), `PCOL` y `PINK` (parchís), `sonPares` (sudoku), `tamano` (trivial). Doce imports que no se usaban.
+Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (calcudoku), `todoArriba` (klondike), `PCOL` y `PINK` (parchís), `sonPares` (sudoku), `tamano` (trivial). Doce imports que no se usaban.
 
 ## Mejoras de funcionalidad
 - **Toda la app**: 🏅 50 logros, 📅 Reto del día (Sudoku, Nonogram, Bombardeo, Calcudoku, Sopa, Crucigrama), 📤 compartir resultado en todos los juegos, 🏆 podio de los 10 mejores en los arcade, deshacer que se guarda con la partida (Sudoku, Calcudoku, Nonogram). La copia de seguridad incluye logros, retos y podios, y suma las palabras aprendidas de Encadenadas.
@@ -55,7 +55,7 @@ Exports: `$$` (dom.js), `TIPOS` y `marcaDe` (bloques), `colorear` (kenken), `tod
 - Figuras nuevas de la baraja ESP-02 (10, 11 y 12), comprimidas como el resto (240 px, WebP 78).
 
 ## Magnate Urbano (juego nuevo, categoría Tablero)
-Integrado en `js/games/magnate/` (datos.js · motor.js · index.js · magnate.css) con la API de la app: guardado y validación de partidas, estadísticas, menú ⋯, 🎨 Apariencia (colores del tablero de la app), diálogos en hoja inferior, sonido y vibración globales, y tecla Espacio para tirar.
+Integrado en `js/games/magnateurbano/` (datos.js · motor.js · index.js · magnateurbano.css) con la API de la app: guardado y validación de partidas, estadísticas, menú ⋯, 🎨 Apariencia (colores del tablero de la app), diálogos en hoja inferior, sonido y vibración globales, y tecla Espacio para tirar.
 
 **Para alejarlo de Monopoly** (ver la nota legal en la conversación): la economía es propia (precios, alquileres, multiplicadores, salario de 220M, fianza de 60M, 30 oficinas y 10 sedes en el banco), las casas y hoteles son «oficinas» y «sede central», y las cartas tienen textos y efectos propios.
 
@@ -78,7 +78,7 @@ Integrado en `js/games/magnate/` (datos.js · motor.js · index.js · magnate.cs
 - Palabras base para los demás juegos (`lemas-<hash>.txt`, 0,45 MB): 36.895 sustantivos y adjetivos y 10.480 verbos en infinitivo, con tildes. Las usan **Encadenadas** (valida cualquier palabra real, conjugaciones incluidas, y la CPU elige entre 47.000 palabras), la **Sopa de letras** (tema 📚 Diccionario) y el **Ahorcado** (tema 📚 Diccionario, con pista de tipo de palabra y primera letra). Crucigramas, Rosco, Trivia Quesitos y Ruleta necesitan definiciones o frases, que el diccionario no trae.
 
 ## Póker cubierto (juego nuevo, categoría Cartas)
-`js/games/pokercub/` (motor.js · index.js · pokercub.css). Póker de descarte de 5 cartas contra 1-5 bots: entrada (ante), primera ronda de apuestas, descarte de hasta 3 cartas (4 si te quedas con un as), segunda ronda y enfrentamiento. Sin límite, con all-in y botes secundarios. Torneo (la entrada sube cada 6 manos) o partida libre con recompras. Opción «jotas o mejor» para abrir: si nadie abre, se reparte de nuevo y el bote se acumula.
+`js/games/pokercubierto/` (motor.js · index.js · pokercubierto.css). Póker de descarte de 5 cartas contra 1-5 bots: entrada (ante), primera ronda de apuestas, descarte de hasta 3 cartas (4 si te quedas con un as), segunda ronda y enfrentamiento. Sin límite, con all-in y botes secundarios. Torneo (la entrada sube cada 6 manos) o partida libre con recompras. Opción «jotas o mejor» para abrir: si nadie abre, se reparte de nuevo y el bote se acumula.
 Reutiliza el evaluador de manos y los perfiles de bots del Texas Hold'em. Los bots calculan su probabilidad simulando también el cambio de cartas (el suyo y el de los rivales) y tienen en cuenta quién se sirve. Consejo de descarte y probabilidad de ganar (menú ⋯), estadísticas propias y la misma mesa y barajas de la app.
 
 ## Air Hockey (juego nuevo, categoría Arcade)
@@ -86,12 +86,12 @@ Reutiliza el evaluador de manos y los perfiles de bots del Texas Hold'em. Los bo
 Física con subpasos (240 por segundo) para que el disco no atraviese mazos ni bandas, rebotes con la velocidad del mazo, roce suave y «colchón de aire» que evita que el disco se quede parado junto a un fondo. La CPU defiende prediciendo los rebotes, se coloca detrás del disco (rodeándolo si hace falta) y lo golpea hacia tu portería; cada nivel cambia su velocidad, puntería y tiempo de reacción. Pausa automática al salir de la app, partida guardada y tres mesas en 🎨 Apariencia.
 
 ## Encajados (juego nuevo, categoría Lógica)
-`js/games/sokoban/` (motor.js · niveles.js · index.js · sokoban.css). Campaña de 20 niveles originales (8 diseñados a mano y 12 creados con el generador del juego con semillas fijas y elegidos por dificultad; ninguno copiado de colecciones publicadas), niveles generados sin fin en 3 tamaños (2, 3 o 4 cajas) y reto del día.
+`js/games/encajados/` (motor.js · niveles.js · index.js · encajados.css). Campaña de 20 niveles originales (8 diseñados a mano y 12 creados con el generador del juego con semillas fijas y elegidos por dificultad; ninguno copiado de colecciones publicadas), niveles generados sin fin en 3 tamaños (2, 3 o 4 cajas) y reto del día.
 El generador juega «al revés» (tira de las cajas desde las metas), así que todo nivel tiene solución; además lo confirma un resolvedor por anchura que busca la solución con menos empujes y descarta casillas muertas. El generador y la pista se ejecutan en un Worker. Controles: deslizar, tocar una casilla (camina hasta ella), flechas en pantalla, teclado (flechas o WASD, Z deshacer, R reiniciar). Deshacer sin límite y guardado, aviso de caja atascada, récord de movimientos por nivel, 3 escenarios y 4 personajes.
 - Apariencia del Encajados: 8 escenarios (muros, suelo y color de las metas), 8 tipos de caja (madera, colores, metálicas, regalos, cartón…) y 92 personajes en 6 secciones (hombres, mujeres, oficios, fantasía, animales y vehículos); los animales y vehículos se giran al caminar hacia la derecha. La hoja de 🎨 Apariencia de la app admite ahora rejillas de iconos con secciones (opciones con `emoji` y `sec`), que podrán usar otros juegos.
 
 ## CruciSumas (juego nuevo, categoría Lógica)
-`js/games/kakuro/` (generador.js · index.js · kakuro.css), con el mismo formato que Calcudoku y Sudoku: tamaño (6×6, 8×8, 10×10) y nivel, notas, deshacer guardado, pista, comprobar, errores automáticos, reto del día (8×8 medio) y 🎨 Apariencia (paleta del tablero, color de las casillas de las sumas y tipo de número). Ayuda propia: al elegir una casilla se muestran las combinaciones posibles de sus dos sumas y se tachan las que ya no encajan.
+`js/games/crucisumas/` (generador.js · index.js · crucisumas.css), con el mismo formato que Calcudoku y Sudoku: tamaño (6×6, 8×8, 10×10) y nivel, notas, deshacer guardado, pista, comprobar, errores automáticos, reto del día (8×8 medio) y 🎨 Apariencia (paleta del tablero, color de las casillas de las sumas y tipo de número). Ayuda propia: al elegir una casilla se muestran las combinaciones posibles de sus dos sumas y se tachan las que ya no encajan.
 Generador: dibujo con simetría central sin tiras de una casilla (y de 7 como mucho, 5 en 10×10), relleno que favorece 1, 2, 8 y 9 y, si hay dos soluciones, cambia una cifra donde difieren hasta que la solución es única; lo confirma un resolvedor por combinaciones con comprobación exacta de las tiras cortas. El nivel depende de si el resolvedor necesita probar valores. Se genera en un Worker (1-3 s en 10×10). El 12×12 se descartó: tardaba 10-20 s.
 
 **Error corregido en Calcudoku** (encontrado al pasar las pruebas): si la comprobación de «¿hay otra solución?» se quedaba sin tiempo (1,5 s), el generador daba el panel por bueno sin saber si era único. En móviles lentos un 7×7 podía salir con dos soluciones. Ahora ese panel se descarta y se genera otro.
@@ -118,7 +118,7 @@ Física con 400 subpasos por segundo, rozamiento del césped y de la arena, rebo
 - **🎨 Apariencia:** color del tapete, tapete de imagen, bandas, bolas y taco.
 
 ## Números y Letras (juego nuevo, categoría Palabras · versión 3.2.0)
-`js/games/cifrasletras/` (motor.js · index.js · cifrasletras.css). Partidas de 4, 6 o 10 rondas que alternan Letras y Cifras, con 30, 45 o 60 segundos (o sin límite), contra la CPU (3 niveles) o en solitario.
+`js/games/numerosyletras/` (motor.js · index.js · numerosyletras.css). Partidas de 4, 6 o 10 rondas que alternan Letras y Cifras, con 30, 45 o 60 segundos (o sin límite), contra la CPU (3 niveles) o en solitario.
 - **Letras:** se piden 9 letras (vocal o consonante, al menos 3 de cada; o 🎲 al azar) con frecuencias del español y la Ñ. La palabra se forma tocando las fichas o con el teclado y se comprueba con el diccionario completo (`core/diccionario.js`: plurales, femeninos y conjugaciones; sin importar las tildes). Cada letra vale un punto y 9 letras, 18. Al final de la ronda se ven las palabras más largas posibles.
 - **Cifras:** 6 números (1-10 dos veces, 25, 50, 75 y 100) y un objetivo de 101 a 999. Se toca un número, una operación y otro número; el resultado pasa a ser una ficha nueva. Divisiones exactas y sin negativos. Exacto 10 puntos, a 5 o menos 7, a 10 o menos 5. Un resolvedor exhaustivo enseña una solución (exacta en ~97 % de los casos) en unos milisegundos.
 - **Contra la CPU** solo puntúa la mejor respuesta de cada ronda (si empatan, los dos), como en el concurso. La CPU busca entre todas las palabras posibles (más cortas cuanto más fácil) y en cifras usa como mucho 3, 4 o 6 números según el nivel.
@@ -126,4 +126,4 @@ Física con 400 subpasos por segundo, rozamiento del césped y de la arena, rebo
 - **🎨 Apariencia:** Fondo de Tablero con los tapetes de imagen (🎲 aleatorio por defecto en este juego), paleta del tablero y 4 estilos de fichas (Concurso, Madera, Pizarra y Del tablero).
 
 ## Guerra de Orugas (versión 3.5.0)
-`js/games/worms/` (motor.js · ia.js · index.js · worms.css), pruebas en `tests/worms.mjs`. El motor no toca el DOM; el terreno es una máscara de bits generada desde una semilla y la partida guardada solo lleva la semilla y la lista de cráteres. Comprobado: 3/6/9/12 gusanos en los 4 mapas sin gusanos enterrados ni flotando, CPU contra CPU termina partidas completas, cuerda que engancha y suelta sin dejar gusanos en el aire, tumbas que se destruyen y guardado/carga validado.
+`js/games/guerraorugas/` (motor.js · ia.js · index.js · guerraorugas.css), pruebas en `tests/guerraorugas.mjs`. El motor no toca el DOM; el terreno es una máscara de bits generada desde una semilla y la partida guardada solo lleva la semilla y la lista de cráteres. Comprobado: 3/6/9/12 gusanos en los 4 mapas sin gusanos enterrados ni flotando, CPU contra CPU termina partidas completas, cuerda que engancha y suelta sin dejar gusanos en el aire, tumbas que se destruyen y guardado/carga validado.

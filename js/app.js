@@ -1,4 +1,5 @@
 // Shell de la aplicación: rutas por hash, menú, estadísticas, ajustes y copia de seguridad.
+import { traducirCopia } from './core/migrar_ids.js';   // debe ir primero: traslada los datos guardados a los nuevos identificadores
 import { JUEGOS, CATEGORIAS, PROXIMAMENTE, GRUPOS, entradas } from './registry.js';
 import { $, el, esc, fmtTiempo } from './core/dom.js';
 import * as store from './core/storage.js';
@@ -141,7 +142,7 @@ function crearApi(j, ent, mod, root) {
   const id = j.id;
   let abrirAsp = null, defBarra = null;
   // Barra inferior común (Nuevo panel / Configurar / Apariencia / Pausa-Salir): cada juego la pide con api.barraHtml() al final de su pantalla de partida.
-  const PANEL = ['sopa', 'crucigrama', 'rosco', 'ruleta', 'encadenadas', 'cifrasletras', 'ahorcado'];
+  const PANEL = ['sopaletras', 'crucigramas', 'elrosco', 'ruletamillonaria', 'encadenadas', 'numerosyletras', 'elahorcado'];
   let celebrada = 0;
   function selloVictoria() { const T = stats.todas(); return { n: Object.values(T).reduce((a, s) => a + (s && s.victorias || 0), 0), juego: (JUEGOS.find(j => j.id === id) || {}).nombre || '' }; }
   function victoria() {
@@ -777,6 +778,7 @@ async function ingestar(j, datos, desdeV1) {
   return true;
 }
 async function importar(o) {
+  o = traducirCopia(o);
   if (!o || typeof o !== 'object' || o.app !== 'juegos-reunidos') throw new Error('El archivo no es una copia de JugamiGO.');
   const got = [];
   for (const j of JUEGOS) {

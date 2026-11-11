@@ -11,7 +11,7 @@
 - **Sudoku**: notas, deshacer, cronómetro (se pausa solo), contador de cuántos quedan por número, resaltado distinto para «mismo número», marcar errores al instante (menú ⋯), pista inteligente sin casilla seleccionada, teclado completo (N notas, Z deshacer), niveles por técnica requerida.
 - **Nonogram**: pintar arrastrando por fila/columna, ✕ con pulsación larga, resaltado de fila y columna activas, deshacer, pistas tachadas, cronómetro, modo **Dibujo** con pixel-art hecho a mano verificado con el resolvedor (5×5 y 10×10; añade más en `data/nonogramas/fuentes.txt` y ejecuta `node tools/verificar_nonogramas.mjs`), generación sin congelar la interfaz.
 - **Damas**: reglas **españolas** (dama voladora + ley de la mayoría) o **inglesas**; IA minimax con poda alfa-beta y 3 niveles reales (profundidad 2 / 5 / 9 con límite de tiempo).
-- **Party’s**: fichas animadas casilla a casilla, dado animado, tocar la casilla de destino además de la ficha, nombres de jugador, velocidad de CPU, motor de reglas separado y probado (partidas de 2 a 4 CPU simuladas hasta el final).
+- **Partxis**: fichas animadas casilla a casilla, dado animado, tocar la casilla de destino además de la ficha, nombres de jugador, velocidad de CPU, motor de reglas separado y probado (partidas de 2 a 4 CPU simuladas hasta el final).
 
 ## Juegos nuevos (actualización 1)
 - **3 en raya**, 4 tableros: Clásico 3×3, **Infinito** 3×3 (solo 3 fichas a la vez; la más antigua se atenúa y desaparece), 4×4 (cuatro en raya) y 5×5 (cuatro en raya).
@@ -24,19 +24,19 @@
 - **🎨 Apariencia en cada juego** (botón y menú ⋯): colores del tablero, y según el juego color, forma y diseño de las fichas. Se guarda por juego y se puede restablecer.
   - Sudoku: 4 paletas + números redondos / clásicos / de colores. Nonogram: paletas, color del relleno y forma (cuadrado, círculo, estrella, corazón…).
   - Damas: 5 tableros, 4 pares de colores y 4 formas de ficha. 3 en raya: paletas y fichas ✕○ o emojis (animales, espacio, comida, deporte). Cuatro en Línea: 5 tableros, 4 pares de colores y formas (redonda, estrella, diamante, corazón).
-- **Party’s rediseñado**: casillas redondeadas y llamativas, fichas bastante más grandes, casas discretas, 4 tableros, 4 paletas (incluida una para daltonismo), 4 formas de ficha (canica, peón, estrella, diamante) y zoom con desplazamiento automático hacia la acción. Se mantiene el indicador de destino y ahora muestra una ficha fantasma y 💥 si se come.
+- **Partxis rediseñado**: casillas redondeadas y llamativas, fichas bastante más grandes, casas discretas, 4 tableros, 4 paletas (incluida una para daltonismo), 4 formas de ficha (canica, peón, estrella, diamante) y zoom con desplazamiento automático hacia la acción. Se mantiene el indicador de destino y ahora muestra una ficha fantasma y 💥 si se come.
 - **Sopa de letras**: 7 temas, 3 niveles (8×8 a 12×12, hasta 8 direcciones), arrastrar o tocar inicio y fin, pistas, subrayado de colores y apariencia.
 - **Bombardeo**: 3 niveles, primer toque seguro, banderas con pulsación larga o modo bandera, abrir con un toque sobre un número (acorde), pistas por deducción, cara y contadores, minas y banderas personalizables.
 
 ## Actualización 3: los cuatro juegos que faltaban
-- **Crucigramas** (libres, generados al momento): 5 niveles y tamaños (Mini 9×9, Fácil 11×11, Medio 13×13, Difícil 15×15, Experto 17×17), 7 temas más Mezcla con unas 220 palabras y definiciones propias. Teclado propio en pantalla, toque para cambiar horizontal/vertical, ‹ › entre pistas, comprobar, revelar letra o palabra y marcado de errores al instante. Para ampliar los temas edita `js/games/crucigrama/pistas.js`.
+- **Crucigramas** (libres, generados al momento): 5 niveles y tamaños (Mini 9×9, Fácil 11×11, Medio 13×13, Difícil 15×15, Experto 17×17), 7 temas más Mezcla con unas 220 palabras y definiciones propias. Teclado propio en pantalla, toque para cambiar horizontal/vertical, ‹ › entre pistas, comprobar, revelar letra o palabra y marcado de errores al instante. Para ampliar los temas edita `js/games/crucigramas/pistas.js`.
 - **BlackJack**: zapato de 6 barajas, pedir, plantarse, doblar, dividir (hasta 4 manos), rendirse y seguro; blackjack 3:2; banca persistente de fichas y consejo de estrategia básica (ventaja de la casa comprobada en torno al 0,4 %).
 - **Klondike**: robar de 1 o de 3, arrastrar cartas o tocar para jugada automática, pista, deshacer, autocompletar y cartas/mesa/dorso personalizables.
 - **Texas Hold'em**: torneo contra 2-5 bots con personalidad (conservador, equilibrado, agresivo y farolero), ciegas crecientes, all-in y botes secundarios, probabilidad de ganar en tiempo real y ranking de manos. Los bots deciden con simulación de Monte Carlo y las probabilidades del bote.
 - Módulo común de cartas (`core/cartas.js`, `css/cartas.css`) con mesa, dorso y colores de palo configurables.
 
 ## Actualización 4: mejoras pedidas
-- **Party’s · Salida libre** (casilla en la pantalla de nueva partida): si no tienes fichas en juego, sales con una ficha con cualquier número; con un 5 en tu primera tirada sacas dos fichas de casa.
+- **Partxis · Salida libre** (casilla en la pantalla de nueva partida): si no tienes fichas en juego, sales con una ficha con cualquier número; con un 5 en tu primera tirada sacas dos fichas de casa.
 - **BlackJack**: el blackjack paga 3 a 2 (+150 %) y la victoria normal +100 %; ahora se ve en pantalla (importe en cada mano, brillo dorado y aviso de pago) y en las reglas.
 - **Klondike**: casilla extra «Libre» a la izquierda de las columnas (admite cualquier carta o grupo cuando está vacía; opcional), analizador que indica si el camino sigue abierto o cerrado y porcentaje de acierto de tus jugadas.
 
@@ -75,7 +75,7 @@
 - `tools/generar_sw.py` incluye ahora la lógica del propio `sw.js` en la VERSION, para que cualquier cambio en el service worker llegue a los móviles.
 
 ## Actualización 13: arreglo del modo sin conexión en GitHub Pages
-- **Causa del fallo**: GitHub Pages pasa la web por Jekyll, que no publica las carpetas que empiezan por «_». La plantilla `js/games/_plantilla/` estaba en la lista del service worker; al no existir en la web, la instalación sin conexión fallaba entera y los juegos no abrían sin internet.
+- **Causa del fallo**: GitHub Pages pasa la web por Jekyll, que no publica las carpetas que empiezan por «_». La plantilla `js/games/plantilla/` estaba en la lista del service worker; al no existir en la web, la instalación sin conexión fallaba entera y los juegos no abrían sin internet.
 - Archivo `.nojekyll` en la raíz: GitHub Pages publica todo tal cual, sin Jekyll.
 - `tools/generar_sw.py` deja fuera de la lista las carpetas que empiezan por «_» o «.».
 - `sw.js` guarda los archivos uno a uno: si alguno falla, los demás se guardan igual (antes, un solo fallo cancelaba todo).
@@ -84,8 +84,8 @@
 ## Actualización 14: Batalla Naval
 - **Batalla Naval** (Tablero): contra la CPU (3 niveles; la difícil calcula la probabilidad de cada casilla) o 2 jugadores en el mismo móvil con pantalla para pasarlo sin ver la flota del otro. Flotas Española (10 barcos), Internacional (5) y Rápida (8×8); barcos que se tocan o no (con agua marcada sola alrededor de los hundidos) y repetir disparo al acertar. Colocación tocando y girando, recolocar tocando un barco, o al azar. Pista sin trampas, barcos restantes de cada bando, efectos de agua/tocado/hundido, revancha, marcador, estadísticas y partida guardada. 🎨 4 colores de mar y 3 de barcos.
 
-## Actualización 15: Rummy de fichas
-- **Rummy de fichas** (Tablero, las reglas del clásico de fichas numeradas): 106 fichas con 2 comodines, tú contra 1–3 CPU en 3 niveles. Grupos y escaleras con comodín en cualquier hueco, primera bajada de 30 puntos solo con fichas propias y reorganización libre de la mesa (se valida al terminar el turno; las jugadas incorrectas se marcan en rojo). Mover tocando fichas (varias a la vez) y su destino, deshacer cambios del turno, atril ordenable por color o número y con arrastre, 💡 Sugerir jugada, fichas nuevas de la CPU resaltadas, recuento final, marcador y estadísticas. La CPU difícil parte escaleras y aprovecha fichas sobrantes de la mesa.
+## Actualización 15: Rummy Tile
+- **Rummy Tile** (Tablero, las reglas del clásico de fichas numeradas): 106 fichas con 2 comodines, tú contra 1–3 CPU en 3 niveles. Grupos y escaleras con comodín en cualquier hueco, primera bajada de 30 puntos solo con fichas propias y reorganización libre de la mesa (se valida al terminar el turno; las jugadas incorrectas se marcan en rojo). Mover tocando fichas (varias a la vez) y su destino, deshacer cambios del turno, atril ordenable por color o número y con arrastre, 💡 Sugerir jugada, fichas nuevas de la CPU resaltadas, recuento final, marcador y estadísticas. La CPU difícil parte escaleras y aprovecha fichas sobrantes de la mesa.
 
 ## Actualización 16: Juego de la Oca
 - **Juego de la Oca** (Tablero): tablero clásico en espiral de 63 casillas, de 2 a 4 jugadores (personas y/o CPU), 1 o 2 dados. Ocas, puentes y dados con sus rimas («de oca a oca y tiro porque me toca»), posada, pozo (hasta que te rescaten o 2 turnos), laberinto, cárcel, muerte, llegada exacta con rebote y la primera tirada 6+3 / 5+4 con dos dados. Fichas que avanzan casilla a casilla, dados animados, sonidos, estadísticas y partida guardada. 🎨 3 tableros.

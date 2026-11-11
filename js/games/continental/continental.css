@@ -1,0 +1,63 @@
+/* Continental · usa css/cartas.css (mesa, dorso y baraja francesa) */
+.juego-continental{--hw:min(52px,calc((min(100vw,520px) - 56px) / 7.4))}
+.cnlista{margin:6px 0 4px 20px;font-size:14px;font-weight:700}
+.cnlista small{color:var(--mut);font-weight:600}
+.cntop{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0;font-weight:800;font-size:13px}
+.cntop .con{background:color-mix(in srgb,var(--purple) 14%,var(--card));border:2px solid color-mix(in srgb,var(--purple) 40%,var(--line));border-radius:99px;padding:3px 12px;color:var(--ink)}
+.cntop .ron,.cntop .pts{color:var(--mut)}
+.cnm{color:#fff;padding:10px 6px 12px;display:flex;flex-direction:column;gap:8px}
+.cnops{display:grid;grid-template-columns:repeat(var(--no),minmax(0,1fr));gap:6px}
+.cnseat{background:rgba(0,0,0,.28);border:3px solid transparent;border-radius:14px;padding:5px 4px 6px;text-align:center;min-width:0}
+.cnseat.turno{border-color:var(--yel);background:rgba(255,194,26,.2)}
+.cnseat .nom{font-weight:800;font-size:13px}
+.cnseat .cs{display:flex;justify-content:center;margin:3px 0;min-height:calc(22px * 1.4)}
+.cnseat .carta{--cw:22px;margin:0 -7px}
+.cnseat .pt{font-size:11px;font-weight:800;color:#FFE08A}
+.cnjugadas{display:flex;flex-direction:column;gap:6px;min-height:40px}
+.cnvacia{text-align:center;font-size:13px;opacity:.85;margin:8px 4px}
+.cngr{display:flex;flex-wrap:wrap;align-items:center;gap:5px;background:rgba(0,0,0,.15);border-radius:10px;padding:4px 6px}
+.cngr small{font-weight:800;font-size:11.5px;width:100%;opacity:.9}
+.cnset{position:relative;display:flex;padding:2px 4px;border-radius:8px;background:rgba(255,255,255,.1)}
+.cnset .carta{--cw:26px;margin-right:-11px}
+.cnset .carta:last-of-type{margin-right:0}
+.cnset.cabe{cursor:pointer;background:rgba(61,220,151,.28);box-shadow:0 0 0 2px #3DDC97}
+.cnset .mas{display:flex;align-items:center;font:800 18px Nunito,sans-serif;margin-left:6px;color:#C9FFE6}
+.cncentro{display:flex;justify-content:center;gap:24px}
+.cnpila{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;padding:5px;border-radius:12px;color:#fff}
+.cnpila .carta{--cw:50px}
+.cnpila small{font-size:11px;font-weight:800;opacity:.9}
+.cnpila .vacio{width:50px;height:70px;border:2px dashed rgba(255,255,255,.4);border-radius:7px}
+.cnpila.activa{cursor:pointer;background:rgba(255,194,26,.18);box-shadow:0 0 0 3px var(--yel)}
+.cnpila:disabled{cursor:default}
+.cnmsg{text-align:center;font-weight:800;font-size:14px;min-height:20px}
+.cnmano{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 3px;padding-top:8px;min-height:calc(var(--hw) * 1.4 + 10px)}
+.cnc{transition:transform .15s;touch-action:none}
+.cnc .carta{--cw:var(--hw);display:block}
+.cnmano.turno .cnc{cursor:pointer}
+.cnc.sel{transform:translateY(-12px)}
+.cnc.sel .carta{box-shadow:0 0 0 3px var(--yel),0 6px 10px rgba(0,0,0,.4)}
+.cnc.liga .carta{box-shadow:inset 0 -5px 0 #1FBF73,0 2px 4px rgba(0,0,0,.35)}
+.cnc.nueva .carta{animation:cartaIn .32s ease-out both}
+.cnc.nueva::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--yel);margin:3px auto 0}
+.cnc.bloq::after{content:"🔒";display:block;text-align:center;font-size:11px}
+.cnc:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:8px}
+.cninfo{text-align:center;font-size:12.5px;font-weight:800;opacity:.9}
+.carta.comodin{background:linear-gradient(135deg,#FFE27A,#FF8FB1 55%,#8FB8FF);color:#4B1E7A}
+.carta.comodin .cr{color:#4B1E7A}
+.carta.comodin .cc{font-size:calc(var(--cw) * .55)}
+.cnacc{justify-content:center}
+.cnacc[hidden]{display:none}
+.cnres{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:10px 12px;margin:10px 0}
+.cnres h3{font-size:18px;margin-bottom:8px}
+.cnrf{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;border-top:1px solid var(--line);padding:6px 0;font-size:13.5px}
+.cnrf.gana b{color:var(--purple)}
+.cnrf .cs{display:flex;flex-wrap:wrap;gap:1px}
+.cnrf .carta{--cw:24px}
+.cnrf span{font-weight:800}
+.cntabla{overflow-x:auto;margin-top:8px}
+.cntabla table{border-collapse:collapse;width:100%;font-size:13px;text-align:center}
+.cntabla th,.cntabla td{padding:4px 3px;border-top:1px solid var(--line)}
+.cntabla td:first-child{text-align:left;font-weight:800;white-space:nowrap}
+.cntabla tr.gana td{color:var(--purple)}
+.cnlog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
+.cnlog li:first-child{color:var(--ink);font-weight:800}

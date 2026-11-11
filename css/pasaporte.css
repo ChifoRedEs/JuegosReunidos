@@ -259,3 +259,10 @@ html[data-anim="no"] #splash{display:none}
 .barra-gen button[data-gen="salir"]{color:#C9441C}
 /* pastillas de 4 opciones: caben en pantallas estrechas (antes «Obstáculos» se cortaba) */
 .seg:has(> .btn:nth-child(4)):not(:has(> .btn:nth-child(5))) > .btn{padding-inline:5px;font-size:12.5px;overflow-wrap:anywhere;min-width:0}
+
+/* ---------- dentro de la partida: marcador y mensajes comunes (3.73.0) ---------- */
+.juego > .info,.juego .info:not(.nota){padding:8px 14px;margin:8px 0;border-radius:14px;background:color-mix(in srgb,var(--card) 90%,transparent);border:2px solid var(--borde);box-shadow:0 3px 0 color-mix(in srgb,var(--borde) 45%,transparent);color:var(--ink);font:800 14px var(--f-texto,Nunito,system-ui,sans-serif);font-variant-numeric:tabular-nums}
+.juego .info .mut{color:var(--mut)}
+.juego .info b,.juego .info [id$="Time"],.juego .info [id$="Tiempo"]{font-family:var(--f-titulo)}
+.juego .msg{text-align:center;margin:8px 0;padding:6px 12px;border-radius:12px;background:color-mix(in srgb,var(--sello) 10%,transparent);border:2px dashed color-mix(in srgb,var(--sello) 45%,transparent);color:var(--ink);font-weight:800;font-size:15px;text-shadow:none}
+.juego .msg:empty{background:transparent;border-color:transparent}

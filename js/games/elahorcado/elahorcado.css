@@ -1,0 +1,19 @@
+.ahinfo{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;font-size:14px;margin:6px 0}
+.ahvidas{display:flex;gap:3px;font-size:18px}
+.ahfig{width:min(100%,260px);aspect-ratio:1;margin:6px auto;background:linear-gradient(160deg,var(--tb-cell),var(--tb-alt));border:3px solid var(--tb-line);border-radius:24px;box-shadow:0 8px 20px color-mix(in srgb,var(--tb-acc) 28%,transparent);display:flex;align-items:center;justify-content:center}
+.ahd{width:92%;height:92%}
+.ahd .nuevo{animation:ahpop .45s cubic-bezier(.3,1.6,.5,1);transform-origin:center;transform-box:fill-box}
+@keyframes ahpop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.ahword{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;margin:12px 0}
+.ahw{display:flex;gap:5px}
+.ahl{display:flex;align-items:flex-end;justify-content:center;min-width:calc(min(88vw,420px) / 11);height:44px;padding:0 2px;border-bottom:4px solid var(--tb-acc);font:800 30px/1 'Baloo 2',system-ui,sans-serif;color:var(--tb-ink);text-transform:uppercase}
+.ahl.sep{border-bottom:0;min-width:10px}
+.ahl.fallo{color:var(--red);border-color:var(--red)}
+.ahl.nuevo{animation:ahrev .35s ease-out}
+@keyframes ahrev{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+.ahpista{background:var(--card);border:2px solid var(--tb-line);border-radius:16px;padding:10px 12px;margin:8px 0;font-size:14.5px;font-weight:700;line-height:1.35}
+.ahpista small{display:block;color:var(--mut);font-weight:800;margin-bottom:2px;text-transform:uppercase;letter-spacing:.4px;font-size:11px}
+.ahword.activa{cursor:pointer;border-radius:14px;padding:4px;transition:background .15s}
+.ahword.activa:hover{background:color-mix(in srgb,var(--tb-acc) 10%,transparent)}
+.ahtoca{text-align:center;color:var(--mut);font-size:12.5px;font-weight:800;margin:-6px 0 6px}
+.ahtoca[hidden]{display:none}

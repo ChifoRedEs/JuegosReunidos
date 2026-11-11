@@ -1,0 +1,119 @@
+// Hotel · datos del tablero y de los 8 hoteles (sin DOM).
+// Juego propio de compra y construcción de hoteles: nombres, precios y tarifas originales.
+// El trazado del camino y la posición de las casillas es propio (el tablero real no se publica con coordenadas).
+
+export const COLORES_JUGADOR = ['#E0243A', '#2F6BFF', '#12A05C', '#F2B600'];
+export const NOMBRES_COLOR = ['Rojo', 'Azul', 'Verde', 'Amarillo'];
+export const COCHES = ['🚗', '🚕', '🚙', '🏎️'];
+
+// ---------- reglas generales ----------
+export const DINERO_INICIAL = 18000;
+export const SALARIO = 3000;           // al pasar por la Caja
+export const PRECIO_MIN_PUJA = 150;
+export const MAX_ENTRADAS = 8;         // tope de entradas por hotel
+// Dado de permiso de obras (6 caras): 3 verdes (concedido), 1 rojo (denegado), 1 «H» (gratis), 1 «×2» (doble coste)
+export const DADO_PERMISO = ['verde', 'verde', 'verde', 'rojo', 'H', 'x2'];
+
+// ---------- hoteles ----------
+// edif: [{ c: coste, r: tarifa por noche una vez construido }] en orden (el primero es el edificio principal)
+// inst: instalación de ocio (jardín / piscina), solo cuando el hotel está completo. Sin permiso de obras.
+export const HOTELES = {
+  fuji: { nombre: 'Gran Pagoda', tierra: 1500, entrada: 150, edif: [{ c: 3300, r: 150 }, { c: 2100, r: 150 }, { c: 2100, r: 300 }], inst: { c: 750, r: 600 }, color: '#E4573D', estilo: 'pagoda' },
+  boom: { nombre: 'Curva Dorada', tierra: 750, entrada: 150, edif: [{ c: 2700, r: 600 }], inst: { c: 375, r: 900 }, color: '#1FA2A6', estilo: 'boomerang' },
+  etoile: { nombre: 'Palacio Mayor', tierra: 4500, entrada: 375, edif: [{ c: 4950, r: 225 }, { c: 3300, r: 450 }, { c: 2700, r: 450 }, { c: 2700, r: 450 }, { c: 2700, r: 675 }], inst: { c: 6000, r: 1125 }, color: '#B8564B', estilo: 'clasico' },
+  pres: { nombre: 'Torre Cielo', tierra: 5250, entrada: 375, edif: [{ c: 7500, r: 300 }, { c: 4500, r: 600 }, { c: 3400, r: 900 }, { c: 2600, r: 1200 }], inst: { c: 7500, r: 1800 }, color: '#3B7DD8', estilo: 'torre' },
+  royal: { nombre: 'Real Alameda', tierra: 3750, entrada: 300, edif: [{ c: 5400, r: 225 }, { c: 3900, r: 450 }, { c: 2700, r: 450 }, { c: 2700, r: 675 }], inst: { c: 4500, r: 900 }, color: '#6C4DB8', estilo: 'hexagono' },
+  waik: { nombre: 'Costa Sol', tierra: 3750, entrada: 300, edif: [{ c: 5250, r: 300 }, { c: 3750, r: 525 }, { c: 3750, r: 750 }, { c: 2600, r: 750 }, { c: 2600, r: 975 }], inst: { c: 3750, r: 1500 }, color: '#F08A24', estilo: 'playa' },
+  taj: { nombre: 'Cúpula Oriental', tierra: 2250, entrada: 150, edif: [{ c: 3600, r: 150 }, { c: 1500, r: 150 }, { c: 750, r: 300 }], inst: { c: 1500, r: 450 }, color: '#E0B84A', estilo: 'cupula' },
+  safari: { nombre: 'Cabañas del Valle', tierra: 3000, entrada: 225, edif: [{ c: 3900, r: 150 }, { c: 1800, r: 150 }, { c: 1800, r: 375 }], inst: { c: 3000, r: 750 }, color: '#7A8F3A', estilo: 'cabana' },
+};
+export const IDS_HOTEL = Object.keys(HOTELES);
+export const nEdif = id => HOTELES[id].edif.length;
+// Tarifa por noche del hotel según lo construido (etapa = nº de edificios; inst = instalación hecha)
+export const tarifa = (id, etapa, inst) => (etapa <= 0 ? 0 : inst ? HOTELES[id].inst.r : HOTELES[id].edif[Math.min(etapa, nEdif(id)) - 1].r);
+// Coste total de dejar un hotel completo (terreno + edificios + instalación), sin entradas
+export const costeTotal = id => { const h = HOTELES[id]; return h.tierra + h.edif.reduce((a, e) => a + e.c, 0) + h.inst.c; };
+
+// ---------- tablero ----------
+export const MAPA = { W: 18, H: 14 };
+// Camino de 48 casillas, en el sentido de las agujas del reloj. [fila, columna]
+const WP = [[10, 2], [3, 2], [3, 6], [5, 6], [5, 8], [3, 8], [3, 13], [6, 13], [6, 11], [8, 11], [8, 13], [10, 13], [10, 8], [8, 8], [8, 6], [10, 6], [10, 2]];
+function trazar(wp) {
+  const out = [];
+  for (let i = 0; i < wp.length - 1; i++) {
+    const [a, b] = wp[i], [c, d] = wp[i + 1], dr = Math.sign(c - a), dc = Math.sign(d - b); let r = a, k = b;
+    for (;;) { const u = out[out.length - 1]; if (!u || u[0] !== r || u[1] !== k) out.push([r, k]); if (r === c && k === d) break; r += dr; k += dc; }
+  }
+  const u = out[out.length - 1]; if (u[0] === out[0][0] && u[1] === out[0][1]) out.pop();
+  return out;
+}
+export const CAMINO = trazar(WP);
+export const N = CAMINO.length;
+// Tipos de casilla: P aparcamiento (salida) · C compra de terreno · O permiso de obras · E entrada libre · F construye una fase libre · N camino
+const TIPOS = 'PCOCCECCFCO' + 'CNCCOCCCOCE' + 'CCNCOFNOCNCCOEN' + 'CCOFCNCCOCC';
+export const TIPO = TIPOS.slice(0, N).split('');
+export const INFO_TIPO = {
+  P: { nombre: 'Salida', corto: 'SALIDA', ico: '🅿️', color: '#3B6FD8', desc: 'Casilla de salida: aquí empiezan los coches. No pasa nada al caer.' },
+  C: { nombre: 'Solar en venta', corto: 'COMPRA', ico: '🏷️', color: '#E5A100', desc: 'Puedes comprar el terreno de un hotel pegado a esta casilla (solo uno por turno). Si el terreno de un rival sigue vacío, puedes quedártelo por la mitad del precio. No puedes construir en él hasta tu siguiente turno.' },
+  O: { nombre: 'Licencia de obras', corto: 'OBRAS', ico: '📋', color: '#2F7DE1', desc: 'Si tienes algún terreno, declaras qué construyes (edificio principal, luego ampliaciones) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, H gratis, ×2 doble precio.' },
+  E: { nombre: 'Acceso gratuito', corto: 'ENTRADA', ico: '🚪', color: '#1E9E63', desc: 'Pones gratis una entrada en un hotel tuyo que ya tenga edificio principal, en una casilla del camino junto a su terreno.' },
+  F: { nombre: 'Obra gratis', corto: 'FASE', ico: '🏗️', color: '#E8690F', desc: 'Construyes gratis una fase: el edificio principal de un terreno vacío tuyo, o la siguiente ampliación de un hotel en obras.' },
+  N: { nombre: 'Calle', corto: '', ico: '', color: '#C3C9D6', desc: 'Casilla normal. Si tiene una entrada de un hotel rival, pagas las noches (dado × tarifa por noche del hotel).' },
+};
+export const EXTRA_LEYENDA = [
+  { ico: '🏦', nombre: 'Línea de Cobro', color: '#F2B600', desc: 'Cada vez que cruzas la línea dorada cobras 3.000 € (con 3-4 jugadores, deja de pagar cuando quedan dos).' },
+  { ico: '🏛️', nombre: 'Línea de Accesos', color: '#2F9BFF', desc: 'Al cruzar la línea azul puedes comprar una entrada por cada hotel tuyo con edificio principal (máximo 8 por hotel, una por casilla).' },
+  { ico: '⛩️', nombre: 'Entrada de un hotel', color: '#888', desc: 'Pórtico del color del hotel en el borde del camino. Si un rival cae en esa casilla, tira el dado y te paga noches × tarifa del hotel.' },
+  { ico: '🚩', nombre: 'Bandera del dueño', color: '#E0243A', desc: 'Marca de qué jugador es el propietario del hotel.' },
+];
+// Líneas que se cruzan entre dos casillas consecutivas: el Banco (cobras 3000) y el Ayuntamiento (compras entradas)
+export const LINEA_BANCO = 41;          // entre la casilla 41 y la 42
+export const LINEA_AYTO = 27;           // entre la 27 y la 28
+// Terrenos: celdas [fila, columna] de cada hotel
+const rect = (f0, c0, f1, c1) => { const o = []; for (let f = f0; f <= f1; f++) for (let c = c0; c <= c1; c++) o.push([f, c]); return o; };
+export const TERRENOS = {
+  fuji: rect(0, 2, 2, 5), boom: rect(2, 7, 4, 7), etoile: rect(4, 9, 5, 12), pres: rect(0, 9, 2, 13), royal: rect(4, 3, 9, 5),
+  waik: [...rect(7, 12, 7, 13), ...rect(3, 14, 10, 16)], taj: [...rect(9, 7, 10, 7), ...rect(11, 7, 12, 9)], safari: rect(11, 2, 12, 6),
+};
+// Edificios públicos del centro y adornos
+export const BANCO = { f0: 6, c0: 6, f1: 7, c1: 7 };
+export const AYUNTAMIENTO = { f0: 6, c0: 9, f1: 7, c1: 10 };
+export const LAGO = { f0: 9, c0: 9, f1: 9, c1: 12 };
+
+// ---------- derivados (adyacencias) ----------
+const clave = (f, c) => f + ',' + c;
+const idxCamino = new Map(CAMINO.map(([f, c], i) => [clave(f, c), i]));
+const VEC = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+// Para cada casilla: terrenos a los que da y, para cada uno, la dirección [df, dc] hacia el terreno (para colocar la entrada)
+export const LADOS = CAMINO.map(() => []);
+export const CASILLAS_DE = {};
+for (const [id, celdas] of Object.entries(TERRENOS)) {
+  CASILLAS_DE[id] = [];
+  for (const [f, c] of celdas) for (const [df, dc] of VEC) {
+    const i = idxCamino.get(clave(f + df, c + dc)); if (i == null) continue;
+    if (!LADOS[i].some(l => l.h === id)) { LADOS[i].push({ h: id, d: [-df, -dc] }); CASILLAS_DE[id].push(i); }
+  }
+  CASILLAS_DE[id].sort((a, b) => a - b);
+}
+// Casillas de compra: solo valen si dan a algún terreno
+export const ADYACENTES = LADOS.map(l => l.map(x => x.h));
+export const casillaCompra = i => TIPO[i] === 'C' && ADYACENTES[i].length > 0;
+export const dedicada = (i, h) => ADYACENTES[i].length === 1 && ADYACENTES[i][0] === h;
+
+export const NOMBRE_CASILLA = i => (INFO_TIPO[TIPO[i]].nombre + (ADYACENTES[i].length ? ' · ' + ADYACENTES[i].map(h => HOTELES[h].nombre).join(' / ') : ''));
+
+// Dónde se levanta cada edificio dentro del terreno: [fila0, col0, fila1, col1] (celdas, inclusive). El último rectángulo es la instalación de ocio.
+export const ANCLAS = {
+  fuji: [[0, 2, 1, 3], [0, 4, 1, 5], [2, 2, 2, 3], [2, 4, 2, 5]],
+  boom: [[2, 7, 3, 7], [4, 7, 4, 7]],
+  etoile: [[4, 9, 5, 9], [4, 10, 4, 10], [5, 10, 5, 10], [4, 11, 4, 11], [5, 11, 5, 11], [4, 12, 5, 12]],
+  pres: [[0, 9, 1, 10], [0, 11, 1, 12], [0, 13, 1, 13], [2, 9, 2, 12], [2, 13, 2, 13]],
+  royal: [[4, 3, 5, 5], [6, 3, 6, 5], [7, 3, 7, 5], [8, 3, 8, 5], [9, 3, 9, 5]],
+  waik: [[3, 14, 5, 16], [6, 14, 7, 16], [7, 12, 7, 13], [8, 14, 8, 16], [9, 14, 9, 16], [10, 14, 10, 16]],
+  taj: [[11, 7, 12, 8], [9, 7, 10, 7], [11, 9, 11, 9], [12, 9, 12, 9]],
+  safari: [[11, 2, 12, 3], [11, 4, 11, 4], [12, 4, 12, 4], [11, 5, 12, 6]],
+};
+
+// Zona realmente usada del mapa (celdas, límites incluidos), para recortar el tablero y que no sobre margen
+export const CAJA = (() => { let r0 = 99, c0 = 99, r1 = -1, c1 = -1; const m = ([r, c]) => { r0 = Math.min(r0, r); c0 = Math.min(c0, c); r1 = Math.max(r1, r); c1 = Math.max(c1, c); };
+  CAMINO.forEach(m); Object.values(TERRENOS).forEach(l => l.forEach(m)); return { r0, c0, r1, c1 }; })();

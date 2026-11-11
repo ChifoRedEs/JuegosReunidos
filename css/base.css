@@ -1,4 +1,4 @@
-/* ===== Juegos Reunidos · estilos globales (diseño vivo) ===== */
+/* ===== JugamiGO · estilos globales (diseño vivo) ===== */
 :root{--bg:#E9F0FF;--bg2:#F6ECFF;--ink:#17214A;--mut:#56638C;--card:#fff;--line:#CFD9F6;--red:#FF4757;--blue:#2F6BFF;--yel:#FFC21A;--ok:#0FB56A;--purple:#7A4DFF;--orange:#FF7A1A;--pink:#FF4FA3;--teal:#0FB3C9;--sel:#D9E6FF;--bad:#FFE0E3;--same:#BDD2FF;--head1:#6A3DF0;--head2:#2F6BFF;--dark:#6B4A36;--light:#E9D5B7;color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1630;--bg2:#1A1040;--ink:#EEF2FF;--mut:#A3AED6;--card:#1B2652;--line:#33427A;--sel:#2A3F7D;--bad:#5A2432;--ok:#3DDC97;--same:#35509B;--head1:#4B2DB8;--head2:#1F4FC9;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0F1630;--bg2:#1A1040;--ink:#EEF2FF;--mut:#A3AED6;--card:#1B2652;--line:#33427A;--sel:#2A3F7D;--bad:#5A2432;--ok:#3DDC97;--same:#35509B;--head1:#4B2DB8;--head2:#1F4FC9;color-scheme:dark}

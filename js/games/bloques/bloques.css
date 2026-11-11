@@ -1,0 +1,34 @@
+/* Bloques */
+.blrecs{display:flex;flex-wrap:wrap;gap:6px 12px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin:8px 0;font-size:13px}
+.blrecs>b{width:100%}
+.blhud{display:flex;justify-content:space-between;gap:6px;margin:4px 0 6px}
+.blhud span{flex:1;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:3px 6px;text-align:center;display:flex;flex-direction:column}
+.blhud small{font-size:10.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.blhud b{font:800 18px 'Baloo 2',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.blhud b i{font-style:normal;font-size:12px;color:var(--mut)}
+.blhud b.poco{color:var(--red)}
+.blzona{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.6fr) minmax(0,1fr);gap:6px;align-items:start;max-width:440px;margin:0 auto}
+.bllado{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px 3px}
+.bllado small{font-size:10.5px;font-weight:800;color:var(--mut)}
+.blmini{display:block;width:100%;max-width:100%}
+.blres,.blpausa{padding:4px 0;min-height:34px;width:90%;font-size:17px}
+.bltab{position:relative;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px;overflow:hidden;box-shadow:0 8px 20px rgba(20,20,60,.35)}
+.bltab canvas{display:block;width:100%}
+.blover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,10,30,.5);cursor:pointer}
+.blover[hidden]{display:none}
+.blover>div{background:var(--card);color:var(--ink);border-radius:16px;padding:12px 14px;text-align:center;display:flex;flex-direction:column;gap:3px;max-width:92%;box-shadow:0 8px 22px rgba(0,0,0,.35)}
+.blover b{font:800 18px/1.2 'Baloo 2',system-ui,sans-serif}
+.blover span{font-size:12.5px;font-weight:700;color:var(--mut)}
+.blover .g{font:800 17px 'Baloo 2',system-ui,sans-serif;color:var(--purple)}
+.blover .rec{color:var(--ok);font-weight:800}
+.blover .bts{display:flex;gap:6px;justify-content:center;margin-top:4px}
+.bllet{position:absolute;left:0;right:0;top:38%;text-align:center;pointer-events:none;opacity:0;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.bllet b{display:block;font:800 22px 'Baloo 2',system-ui,sans-serif;color:#FFE27A}
+.bllet span{font-weight:800;font-size:13px}
+.bllet.ver{animation:blletrero 1.1s ease-out}
+@keyframes blletrero{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.1)}70%{opacity:1;transform:translateY(-10px)}100%{opacity:0;transform:translateY(-30px)}}
+.blbots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:440px;margin:10px auto 2px}
+.blbots[hidden]{display:none}
+.blbots button{min-height:52px;font-size:22px;padding:0;touch-action:none;user-select:none;-webkit-user-select:none}
+.blbots .bltodo{grid-column:1 / -1;min-height:46px;font-size:16px;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
+.blayuda{text-align:center;font-size:12px}

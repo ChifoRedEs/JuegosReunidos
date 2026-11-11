@@ -1,0 +1,47 @@
+/* Bingo Live */
+.juego-bingolive .bgHud{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:4px 0 8px}
+.juego-bingolive .bgAct{display:flex;align-items:center;gap:10px;min-width:0}
+.juego-bingolive .bgBola{flex:none;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.5),transparent 40%),var(--tx,var(--c));box-shadow:0 5px 12px rgba(0,0,0,.35),inset 0 -5px 8px rgba(0,0,0,.2)}
+.juego-bingolive .bgBola em{width:66%;height:66%;border-radius:50%;background:#fff;color:#1b1f2a;display:flex;align-items:center;justify-content:center;font:800 24px 'Baloo 2',system-ui,sans-serif;font-style:normal}
+.juego-bingolive .bgApodo{font-weight:800;font-size:15px;line-height:1.15;min-width:0;overflow-wrap:anywhere}
+.juego-bingolive .bgInfo{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:13px}
+.juego-bingolive .bgUlt{display:flex;gap:3px}
+.juego-bingolive .bgUlt i{font-style:normal;font-weight:800;font-size:11px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--c);color:#fff}
+.juego-bingolive .bgChips{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.juego-bingolive .bgChip{font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;border:2px solid var(--line);background:var(--card);color:var(--mut)}
+.juego-bingolive .bgChip.ok{background:#1E9E5A;border-color:#1E9E5A;color:#fff}
+.juego-bingolive .bgEsc{position:relative;width:100%;height:clamp(420px,68vh,860px);border-radius:16px;overflow:hidden;background:radial-gradient(120% 100% at 50% 0%,#24365f 0,#0c1426 70%);box-shadow:0 10px 26px rgba(10,15,50,.4)}
+@media (orientation:landscape) and (min-width:700px){.juego-bingolive .bgEsc{height:clamp(320px,72vh,820px)}}
+.juego-bingolive .bgWrap{position:relative}
+.juego-bingolive .bgAcc{position:absolute;top:10px;right:8px;width:134px;display:flex;flex-direction:column;gap:8px;z-index:3}
+.juego-bingolive .bgAcc .btn{width:100%;min-height:54px;font-size:14px;line-height:1.15;padding:6px 8px;white-space:normal}
+.juego-bingolive .bgNota{text-align:center;margin:2px 0}
+/* comprobar cartón (panel táctil) */
+.bgModo{margin-bottom:4px}
+.bgModo .btn{flex:1}
+.bgCarton{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.bgFila{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.bgSlot{height:46px;border:2px dashed var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:800 20px 'Baloo 2',system-ui,sans-serif;cursor:pointer}
+.bgSlot.lleno{border-style:solid;background:#fff7d6}
+.bgSlot.act{outline:3px solid var(--blue);outline-offset:1px}
+.bgTeclas{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0}
+.bgKey{aspect-ratio:1;min-width:0;padding:0;border:0;border-bottom:3px solid var(--c);border-radius:7px;background:var(--card);color:var(--ink);font:800 clamp(11px,3.3vw,15px) 'Baloo 2',system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+.bgKey:active{background:var(--c);color:#fff}
+.bgKey:disabled{opacity:.25}
+.bgCfg{margin:8px 0}
+.bgCfg>b{display:block;margin-bottom:4px}
+.bgRes{margin-top:10px;padding:10px 12px;border-radius:12px;font-weight:700;font-size:14px;line-height:1.3}
+.bgRes:empty{display:none}
+.bgRes.ok{background:#1E9E5A22;border:2px solid #1E9E5A}
+.bgRes.mal{background:#D61F1F18;border:2px solid #D61F1F}
+/* versión 2D (sin WebGL) */
+.bg2d{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px}
+.bg2d-g{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;width:100%;max-width:640px}
+.bg2d-g i{font-style:normal;font-weight:800;font-size:clamp(10px,2.6vw,18px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#3b4a5c;color:#8693a6;transition:.3s}
+.bg2d-g i.on{background:var(--c);color:#fff;transform:scale(1.08);box-shadow:0 0 10px var(--c)}
+.bg2d-b{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 38%,var(--c) 39%);color:#1b1f2a;font:800 38px 'Baloo 2',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.bg2d-b[hidden]{display:none}
+.bg2d-b.rueda{animation:bgrueda 1.5s ease-in-out}
+.bg2d-b.cae{animation:bgcae .7s ease-in forwards}
+@keyframes bgrueda{from{transform:translate(-120px,-60px) rotate(0)}to{transform:translate(0,0) rotate(720deg)}}
+@keyframes bgcae{to{transform:translateY(120px) scale(.3);opacity:.2}}

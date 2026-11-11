@@ -1,0 +1,17 @@
+/* Air Hockey */
+.ahhud{display:flex;align-items:center;gap:8px;margin:4px auto 8px;max-width:460px}
+.ahhud span{flex:1;display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--card);border:2px solid var(--line);border-left:6px solid var(--c);border-radius:14px;padding:4px 12px}
+.ahhud span:last-child{flex-direction:row-reverse;border-left-width:2px;border-right:6px solid var(--c)}
+.ahhud small{font-weight:800;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ahhud b{font:800 28px/1.1 'Baloo 2',system-ui,sans-serif;color:var(--c);font-variant-numeric:tabular-nums}
+.ahhud em{font-style:normal;font-size:12px;font-weight:800;color:var(--mut);text-align:center;white-space:nowrap}
+.ahzona{position:relative;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:22px;overflow:hidden;box-shadow:0 12px 28px rgba(10,15,50,.35)}
+.ahzona canvas{display:block;width:100%}
+.ahover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,8,30,.45);cursor:pointer}
+.ahover[hidden]{display:none}
+.ahover>div{background:var(--card);color:var(--ink);border-radius:18px;padding:14px 20px;text-align:center;display:flex;flex-direction:column;gap:5px;box-shadow:0 10px 26px rgba(0,0,0,.35);max-width:86%}
+.ahover b{font:800 22px 'Baloo 2',system-ui,sans-serif}
+.ahover span{font-size:13px;font-weight:700;color:var(--mut)}
+.ahover .g{font:800 34px 'Baloo 2',system-ui,sans-serif;color:var(--purple)}
+.ahover .bts{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.ahbar{justify-content:center}

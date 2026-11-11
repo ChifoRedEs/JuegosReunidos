@@ -1,6 +1,6 @@
 # Cómo añadir un juego
 
-1. Copia `js/games/_plantilla` a `js/games/<id>` (por ejemplo `conecta4`).
+1. Copia `js/games/plantilla` a `js/games/<id>` (por ejemplo `cuatroenlinea`).
 2. En `index.js` exporta `mount`, `unmount`, `validar`, `migrarV1`, `resumen` (la plantilla explica cada una y la `api` que recibes).
 3. Da de alta el juego en `js/registry.js` (id, nombre, icono, color, categoría, descripción y el `import()`), y quítalo de `PROXIMAMENTE`.
 4. Pon la lógica sin DOM en `reglas.js` (o `generador.js`, `ia.js`) para poder probarla con Node; añade pruebas en `tests/motores.mjs`.
@@ -17,7 +17,7 @@
 
 ## Juegos de dos jugadores por turnos (CPU o persona)
 Si tu juego es de tablero y por turnos (Reversi, Cuatro en línea, Batalla Naval con dos jugadores…), no escribas el controlador: usa `core/duelo.js`.
-Mira `js/games/tresenraya/` y `js/games/conecta4/` como modelo. Solo aportas:
+Mira `js/games/tresenraya/` y `js/games/cuatroenlinea/` como modelo. Solo aportas:
 - `reglas.js`: `VARIANTES`, `estadoInicial`, `jugadas`, `aplicar`, `validarEstado`, `ia` (con `core/ia/minimax.js`) y `reglasHTML`. Sin DOM, así se prueba con Node.
 - `index.js`: la vista (`montar` / `pintar`) y la llamada `crearDuelo({...})`.
 Con eso tienes gratis: varios tableros, contra CPU (3 niveles) o 2 jugadores, quién empieza, marcador, deshacer, pista, estadísticas y guardado.
@@ -58,7 +58,7 @@ Los juegos nuevos deben seguir `docs/MARCA.md`: pantalla de partida con `<p clas
 
 ## Agrupar juegos
 Para que dos juegos salgan como una sola ficha en Inicio, añade un grupo a `GRUPOS` en `js/registry.js`:
-`{ id: 'parchis-oca', nombre: 'Partxis & Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['parchis', 'oca'] }`.
+`{ id: 'partxis-oca', nombre: 'Partxis & Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '…', juegos: ['partxis', 'juegodelaoca'] }`.
 Cada juego conserva su id, su partida guardada y sus estadísticas.
 
 ## Juegos en 3D (Three.js)
@@ -70,7 +70,7 @@ Cada juego conserva su id, su partida guardada y sus estadísticas.
 - `mesacartas3d.js`: mesa de póker (Hold'em y Póker cubierto): `crearMesaCartas3D(cont)` → `pintar({ bote, tablero, bots, yo, nCartas, mostrarTablero })`, `alCarta(k)` y `recolor()`.
 - `anillo3d.js`: tableros de 40 casillas en anillo (Magnate): `crearVista(cont, { estilo, grupos, titulo, ... })`. Hotel tiene su propia escena (`hotel/vista3d.js`) y respaldo SVG (`hotel/vista2d.js`).
 
-**Vistas propias** (junto al juego): `sokoban/vista3d.js`, `rummy/vista3d.js`, `parchis/vista3d.js`, `oca/vista3d.js`, `flota/vista3d.js`, `billar/vista3d.js`, `ruleta/vista3d.js`. Todas siguen el mismo patrón: la vista **solo dibuja** (recibe el estado y devuelve toques) y el juego conserva sus reglas.
+**Vistas propias** (junto al juego): `encajados/vista3d.js`, `rummy/vista3d.js`, `partxis/vista3d.js`, `juegodelaoca/vista3d.js`, `batallanaval/vista3d.js`, `billar/vista3d.js`, `ruletamillonaria/vista3d.js`. Todas siguen el mismo patrón: la vista **solo dibuja** (recibe el estado y devuelve toques) y el juego conserva sus reglas.
 
 **Cómo se integra en un juego existente (patrón usado en los 9 juegos)**
 1. Grupo de Apariencia `{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }`.
@@ -112,7 +112,7 @@ No hace falta código extra: cuando tu juego anota el final con `api.registrar({
 Las animaciones están en `img/victoria/*.webp` y se declaran en `ANIMACIONES` de `js/core/victoria.js` (imagen, fondo de la ventana y efecto opcional a pantalla completa: confeti o lluvia de emojis). Para añadir una: copia el .webp (animado, con transparencia si quieres) y añade una línea.
 
 ## Bancos de imágenes (Match-Up)
-Las imágenes viven en `img/memorama/<tema>/<id>.webp` con un `nombres.json` (`{id: "Nombre"}`) por tema. Tras añadir/quitar imágenes o un tema nuevo (añádelo al dict `TEMAS` del script) ejecuta `python3 tools/generar_memorama.py`, que regenera `js/games/memorama/bancos.js`.
+Las imágenes viven en `img/matchup/<tema>/<id>.webp` con un `nombres.json` (`{id: "Nombre"}`) por tema. Tras añadir/quitar imágenes o un tema nuevo (añádelo al dict `TEMAS` del script) ejecuta `python3 tools/generar_matchup.py`, que regenera `js/games/matchup/bancos.js`.
 
 ## Apariencia de las fichas (js/core/fichas.js)
 Color (más de 45), textura (8), forma (5) y tamaño de las piezas, común a varios juegos. Todo es «Original» por defecto, así que el juego no cambia hasta que el jugador elige algo.
@@ -122,10 +122,10 @@ Color (más de 45), textura (8), forma (5) y tamaño de las piezas, común a var
    - **HTML/CSS**: carga `css/fichas.css` (`api.css(new URL('../../../css/fichas.css', import.meta.url))`), pon la clase `.fx` en la pieza (o `.fxb` si el dibujo está en su `::before`) y llama a `aplicarVars(elemento, est)`; el color llega en `--fx-c` / `--fx-c2`. Si la textura tapa el color de fondo, añade `background-color` en el CSS del juego.
    - **Canvas 2D**: `spriteFicha(colorBase, est, w, h, radio)` devuelve un lienzo con color, textura y forma (con caché) para `drawImage`; `variantes(est.hex, n)` reparte un color en n tonos si las piezas deben distinguirse. Para terrenos pintados píxel a píxel: `pixelTextura(est.tex, x, y)`.
    - **Three.js**: `geoCaja(T, w, h, d, est.forma)` (caja redondeada/biselada con UV) y `capaTextura(ctx, 0, 0, w, h, est.tex)` sobre el lienzo del mapa; `est.esc` escala la pieza.
-Opciones útiles: `color:false` (si las piezas necesitan sus colores para jugar: Encajados, Deslizadas, Bloques, Rompe-Ladrillos) y `pocos:true` (paleta de 18 colores, solo muestras sin nombre: Guerra de Orugas; Dominó usa su propia lista). Juegos que ya lo usan: Encajados, Deslizadas, Bloques, Rompe-Ladrillos, Guerra de Orugas (terreno), Ajedrez, Damas, 3 en raya, Cuatro en Línea, Partxis, Oca, Rummy, Magnate, Hotel y Batalla Naval. Los juegos de dos bandos o varios jugadores usan `lados:[…]` (un color por bando) y sobrescriben sus propias variables CSS o el color que pasan a la vista 3D (ver `damas`, `parchis`, `hotel`).
+Opciones útiles: `color:false` (si las piezas necesitan sus colores para jugar: Encajados, Deslizadas, Bloques, Rompe-Ladrillos) y `pocos:true` (paleta de 18 colores, solo muestras sin nombre: Guerra de Orugas; Dominó usa su propia lista). Juegos que ya lo usan: Encajados, Deslizadas, Bloques, Rompe-Ladrillos, Guerra de Orugas (terreno), Ajedrez, Damas, 3 en raya, Cuatro en Línea, Partxis, Oca, Rummy, Magnate, Hotel y Batalla Naval. Los juegos de dos bandos o varios jugadores usan `lados:[…]` (un color por bando) y sobrescriben sus propias variables CSS o el color que pasan a la vista 3D (ver `damas`, `partxis`, `hotel`).
 
 ## Caras de «¿Qué cara tienes?» (avatares)
-`js/games/quecara/avatar.js` compone una cara como un SVG a partir de piezas por capas (`piezas.js`, generado con `python tools/generar_piezas.py` desde `tools/avatares/<pieza>/<forma>.svg`; el marcador `$fillColor` se sustituye por el color). Una cara es un objeto pequeño (`nm, sx, pi, pe, pc, …`); `caraValida(f)` la normaliza, `svgDe(f)` devuelve el SVG (con ids únicos) y `generarCaras(n, semilla, vectorDe)` crea un tablero repartido y repetible. Para añadir una pieza: dibuja el SVG en `tools/avatares/<pieza>/` (coordenadas absolutas de la cara, 4 px de contorno negro), añade la forma al catálogo de `avatar.js` y, si se puede preguntar por ella, una pregunta en `preguntas.js`. Las 30 caras por defecto se regeneran con `node tools/generar_caras_quecara.mjs`. Crédito obligatorio (licencia MIT): Vue Color Avatar, de LeoKu.
+`js/games/quecaratienes/avatar.js` compone una cara como un SVG a partir de piezas por capas (`piezas.js`, generado con `python tools/generar_piezas.py` desde `tools/avatares/<pieza>/<forma>.svg`; el marcador `$fillColor` se sustituye por el color). Una cara es un objeto pequeño (`nm, sx, pi, pe, pc, …`); `caraValida(f)` la normaliza, `svgDe(f)` devuelve el SVG (con ids únicos) y `generarCaras(n, semilla, vectorDe)` crea un tablero repartido y repetible. Para añadir una pieza: dibuja el SVG en `tools/avatares/<pieza>/` (coordenadas absolutas de la cara, 4 px de contorno negro), añade la forma al catálogo de `avatar.js` y, si se puede preguntar por ella, una pregunta en `preguntas.js`. Las 30 caras por defecto se regeneran con `node tools/generar_caras_quecara.mjs`. Crédito obligatorio (licencia MIT): Vue Color Avatar, de LeoKu.
 
 ## Dado 3D común (`core/dado3d.js`)
 `const D = await crearDado3D(contenedor, { n: 1|2, alClic, etiqueta })` pinta un lienzo con 1 o 2 dados; el propio dado es el botón de tirar (no pongas un botón «Tirar»). `D.activar(bool, 'Toca el dado')` lo marca como pulsable, `await D.tirar([v1, v2], ms)` lo anima hasta el valor ya decidido por el motor, `D.poner(vals|null)` muestra valores sin animar, `D.color('#hex')` tiñe el dado y `D.estilo(asp.valores)` aplica la apariencia (añade `...grupoDado()` al `api.aspecto([...])` del juego y llama a `D.estilo` al crear el dado y en la función de cambio de aspecto), `D.destruir()` lo libera (llámalo en `unmount` y al reconstruir la pantalla). Sin WebGL usa un dado plano HTML. Contenedor: `<div class="dadozona">` (estilos en `css/marca.css`). Lo usan Partxis, Oca, Magnate Urbano y Hotel.
@@ -153,7 +153,7 @@ Bingo (3.52.0): `js/core/bingo/` es el núcleo compartido de Bingo Live y del fu
 
 Bingo Mobile (3.55.0): usa el núcleo `js/core/bingo/` y añade `partida.js` (lógica pura de una partida: tú + hasta 8 CPU, cartones, marcas, premios `l1`/`l2`/`b`, reparto del bote; el estado es JSON) y `cartones3d.js` (cartones como placas 3D con fichas de marca; el toque se convierte en cartón/fila/columna; sin WebGL se dibujan en canvas 2D). Bingo Live y Bingo Mobile forman el grupo «Bingo's» en `GRUPOS`. Pruebas: `node tests/bingomobile.mjs`.
 
-Puentes Hashi (3.64.0): `js/games/hashi/` — `motor.js` (lógica pura: `construir` aristas entre islas vecinas y cruces, `resolver` por propagación + búsqueda que cuenta soluciones y dice si hubo que adivinar, `generar(nivel)` con solución única, `pista`), `index.js` (SVG con las imágenes de `img/`: islas, tramo de puente repetido con `<pattern>`, mar, marco por `border-image`, boyas y adornos animados), `hashi.css`, `mini.js` (tableros pequeños de ejercicio para el tutorial) y `img/*.webp` (arte propio). Adornos del mar: lista `ADORNOS` de `index.js` (`[imagen, ancho %, segundos, ondula]`) y `ponerAdornos()`; para añadir uno basta la imagen `adorno-*.webp` (mirando a la derecha) y una fila. Temas de islas en `TEMAS` de `index.js` (3 imágenes por tema: `<tema>1-3.webp`); para añadir un tema, suma las 3 imágenes, una entrada en `TEMAS` y una opción en el grupo `islas` de `aspecto`. Navidad solo entra en «Mezcladas/Revueltas» en diciembre y enero (`navidadActiva`). Reemplaza a Crystalogic, retirado en esa versión.
+Puentes Hashi (3.64.0): `js/games/puenteshashi/` — `motor.js` (lógica pura: `construir` aristas entre islas vecinas y cruces, `resolver` por propagación + búsqueda que cuenta soluciones y dice si hubo que adivinar, `generar(nivel)` con solución única, `pista`), `index.js` (SVG con las imágenes de `img/`: islas, tramo de puente repetido con `<pattern>`, mar, marco por `border-image`, boyas y adornos animados), `puenteshashi.css`, `mini.js` (tableros pequeños de ejercicio para el tutorial) y `img/*.webp` (arte propio). Adornos del mar: lista `ADORNOS` de `index.js` (`[imagen, ancho %, segundos, ondula]`) y `ponerAdornos()`; para añadir uno basta la imagen `adorno-*.webp` (mirando a la derecha) y una fila. Temas de islas en `TEMAS` de `index.js` (3 imágenes por tema: `<tema>1-3.webp`); para añadir un tema, suma las 3 imágenes, una entrada en `TEMAS` y una opción en el grupo `islas` de `aspecto`. Navidad solo entra en «Mezcladas/Revueltas» en diciembre y enero (`navidadActiva`). Reemplaza a Crystalogic, retirado en esa versión.
 
 
 Tutoriales (3.63.0): para dar un tutorial a un juego, crea `js/tutoriales/<id>.js` con `export const TUTORIAL = { titulo, pasos:[{ t, h, demo?, req? }] }` y añade el id en `js/tutoriales/indice.js`. `demo(zona, ctx)` pinta un ejercicio y devuelve `{ ver() }` (botón «Muéstrame»); `ctx.ok/mal/info` dan la respuesta y, si el paso tiene `req`, «Siguiente» se bloquea hasta resolverlo. Ayudas en `js/core/tutorial.js`: `cartaEs`, `cartaFr`, `ficha`, `fila`, `marcar`, `elige`, `ciclo`, `pincha` (tablero de casillas tocables). Todo juego nuevo debería llevar el suyo. `app.js` ofrece el tutorial las 2 primeras veces (sin partida guardada) y desde 📖 Reglas. Crystalogic tiene el suyo propio.
@@ -161,3 +161,8 @@ Tutoriales (3.63.0): para dar un tutorial a un juego, crea `js/tutoriales/<id>.j
 Demostración animada en un tutorial (3.63.1): `js/tutoriales/demos.js` guarda `DEMOS[id] = { h, marcos: [[escena, explicación], …] }`; `indice.js` la inserta como 2.º paso («Así se juega») con el helper `pase`. Cuidado con los nombres de clase CSS de los juegos: no reutilices los de la app (por ejemplo `.ini` de la pantalla de inicio, que pinta el fondo JR).
 
 No nombrar archivos ni carpetas con `_` inicial en lo que se sirve por GitHub Pages: Jekyll los ignora (404) salvo que exista `.nojekyll` (3.63.2 lo incluye, pero mejor no depender de ello).
+
+
+## Nombres y carpetas
+
+El `id` de un juego es su nombre público en minúsculas, sin tildes, espacios ni signos (`Código Cifrado` → `codigocifrado`) y es el nombre de todo lo suyo: `js/games/<id>/`, `js/tutoriales/<id>.js`, `tests/<id>.mjs`, `img/<id>/`, la clase `.juego-<id>` y las claves guardadas. Si algún día se cambia un id, hay que añadirlo a `IDS_ANTIGUOS` en `js/core/migrar_ids.js` para no perder los datos de los jugadores. Los ids antiguos (klotski, mastermind, hashi, memorama…) ya no existen.

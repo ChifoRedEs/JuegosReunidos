@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Genera js/games/quecara/piezas.js a partir de tools/avatares/<pieza>/<forma>.svg
+"""Genera js/games/quecaratienes/piezas.js a partir de tools/avatares/<pieza>/<forma>.svg
 
 Las piezas de rostro son de «Vue Color Avatar» de LeoKu (licencia MIT, ver LICENSE-vue-color-avatar.txt);
 las de bigote, perilla, barba, gafas de sol, pecas, pelo rizado, entradas, gorra, sombrero de ala, de copa, lazo y diadema son nuevas, dibujadas en el mismo estilo.
@@ -9,7 +9,7 @@ Uso: python tools/generar_piezas.py
 import json, re, pathlib
 RAIZ = pathlib.Path(__file__).resolve().parent
 ORIGEN = RAIZ / 'avatares'
-DESTINO = RAIZ.parent / 'js' / 'games' / 'quecara' / 'piezas.js'
+DESTINO = RAIZ.parent / 'js' / 'games' / 'quecaratienes' / 'piezas.js'
 
 def reducir(txt):
     ini = txt.index('>', txt.index('<svg')) + 1

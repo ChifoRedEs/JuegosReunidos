@@ -1,9 +1,9 @@
-// Genera js/games/quecara/defecto.js: las 30 caras por defecto de «¿Qué cara tienes?».
+// Genera js/games/quecaratienes/defecto.js: las 30 caras por defecto de «¿Qué cara tienes?».
 // Busca entre muchas semillas el reparto con más preguntas útiles y las guarda tal cual (así el tablero clásico no cambia aunque cambie el generador).
 // Uso: node tools/generar_caras_quecara.mjs
 import { writeFileSync } from 'node:fs';
-import { generarCaras, caraValida } from '../js/games/quecara/avatar.js';
-import { PREGUNTAS, vectorDe, disponibles } from '../js/games/quecara/preguntas.js';
+import { generarCaras, caraValida } from '../js/games/quecaratienes/avatar.js';
+import { PREGUNTAS, vectorDe, disponibles } from '../js/games/quecaratienes/preguntas.js';
 
 let mejor = null;
 for (let semilla = 1; semilla <= 3000; semilla++) {
@@ -17,4 +17,4 @@ for (let semilla = 1; semilla <= 3000; semilla++) {
 console.log('semilla', mejor.semilla, 'preguntas útiles', mejor.util, '/', PREGUNTAS.length);
 for (const f of mejor.c) if (!caraValida(f)) throw new Error('cara inválida ' + f.nm);
 const lineas = mejor.c.map(f => '  ' + JSON.stringify(f)).join(',\n');
-writeFileSync(new URL('../js/games/quecara/defecto.js', import.meta.url), `// GENERADO por tools/generar_caras_quecara.mjs (semilla ${mejor.semilla}) — las 30 caras por defecto de «¿Qué cara tienes?».\n// Caras: dibujos de Vue Color Avatar (LeoKu, MIT) y piezas nuevas en el mismo estilo.\nexport const CARAS_DEFECTO = [\n${lineas},\n];\n`);
+writeFileSync(new URL('../js/games/quecaratienes/defecto.js', import.meta.url), `// GENERADO por tools/generar_caras_quecara.mjs (semilla ${mejor.semilla}) — las 30 caras por defecto de «¿Qué cara tienes?».\n// Caras: dibujos de Vue Color Avatar (LeoKu, MIT) y piezas nuevas en el mismo estilo.\nexport const CARAS_DEFECTO = [\n${lineas},\n];\n`);
