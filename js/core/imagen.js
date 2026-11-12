@@ -9,7 +9,7 @@ function ajustarTexto(c, t, x, y, max, fuente, px, col) {
   c.fillStyle = col; c.fillText(t, x, y);
 }
 /** Devuelve un Blob PNG de 1080×1080: { titulo, linea, pie } */
-export async function crearImagen({ titulo = '', linea = '', pie = '' }) {
+export async function crearImagen({ titulo = '', linea = '', pie = '', emblema = '' }) {
   try { await document.fonts.load("900 40px Fraunces"); await document.fonts.load("800 30px Nunito"); } catch { /* sin fuentes: se usa la de reserva */ }
   const W = 1080, cv = document.createElement('canvas'); cv.width = cv.height = W; const c = cv.getContext('2d');
   const fondo = await cargar('fondo-papel.webp');
@@ -24,7 +24,11 @@ export async function crearImagen({ titulo = '', linea = '', pie = '' }) {
   c.save(); c.translate(sx, sy); c.rotate(-0.1);
   c.shadowColor = 'rgba(20,33,61,.35)'; c.shadowOffsetY = 10; c.shadowBlur = 0;
   if (sello) c.drawImage(sello, -S / 2, -S / 2, S, S);
-  c.shadowColor = 'transparent'; c.fillStyle = '#FFF8EC'; c.font = `900 ${S * 0.34}px ${TIT}`; c.textBaseline = 'middle'; c.fillText('GO', 0, S * 0.02); c.restore();
+  c.shadowColor = 'transparent';
+  const emb = emblema ? await cargar('../sellos/' + emblema + '.webp') : null;
+  if (emb) { const E = S * 0.52; c.drawImage(emb, -E / 2, -E / 2, E, E); }
+  else { c.fillStyle = '#FFF8EC'; c.font = `900 ${S * 0.34}px ${TIT}`; c.textBaseline = 'middle'; c.fillText('GO', 0, S * 0.02); }
+  c.restore();
   c.textBaseline = 'alphabetic';
   ajustarTexto(c, linea, W / 2, 840, W - 180, `900 #px ${TIT}`, 68, '#E4572E');
   if (pie) ajustarTexto(c, pie, W / 2, 905, W - 180, `800 #px ${TXT}`, 38, '#34405F');
@@ -32,8 +36,8 @@ export async function crearImagen({ titulo = '', linea = '', pie = '' }) {
   return new Promise(res => cv.toBlob(res, 'image/png'));
 }
 /** Crea la imagen y la comparte (o la descarga). aviso: función para mostrar mensajes. */
-export async function compartirImagen({ titulo, linea, pie, texto = '' }, aviso = () => {}) {
-  const blob = await crearImagen({ titulo, linea, pie }); if (!blob) { aviso('No se pudo crear la imagen'); return; }
+export async function compartirImagen({ titulo, linea, pie, texto = '', emblema = '' }, aviso = () => {}) {
+  const blob = await crearImagen({ titulo, linea, pie, emblema }); if (!blob) { aviso('No se pudo crear la imagen'); return; }
   const f = new File([blob], 'jugamigo.png', { type: 'image/png' });
   try {
     if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'JugamiGO', text: texto }); return; }

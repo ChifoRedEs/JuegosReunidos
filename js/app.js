@@ -144,7 +144,7 @@ function crearApi(j, ent, mod, root) {
   // Barra inferior común (Nuevo panel / Configurar / Apariencia / Pausa-Salir): cada juego la pide con api.barraHtml() al final de su pantalla de partida.
   const PANEL = ['sopaletras', 'crucigramas', 'elrosco', 'ruletamillonaria', 'encadenadas', 'numerosyletras', 'elahorcado'];
   let celebrada = 0;
-  function selloVictoria() { const T = stats.todas(); return { n: Object.values(T).reduce((a, s) => a + (s && s.victorias || 0), 0), juego: (JUEGOS.find(j => j.id === id) || {}).nombre || '' }; }
+  function selloVictoria() { const T = stats.todas(); return { id, n: Object.values(T).reduce((a, s) => a + (s && s.victorias || 0), 0), juego: (JUEGOS.find(j => j.id === id) || {}).nombre || '' }; }
   function victoria() {
     if (aj.ajustes().celebrar === false || Date.now() - celebrada < 3000) return;
     celebrada = Date.now();
@@ -635,7 +635,7 @@ function vStats_(catSel = null) {
   const fcorta = t => t ? new Date(t).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
   const cards = JUEGOS.filter(j => j.categoria === elegida).map((j, i) => {
     const s = T[j.id], n = s && s.partidas ? s.partidas : 0, rot = ((i * 37) % 15) - 7;
-    return `<button type="button" class="st-cas ${n ? 'sellada' : ''}" data-stat-juego="${j.id}" style="--rot:${rot}deg" aria-haspopup="dialog" aria-label="${esc(j.nombre)}: ${n ? 'sellado, ' + n + (n === 1 ? ' partida' : ' partidas') : 'sin sellar'}"><span class="st-sl"><img src="img/marca/ruta-${j.categoria}.webp" alt="" width="64" height="64">${n ? '<i aria-hidden="true">✓</i>' : ''}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'Sin sellar'}</small>${n && s.ultima ? `<small class="st-f">${fcorta(s.ultima)}</small>` : ''}</button>`;
+    return `<button type="button" class="st-cas ${n ? 'sellada' : ''}" data-stat-juego="${j.id}" style="--rot:${rot}deg" aria-haspopup="dialog" aria-label="${esc(j.nombre)}: ${n ? 'sellado, ' + n + (n === 1 ? ' partida' : ' partidas') : 'sin sellar'}"><span class="st-sl"><span class="st-rot"><img src="img/marca/sello.webp" alt="" width="64" height="64"><img class="st-em" src="img/sellos/${j.id}.webp" alt="" width="34" height="34" loading="lazy"></span>${n ? '<i aria-hidden="true">✓</i>' : ''}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'Sin sellar'}</small>${n && s.ultima ? `<small class="st-f">${fcorta(s.ultima)}</small>` : ''}</button>`;
   }).join('');
   app.innerHTML = panelPasaporte + (nSell ? '' : '<div class="vacio"><img src="img/marca/vacio-partidas.webp" alt="" width="190" height="200"><p class="note">Tu pasaporte está en blanco. Termina una partida de cualquier juego y se sellará aquí.</p></div>') + panelLogros + '<div class="sep-ruta" role="presentation"></div>' + tabs + `<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
   $('#pasComp').addEventListener('click', async () => {

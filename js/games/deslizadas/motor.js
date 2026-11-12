@@ -219,10 +219,10 @@ export function generar(modo, tam, nivel, semilla = Math.random()) {
 }
 
 /* ---------- pista para números (A* ponderado) ---------- */
-export function pistaNumeros(S, limite = 120000) {
+const PLANES = new WeakMap();               // plan completo de la última búsqueda (no se guarda con la partida)
+function buscaNumeros(S, W, limite) {
   const { w, h } = S, n = w * h, b = new Array(n).fill(0);
   S.p.forEach(([x, y], i) => { b[y * w + x] = i + 1; });
-  const W = n <= 9 ? 1 : n <= 12 ? 2 : n <= 16 ? 3 : n <= 20 ? 6 : 9;
   const man = (v, c) => (v ? Math.abs((v - 1) % w - c % w) + Math.abs(((v - 1) / w | 0) - (c / w | 0)) : 0);
   let h0 = 0; b.forEach((v, c) => { h0 += man(v, c); });
   const abierta = [[h0 * W, 0, b.join(',')]], mejor = new Map([[b.join(','), [0, null, -1]]]);
@@ -241,8 +241,19 @@ export function pistaNumeros(S, limite = 120000) {
     }
   }
   if (!fin) return null;
-  let k = fin, ficha = -1; while (mejor.get(k)[1] !== null) { const [, pk, v] = mejor.get(k); ficha = v; k = pk; }
-  return ficha > 0 ? { i: ficha - 1 } : null;
+  const tab = [], mov = []; let k = fin;
+  while (mejor.get(k)[1] !== null) { const [, pk, v] = mejor.get(k); tab.push(pk); mov.push(v - 1); k = pk; }
+  return { tab: tab.reverse(), mov: mov.reverse() };
+}
+export function pistaNumeros(S, limite = 120000) {
+  const n = S.w * S.h, b = new Array(n).fill(0); S.p.forEach(([x, y], i) => { b[y * S.w + x] = i + 1; });
+  const clave = b.join(','), pl = PLANES.get(S);
+  if (pl) { const j = pl.tab.indexOf(clave); if (j >= 0) return { i: pl.mov[j] }; }       // seguimos el plan ya calculado (también tras deshacer)
+  const W = n <= 9 ? 1 : n <= 12 ? 2 : n <= 16 ? 3 : n <= 20 ? 6 : 9;
+  for (const [ww, lim] of [[W, limite], [W * 3, limite], [60, limite * 2]]) {          // si no hay camino a tiempo, se prueba con una búsqueda más voraz
+    const r = buscaNumeros(S, ww, lim); if (r && r.mov.length) { PLANES.set(S, r); return { i: r.mov[0] }; }
+  }
+  return null;
 }
 export function pista(S) {
   if (S.modo === 'colores') { const s = solucionColores(S.p, S.w, S.h); return s && s.length ? s[0] : null; }

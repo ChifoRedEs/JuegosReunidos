@@ -37,6 +37,7 @@ const CSS = `
 .vic-sello{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;text-align:left}
 .vic-sello-i{position:relative;width:64px;height:64px;flex:none;animation:vicSello .7s .55s cubic-bezier(.2,1.5,.4,1) both}
 .vic-sello-i img{width:100%;height:100%;display:block}
+.vic-sello-i img.vic-em{position:absolute;left:24%;top:24%;width:52%;height:52%;border-radius:50%}
 .vic-sello-i b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 22px 'Fraunces',Georgia,serif;color:#FFF8EC;transform:rotate(-8deg)}
 .vic-sello span{display:flex;flex-direction:column;line-height:1.15;min-width:0}
 .vic-sello strong{font:900 22px 'Fraunces',Georgia,serif}
@@ -108,7 +109,7 @@ export function celebrar({ nueva = null, etiqueta = 'Nueva partida', sello = nul
   if (nueva) { const bn = document.createElement('button'); bn.type = 'button'; bn.className = 'btn on grande'; bn.textContent = '🆕 ' + etiqueta; bn.addEventListener('click', () => { cerrar(); nueva(); }); bs.append(bn); }
   if (sello && sello.n) {
     const bp = document.createElement('button'); bp.type = 'button'; bp.className = 'btn'; bp.textContent = '📤 Compartir mi sello';
-    bp.addEventListener('click', async () => { try { const m = await import('./imagen.js'); await m.compartirImagen({ titulo: sello.juego ? '¡Victoria en ' + sello.juego + '!' : '¡Victoria!', linea: 'Sello n.º ' + sello.n.toLocaleString('es-ES'), pie: 'Otro destino para mi pasaporte', texto: '¡He ganado en JugamiGO!' }); } catch (e) { console.error(e); } });
+    bp.addEventListener('click', async () => { try { const m = await import('./imagen.js'); await m.compartirImagen({ emblema: sello.id, titulo: sello.juego ? '¡Victoria en ' + sello.juego + '!' : '¡Victoria!', linea: 'Sello n.º ' + sello.n.toLocaleString('es-ES'), pie: 'Otro destino para mi pasaporte', texto: '¡He ganado en JugamiGO!' }); } catch (e) { console.error(e); } });
     bs.append(bp);
   }
   const bc = document.createElement('button'); bc.type = 'button'; bc.className = 'btn'; bc.textContent = 'Ver el tablero'; bc.addEventListener('click', cerrar); bs.append(bc);
@@ -116,7 +117,7 @@ export function celebrar({ nueva = null, etiqueta = 'Nueva partida', sello = nul
   if (sello && sello.n) {
     st = document.createElement('div'); st.className = 'vic-sello'; st.setAttribute('role', 'status');
     const im = new Image(); im.alt = ''; im.src = new URL('../../img/marca/sello.webp', import.meta.url).href;
-    const go = document.createElement('b'); go.textContent = 'GO'; go.setAttribute('aria-hidden', 'true');
+    const go = sello.id ? new Image() : document.createElement('b'); if (sello.id) { go.alt = ''; go.className = 'vic-em'; go.src = new URL('../../img/sellos/' + sello.id + '.webp', import.meta.url).href; go.onerror = () => go.remove(); } else { go.textContent = 'GO'; go.setAttribute('aria-hidden', 'true'); }
     const tx = document.createElement('span'); tx.innerHTML = '<small>Sello</small>'; const nn = document.createElement('strong'); nn.textContent = 'n.º ' + sello.n.toLocaleString('es-ES'); tx.append(nn);
     if (sello.juego) { const g = document.createElement('small'); g.textContent = sello.juego; tx.append(g); }
     const caja = document.createElement('div'); caja.className = 'vic-sello-i'; caja.append(im, go); st.append(caja, tx);
