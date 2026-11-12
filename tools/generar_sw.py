@@ -17,7 +17,7 @@ for base, dirs, files in os.walk(RAIZ):
     dirs[:] = sorted(d for d in dirs if d not in EXCLUIR_DIRS and not d.startswith('_') and not d.startswith('.'))
     for f in sorted(files):
         rel0 = os.path.relpath(os.path.join(base, f), RAIZ).replace(os.sep, '/')
-        marca = rel0.startswith('img/marca/') and re.match(r'(ruta-|banner|fondo-|sello)', f)   # imágenes de marca imprescindibles: van en la instalación inicial
+        marca = rel0.startswith('img/marca/') and re.match(r'(ruta-|banner|fondo-|sello|separador-|vacio-)', f)   # imágenes de marca imprescindibles: van en la instalación inicial
         if f in EXCLUIR_ARCHIVOS or (os.path.splitext(f)[1].lower() not in EXT and not marca):
             continue
         # El diccionario (~6 MB) no se instala con la app: se baja solo cuando un juego lo pide (caché jr-diccionario)

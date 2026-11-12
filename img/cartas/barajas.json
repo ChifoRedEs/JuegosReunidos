@@ -144,6 +144,36 @@
  ],
  "tapetes": [
   {
+   "id": "t-0-baul",
+   "nombre": "Baúl de madera",
+   "archivo": "tapetes/0-baul.webp"
+  },
+  {
+   "id": "t-0-cuero-azul",
+   "nombre": "Cuero azul noche",
+   "archivo": "tapetes/0-cuero-azul.webp"
+  },
+  {
+   "id": "t-0-fieltro",
+   "nombre": "Fieltro con puntada",
+   "archivo": "tapetes/0-fieltro.webp"
+  },
+  {
+   "id": "t-0-lona",
+   "nombre": "Lona turquesa",
+   "archivo": "tapetes/0-lona.webp"
+  },
+  {
+   "id": "t-0-mapa",
+   "nombre": "Mapa antiguo",
+   "archivo": "tapetes/0-mapa.webp"
+  },
+  {
+   "id": "t-0-kraft",
+   "nombre": "Papel kraft",
+   "archivo": "tapetes/0-kraft.webp"
+  },
+  {
    "id": "t-amarillo",
    "nombre": "Amarillo",
    "archivo": "tapetes/amarillo.webp"

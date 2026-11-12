@@ -9,7 +9,7 @@
   --bg:#F4EBD9;--bg2:#EDE0C6;--ink:#14213D;--mut:#4A5470;--card:#FFFDF7;--line:#D6C7A8;
   --red:#D93A3A;--blue:#B5381A;--yel:#F2B134;--ok:#0F9B62;--purple:#D4481F;--orange:#E4572E;--pink:#D9487A;--teal:#1B998B;
   --sel:#F4E2B0;--bad:#FFDCD3;--same:#E9D9B5;--head1:#14213D;--head2:#1F3159;
-  --fondo-tile:url(../img/marca/fondo-papel.webp) 0 0/460px 460px repeat;--banner:url(../img/marca/banner.webp);--borde:#14213D;--duro:0 3px 0 #14213D;--sello:#B8401F;--lima:#C6FF3D;--velo:rgba(244,235,217,.12);--velo-cat:rgba(244,235,217,.06);
+  --fondo-tile:url(../img/marca/fondo-papel.webp) 0 0/460px 460px repeat;--separador:url(../img/marca/separador-papel.webp);--banner:url(../img/marca/banner.webp);--borde:#14213D;--duro:0 3px 0 #14213D;--sello:#B8401F;--lima:#C6FF3D;--velo:rgba(244,235,217,.12);--velo-cat:rgba(244,235,217,.06);
   --pan1:color-mix(in srgb,var(--head1) 4%,#FFFDF7);--pan2:color-mix(in srgb,var(--head2) 6%,#FFFDF7);
   --sombra-s:0 2px 0 rgba(20,33,61,.18);--sombra-m:0 3px 0 rgba(20,33,61,.28);--sombra-marca:0 3px 0 #7E2410;
   --grad-marca:linear-gradient(135deg,#D4481F,#B5381A);
@@ -20,7 +20,7 @@
   --blue:#B5381A;--purple:#E5572B;--ok:#4BE39A;--yel:#F2B134;--pink:#FF7AA2;--teal:#3CC8B8;
   --sel:#2A4180;--bad:#5A2432;--same:#2F4478;--head1:#0B1429;--head2:#14224A;
   --borde:#A8812F;--duro:0 3px 0 rgba(0,0,0,.55);--sello:#F2B134;--lima:#F2B134;--velo:rgba(11,20,41,.3);--velo-cat:rgba(11,20,41,.22);
-  --fondo-tile:url(../img/marca/fondo-noche.webp) 0 0/420px 420px repeat;--banner:url(../img/marca/banner-noche.webp);
+  --fondo-tile:url(../img/marca/fondo-noche-vertical.webp) center top/cover no-repeat;--separador:url(../img/marca/separador-noche.webp);--banner:url(../img/marca/banner-noche.webp);
   --pan1:var(--card);--pan2:color-mix(in srgb,var(--card) 88%,#000);
   --sombra-s:0 2px 0 rgba(0,0,0,.45);--sombra-m:0 3px 0 rgba(0,0,0,.55);--sombra-marca:0 3px 0 #5C1D0C;
   --grad-marca:linear-gradient(135deg,#D4481F,#B5381A);color-scheme:dark}}
@@ -29,7 +29,7 @@
   --blue:#B5381A;--purple:#E5572B;--ok:#4BE39A;--yel:#F2B134;--pink:#FF7AA2;--teal:#3CC8B8;
   --sel:#2A4180;--bad:#5A2432;--same:#2F4478;--head1:#0B1429;--head2:#14224A;
   --borde:#A8812F;--duro:0 3px 0 rgba(0,0,0,.55);--sello:#F2B134;--lima:#F2B134;--velo:rgba(11,20,41,.3);--velo-cat:rgba(11,20,41,.22);
-  --fondo-tile:url(../img/marca/fondo-noche.webp) 0 0/420px 420px repeat;--banner:url(../img/marca/banner-noche.webp);
+  --fondo-tile:url(../img/marca/fondo-noche-vertical.webp) center top/cover no-repeat;--separador:url(../img/marca/separador-noche.webp);--banner:url(../img/marca/banner-noche.webp);
   --pan1:var(--card);--pan2:color-mix(in srgb,var(--card) 88%,#000);
   --sombra-s:0 2px 0 rgba(0,0,0,.45);--sombra-m:0 3px 0 rgba(0,0,0,.55);--sombra-marca:0 3px 0 #5C1D0C;
   --grad-marca:linear-gradient(135deg,#D4481F,#B5381A);color-scheme:dark}
@@ -283,3 +283,15 @@ html[data-anim="no"] #splash{display:none}
 .juego .mrcab b,.juego .mmcab b,.juego .dmcab b{font:800 15px var(--f-titulo)}
 .juego .brtop{flex-wrap:wrap;gap:6px 8px}
 .juego .brtop .btn,.juego .brtop > span{font-size:12.5px;padding:4px 10px;white-space:nowrap;min-height:0}
+
+/* ---------- fondo oscuro: una imagen grande sin mosaico; vertical en móvil, horizontal en pantallas anchas (3.76.0) ---------- */
+@media (prefers-color-scheme:dark) and (orientation:landscape){:root:not([data-theme="light"]){--fondo-tile:url(../img/marca/fondo-noche-horizontal.webp) center/cover no-repeat}}
+@media (orientation:landscape){:root[data-theme="dark"]{--fondo-tile:url(../img/marca/fondo-noche-horizontal.webp) center/cover no-repeat}}
+
+/* ---------- separador de ruta y estados vacíos (3.76.0) ---------- */
+.sep-ruta{height:26px;margin:10px 0;background:var(--separador) center/contain no-repeat;pointer-events:none}
+.vacio{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:6px 8px}
+.vacio img{width:min(190px,62%);height:auto}
+.vacio .note{max-width:34ch;margin:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .vacio img{filter:drop-shadow(0 0 1.5px rgba(244,235,217,.95))}}
+:root[data-theme="dark"] .vacio img{filter:drop-shadow(0 0 1.5px rgba(244,235,217,.95))}

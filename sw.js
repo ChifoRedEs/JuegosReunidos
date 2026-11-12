@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-fd245782b5';
+const VERSION = 'jr-80a77a0e0a';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -24,6 +24,8 @@ const ARCHIVOS = [
 './img/catapulta/info.json',
 './img/marca/banner-noche.webp',
 './img/marca/banner.webp',
+'./img/marca/fondo-noche-horizontal.webp',
+'./img/marca/fondo-noche-vertical.webp',
 './img/marca/fondo-noche.webp',
 './img/marca/fondo-papel.webp',
 './img/marca/ruta-arcade.webp',
@@ -32,6 +34,10 @@ const ARCHIVOS = [
 './img/marca/ruta-palabras.webp',
 './img/marca/ruta-tablero.webp',
 './img/marca/sello.webp',
+'./img/marca/separador-noche.webp',
+'./img/marca/separador-papel.webp',
+'./img/marca/vacio-partidas.webp',
+'./img/marca/vacio-sin-conexion.webp',
 './img/matchup/animales/nombres.json',
 './img/matchup/banderas/nombres.json',
 './img/matchup/caras/nombres.json',
@@ -1534,6 +1540,12 @@ const CARTAS_TODO = [
 './img/cartas/francesa/FR-02/13-D.webp',
 './img/cartas/francesa/FR-02/13-P.webp',
 './img/cartas/francesa/FR-02/13-T.webp',
+'./img/cartas/tapetes/0-baul.webp',
+'./img/cartas/tapetes/0-cuero-azul.webp',
+'./img/cartas/tapetes/0-fieltro.webp',
+'./img/cartas/tapetes/0-kraft.webp',
+'./img/cartas/tapetes/0-lona.webp',
+'./img/cartas/tapetes/0-mapa.webp',
 './img/cartas/tapetes/amarillo.webp',
 './img/cartas/tapetes/arcoiris.webp',
 './img/cartas/tapetes/azul-claro.webp',
@@ -1553,7 +1565,7 @@ const DICC_TODO = [
 './data/diccionario/lemas-1f6f9c6b.txt'
 /*DICC-FIN*/
 ];
-const DESCARGA_MB = /*MB*/18/*MB-FIN*/;
+const DESCARGA_MB = /*MB*/19/*MB-FIN*/;
 // Tipografías de Google Fonts (Fraunces, Baloo 2, Chewy y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
 // para que sin conexión los textos se vean igual que con internet. Debe ser la MISMA dirección que en index.html.
 const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas', DICC = 'jr-diccionario';      // cachés que se conservan entre versiones

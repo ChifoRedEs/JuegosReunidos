@@ -524,7 +524,7 @@ function alternarFav(id, nodo) {
 function vFavoritos() {
   nombreVista = 'Favoritos'; cabTxt('JugamiGO');
   const js = favs().map(id => JUEGOS.find(j => j.id === id));
-  app.innerHTML = `<section class="panel"><h3>⭐ Mis favoritos</h3><p class="note">${js.length ? 'Tus juegos preferidos, a un toque. Pulsa la ★ de un juego para quitarlo.' : 'Aún no tienes favoritos. Toca la ☆ de cualquier juego (o de un resultado de la búsqueda) para guardarlo aquí.'}</p></section>`
+  app.innerHTML = `<section class="panel"><h3>⭐ Mis favoritos</h3>${js.length ? '<p class="note">Tus juegos preferidos, a un toque. Pulsa la ★ de un juego para quitarlo.</p>' : '<div class="vacio"><img src="img/marca/vacio-partidas.webp" alt="" width="190" height="200"><p class="note">Aún no tienes favoritos. Toca la ☆ de cualquier juego (o de un resultado de la búsqueda) para guardarlo aquí.</p></div>'}</section>`
     + (js.length ? `<div class="rejilla fav-rej">${js.map(ficha).join('')}</div>` : '') + `<div class="bar" style="margin-top:14px"><a class="btn on" href="#/">‹ Volver al inicio</a></div>`;
   colorearFichas();
 }
@@ -637,7 +637,7 @@ function vStats_(catSel = null) {
     const s = T[j.id], n = s && s.partidas ? s.partidas : 0, rot = ((i * 37) % 15) - 7;
     return `<button type="button" class="st-cas ${n ? 'sellada' : ''}" data-stat-juego="${j.id}" style="--rot:${rot}deg" aria-haspopup="dialog" aria-label="${esc(j.nombre)}: ${n ? 'sellado, ' + n + (n === 1 ? ' partida' : ' partidas') : 'sin sellar'}"><span class="st-sl"><img src="img/marca/ruta-${j.categoria}.webp" alt="" width="64" height="64">${n ? '<i aria-hidden="true">✓</i>' : ''}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'Sin sellar'}</small>${n && s.ultima ? `<small class="st-f">${fcorta(s.ultima)}</small>` : ''}</button>`;
   }).join('');
-  app.innerHTML = panelPasaporte + panelLogros + tabs + `<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
+  app.innerHTML = panelPasaporte + (nSell ? '' : '<div class="vacio"><img src="img/marca/vacio-partidas.webp" alt="" width="190" height="200"><p class="note">Tu pasaporte está en blanco. Termina una partida de cualquier juego y se sellará aquí.</p></div>') + panelLogros + '<div class="sep-ruta" role="presentation"></div>' + tabs + `<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
   $('#pasComp').addEventListener('click', async () => {
     try { const m = await import('./core/imagen.js'); await m.compartirImagen({ titulo: 'Mi pasaporte JugamiGO', linea: `${nSell} de ${JUEGOS.length} destinos sellados`, pie: `${totVic.toLocaleString('es-ES')} victorias · mejor racha ${mejorR}`, texto: `Llevo ${nSell} de ${JUEGOS.length} destinos sellados en JugamiGO` }, aviso); }
     catch (e) { console.error(e); aviso('No se pudo crear la imagen'); }
@@ -722,7 +722,7 @@ function vAjustes_() {
       <label class="btn file">Importar .json<input type="file" id="gImp" accept=".json,application/json"></label>
       <button class="btn danger" id="gBor">Borrar partidas</button></div>
     <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
-  <div class="panel"><h3>✈️ Modo avión</h3><p class="note" id="gOff" role="status">Comprobando…</p>
+  <div class="sep-ruta" role="presentation"></div><div class="panel"><h3>✈️ Modo avión</h3><div class="vacio"><img src="img/marca/vacio-sin-conexion.webp" alt="" width="170" height="155" loading="lazy"></div><p class="note" id="gOff" role="status">Comprobando…</p>
     <div class="prog" id="gProg" hidden><i></i></div><p class="note" id="gDes" role="status"></p>
     <div class="bar"><button class="btn on" id="gDesc" hidden>⬇️ Descargar todo</button><button class="btn" id="gCanc" hidden>Cancelar</button><button class="btn" id="gQuit" hidden>Quitar descarga</button></div>
     <div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>

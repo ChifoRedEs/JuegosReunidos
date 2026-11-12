@@ -128,7 +128,8 @@ def dorsos(carpeta='dorsos', pref='i-'):
             continue
         nom = nombres.get(n) if isinstance(nombres.get(n), str) else bonito(n)
         salida.append({'id': pref + slug(n), 'nombre': nom[:30], 'archivo': carpeta + '/' + f})
-    salida.sort(key=lambda d: d['nombre'].lower())   # agrupa por color en la lista de la app
+    # los archivos que empiezan por «0-» van los primeros (tapetes viajeros); el resto, ordenado por nombre (agrupa por color en la lista de la app)
+    salida.sort(key=lambda d: (not os.path.basename(d['archivo']).startswith('0-'), d['nombre'].lower()))
     return salida
 
 

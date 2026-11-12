@@ -10,6 +10,8 @@ Todo lo que pongas aquí aparece en **🎨 Apariencia** de los juegos de cartas.
 | `tapetes/` | fondos de mesa (webp de ~1280 px de ancho, 50–170 KB). `nombres.json` permite poner tildes | todos los de cartas, Rummy y los tableros |
 | `fondos/` | fondos de pantalla ambientados (escenarios). **Solo** se ofrecen en juegos de Arcade (Worms, Serpiente, Bloques, Rompe-Ladrillos, Air Hockey); nunca en cartas ni tableros, donde distraen | Arcade |
 
+**Orden en la lista:** por nombre; los archivos que empiezan por `0-` (los tapetes «viajeros») salen los primeros.
+
 ## Nombres de archivo (respeta mayúsculas)
 - **Española** (`NN-X`): `01-O.webp` … `12-O.webp`. NN = 01–07, 10, 11, 12 (los 08 y 09 se permiten pero no se usan). X = **O** oros · **C** copas · **E** espadas · **B** bastos.
 - **Francesa** (`NN-X`): `01-P.webp` … `13-P.webp`. NN = 01 (As) … 11 (J), 12 (Q), 13 (K). X = **P** picas · **C** corazones · **D** diamantes · **T** tréboles.
