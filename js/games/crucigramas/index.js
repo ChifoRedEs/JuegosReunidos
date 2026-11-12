@@ -63,7 +63,7 @@ export async function mount(r, a) {
     { texto: 'Nuevo crucigrama', accion: () => nueva(S.tema, S.nivel) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.tema, RETO.nivel, false, true) }, { texto: 'Comprobar', accion: comprobar },
     { texto: 'Revelar letra', accion: () => revelar('letra') }, { texto: 'Revelar palabra', accion: () => revelar('palabra') },
     { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menuErrores(); }, activo: api.pref('errores', false) },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas },
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas },
   ]);
   crono = new Cronometro(() => { if (S) { S.t = crono.s; $('#cwCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
   if (!S) { await nueva(api.pref('tema', 'animales'), api.pref('nivel', 'medio'), true); }
@@ -73,7 +73,7 @@ function menuErrores() { api.menu([
   { texto: 'Nuevo crucigrama', accion: () => nueva(S.tema, S.nivel) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.tema, RETO.nivel, false, true) }, { texto: 'Comprobar', accion: comprobar },
   { texto: 'Revelar letra', accion: () => revelar('letra') }, { texto: 'Revelar palabra', accion: () => revelar('palabra') },
   { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menuErrores(); }, activo: api.pref('errores', false) },
-  { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]); }
+  { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]); }
 export function unmount() {
   if (S && crono) { S.t = crono.s; guardar(); }
   if (crono) crono.detener();

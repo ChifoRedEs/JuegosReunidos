@@ -22,3 +22,10 @@ Todos los juegos comparten el mismo esqueleto; solo cambia el **espacio de juego
 
 ## Al hacer un juego nuevo
 Usa estas clases y no inventes otras para marcador, mensaje, filas de menú o botones. Los colores del espacio de juego salen de `--tb-*` (claro y oscuro ya resueltos).
+
+
+## Pie común del menú (3.75.0)
+
+Todo menú de partida termina con `pieMenu({...})` de `js/core/pie.js`: botón principal (`data-ac` start|jugar|nueva), opcionalmente «Continuar partida» (`seguir|volver`), y los secundarios `podio`, `aspecto` y `reglas`. Cada juego resuelve esos `data-ac` en su manejador de clics. No se escribe a mano un `<div class="bar">` de menú.
+
+Las tiras de estado de partida (`.info`, `.duM` y las propias de cada juego: `.brtop`, `.snhud`…) comparten aspecto en `css/pasaporte.css`; al añadir una nueva, inclúyela en la lista «marcador común».

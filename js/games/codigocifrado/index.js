@@ -1,5 +1,6 @@
 // Código Cifrado: descubre el código de colores con las pistas (negras y blancas), o pon tú el código y mira cómo lo descifra la máquina.
 // Vista 2D (HTML) o 3D (Three.js). Reglas y lógica en motor.js.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoFondo } from '../../core/aspectos.js';
@@ -56,7 +57,7 @@ export async function mount(r, a) {
     crono: () => crono,
     config: { valores: () => ({ modo: cfg.modo, preset: cfg.preset, pos: cfg.pos, col: cfg.col, rep: cfg.rep, max: cfg.max }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'adivinar' ? '🔍 ' : '🔒 ') + l]) }, { clave: 'preset', titulo: 'Nivel', opciones: [...Object.entries(M.PRESETS).map(([k, p]) => [k, p.nombre]), ['personal', '⚙️ A tu gusto']] }, { clave: 'pos', titulo: 'Bolas', visible: v.preset === 'personal', opciones: M.POS.map(n => [n, String(n)]) }, { clave: 'col', titulo: 'Colores', visible: v.preset === 'personal', opciones: M.COLS.map(n => [n, String(n)]) }, { clave: 'rep', titulo: 'Repetir colores', visible: v.preset === 'personal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'max', titulo: 'Intentos', visible: v.preset === 'personal', opciones: M.MAXS.map(n => [n, String(n)]) }], alCambiar: (v, c) => { if (c === 'preset' && M.PRESETS[v.preset]) Object.assign(v, { pos: M.PRESETS[v.preset].pos, col: M.PRESETS[v.preset].col, rep: M.PRESETS[v.preset].rep, max: M.PRESETS[v.preset].max }); else if (c !== 'modo' && c !== 'preset' && !v.rep && v.col < v.pos) v.col = M.COLS.find(x => x >= v.pos) || 8; }, aplicar: v => { Object.assign(cfg, v); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '⌫ Borrar', accion: borrar }, { texto: '💡 Pista', accion: pedirPista },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
 }
 export function unmount() {
@@ -81,7 +82,7 @@ function setup() {
     <div class="bar"><span class="lbl">Repetir</span>${seg('rep', [[true, 'Sí'], [false, 'No']])}</div>
     <div class="bar"><span class="lbl">Intentos</span>${seg('max', M.MAXS.map(n => [n, n]))}</div>` : `<p class="note">${cfg.pos} bolas · ${cfg.col} colores · ${cfg.rep ? 'se pueden repetir' : 'sin repetir colores'} · ${cfg.max} intentos</p>`}
     ${cfg.modo === 'adivinar' && rec ? `<p class="note">🏆 Tu mejor marca aquí: <b>${rec.n}</b> ${rec.n === 1 ? 'intento' : 'intentos'} · ${fmt(rec.t)}</p>` : ''}
-    <div class="bar"><button class="btn on" data-ac="jugar">▶️ Jugar</button>${S && !S.done ? '<button class="btn" data-ac="volver">Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ ac: 'jugar', seguir: S && !S.done ? 'volver' : null })}`;
 }
 function jugar() {
   api.setPref('cfg', cfg);

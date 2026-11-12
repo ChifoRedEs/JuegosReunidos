@@ -1,5 +1,6 @@
 // Palabras Cruzadas en español: tablero de 15 × 15, 100 fichas (con CH, LL, RR y Ñ), contra la CPU (3 niveles) o entre 2-4 personas
 // en el mismo móvil. Las palabras se comprueban con el diccionario común (core/diccionario.js) en un Worker (trabajador.js).
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { grupoFondo } from '../../core/aspectos.js';
 import { anotarPartida, htmlPartidas } from '../../core/historial.js';
@@ -74,7 +75,7 @@ export async function mount(r, a) {
     salir: () => { api.borrar(); S = null; serie++; location.hash = '#/cat/palabras'; },
     etiqueta: 'Nueva partida',
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'jug', titulo: 'Jugadores', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'rival', titulo: 'Rivales', opciones: [['cpu', '🤖 CPU'], ['personas', '👥 Personas']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.rival === 'cpu', opciones: Object.entries(M.NIVELES) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (dicOk === null) pedir('cargar').then(() => { dicOk = true; if (S && root) { pintar(); revisarPrevia(); } }, () => { dicOk = false; if (root) pintar(); });
   if (S && S.fase !== 'fin') armar(); else setup();
 }
@@ -95,7 +96,7 @@ function setup() {
     <div class="bar"><span class="lbl">Jugadores</span>${seg('jug', [[2, '2'], [3, '3'], [4, '4']])}</div>
     <div class="bar"><span class="lbl">Rivales</span>${seg('rival', [['cpu', '🤖 CPU'], ['personas', '👥 Personas']])}</div>
     ${cfg.rival === 'cpu' ? `<div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(M.NIVELES))}</div>` : ''}
-    <div class="bar"><button class="btn on" data-ac="start">🔠 Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
+    ${pieMenu({})}
     ${dicOk === false ? '<p class="msg mal">No se ha podido cargar el diccionario. Conéctate a internet una vez para descargarlo (luego funciona sin conexión).</p>' : ''}</div>`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && S.hist.length && !api.confirmar('¿Abandonar la partida actual?')) return; api.borrar(); S = null; setup(); }
@@ -121,7 +122,7 @@ function armar() {
       <div class="sctapa" id="scTapa" hidden></div>
     </div>
     <details class="schist"><summary>📜 Jugadas</summary><ol id="scHist"></ol></details>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="zoom" id="scZoom"></button><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="zoom" id="scZoom"></button><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   const tab = $('#scTab'), atr = $('#scAtril');
   tab.addEventListener('pointerdown', abajoTablero); atr.addEventListener('pointerdown', abajoAtril);
   tapado = S.fase !== 'fin' && humanos() > 1 && !S.jug[S.turno].cpu;

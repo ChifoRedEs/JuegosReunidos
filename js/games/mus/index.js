@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { anotarPartida, htmlPartidas, historialVacio, validarHistorial, seguir, htmlTabla } from '../../core/historial.js';
 import { cartaEsHTML, asegurarSprites, nombreEs } from '../../core/cartas.js';
@@ -41,7 +42,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(M.NIVEL) }, { clave: 'meta', titulo: 'Tantos', opciones: M.METAS.map(x => [x, `A ${x}`]) }, { clave: 'juegos', titulo: 'Partida', opciones: [[1, 'Un juego'], [2, 'Mejor de 3']] }, { clave: 'reyes', titulo: 'Reyes', opciones: [[8, '8 reyes'], [4, '4 reyes']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { if (arr) { arr.destruir(); arr = null; } clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
@@ -57,7 +58,7 @@ function setup() {
     <div class="bar"><span class="lbl">Partida</span>${seg('juegos', [[1, 'Un juego'], [2, 'Mejor de 3']])}</div>
     <div class="bar"><span class="lbl">Reyes</span>${seg('reyes', [[8, '8 reyes'], [4, '4 reyes']])}</div>
     <p class="note">${cfg.reyes === 8 ? 'Con 8 reyes, los treses valen como reyes y los doses como ases.' : 'Con 4 reyes, cada carta vale lo que es.'} Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
-    <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   root.innerHTML = `<div class="mstop" id="msTop"></div>
@@ -73,7 +74,7 @@ function armar() {
     <div class="bar msacc" id="msAcc"></div>
     <div id="msRec"></div>
     <ul class="mslog" id="msLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#msMano'), { sel: '.msc', alSoltar: ids => { ord = { modo: 'libre', ids }; api.sonido('click'); pintar(); guardar(); } });
 }

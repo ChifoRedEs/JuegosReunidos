@@ -1,5 +1,6 @@
 // Hijoputa — Mau-Mau con baraja española: casa por palo o número, sota = comodín, 2 = +2 acumulable, as = el siguiente roba y pierde el turno,
 // rey = repites turno, y con una sola carta hay que gritar «¡Hijoputa!» o te caen 5 cartas. Contra 1–3 CPU.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { cartaEsHTML, asegurarSprites, nombreEs } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso, grupoBarajaEs } from '../../core/aspectos.js';
@@ -29,7 +30,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   api.barra({ nueva: nuevaSetup, salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; }, pausar: () => clearTimeout(timer), reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: () => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(H.NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
@@ -41,7 +42,7 @@ function setup() {
   root.innerHTML = `<p class="note">Baraja española: tira una carta del <b>mismo palo o número</b>. La <b>sota</b> es comodín, el <b>2</b> acumula castigo, el <b>as</b> hace robar y perder turno, el <b>rey</b> repite. Con una sola carta, ¡grita <b>HIJOPUTA</b>! Gana quien se quede sin cartas.</p>
     <div class="bar"><span class="lbl">Rivales</span>${seg('rivales', [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']])}</div>
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(H.NIVEL))}</div>
-    <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   root.innerHTML = `<div class="hptop"><span id="hpInfo"></span><span id="hpSt"></span></div>
@@ -54,7 +55,7 @@ function armar() {
     <div class="bar hpacc" id="hpAcc"></div>
     <ul class="hplog" id="hpLog"></ul>
     <div id="hpRes"></div>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {

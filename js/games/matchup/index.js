@@ -1,5 +1,6 @@
 // Match-Up: encuentra las parejas de imágenes. Un jugador (movimientos y tiempo), 2 jugadores por turnos o contra la máquina (3 niveles de memoria).
 // Reglas y lógica en motor.js; los bancos de imágenes (img/matchup/<tema>) se listan en bancos.js (tools/generar_matchup.py).
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoFondo, grupoDorso } from '../../core/aspectos.js';
@@ -63,7 +64,7 @@ export async function mount(r, a) {
       aplicar: v => { cfg = { modo: v.modo, tema: v.tema, tam: v.tam, nivel: v.nivel }; jugar(); },
     },
   });
-  api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '👁️ Vistazo', accion: vistazo }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '👁️ Vistazo', accion: vistazo }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   cargado = true;
   if (S && !S.done) armar(); else setup();
 }
@@ -88,7 +89,7 @@ function setup() {
     <p class="note">${M.pares(cfg.tam)} parejas · ${M.TAMANOS[cfg.tam].cols * M.TAMANOS[cfg.tam].filas} cartas</p>
     ${cfg.modo === 'cpu' ? `<div class="bar"><span class="lbl">Memoria de la máquina</span>${seg('nivel', Object.entries(M.NIVELES))}</div>` : ''}
     ${cfg.modo === 'solo' && mej ? `<p class="note">🏆 Tu mejor marca aquí: <b>${mej.movs}</b> movimientos · ${fmt(mej.t)}</p>` : ''}
-    <div class="bar"><button class="btn on" data-ac="jugar">▶️ Jugar</button>${S && !S.done ? '<button class="btn" data-ac="volver">Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({ ac: 'jugar', seguir: S && !S.done ? 'volver' : null })}`;
 }
 function jugar() {
   api.setPref('cfg', cfg); parar(); if (asp) asp.sortear();

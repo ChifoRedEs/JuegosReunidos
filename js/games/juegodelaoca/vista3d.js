@@ -19,7 +19,7 @@ export async function crearOca3D(cont, o) {
   }
   function dibujar(t, cs) {
     const k = t.k, cas = CAS[k], tipo = k === 0 ? 'salida' : cas ? cas.tipo : '', c = lienzo(160, 160), x = c.getContext('2d');
-    const fondo = tipo === 'juegodelaoca' ? cs.oca : tipo === 'fin' ? cs.fin : tipo === 'salida' ? '#EEF3FF' : cas ? cs.esp : (k % 2 ? cs.c2 : cs.c1);
+    const fondo = tipo === 'oca' ? cs.oca : tipo === 'fin' ? cs.fin : tipo === 'salida' ? '#EEF3FF' : cas ? cs.esp : (k % 2 ? cs.c2 : cs.c1);
     x.fillStyle = fondo; x.fillRect(0, 0, 160, 160); x.strokeStyle = cs.bd; x.lineWidth = 8; x.strokeRect(4, 4, 152, 152);
     x.fillStyle = cs.ink; x.textBaseline = 'top'; x.textAlign = 'left'; x.font = '800 34px Nunito, sans-serif'; if (k) x.fillText(String(k), 12, 8);
     const ico = k === 0 ? '🚩' : cas ? cas.ico : ''; if (ico) { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `70px ${EMOJI_FUENTE}`; x.fillText(ico, 80, 94); }

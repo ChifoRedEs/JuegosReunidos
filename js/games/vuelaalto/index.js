@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
@@ -51,7 +52,7 @@ export async function mount(r, a) {
       { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(M.VEL).map(([k2, x]) => [k2, x.nombre]) },
       { clave: 'ctl', titulo: 'Control', opciones: Object.entries(M.CTL).map(([k2, x]) => [k2, x.nombre]) },
       { clave: 'ext', titulo: 'Peligros', opciones: Object.entries(M.EXT) },], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (Infinito)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (Infinito)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: '📖 Reglas', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin' && S.fase !== 'meta') { Mu = new M.Mundo(S); armar(); dibujar(); } else setup();
 }
 export function unmount() {
@@ -82,7 +83,7 @@ function setup() {
     <div class="bar"><span class="lbl">Control</span>${seg('ctl', Object.entries(M.CTL).map(([x, v]) => [x, v.nombre]))}</div>
     <div class="bar"><span class="lbl">Peligros</span>${seg('ext', Object.entries(M.EXT))}</div>
     <p class="note">Dificultad: tamaño del hueco y velocidad. Obstáculos: cuánto tardan en aparecer. Peligros: añade tubos móviles, pájaros, dobles huecos y hélices.</p>
-    <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">🐦 Jugar</button><button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ seguir: S && S.fase === 'pausa' ? 'seguir' : null, podio: true })}`;
 }
 function armar() {
   root.innerHTML = `<div class="vahud"><span>🪙 <b id="vaMon">0</b></span><span class="pts"><b id="vaPts">0</b> puntos</span><span id="vaDist">0 m</span><button class="btn vapausa" data-ac="pausa" aria-label="Pausa">⏸️</button></div>
@@ -304,7 +305,7 @@ function clic(e) {
   const a = d.ac;
   if (a === 'start' || a === 'otra') empezar(); else if (a === 'seguir') empezar(true);
   else if (a === 'siguiente') { cfg.nivel = Math.min(M.N_NIVELES, S.nivel + 1); empezar(); }
-  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'podio') verPodio(); else if (a === 'aspecto') { pausar(); asp.abrir(); }
+  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'podio') verPodio(); else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') { pausar(); reglas(); }
   else if (a === 'pausa') { if (S && S.fase === 'jugar') pausar(); else if (S && S.fase === 'pausa') jugarYa(); }
 }
 function reglas() {

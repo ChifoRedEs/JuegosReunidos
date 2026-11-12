@@ -1,5 +1,6 @@
 // Catapulta — lanza proyectiles con la catapulta y derriba las fortalezas de los enemigos. Física con Matter.js (js/vendor).
 // Apuntas con el círculo táctil del menú flotante (dirección = hacia dónde mueves el punto, fuerza = lo lejos que lo pones).
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as C from './motor.js';
 import { NIVELES, validarNivel, NUEVO_DE_ANTIGUO } from './niveles.js';
@@ -72,7 +73,7 @@ export async function mount(r, a) {
     pausar: () => { eraJugando = ['apuntar', 'vuelo', 'espera'].includes(fase); pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) seguir(); },
     config: { pantalla: () => menu() } });
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); menu(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); menu(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: '📖 Reglas', accion: () => { pausar(); reglas(); } }]);
   const g = api.cargar();
   if (g && g.nivel <= nivelMax()) jugar(g.nivel); else menu();
 }
@@ -100,7 +101,7 @@ function menu() {
     }).join('')}</div>
     <div class="ctcaps">${CLASES.map(c => `<span><img src="${url(imgAve(s, c))}" alt=""><b>${esc(nombreAve(s, c))}</b> ${esc(C.AVES[c].hab)}</span>`).join('')}</div>
     ${est || tot ? `<div class="ldrecs"><b>🏆 Tus récords</b><span>Estrellas: <b>${est}/${NIVELES.length * 3}</b></span><span>Puntos: <b>${tot.toLocaleString('es-ES')}</b></span></div>` : ''}
-    <div class="bar"><button class="btn on" data-ac="jugar">🪃 ${est || tot ? 'Jugar nivel ' + cfg.nivel : 'Nueva partida'}</button><button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ ac: 'jugar', texto: est || tot ? '🪃 Jugar nivel ' + cfg.nivel : '', podio: true })}`;
 }
 function reglas() {
   const s = avatar();
@@ -306,7 +307,7 @@ function clic(e) {
   else if (ac === 'menu') menu();
   else if (ac === 'seguir') seguir();
   else if (ac === 'podio') verPodio();
-  else if (ac === 'aspecto') asp.abrir();
+  else if (ac === 'aspecto') asp.abrir(); else if (ac === 'reglas') { pausar(); reglas(); }
 }
 function pintarHud() {
   const h = $('#ctHud'); if (!h || !m) return;

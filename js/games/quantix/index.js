@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { grupoEscenario, grupoPersonaje, emojiPersonaje, ESCENARIOS_WORMS } from '../../core/aspectos.js';
@@ -40,7 +41,7 @@ export async function mount(r, a) {
       { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(M.VEL).map(([x, v]) => [x, v.nombre]) },
       { clave: 'vidas', titulo: 'Vidas', opciones: [[3, '3'], [5, '5'], [7, '7']] },
       { clave: 'trazo', titulo: 'Crecimiento del cuadrado', opciones: Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: '📖 Reglas', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin' && S.fase !== 'meta') { armar(); dibujar(); } else setup();
 }
 export function unmount() {
@@ -71,7 +72,7 @@ function setup() {
     <div class="bar"><span class="lbl">Vidas</span>${seg('vidas', [[3, '3'], [5, '5'], [7, '7']])}</div>
     <div class="bar"><span class="lbl">Crecimiento del cuadrado</span>${seg('trazo', Object.entries(M.TRAZO).map(([x, v]) => [x, v.nombre]))}</div>
     <p class="note"><b>IA ${M.IA[cfg.ia].nombre}</b>: ${M.IA[cfg.ia].desc}. Velocidad: lo rápido que se mueven los jefes. Crecimiento: Pequeño crece despacio (más tiempo expuesto) y Grande crece deprisa.</p>
-    <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">💠 Jugar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ seguir: S && S.fase === 'pausa' ? 'seguir' : null })}`;
 }
 function armar() {
   root.innerHTML = `<div class="qxhud"><span class="vi" id="qxVid"></span><span class="pts"><b id="qxPts">0</b> puntos</span><span id="qxNiv"></span><button class="btn qxpausa" data-ac="pausa" aria-label="Pausa">⏸️</button></div>
@@ -274,7 +275,7 @@ function clic(e) {
   const a = d.ac;
   if (a === 'start' || a === 'otra') empezar(); else if (a === 'seguir') empezar(true);
   else if (a === 'siguiente') { cfg.nivel = Math.min(M.N_NIVELES, S.nivel + 1); empezar(); }
-  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'aspecto') { pausar(); asp.abrir(); }
+  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') { pausar(); reglas(); }
   else if (a === 'pausa') { if (S && S.fase === 'jugar') pausar(); else if (S && S.fase === 'pausa') jugarYa(); }
 }
 function reglas() {

@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
 import { crearTeclado } from '../../core/teclado.js';
@@ -29,7 +30,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; girando = false; res = null; recien = new Set(); forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista de la ruleta', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#rlJuego'), grupoTablero('Colores del panel'), { clave: 'ruletamillonaria', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { if (cv && modo3d !== quiere3D()) armar(); else { claveRueda = ''; dibujar(); } pintar(); } });
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista de la ruleta', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, grupoFondo('#rlJuego'), grupoTablero('Colores del panel'), { clave: 'ruleta', titulo: 'Colores de la ruleta', def: 'clasica', opciones: Object.entries(RUEDAS).map(([id, x]) => ({ id, nombre: x.nombre, sw: x.c.slice(0, 4) })) }], () => { if (S) { if (cv && modo3d !== quiere3D()) armar(); else { claveRueda = ''; dibujar(); } pintar(); } });
   await api.css(new URL('./ruletamillonaria.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && R.RONDAS.includes(c0.rondas) && R.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 3) cfg = { ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
@@ -42,7 +43,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin' && !girando) bucle(); },
     config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], rondas: cfg.rondas, nivel: cfg.nivel }), grupos: v => [...[0, 1, 2].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'rondas', titulo: 'Rondas', opciones: R.RONDAS.map(k => [k, String(k)]) }, { clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(R.NIVEL).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { if ([0, 1, 2].filter(i => v['j' + i] !== 'n').length < 1) { api.aviso('Elige al menos un jugador'); return; } [0, 1, 2].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.rondas = v.rondas; cfg.nivel = v.nivel; empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() {
@@ -62,7 +63,7 @@ function setup() {
     ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${COL[i]}"><span class="jf-dot"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Rondas</span><div class="seg">${R.RONDAS.map(k => `<button class="btn ${cfg.rondas === k ? 'on' : ''}" data-rondas="${k}">${k}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel CPU</span><div class="seg">${Object.entries(R.NIVEL).map(([k, v]) => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-niv="${k}">${v.nombre}</button>`).join('')}</div></div>
-    <div class="bar"><button class="btn on" data-ac="start" ${n < 1 ? 'disabled' : ''}>Empezar partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
+    ${pieMenu({ deshabilitado: n < 1 })}
     <p class="note">${n < 1 ? 'Elige al menos un jugador.' : n === 1 ? 'Un solo jugador: juegas para hacer tu mejor marca.' : `${n} jugadores por turnos en este dispositivo.`}</p>`;
 }
 const COL = ['#FF4757', '#2F6BFF', '#12B76A'];
@@ -89,7 +90,7 @@ function armar() {
       <div class="bar rlacc"><button class="btn on rlgirar" data-ac="girar" id="rlGirar">🎡 Girar</button><button class="btn" data-ac="vocal" id="rlVocal">Comprar vocal · ${R.dinero(R.PRECIO_VOCAL)}</button><button class="btn" data-ac="resolver" id="rlResolver">🧩 Resolver</button><button class="btn tkabrir" data-ac="teclado" id="rlTk" aria-label="Abrir teclado">⌨️</button></div>
     </div>
     <ul class="rllog" id="rlLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   cv = $('#rlCanvas'); dpr = Math.min(window.devicePixelRatio || 1, 3); cv.width = 400 * dpr; cv.height = 400 * dpr;
   if (modo3d) iniciar3D(); else dibujar();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (cv) { claveRueda = ''; dibujar(); } });

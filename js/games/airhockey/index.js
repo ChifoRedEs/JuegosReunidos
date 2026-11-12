@@ -1,4 +1,5 @@
 // Air Hockey: contra la CPU (3 niveles) o 2 jugadores en el mismo móvil (cada uno controla su mitad con un dedo).
+import { pieMenu } from '../../core/pie.js';
 import { $ } from '../../core/dom.js';
 import * as A from './motor.js';
 import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
@@ -42,7 +43,7 @@ export async function mount(r, a) {
     pausar: () => { eraJugando = !!S && (S.fase === 'juego' || S.fase === 'gol'); pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) seguir(); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, meta: cfg.meta }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(A.MODOS) }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.modo === 'cpu', opciones: Object.entries(A.NIVELES).map(([k, n]) => [k, n.nombre]) }, { clave: 'meta', titulo: 'Partido a', opciones: A.METAS.map(m => [m, `${m} goles`]) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') { if (S.fase !== 'listo') S.fase = 'pausa'; armar(); } else setup();
 }
 export function unmount() {
@@ -60,7 +61,7 @@ function setup() {
     <div class="bar"><span class="lbl">Modo</span>${seg('modo', Object.entries(A.MODOS))}</div>
     ${cfg.modo === 'cpu' ? `<div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(A.NIVELES).map(([k, n]) => [k, n.nombre]))}</div>` : ''}
     <div class="bar"><span class="lbl">Partido a</span>${seg('meta', A.METAS.map(m => [m, `${m} goles`]))}</div>
-    <div class="bar">${S && S.fase !== 'fin' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase !== 'fin' ? '' : 'on'}" data-ac="start">🏒 Nuevo partido</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ seguir: S && S.fase !== 'fin' ? 'seguir' : null })}`;
 }
 function armar() {
   root.innerHTML = `<div class="ahhud" id="ahHud"></div>
@@ -214,7 +215,7 @@ function clic(e) {
   const a = d.ac;
   if (a === 'start') { e.stopPropagation(); empezar(); }
   else if (a === 'seguir') { armar(); } else if (a === 'pausa') { if (S && (S.fase === 'juego' || S.fase === 'gol')) pausar(); else seguir(); }
-  else if (a === 'opciones') { e.stopPropagation(); pausar(); setup(); } else if (a === 'aspecto') { pausar(); asp.abrir(); }
+  else if (a === 'opciones') { e.stopPropagation(); pausar(); setup(); } else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') { pausar(); reglas(); }
 }
 function reglas() {
   api.modal('Air Hockey', `<ul><li>Arrastra tu mazo (el rojo, abajo) para golpear el disco y meterlo en la portería de arriba. Solo puedes moverte por tu mitad.</li>

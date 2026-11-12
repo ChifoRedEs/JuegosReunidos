@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { anotarPartida, htmlPartidas, historialVacio, validarHistorial, seguir, htmlTabla } from '../../core/historial.js';
 import { cartaEsHTML, asegurarSprites, nombreEs } from '../../core/cartas.js';
@@ -41,7 +42,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(C.NIVEL) }, { clave: 'limite', titulo: 'Límite', opciones: C.LIMITES.map(x => [x, `${x} puntos`]) }, { clave: 'cierre', titulo: 'Cerrar con', opciones: C.CIERRES.map(x => [x, `≤ ${x} sueltos`]) }, { clave: 'comodines', titulo: 'Comodines', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { if (arr) { arr.destruir(); arr = null; } clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
@@ -58,7 +59,7 @@ function setup() {
     <div class="bar"><span class="lbl">Cerrar con</span>${seg('cierre', C.CIERRES.map(v => [v, `≤ ${v} sueltos`]))}</div>
     <label class="chk"><input type="checkbox" data-chk="comodines" ${cfg.comodines ? 'checked' : ''}><span><b>Jugar con comodines</b>: ${C.numComodines(cfg.rivales + 1, true)} con ${cfg.rivales + 1} jugadores (2 con 2 o 3 jugadores, 3 con 4). Sustituyen a cualquier carta de una jugada.</span></label>
     <p class="note">Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
-    <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   root.innerHTML = `<div class="chtop"><span id="chInfo"></span><span id="chMarc"></span></div>
@@ -76,7 +77,7 @@ function armar() {
     <div class="bar chacc" id="chAcc"><button class="btn" data-ac="tirar" id="chTirar">🗑️ Tirar carta</button><button class="btn on" data-ac="cerrar" id="chCerrar">🔒 Cerrar</button></div>
     <div id="chRec"></div>
     <ul class="chlog" id="chLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   montarArrastre();
 }
 function montarArrastre() {

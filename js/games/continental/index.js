@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { anotarPartida, htmlPartidas, historialVacio, validarHistorial, seguir, htmlTabla } from '../../core/historial.js';
 import { cartaHTML, nombreCarta } from '../../core/cartas.js';
@@ -40,7 +41,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVEL) }, { clave: 'comodines', titulo: 'Comodines', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); if (arr) { arr.destruir(); arr = null; } if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
@@ -56,7 +57,7 @@ function setup() {
     ${chkComodines()}
     <ol class="cnlista">${K.CONTRATOS.map((c, i) => `<li>${c.nombre} <small>(${K.cartasRonda(i)} cartas)</small></li>`).join('')}</ol>
     <p class="note">Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
-    <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 const chkComodines = () => `<label class="chk"><input type="checkbox" data-chk="comodines" ${cfg.comodines ? 'checked' : ''}><span><b>Jugar con comodines</b>: ${K.numComodines(cfg.rivales + 1, true)} con ${cfg.rivales + 1} jugadores (3 con 2 o 3 jugadores, 4 con 4).</span></label>`;
 function armar() {
@@ -73,7 +74,7 @@ function armar() {
     <div class="bar cnacc" id="cnAcc"></div>
     <div id="cnRes"></div>
     <ul class="cnlog" id="cnLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#cnMano'), { sel: '.cnc', alSoltar: ids => { ord = { modo: 'libre', ids }; pintar(); guardar(); } });
 }

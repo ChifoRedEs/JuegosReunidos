@@ -1,5 +1,6 @@
 // Deslizadas: puzle de bloques deslizantes («fichas de colores») y puzle de fichas numeradas, con varios tamaños y niveles.
 // Vista 2D (HTML) o 3D (Three.js). Reglas y generación en motor.js.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { Cronometro } from '../../core/cronometro.js';
@@ -52,7 +53,7 @@ export async function mount(r, a) {
     crono: () => crono,
     config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(K.MODOS).map(([k, l]) => [k, (k === 'colores' ? '🟦 ' : '🔢 ') + l]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(K.TAMANOS[v.modo]).map(([k, t]) => [k, t.nombre]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVELES) }], alCambiar: (v, c) => { if (c === 'modo' && !K.TAMANOS[v.modo][v.tam]) v.tam = v.modo === 'colores' ? '4x5' : '4x4'; }, aplicar: v => { cfg = { modo: v.modo, tam: v.tam, nivel: v.nivel }; parar(); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '↶ Deshacer', accion: deshacer }, { texto: '💡 Pista', accion: pedirPista }, { texto: '↺ Reiniciar este puzle', accion: reiniciar },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
 }
 export function unmount() {
@@ -74,7 +75,7 @@ function setup() {
     <div class="bar"><span class="lbl">Tablero</span>${seg('tam', Object.entries(K.TAMANOS[cfg.modo]).map(([k, v]) => [k, v.nombre]))}</div>
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(K.NIVELES))}</div>
     ${mej ? `<p class="note">🏆 Tu mejor marca aquí: <b>${mej.movs}</b> movimientos · ${fmt(mej.t)}</p>` : ''}
-    <div class="bar"><button class="btn on" data-ac="jugar">▶️ Jugar</button>${S && !S.done ? '<button class="btn" data-ac="volver">Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({ ac: 'jugar', seguir: S && !S.done ? 'volver' : null })}`;
 }
 async function jugar() {
   if (ocupado) return; ocupado = true; const tok = ++serie;

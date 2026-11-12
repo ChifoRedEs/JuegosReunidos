@@ -55,7 +55,7 @@ export async function mount(r, a) {
     pausar: () => { if (crono) crono.pausar(); },
     reanudar: () => { if (crono && S && !K.gana(S) && S.mov > 0) crono.iniciar(); },
     config: { valores: () => ({ palos: S.palos }), grupos: () => [{ clave: 'palos', titulo: 'Palos', opciones: [[1, `${de(S).palosOpc[1]} 1 palo (fácil)`], [2, `${de(S).palosOpc[2]} 2 palos`], [4, `${de(S).palosOpc[4]} 4 palos (difícil)`]] }], aplicar: v => nueva(v.palos, true) } });
-  api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.palos) }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.palos) }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { $('#spCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } }, g ? g.t : 0);
   if (S.mov > 0 && !K.gana(S)) crono.iniciar();
   pintar();

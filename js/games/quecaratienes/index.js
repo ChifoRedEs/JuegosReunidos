@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { svgDe } from './avatar.js';
@@ -53,7 +54,7 @@ export async function mount(r, a) {
       aplicar: v => { cfg = M.cfgValida(v) || cfg; empezar(); },
     },
   });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; asp = null; root = null; }
@@ -74,7 +75,7 @@ function setup() {
     <div class="bar"><span class="lbl">Tumbar las caras</span>${seg('tumbar', Object.entries(M.TUMBAR))}</div>
     <div class="bar"><span class="lbl">Empieza</span>${seg('empieza', Object.entries(M.empiezaTexto(cfg.modo)))}</div>
     <p class="note">${cfg.modo === 'dos' ? 'Dos jugadores en este dispositivo: entre turnos aparece una pantalla para pasar el móvil sin ver el tablero del otro. ' : ''}${cfg.conjunto === 'azar' ? 'Cada partida estrena caras nuevas, generadas al azar.' : 'Las 30 caras clásicas del juego (con menos caras se eligen al azar entre ellas).'}</p>
-    <div class="bar"><button class="btn on" data-ac="start">▶️ Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); api.borrar(); setup(); }
 function empezar() {

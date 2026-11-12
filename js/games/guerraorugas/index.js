@@ -1,5 +1,6 @@
 // Guerra de Orugas (Arcade) · vista: pantalla de ajustes, canvas, controles táctiles/teclado, cámara, efectos y guardado.
 // La lógica está en motor.js (físicas, armas, turnos) e ia.js (CPU), ambos sin DOM.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { crearPiloto } from './ia.js';
@@ -78,7 +79,7 @@ export async function mount(r, a) {
     { texto: '⏸️ Pausa', accion: () => poner_pausa(true) },
     { texto: '⏭️ Terminar turno', accion: () => { if (humano()) M.terminarTurno(S); } },
     { texto: '🎨 Apariencia', accion: () => { poner_pausa(true); asp.abrir(); } },
-    { texto: 'Cómo se juega', accion: () => { poner_pausa(true); reglas(); } },
+    { texto: '📖 Reglas', accion: () => { poner_pausa(true); reglas(); } },
   ]);
   const g = api.cargar();
   if (g && g.s.ganador === null) { try { S = M.restaurar(g.s); } catch { S = null; } }
@@ -114,7 +115,7 @@ function ajustes() {
     ${fila('Mapa', 'mapa', [...Object.entries(M.MAPAS), ['azar', '🎲 Al azar']])}
     ${fila('Tiempo por turno', 'tiempo', M.TIEMPOS.map(t => [t, t + ' s']))}
     ${fila('Cajas de suministros', 'cajas', [[true, '📦 Sí'], [false, 'No']])}
-    <div class="bar">${sigue ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${sigue ? '' : 'on'}" data-ac="nueva">🪱 Nueva partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({ ac: 'nueva', seguir: sigue ? 'seguir' : null, podio: false })}`;
 }
 
 function nuevaPartida() {

@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import * as O from './motor.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
@@ -40,7 +41,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { pantalla: () => nuevaSetup() } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { quitarDado(); cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); } S = null; asp = null; anim = false; }
@@ -54,7 +55,7 @@ function setup() {
     ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${colF(i)}"><span class="jf-dot"></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Dados</span><div class="seg"><button class="btn ${cfg.dados === 1 ? 'on' : ''}" data-dados="1">1 dado</button><button class="btn ${cfg.dados === 2 ? 'on' : ''}" data-dados="2">2 dados</button></div></div>
     <div class="bar"><span class="lbl">Pozo</span><div class="seg"><button class="btn ${cfg.pozo === 'rescate' ? 'on' : ''}" data-pozo="rescate">Hasta que te rescaten</button><button class="btn ${cfg.pozo === 'turnos' ? 'on' : ''}" data-pozo="turnos">2 turnos</button></div></div>
-    <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
+    ${pieMenu({ deshabilitado: n < 2 })}
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos.`}${cfg.dados === 2 ? ' Con 2 dados, si en la primera tirada sacas 6 y 3 vas a la 26; con 5 y 4, a la 53.' : ''}</p>`;
 }
 function armar() {
@@ -156,7 +157,7 @@ async function tirar() {
   for (const e of r.eventos) {
     msgEvento = `<span class="ocrima">${CASILLA_ICO(e)} ${esc(e.texto)}</span>`; pintar();
     api.sonido(['muerte', 'carcel', 'pozo', 'laberinto', 'posada'].includes(e.tipo) ? 'error' : e.tipo === 'rebote' ? 'click' : 'ok');
-    if (['juegodelaoca', 'puente', 'dados'].includes(e.tipo)) api.vibrar(30);
+    if (['oca', 'puente', 'dados'].includes(e.tipo)) api.vibrar(30);
     await esperar(lento ? 200 : 650); if (!S) return;
     if (e.a !== e.de && e.tipo !== 'rebote') { vis[j] = e.a; colocarFichas(); await esperar(lento ? 150 : 500); if (!S) return; }
   }

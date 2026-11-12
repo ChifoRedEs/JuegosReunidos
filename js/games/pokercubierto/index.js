@@ -1,4 +1,5 @@
 // Póker cubierto (de descarte, 5 cartas) contra bots: torneo o partida libre, apertura libre o con jotas o mejor.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
@@ -66,7 +67,7 @@ export async function mount(r, a) {
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['torneo', '🏆 Torneo'], ['libre', '🃏 Partida libre']] }, { clave: 'ante', titulo: 'Entrada', visible: v.modo === 'libre', opciones: Object.entries(P.ANTE_LIBRE).map(([k, x]) => [k, x + ' fichas']) }, { clave: 'apertura', titulo: 'Apertura', opciones: Object.entries(P.APERTURA) }, { clave: 'bots', titulo: 'Rivales', opciones: [1, 2, 3, 4, 5].map(n => [n, String(n)]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📊 Mis estadísticas', accion: verEstad },
     { texto: 'Mostrar consejos y probabilidades', accion: () => { consejo = !consejo; api.setPref('consejo', consejo); pintar(); }, activo: consejo },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: 'Reglas', accion: reglas }]);
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); } S = null; asp = null; }
@@ -81,7 +82,7 @@ function setup() {
     <div class="bar"><span class="lbl">Apertura</span><div class="seg">${Object.entries(P.APERTURA).map(([k, v]) => `<button class="btn ${cfg.apertura === k ? 'on' : ''}" data-apertura="${k}">${v}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Rivales</span><div class="seg">${[1, 2, 3, 4, 5].map(n => `<button class="btn ${cfg.bots === n ? 'on' : ''}" data-bots="${n}">${n}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(NIVEL).map(([k, l]) => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-niv="${k}">${l}</button>`).join('')}</div></div>
-    <div class="bar"><button class="btn on" data-ac="start">${cfg.modo === 'libre' ? 'Sentarse a la mesa' : 'Empezar torneo'}</button><button class="btn" data-ac="estad">📊 Mis estadísticas</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="rank">Ranking de manos</button></div>
+    ${pieMenu({ extra: '<button class="btn" data-ac="estad">📊 Mis estadísticas</button><button class="btn" data-ac="rank">🃏 Ranking de manos</button>' })}
     <p class="note">${cfg.apertura === 'jotas' ? '<b>Jotas o mejor</b>: para hacer la primera apuesta hace falta al menos una pareja de jotas. Si nadie puede abrir, se reparte de nuevo y el bote se acumula. ' : ''}Cada bot tiene su estilo: conservador, equilibrado, agresivo o farolero.</p>`;
 }
 function armar() {
@@ -229,7 +230,7 @@ function clic(e) {
   if (d.pre) { const L = P.legal(S, 0), B = P.bote(S); subir = d.pre === 'max' ? L.maxTo : Math.max(L.minTo, Math.min(L.maxTo, Math.round((S.apuestaMax + (B + L.aPagar) * +d.pre) / 5) * 5)); return panel(); }
   if (d.act) return humano({ t: d.act, a: subir });
   const ac = d.ac;
-  if (ac === 'start') empezar(); else if (ac === 'aspecto') asp.abrir(); else if (ac === 'rank') ranking();
+  if (ac === 'start') empezar(); else if (ac === 'aspecto') asp.abrir(); else if (ac === 'reglas') reglas(); else if (ac === 'rank') ranking();
   else if (ac === 'servido') cambiar([]); else if (ac === 'cambiar') cambiar([...marcadas]);
   else if (ac === 'usarConsejo') { marcadas = new Set(P.sugerirDescarte(S.jug[0].cartas)); pintar(); }
   else if (ac === 'siguiente') { P.nuevaMano(S); S.mio = { vpip: false }; marcadas = new Set(); pintar(); guardar(); bucle(); }

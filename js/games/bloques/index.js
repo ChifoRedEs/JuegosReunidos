@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as B from './motor.js';
 import { grupoFondo, grupoPantalla, tapeteElegido } from '../../core/aspectos.js';
@@ -45,7 +46,7 @@ export async function mount(r, a) {
     pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, botones: cfg.botones }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(B.MODOS) }, { clave: 'nivel', titulo: 'Nivel inicial', visible: !B.porTiempo(v.modo), opciones: [1, 5, 8, 10, 13].map(n => [n, String(n)]) }, { clave: 'botones', titulo: 'Botones táctiles', opciones: [[true, 'Mostrar'], [false, 'Solo gestos']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: '📖 Reglas', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin') { armar(); dibujar(); } else setup();
 }
 export function unmount() {
@@ -66,7 +67,7 @@ function setup() {
     ${!B.porTiempo(cfg.modo) ? `<div class="bar"><span class="lbl">Nivel inicial</span>${seg('nivel', [[1, '1'], [5, '5'], [8, '8'], [10, '10'], [13, '13']])}</div>` : ''}
     <div class="bar"><span class="lbl">Botones</span>${seg('botones', [[true, 'Mostrar'], [false, 'Solo gestos']])}</div>
     ${rM || rU || mejorS || mejorE ? `<div class="blrecs"><b>🏆 Tus récords</b>${rM ? `<span>Maratón: <b>${rM.toLocaleString('es-ES')}</b></span>` : ''}${rU ? `<span>Ultra: <b>${rU.toLocaleString('es-ES')}</b></span>` : ''}${mejorS ? `<span>Sprint: <b>${reloj(mejorS)}</b></span>` : ''}${mejorE ? `<span>Excavar: <b>${reloj(mejorE)}</b></span>` : ''}</div>` : ''}
-    <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">🧱 Nueva partida</button><button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Cómo se juega</button></div>`;
+    ${pieMenu({ seguir: S && S.fase === 'pausa' ? 'seguir' : null, podio: true })}`;
 }
 function armar() {
   root.innerHTML = `<div class="blhud" id="blHud"></div>

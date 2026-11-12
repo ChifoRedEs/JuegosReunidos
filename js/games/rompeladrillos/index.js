@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as L from './motor.js';
 import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
@@ -36,7 +37,7 @@ export async function mount(r, a) {
     pausar: () => { eraJugando = !!S && (S.fase === 'jugar' || S.fase === 'listo'); pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) tocar(); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(L.MODOS) }, { clave: 'nivel', titulo: 'Empezar en el nivel', visible: v.modo === 'campana', opciones: Array.from({ length: nivelMax() }, (_, k) => [k + 1, String(k + 1)]) }], aplicar: v => { Object.assign(cfg, v); if (cfg.modo === 'propio') { api.setPref('cfg', cfg); pausar(); setup(); } else empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '✏️ Editor de niveles', accion: () => { pausar(); editar(-1); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '✏️ Editor de niveles', accion: () => { pausar(); editar(-1); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: '📖 Reglas', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin') { armar(); dibujar(); if (S.fase === 'listo') arrancar(); } else setup();
 }
 export function unmount() {
@@ -62,7 +63,7 @@ function setup() {
       <div class="bar"><button class="btn" data-ac="editar" data-i="-1">✏️ Crear un nivel</button></div></div>` : cfg.modo === 'campana' ? `<div class="bar"><span class="lbl">Empezar en</span><div class="seg ldniv">${Array.from({ length: L.NIVELES.length }, (_, k) => k + 1).map(n => `<button class="btn ${cfg.nivel === n ? 'on' : ''}" data-cfg="nivel" data-v="${n}" ${n > nivelMax() ? 'disabled title="Llega a este nivel para desbloquearlo"' : ''}>${n > nivelMax() ? '🔒' : n}</button>`).join('')}</div></div>` : '<p class="note">Niveles generados al azar, cada vez con más ladrillos y más rápidos.</p>'}
     <div class="ldcaps">${Object.entries(L.CAPSULAS).map(([k, c]) => `<span><i style="--c:${CAP_COLOR[k]}">${c.letra}</i>${c.nombre}</span>`).join('')}</div>
     ${rC || rA ? `<div class="ldrecs"><b>🏆 Tus récords</b>${rC ? `<span>Campaña: <b>${rC.toLocaleString('es-ES')}</b></span>` : ''}${rA ? `<span>Aleatorio: <b>${rA.toLocaleString('es-ES')}</b></span>` : ''}</div>` : ''}
-    <div class="bar">${S && S.fase !== 'fin' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}${cfg.modo === 'propio' ? '' : `<button class="btn ${S && S.fase !== 'fin' ? '' : 'on'}" data-ac="start">🧱 Nueva partida</button>`}<button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ seguir: S && S.fase !== 'fin' ? 'seguir' : null, sinNueva: cfg.modo === 'propio', podio: true })}`;
 }
 const COLOR_PIEZA = { '1': COLORES[1], '2': COLORES[2], '3': COLORES[3], '4': COLORES[4], '5': COLORES[5], '6': COLORES[6], D: '#5AA9E6', T: '#E0A400', M: '#7A8597', '?': '#FF5DA2' };
 const miniatura = filas => `<svg viewBox="0 0 10 8" aria-hidden="true">${filas.flatMap((f, y) => [...f].map((ch, x) => ch === '.' ? '' : `<rect x="${x + .06}" y="${y + .1}" width=".88" height=".8" rx=".15" fill="${COLOR_PIEZA[ch]}"/>`)).join('')}</svg>`;
@@ -326,7 +327,7 @@ function clic(e) {
     if (a === 'probar') { const n = guardarNivel(); if (n) jugarPropio(n); return; }
   }
   if (a === 'start') empezar(); else if (a === 'seguir') empezar(true); else if (a === 'otra') empezar();
-  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'podio') verPodio(); else if (a === 'aspecto') { pausar(); asp.abrir(); }
+  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'podio') verPodio(); else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') { pausar(); reglas(); }
   else if (a === 'pausa') { if (S && (S.fase === 'jugar' || S.fase === 'listo')) pausar(); else tocar(); }
   else if (a === 'tocar' && b.tagName === 'BUTTON') tocar();
 }

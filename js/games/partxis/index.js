@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc, rnd } from '../../core/dom.js';
 import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
@@ -88,7 +89,7 @@ export async function mount(root, a) {
     pausar: () => { clearTimeout(timer); },
     reanudar: () => { if (P && P.phase !== 'over') drive(); },
     config: { valores: () => ({ ...Object.fromEntries(PC.map(c => [c, cfgSetup[c] || 'n'])), parejas, libre, vel: api.pref('vel', 'normal') }), grupos: v => [...PC.map(c => ({ clave: c, titulo: `Jugador ${PNAME[c]}${nombres[c] ? ' · ' + nombres[c] : ''}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'parejas', titulo: 'Por parejas (con 4 jugadores)', opciones: [[true, 'Sí'], [false, 'No']], visible: PC.every(c => v[c] !== 'n') }, { clave: 'libre', titulo: 'Salida libre', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'vel', titulo: 'Velocidad CPU', opciones: [['rapida', 'Rápida'], ['normal', 'Normal'], ['lenta', 'Lenta']] }], aplicar: v => { if (PC.filter(c => v[c] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } PC.forEach(c => { cfgSetup[c] = v[c] === 'n' ? null : v[c]; }); api.setPref('cfg', cfgSetup); libre = !!v.libre; parejas = !!v.parejas; api.setPref('libre', libre); api.setPref('parejas', parejas); api.setPref('vel', v.vel); iniciarPartida(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   const g = api.cargar();
   if (g) { restaurar(g); modo = 'juego'; rJuego(); pintarJuego(); drive(); }
   else { P = null; modo = 'setup'; rSetup(); }
@@ -180,7 +181,7 @@ function rSetup() {
     <label class="chk"><input type="checkbox" id="pzParejas" ${parejas && n === 4 ? 'checked' : ''} ${n === 4 ? '' : 'disabled'}><span><b>Por parejas</b> (con 4 jugadores): <b>Amarillo y Rojo</b> contra <b>Azul y Verde</b>. No se come al compañero y, cuando uno mete sus 4 fichas, sigue tirando para mover las de su pareja. Gana la pareja que mete las 8.</span></label>
     <label class="chk"><input type="checkbox" id="pzLibre" ${libre ? 'checked' : ''}><span><b>Salida libre</b>: si no tienes ninguna ficha en juego, sales con una ficha con cualquier número (no hace falta un 5). Y si en tu primera tirada sacas un 5, sacas dos fichas de casa.</span></label>
     <div class="bar"><span class="lbl">Velocidad CPU</span>${velBotones()}</div>
-    <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button>${n < 2 ? '<span class="note">Elige al menos 2 jugadores.</span>' : ''}</div>
+    ${pieMenu({ deshabilitado: n < 2, nota: n < 2 ? 'Elige al menos 2 jugadores.' : '' })}
     <details><summary>Reglas</summary>${listaReglas()}</details>
     <div class="pzv"><div class="pzb">${pBoard(true)}</div></div>`;
 }
@@ -379,7 +380,7 @@ function clic(e) {
     if (PC.filter(c => cfgSetup[c]).length < 2) return;
     iniciarPartida();
   } else if (ac === 'setup') nuevaSetup();
-  else if (ac === 'aspecto') asp.abrir();
+  else if (ac === 'aspecto') asp.abrir(); else if (ac === 'reglas') reglas();
 }
 function iniciarPartida() {
   const nm = {}; PC.forEach(c => { if (cfgSetup[c] && nombres[c] && nombres[c].trim()) nm[c] = nombres[c].trim().slice(0, 14); });

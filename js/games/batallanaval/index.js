@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as F from './motor.js';
 import { gruposFichas, estilo, oscuro } from '../../core/fichas.js';
@@ -45,8 +46,8 @@ export async function mount(r, a) {
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
-    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra CPU'], ['dos', '2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(F.NIVEL) }, { clave: 'batallanaval', titulo: 'Flota', opciones: Object.entries(F.FLOTAS).map(([k, f]) => [k, f.nombre]) }, { clave: 'tocar', titulo: 'Barcos juntos', opciones: [[false, 'No se tocan'], [true, 'Pueden tocarse']] }, { clave: 'repetir', titulo: 'Al acertar', opciones: [[true, 'Vuelves a disparar'], [false, 'Pasa el turno']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra CPU'], ['dos', '2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(F.NIVEL) }, { clave: 'flota', titulo: 'Flota', opciones: Object.entries(F.FLOTAS).map(([k, f]) => [k, f.nombre]) }, { clave: 'tocar', titulo: 'Barcos juntos', opciones: [[false, 'No se tocan'], [true, 'Pueden tocarse']] }, { clave: 'repetir', titulo: 'Al acertar', opciones: [[true, 'Vuelves a disparar'], [false, 'Pasa el turno']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { cerrar3D(); clearTimeout(timer); document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
@@ -59,12 +60,12 @@ function setup() {
   root.innerHTML = `<p class="note">Coloca tu flota en secreto y dispara por coordenadas al mar enemigo. Gana quien hunda antes todos los barcos del rival.</p>
     <div class="bar"><span class="lbl">Modo</span>${seg('modo', [['cpu', 'Contra CPU'], ['dos', '2 jugadores']])}</div>
     ${cfg.modo === 'cpu' ? `<div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(F.NIVEL))}</div>` : ''}
-    <div class="bar"><span class="lbl">Flota</span>${seg('batallanaval', Object.entries(F.FLOTAS).map(([k, f]) => [k, f.nombre]))}</div>
+    <div class="bar"><span class="lbl">Flota</span>${seg('flota', Object.entries(F.FLOTAS).map(([k, f]) => [k, f.nombre]))}</div>
     <p class="note">${F.FLOTAS[cfg.flota].desc}</p>
     <div class="bar"><span class="lbl">Barcos juntos</span>${seg('tocar', [[false, 'No se tocan'], [true, 'Pueden tocarse']])}</div>
     <div class="bar"><span class="lbl">Al acertar</span>${seg('repetir', [[true, 'Vuelves a disparar'], [false, 'Pasa el turno']])}</div>
     <p class="note">${cfg.modo === 'dos' ? 'Dos jugadores en este dispositivo: entre turnos aparece una pantalla para pasar el móvil sin ver la flota del otro. ' : ''}Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
-    <div class="bar"><button class="btn on" data-ac="start">Colocar la flota</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   cerrar3D(); if (quiere3D()) iniciar3D();

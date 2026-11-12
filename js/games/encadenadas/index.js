@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { crearTeclado } from '../../core/teclado.js';
 import { silabas } from './silabas.js';
@@ -38,7 +39,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); empezar(); },
     salir: () => { parar(); api.borrar(); location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra la CPU'], ['solo', 'Solo (récord)'], ['grupo', 'En grupo']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(E.NIVEL) }, { clave: 'n', titulo: 'Jugadores', visible: v.modo === 'grupo', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'enlace', titulo: 'Enlazar con', opciones: Object.entries(E.ENLACES) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: E.TIEMPOS.map(t => [t, t ? `${t} s` : 'Sin límite']) }], aplicar: v => { Object.assign(cfg, v); parar(); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); empezarTurno(); } else setup();
 }
 export function unmount() { parar(); document.removeEventListener('keydown', onKey); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); } if (tk) { tk.destruir(); tk = null; } S = null; asp = null; }
@@ -56,7 +57,7 @@ function setup() {
     <div class="bar"><span class="lbl">Enlazar con</span>${seg('enlace', Object.entries(E.ENLACES))}</div>
     <div class="bar"><span class="lbl">Tiempo</span>${seg('tiempo', E.TIEMPOS.map(t => [t, t ? `${t} s` : 'Sin límite']))}</div>
     <p class="note">${cfg.modo === 'cpu' ? 'La CPU difícil intenta dejarte sílabas complicadas. ' : cfg.modo === 'grupo' ? 'Os pasáis el móvil por turnos; si alguien dice una palabra que no está en el diccionario, decidís entre todos si vale. ' : 'Encadena tus propias palabras: ¿hasta dónde llegas? '}Cada jugador tiene ${E.VIDAS} vidas.${marcador.record ? ` Tu récord en solitario: ${marcador.record} palabras.` : ''}</p>
-    <div class="bar"><button class="btn on" data-ac="start">¡A encadenar!</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   root.innerHTML = `<div class="enjug" id="enJug"></div>
@@ -68,7 +69,7 @@ function armar() {
     <div class="bar enacc" id="enAcc"><button class="btn on" data-ac="jugar">✔ Jugar</button><button class="btn" data-ac="nose">🏳️ No sé</button><button class="btn tkabrir" data-ac="teclado" aria-label="Abrir teclado">⌨️</button></div>
     <div id="enFin"></div>
     <ul class="enlog" id="enLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); api.borrar(); setup(); }
 function empezar() {

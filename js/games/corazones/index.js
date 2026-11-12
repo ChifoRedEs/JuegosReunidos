@@ -1,4 +1,5 @@
 // Corazones: 4 jugadores (tú y tres CPU), evita llevarte corazones y la dama de picas… o llévatelos todos.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
@@ -32,7 +33,7 @@ export async function mount(r, a) {
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }, { clave: 'meta', titulo: 'Partida a', opciones: C.METAS.map(m => [m, `${m} puntos`]) }, { clave: 'luna', titulo: 'Tiro a la luna', opciones: [['resto', 'Los rivales +26'], ['resta', 'Tú −26']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '👀 Última baza', accion: verUltima }, { texto: '📜 Historial de la partida', accion: verHistorial },
-    { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+    { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
@@ -46,7 +47,7 @@ function setup() {
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(NIVEL))}</div>
     <div class="bar"><span class="lbl">Partida a</span>${seg('meta', C.METAS.map(m => [m, `${m} puntos`]))}</div>
     <div class="bar"><span class="lbl">Tiro a la luna</span>${seg('luna', [['resto', 'Los rivales +26'], ['resta', 'Tú −26']])}</div>
-    <div class="bar"><button class="btn on" data-ac="start">❤️ Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; api.borrar(); setup(); }
 function empezar() {

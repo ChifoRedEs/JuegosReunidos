@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { hacerOrdenable, ordenarMano } from '../../core/arrastrar.js';
 import * as R from './motor.js';
@@ -47,7 +48,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(R.NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); empezarTurno(); pintar(); bucle(); } else setup();
 }
 export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (arr) { arr.destruir(); arr = null; } if (root) root.removeEventListener('click', clic); S = null; asp = null; W = null; }
@@ -61,7 +62,7 @@ function setup() {
     <div class="bar"><span class="lbl">Rivales</span>${seg('rivales', [[1, '1 CPU'], [2, '2 CPU'], [3, '3 CPU']])}</div>
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(R.NIVEL))}</div>
     <p class="note">Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
-    <div class="bar"><button class="btn on" data-ac="start">Repartir fichas</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   cerrar3D(); modo3d = quiere3D();

@@ -1,5 +1,6 @@
 // Dominó: clásico con pozo, bloqueo, «de a cinco» y por parejas, de 2 a 4 jugadores (tú contra la máquina), con fichas doble 6 o doble 9.
 // Reglas y lógica en motor.js. Apariencia: Tapete + Fichas (color, textura, forma, tamaño y puntos).
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { grupoFondo } from '../../core/aspectos.js';
 import * as M from './motor.js';
@@ -73,7 +74,7 @@ export async function mount(r, a) {
       aplicar: v => { cfg = M.normalizar(v); jugar(); },
     },
   });
-  api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '💡 Pista', accion: darPista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '💡 Pista', accion: darPista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && S.ganador === null) armar(); else setup();
 }
 export function unmount() {
@@ -113,7 +114,7 @@ function setup() {
     <div class="bar"><span class="lbl">Fichas</span>${seg('doble', Object.entries(M.DOBLES).map(([k, l]) => [k, l]))}</div>
     <div class="bar"><span class="lbl">La partida termina…</span>${seg('objetivo', Object.entries(M.OBJETIVOS))}</div>
     <div class="bar"><span class="lbl">Nivel de la máquina</span>${seg('nivel', Object.entries(M.NIVELES))}</div>
-    <div class="bar"><button class="btn on" data-ac="jugar">▶️ Jugar</button>${S && S.ganador === null ? '<button class="btn" data-ac="volver">Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({ ac: 'jugar', seguir: S && S.ganador === null ? 'volver' : null })}`;
 }
 function jugar() {
   api.setPref('cfg', cfg); parar(); S = M.crear(cfg); pausado = false; registrada = false; anim = true; armar(); guardar();

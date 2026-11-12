@@ -63,7 +63,7 @@ export async function mount(r, a) {
   else { prepararInfo(); construir(); arrancar(); pintar(); }
 }
 const RETO = { n: 6, dif: 'medio' };
-function menu() { api.menu([{ texto: 'Nuevo panel', accion: () => nueva(S.n, S.dif, false, true) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.n, RETO.dif, false, true, true) }, { texto: 'Comprobar', accion: comprobar }, { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menu(); }, activo: api.pref('errores', false) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]); }
+function menu() { api.menu([{ texto: 'Nuevo panel', accion: () => nueva(S.n, S.dif, false, true) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.n, RETO.dif, false, true, true) }, { texto: 'Comprobar', accion: comprobar }, { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menu(); }, activo: api.pref('errores', false) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]); }
 export function unmount() {
   if (S && crono) { S.t = crono.s; guardar(); }
   if (crono) crono.detener();

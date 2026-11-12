@@ -42,7 +42,7 @@ export async function mount(r, a) {
     config: { valores: () => ({ gar: api.pref('garantizada', true), autor: api.pref('autosubir', true) }),
       grupos: () => [{ clave: 'gar', titulo: 'Reparto', opciones: [[true, '✅ Siempre con solución'], [false, '🎲 Al azar']] }, { clave: 'autor', titulo: 'Subir a las bases', opciones: [[true, 'Solas (jugadas seguras)'], [false, 'Solo a mano']], nota: 'Las cartas que ya no hacen falta en las columnas suben solas a las bases.' }],
       aplicar: v => { api.setPref('garantizada', v.gar); api.setPref('autosubir', v.autor); nueva(true); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => nueva() }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => nueva() }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { $('#fcCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } }, g ? g.t : 0);
   if (S.mov > 0 && !K.gana(S)) crono.iniciar();
   pintar(); revisarAuto();

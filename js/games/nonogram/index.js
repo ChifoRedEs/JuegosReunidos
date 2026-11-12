@@ -61,7 +61,7 @@ export async function mount(root, a) {
     { texto: '📅 Reto del día', accion: () => nuevo(RETO.n, RETO.diff, false, 'azar', true) },
     { texto: 'Borrar casillas', accion: borrar, peligro: true },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() },
-    { texto: 'Reglas', accion: reglas },
+    { texto: '📖 Reglas', accion: reglas },
   ]);
   crono = new Cronometro(() => { if (N) { N.t = crono.s; $('#ngCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
   if (!N) await nuevo(10, 'medio', true); else { construir(); arrancar(); pintar(); }

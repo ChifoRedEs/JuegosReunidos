@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
@@ -33,7 +34,7 @@ export async function mount(r, a) {
     pausar: () => { eraJugando = !!S && S.fase === 'jugar'; pausar(); },
     reanudar: o => { if (o === 'salir' && eraJugando) jugarYa(); },
     config: { valores: () => ({ modo: cfg.modo, vel: cfg.vel, tam: cfg.tam, cruceta: cfg.cruceta }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS) }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(M.VELOCIDADES).map(([k, x]) => [k, x.nombre]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(M.TAMANOS).map(([k, x]) => [k, x.nombre]) }, { clave: 'cruceta', titulo: 'Cruceta', opciones: [[true, 'Mostrar'], [false, 'Solo deslizar']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: 'Cómo se juega', accion: () => { pausar(); reglas(); } }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => { pausar(); setup(); } }, { texto: '🏆 Podio (10 mejores)', accion: () => { pausar(); verPodio(); } }, { texto: '⏸️ Pausa', accion: pausar }, { texto: '🎨 Apariencia', accion: () => { pausar(); asp.abrir(); } }, { texto: '📖 Reglas', accion: () => { pausar(); reglas(); } }]);
   if (S && S.fase !== 'fin') { armar(); dibujar(); } else setup();
 }
 export function unmount() {
@@ -56,7 +57,7 @@ function setup() {
     <div class="bar"><span class="lbl">Cruceta</span>${seg('cruceta', [[true, 'Mostrar'], [false, 'Solo deslizar']])}</div>
     <p class="note">${{ clasico: 'Las paredes del borde te eliminan.', libre: 'Sin paredes: si sales por un lado, entras por el contrario.', laberinto: 'Con muros dentro del tablero: ¡cuidado al girar!', obstaculos: `Empiezas con unas rocas sueltas por el tablero y cada ${M.CADA_ROCA} manzanas aparece otra nueva (nunca justo delante de ti). Es distinto del Laberinto, que tiene muros fijos.` }[cfg.modo]} La velocidad sube a medida que comes; las velocidades altas puntúan más.</p>
     ${recs.length ? `<div class="snrecs"><b>🏆 Tus récords</b>${recs.map(([k, p]) => `<span>${esc(k)}: <b>${p}</b></span>`).join('')}</div>` : ''}
-    <div class="bar">${S && S.fase === 'pausa' ? '<button class="btn on" data-ac="seguir">▶️ Continuar partida</button>' : ''}<button class="btn ${S && S.fase === 'pausa' ? '' : 'on'}" data-ac="start">🐍 Nueva partida</button><button class="btn" data-ac="podio">🏆 Podio</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ seguir: S && S.fase === 'pausa' ? 'seguir' : null, podio: true })}`;
 }
 function armar() {
   root.innerHTML = `<div class="snhud"><span>🍎 <b id="snCom">0</b></span><span class="pts"><b id="snPts">0</b> puntos</span><span>🏆 <b id="snRec">0</b></span><button class="btn snpausa" data-ac="pausa" aria-label="Pausa">⏸️</button></div>
@@ -242,7 +243,7 @@ function clic(e) {
   if (d.dir != null) { api.vibrar(8); return girar(+d.dir); }
   const a = d.ac;
   if (a === 'start') empezar(); else if (a === 'seguir') empezar(true); else if (a === 'otra') empezar();
-  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'podio') verPodio(); else if (a === 'aspecto') { pausar(); asp.abrir(); }
+  else if (a === 'opciones') { pausar(); setup(); } else if (a === 'podio') verPodio(); else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') { pausar(); reglas(); }
   else if (a === 'pausa') { if (S && S.fase === 'jugar') pausar(); else jugarYa(); }
   else if (a === 'tocar' && S && S.fase === 'pausa') jugarYa();
 }

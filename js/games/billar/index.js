@@ -1,4 +1,5 @@
 // Billar: Pool 8, Pool 9 y Snooker de 6 rojas, contra la CPU o entre 2 personas en el mismo móvil.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { anotarPartida, htmlPartidas } from '../../core/historial.js';
@@ -63,7 +64,7 @@ export async function mount(r, a) {
     pausar: () => { pausado = true; },
     reanudar: () => { pausado = false; tPrev = performance.now(); turnoCPU(); },
     config: { valores: () => ({ modo: cfg.modo, rival: cfg.rival, nivel: cfg.nivel, guia: cfg.guia }), grupos: v => [{ clave: 'modo', titulo: 'Juego', opciones: Object.entries(B.MODOS) }, { clave: 'rival', titulo: 'Rival', opciones: [['cpu', '🤖 CPU'], ['dos', '👥 2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.rival === 'cpu', opciones: Object.entries(NIVEL) }, { clave: 'guia', titulo: 'Ayuda', opciones: Object.entries(GUIA) }], aplicar: v => { Object.assign(cfg, v); pausado = false; empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') armar(); else setup();
 }
 export function unmount() {
@@ -85,7 +86,7 @@ function setup() {
     <div class="bar"><span class="lbl">Rival</span>${seg('rival', [['cpu', '🤖 CPU'], ['dos', '👥 2 jugadores']])}</div>
     ${cfg.rival === 'cpu' ? `<div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(NIVEL))}</div>` : ''}
     <div class="bar"><span class="lbl">Ayuda</span>${seg('guia', Object.entries(GUIA))}</div>
-    <div class="bar"><button class="btn on" data-ac="start">🎱 Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; serie++; anim = null; api.borrar(); S = null; setup(); }
 function empezar() {
@@ -99,7 +100,7 @@ function armar() {
     <div class="msg bimsg" id="biMsg" role="status" aria-live="polite"></div>
     <div class="bizona" id="biZona"><canvas id="biCv" aria-label="Mesa de billar: toca o arrastra para apuntar"${modo3d ? ' style="display:none"' : ''}></canvas>${modo3d ? '<div class="e3d bi3d" id="bi3d"></div>' : ''}</div>
     <div class="bicesto" id="biCesto" aria-label="Bolas metidas"></div>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="panel">📍 Recolocar controles</button><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="panel">📍 Recolocar controles</button><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   cv = $('#biCv'); ctx = cv.getContext('2d'); dpr = Math.min(window.devicePixelRatio || 1, 3);
   cv.addEventListener('pointerdown', abajo); cv.addEventListener('pointermove', mueve);
   for (const t of ['pointerup', 'pointercancel']) cv.addEventListener(t, () => { arrastre = null; });

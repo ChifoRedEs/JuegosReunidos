@@ -47,7 +47,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => nueva(S.nivel, S.tema),
     salir: () => { location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ nivel: S.nivel, tema: S.tema }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel', nota: (NIVELES[v.nivel] || {}).ayuda, opciones: Object.entries(NIVELES).map(([k, n]) => [k, n.nombre]) }, { clave: 'tema', titulo: 'Tema', opciones: temasDe(v.nivel).map(x => [x.id, `${x.icono} ${x.nombre}`]) }], alCambiar: (v, k) => { if (k === 'nivel' && !temasDe(v.nivel).some(x => x.id === v.tema)) v.tema = 'mezcla'; }, aplicar: v => nueva(v.nivel, v.tema, true) } });
-  api.menu([{ texto: 'Otra palabra', accion: () => nueva(S.nivel, S.tema) }, { texto: '👥 2 jugadores: escribe tú la palabra', accion: dosJugadores }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+  api.menu([{ texto: 'Otra palabra', accion: () => nueva(S.nivel, S.tema) }, { texto: '👥 2 jugadores: escribe tú la palabra', accion: dosJugadores }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (!S) { nueva(api.pref('nivel', 'facil'), 'mezcla', true); } else { faseAnterior = fase(); pintar(false); }
 }
 export function unmount() { document.removeEventListener('keydown', onKey); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', teclaPalabra); } if (tk) { tk.destruir(); tk = null; } S = null; asp = null; }

@@ -9,7 +9,7 @@ export const CASILLAS = {
   26: { tipo: 'dados', nombre: 'Dados', ico: '🎲' }, 53: { tipo: 'dados', nombre: 'Dados', ico: '🎲' },
   58: { tipo: 'muerte', nombre: 'Muerte', ico: '💀' }, 63: { tipo: 'fin', nombre: 'Jardín de la Oca', ico: '🏁' },
 };
-OCAS.forEach(n => { CASILLAS[n] = { tipo: 'juegodelaoca', nombre: 'Oca', ico: '🦢' }; });
+OCAS.forEach(n => { CASILLAS[n] = { tipo: 'oca', nombre: 'Oca', ico: '🦢' }; });
 export const COLORES = ['#E0243A', '#2F6BFF', '#12A05C', '#F2B600'];
 export const NOMBRES_COLOR = ['Roja', 'Azul', 'Verde', 'Amarilla'];
 const PIERDE = { posada: 1, carcel: 2 };
@@ -51,8 +51,8 @@ export function tirar(S, valores) {
   // efecto de la casilla (puede encadenar: rebote → oca, etc.)
   for (let g = 0; g < 1; g++) {                            // una sola casilla especial por tirada
     const c = CASILLAS[pos]; if (!c) break;
-    if (c.tipo === 'juegodelaoca' && !eventos.some(e => e.tipo === 'juegodelaoca' && e.de === pos)) {
-      const sig = OCAS.find(n => n > pos) ?? FIN; eventos.push({ tipo: 'juegodelaoca', de: pos, a: sig, texto: sig === FIN ? '¡De oca a oca… y al jardín de la Oca!' : 'De oca a oca y tiro porque me toca.' }); pos = sig; otra = sig !== FIN; break;
+    if (c.tipo === 'oca' && !eventos.some(e => e.tipo === 'oca' && e.de === pos)) {
+      const sig = OCAS.find(n => n > pos) ?? FIN; eventos.push({ tipo: 'oca', de: pos, a: sig, texto: sig === FIN ? '¡De oca a oca… y al jardín de la Oca!' : 'De oca a oca y tiro porque me toca.' }); pos = sig; otra = sig !== FIN; break;
     }
     if (c.tipo === 'puente' && !eventos.some(e => e.tipo === 'puente')) { const a = pos === 6 ? 12 : 6; eventos.push({ tipo: 'puente', de: pos, a, texto: 'De puente a puente y tiro porque me lleva la corriente.' }); pos = a; otra = true; break; }
     if (c.tipo === 'dados' && !eventos.some(e => e.tipo === 'dados')) { const a = pos === 26 ? 53 : 26; eventos.push({ tipo: 'dados', de: pos, a, texto: 'De dado a dado y tiro porque me ha tocado.' }); pos = a; otra = true; break; }

@@ -84,7 +84,7 @@ export async function mount(r, a) {
 function menu() {
   api.menu([{ texto: 'Nuevo puzle', accion: () => nueva(S.dif, false, true) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.dif, false, true, true) }, { texto: 'Comprobar', accion: comprobar },
     { texto: 'Marcar errores al instante', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menu(); }, activo: api.pref('errores', false) },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
 }
 export function unmount() {
   if (S && crono) { S.t = crono.s; guardar(); }

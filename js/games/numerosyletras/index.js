@@ -33,7 +33,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => nuevaSetup(),
     salir: () => { location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rondas', titulo: 'Rondas', opciones: C.RONDAS.map(n => [n, String(n)]) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: C.TIEMPOS.map(t => [t, t ? t + ' s' : 'Sin límite']) }, { clave: 'rival', titulo: 'Rival', opciones: [['cpu', '🤖 CPU'], ['solo', '👤 Solo']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.rival === 'cpu', opciones: Object.entries(NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📅 Reto del día', accion: reto }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📅 Reto del día', accion: reto }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   armar();
   if (S && S.fase === 'pensar') arrancarReloj();
 }
@@ -49,7 +49,7 @@ function guardar() { if (!S) return; const d = { s: S, reg }; const r = resumen(
 function armar() {
   root.innerHTML = `<div id="cyReto"></div>
     <div class="cymesa" id="cyMesa"></div>
-    <div class="bar" style="justify-content:center"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar" style="justify-content:center"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   if (!S) { empezar(); return; }
   pintar();
 }

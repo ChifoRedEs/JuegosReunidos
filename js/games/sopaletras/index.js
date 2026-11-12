@@ -83,7 +83,7 @@ export async function mount(r, a) {
     { texto: '💡 Pista', accion: pista },
     { texto: 'Mostrar soluciones', accion: rendirse, peligro: true },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() },
-    { texto: 'Cómo se juega', accion: reglas },
+    { texto: '📖 Reglas', accion: reglas },
   ]);
   crono = new Cronometro(() => { if (S) { S.t = crono.s; $('#spCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
   if (!S) { await nueva(api.pref('tema', 'animales'), api.pref('nivel', 'medio'), true); }

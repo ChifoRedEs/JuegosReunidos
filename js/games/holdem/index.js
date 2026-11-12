@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { cartaHTML } from '../../core/cartas.js';
 import { grupoMesa, grupoDorso, grupoBarajaFr } from '../../core/aspectos.js';
@@ -63,7 +64,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'terminado') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['torneo', '🏆 Torneo'], ['libre', '🃏 Partida libre']] }, { clave: 'ciegas', titulo: 'Ciegas', visible: v.modo === 'libre', opciones: Object.entries(H.CIEGAS_LIBRE).map(([k, [a, b]]) => [k, `${a}/${b}`]) }, { clave: 'bots', titulo: 'Rivales', opciones: [2, 3, 4, 5].map(n => [n, n + ' bots']) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📊 Mis estadísticas', accion: verEstad }, { texto: 'Mostrar mis probabilidades', accion: () => { consejo = !consejo; api.setPref('consejo', consejo); pintar(); }, activo: consejo }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📊 Mis estadísticas', accion: verEstad }, { texto: 'Mostrar mis probabilidades', accion: () => { consejo = !consejo; api.setPref('consejo', consejo); pintar(); }, activo: consejo }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Ranking de manos', accion: ranking }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { prevTab = S.tablero.length; armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { cerrar3D(); modo3d = false; clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alMover); } S = null; asp = null; }
@@ -77,7 +78,7 @@ function setup() {
     ${cfg.modo === 'libre' ? `<div class="bar"><span class="lbl">Ciegas</span><div class="seg">${Object.entries(H.CIEGAS_LIBRE).map(([k, [a, b]]) => `<button class="btn ${cfg.ciegas === k ? 'on' : ''}" data-ciegas="${k}">${a}/${b}</button>`).join('')}</div></div>` : ''}
     <div class="bar"><span class="lbl">Rivales</span><div class="seg">${[2, 3, 4, 5].map(n => `<button class="btn ${cfg.bots === n ? 'on' : ''}" data-bots="${n}">${n} bots</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(NIVEL).map(([k, l]) => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-niv="${k}">${l}</button>`).join('')}</div></div>
-    <div class="bar"><button class="btn on" data-ac="start">${cfg.modo === 'libre' ? 'Sentarse a la mesa' : 'Empezar torneo'}</button><button class="btn" data-ac="estad">📊 Mis estadísticas</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="rank">Ranking de manos</button></div>
+    ${pieMenu({ extra: '<button class="btn" data-ac="estad">📊 Mis estadísticas</button><button class="btn" data-ac="rank">🃏 Ranking de manos</button>' })}
     <p class="note">Cada bot tiene su estilo: conservador, equilibrado, agresivo o farolero. En Fácil se equivocan más; en Difícil calculan más simulaciones.</p>`;
 }
 function armar() {
@@ -197,7 +198,7 @@ function clic(e) {
   if (d.pre) { const L = H.legal(S, 0), B = H.bote(S); subir = d.pre === 'max' ? L.maxTo : Math.max(L.minTo, Math.min(L.maxTo, Math.round((S.apuestaMax + (B + L.aPagar) * +d.pre) / 5) * 5)); return panel(); }
   if (d.act) return humano({ t: d.act, a: subir });
   const ac = d.ac;
-  if (ac === 'start') empezar(); else if (ac === 'aspecto') asp.abrir(); else if (ac === 'rank') ranking();
+  if (ac === 'start') empezar(); else if (ac === 'aspecto') asp.abrir(); else if (ac === 'reglas') reglas(); else if (ac === 'rank') ranking();
   else if (ac === 'siguiente') { H.nuevaMano(S); S.mio = { vpip: false, pfr: false }; prevTab = 0; pintar(); guardar(); bucle(); }
   else if (ac === 'estad') verEstad(); else if (ac === 'levantarse') levantarse();
   else if (ac === 'setup') { api.borrar(); setup(); } else if (ac === 'nueva') nuevaSetup();

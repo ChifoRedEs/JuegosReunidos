@@ -1,4 +1,5 @@
 // Encajados: empuja todas las cajas hasta las metas. Campaña de 20 niveles, niveles generados sin fin y reto del día.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import * as K from './motor.js';
@@ -67,7 +68,7 @@ export async function mount(r, a) {
     etiqueta: 'Nuevo nivel',
     config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(MODOS) }, { clave: 'tam', titulo: 'Tamaño del almacén', visible: v.modo !== 'campana', opciones: Object.entries(K.TAMANOS).map(([k, t]) => [k, `${t.nombre} · ${t.cajas} cajas`]) }], aplicar: v => { cfg.modo = v.modo; cfg.tam = v.tam; api.setPref('cfg', cfg); if (v.modo === 'campana') elegirModo('campana'); else generado(v.tam); } } });
   api.menu([{ texto: '🗺️ Campaña', accion: () => elegirModo('campana') }, { texto: '🎲 Nivel generado', accion: () => elegirModo('azar') }, { texto: '📅 Reto del día', accion: () => reto() },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) armar(); else elegirModo(cfg.modo);
 }
 export function unmount() { cerrar3D(); modo3d = false; serie++; clearTimeout(andando); andando = null; document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; L = null; asp = null; }
@@ -88,7 +89,7 @@ function elegirModo(modo) {
     : `<p class="note">Niveles nuevos sin fin, creados al momento y comprobados: siempre tienen solución.</p>
       <div class="bar"><span class="lbl">Tamaño</span><div class="seg">${Object.entries(K.TAMANOS).map(([k, t]) => `<button class="btn ${cfg.tam === k ? 'on' : ''}" data-tam="${k}">${t.nombre} · ${t.cajas} cajas</button>`).join('')}</div></div>
       <div class="bar"><button class="btn on" data-ac="generar">🎲 Crear nivel</button></div>`}
-    <div class="bar">${S && !S.done ? '<button class="btn" data-ac="volver">▶️ Volver a la partida</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button></div>`;
+    ${pieMenu({ seguir: S && !S.done ? 'volver' : null, sinNueva: true })}`;
 }
 function empezar(datos) {
   serie++; clearTimeout(andando); andando = null; ocupado = false;
@@ -261,7 +262,7 @@ function clic(e) {
   const a = d.ac;
   if (a === 'deshacer') deshacer(); else if (a === 'reiniciar') reiniciar(); else if (a === 'pista') pista();
   else if (a === 'volver') armar(); else if (a === 'generar') generado(cfg.tam); else if (a === 'reto') reto();
-  else if (a === 'siguiente') nivelCampana(S.nivel + 1); else if (a === 'aspecto') asp.abrir();
+  else if (a === 'siguiente') nivelCampana(S.nivel + 1); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
 }
 function reglas() {
   api.modal('Encajados', `<ul><li>Eres el mozo del almacén: <b>empuja todas las cajas</b> hasta las casillas marcadas.</li>

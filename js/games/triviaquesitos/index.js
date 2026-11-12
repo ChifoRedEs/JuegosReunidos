@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { grupoTablero, grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 import * as T from './motor.js';
@@ -26,7 +27,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], nCat: cfg.nCat, banco: cfg.banco, modo: cfg.modo, nivel: cfg.nivel }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'nCat', titulo: 'Quesitos', opciones: [[6, '6 categorías'], [9, '9 (completo)']] }, { clave: 'banco', titulo: 'Preguntas', opciones: Object.entries(T.BANCOS) }, { clave: 'modo', titulo: 'Respuestas', opciones: [['opciones', '4 opciones'], ['escribir', 'Escribir']] }, { clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(T.NIVEL).map(([k, x]) => [k, x.nombre]) }], aplicar: v => { if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.nCat = v.nCat; cfg.banco = v.banco; cfg.modo = v.modo; cfg.nivel = v.nivel; empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); root.removeEventListener('keydown', alTecla); } S = null; asp = null; }
@@ -41,12 +42,12 @@ function setup() {
     <div class="bar"><span class="lbl">Preguntas</span><div class="seg">${Object.entries(T.BANCOS).map(([k, l]) => `<button class="btn ${cfg.banco === k ? 'on' : ''}" data-banco="${k}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Respuestas</span><div class="seg"><button class="btn ${cfg.modo === 'opciones' ? 'on' : ''}" data-modo="opciones">4 opciones</button><button class="btn ${cfg.modo === 'escribir' ? 'on' : ''}" data-modo="escribir">Escribir</button></div></div>
     <div class="bar"><span class="lbl">Nivel CPU</span><div class="seg">${Object.entries(T.NIVEL).map(([k, v]) => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-niv="${k}">${v.nombre}</button>`).join('')}</div></div>
-    <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar partida</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
+    ${pieMenu({ deshabilitado: n < 2 })}
     <p class="note">${cfg.nCat === 6 ? 'Geografía, Historia, Ciencias, Arte y literatura, Espectáculos y Deportes.' : 'Añade Mitología y filosofía, Gastronomía y Cultura general (partidas más largas).'} Banco de 450 definiciones y ${cfg.nCat * 15} preguntas clásicas.</p>`;
 }
 function armar() {
   root.innerHTML = `<div class="tvj" id="tvJ"></div><svg class="tvb" id="tvB" viewBox="0 0 320 320" role="img" aria-label="Tablero circular del Trivia Quesitos"></svg><div class="tvpanel" id="tvP"></div><ul class="tvlog" id="tvL"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
 }
 function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {

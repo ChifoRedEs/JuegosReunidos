@@ -71,7 +71,7 @@ function menu() {
   api.menu([{ texto: 'Nuevo panel', accion: () => nueva(S ? S.n : 8, S ? S.dif : 'medio', false, true) }, { texto: '📅 Reto del día', accion: () => nueva(RETO.n, RETO.dif, false, true, true) },
     { texto: 'Comprobar', accion: comprobar }, { texto: 'Marcar errores automáticamente', accion: () => { api.setPref('errores', !api.pref('errores', false)); pintar(); menu(); }, activo: api.pref('errores', false) },
     { texto: 'Mostrar combinaciones', accion: () => { api.setPref('combos', !api.pref('combos', true)); pintar(); menu(); }, activo: api.pref('combos', true) },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
 }
 export function unmount() {
   serie++;

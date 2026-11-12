@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { crearTeclado } from '../../core/teclado.js';
 import * as R from './motor.js';
@@ -23,7 +24,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; texto = ''; flash = null; bocadillo = '';
-  asp = api.aspecto([grupoFondo('#rcRosco'), { clave: 'elrosco', titulo: 'Colores del rosco', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul de concurso', sw: ['#1E4FD8', '#0B1E5B'] }, { id: 'morado', nombre: 'Morado', sw: ['#8B5CF6', '#3B1E7A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#0E1330'] }] }], () => { if (S) pintar(); });
+  asp = api.aspecto([grupoFondo('#rcRosco'), { clave: 'rosco', titulo: 'Colores del rosco', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul de concurso', sw: ['#1E4FD8', '#0B1E5B'] }, { id: 'morado', nombre: 'Morado', sw: ['#8B5CF6', '#3B1E7A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#0E1330'] }] }], () => { if (S) pintar(); });
   await api.css(new URL('./elrosco.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && ['solo', 'cpu'].includes(c0.modo) && R.NIVEL[c0.nivel] && R.TIEMPOS.includes(c0.tiempo)) cfg = { ...c0 };
   const g = api.cargar();
@@ -34,7 +35,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar este rosco?')) return; parar(); empezar(); },
     salir: () => { parar(); api.borrar(); location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['solo', 'Contrarreloj'], ['cpu', 'Duelo contra la CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(R.NIVEL) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: R.TIEMPOS.map(t => [t, `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]) }], aplicar: v => { Object.assign(cfg, v); parar(); empezar(); } } });
-  api.menu([{ texto: 'Nuevo rosco', accion: nuevaSetup }, { texto: '🏳️ Plantarse', accion: plantarse }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Cómo se juega', accion: reglas }]);
+  api.menu([{ texto: 'Nuevo rosco', accion: nuevaSetup }, { texto: '🏳️ Plantarse', accion: plantarse }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); arrancar(); } else setup();
 }
 export function unmount() {
@@ -52,7 +53,7 @@ function setup() {
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(R.NIVEL))}</div>
     <div class="bar"><span class="lbl">Tiempo</span>${seg('tiempo', R.TIEMPOS.map(t => [t, `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]))}</div>
     <p class="note">${cfg.modo === 'cpu' ? 'Duelo: cada uno tiene su rosco y su reloj. Si fallas o dices paso la cabra, le toca a la CPU; gana quien más acierte. ' : ''}Fácil: palabras cotidianas · Normal: algo más variadas · Difícil: incluye las definiciones del Trivia Quesitos.<br>Tu mejor marca: ${marcador.mejor} aciertos${marcador.g + marcador.p + marcador.e ? ` · Duelos: ${marcador.g} ganados, ${marcador.p} perdidos, ${marcador.e} empates` : ''}.</p>
-    <div class="bar"><button class="btn on" data-ac="start">¡Empezar el rosco!</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   root.innerHTML = `<div class="rcpanel" id="rcRival"></div>

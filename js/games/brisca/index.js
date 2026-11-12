@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { anotarPartida, htmlPartidas } from '../../core/historial.js';
 import { cartaEsHTML, asegurarSprites, PALOS_ES } from '../../core/cartas.js';
@@ -35,7 +36,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'n', titulo: 'Jugadores', opciones: [[2, '2 · tú vs CPU'], [3, '3 · cada uno por su cuenta'], [4, '4 · en parejas']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(NIVEL) }, { clave: 'cambio', titulo: 'Cambiar el 7 del triunfo', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '👀 Última baza', accion: verUltima }, { texto: '📜 Historial de partidas', accion: () => api.modal('📜 Historial de partidas', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '👀 Última baza', accion: verUltima }, { texto: '📜 Historial de partidas', accion: () => api.modal('📜 Historial de partidas', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); prevMesa = S.mesa.length; pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); if (root) root.removeEventListener('click', clic); S = null; asp = null; }
@@ -49,7 +50,7 @@ function setup() {
     <div class="bar"><span class="lbl">Nivel</span><div class="seg">${Object.entries(NIVEL).map(([k, l]) => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-niv="${k}">${l}</button>`).join('')}</div></div>
     <label class="chk"><input type="checkbox" id="brCambio" ${cfg.cambio ? 'checked' : ''}><span><b>Cambiar el 7 del triunfo</b>: cuando salgas tú, puedes cambiar tu 7 de triunfo por la carta de triunfo que se ve en el mazo.</span></label>
     <p class="note">${cfg.n === 4 ? 'Juegas con el compañero de enfrente (CPU) contra los otros dos. ' : ''}${cfg.n === 3 ? 'Con 3 jugadores se retira el 2 de oros. ' : ''}Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas · ${marcador.e} empates.</p>
-    <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
   root.querySelector('#brCambio').addEventListener('change', e => { cfg.cambio = e.target.checked; });
 }
 function armar() {

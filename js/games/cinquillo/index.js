@@ -1,3 +1,4 @@
+import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { anotarPartida, htmlPartidas, historialVacio, validarHistorial, seguir, htmlTabla } from '../../core/historial.js';
 import { cartaEsHTML, asegurarSprites, nombreEs, PALOS_ES } from '../../core/cartas.js';
@@ -39,7 +40,7 @@ export async function mount(r, a) {
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'rivales', titulo: 'Rivales', opciones: [[2, '2 CPU'], [3, '3 CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(C.NIVEL) }, { clave: 'rondas', titulo: 'Partida', opciones: [[1, '1 mano'], [3, '3 manos'], [5, '5 manos']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
 export function unmount() { clearTimeout(timer); if (arr) { arr.destruir(); arr = null; } if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
@@ -54,7 +55,7 @@ function setup() {
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(C.NIVEL))}</div>
     <div class="bar"><span class="lbl">Partida</span>${seg('rondas', [[1, '1 mano'], [3, '3 manos'], [5, '5 manos']])}</div>
     <p class="note">${cfg.rivales === 2 ? 'Con 3 jugadores se reparten 13 o 14 cartas a cada uno.' : 'Con 4 jugadores, 10 cartas a cada uno.'} Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
-    <div class="bar"><button class="btn on" data-ac="start">Repartir</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>`;
+    ${pieMenu({})}`;
 }
 function armar() {
   root.innerHTML = `<div class="cqtop"><span id="cqInfo"></span><span>✔ ${marcador.g} · ✘ ${marcador.p}</span></div>
@@ -68,7 +69,7 @@ function armar() {
     <div class="bar cqacc" id="cqAcc"></div>
     <div id="cqRes"></div>
     <ul class="cqlog" id="cqLog"></ul>
-    <div class="bar"><button class="btn" data-ac="reglas">Reglas</button></div>${api.barraHtml()}`;
+    <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#cqMano'), { sel: '.cqc', alSoltar: ids => { ord = { modo: 'libre', ids }; pintar(); guardar(); } });
 }

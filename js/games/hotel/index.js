@@ -1,5 +1,6 @@
 // Hotel · juego de compra y construcción de hoteles: compra terrenos, pide licencias de obras, levanta hoteles por fases,
 // abre entradas en el Ayuntamiento y cobra las noches de los rivales. Gana el último jugador en pie. Tablero 3D (Three.js) con respaldo SVG.
+import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoFondo } from '../../core/aspectos.js';
@@ -47,7 +48,7 @@ export async function mount(r, a) {
     pausar: () => { enPausa = true; },
     reanudar: () => { enPausa = false; },
     config: { pantalla: () => nuevaSetup() } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏨 Hoteles', accion: () => hoteles() }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏨 Hoteles', accion: () => hoteles() }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && S.fase !== 'fin') { armar(); pintar(); ciclo(); } else setup();
 }
 export function unmount() {
@@ -68,7 +69,7 @@ function setup() {
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [40, '40 rondas'], [80, '80 rondas']].map(([v, l]) => `<button class="btn ${cfg.limite === v ? 'on' : ''}" data-limite="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel de la CPU</span><div class="seg">${[1, 2, 3].map(k => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-nivel="${k}">${NIVELES[k]}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
-    <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
+    ${pieMenu({ deshabilitado: n < 2 })}
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores, ${eur(DINERO_INICIAL)} cada uno. Las personas se pasan el móvil por turnos.`}</p>`;
 }
 function nuevaSetup() {

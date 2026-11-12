@@ -1,4 +1,5 @@
 // Magnate Urbano · juego de compraventa de empresas tecnológicas (2 a 4 jugadores, personas o CPU).
+import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
@@ -70,7 +71,7 @@ export async function mount(r, a) {
     reanudar: () => { enPausa = false; },
     config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], dinero: cfg.dinero, rondas: cfg.rondas, vel: cfg.vel, bote: cfg.bote, subasta: cfg.subasta }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'dinero', titulo: 'Dinero', opciones: [1200, 1600, 2000].map(x => [x, x + 'M']) }, { clave: 'rondas', titulo: 'Duración', opciones: [[0, 'Hasta la quiebra'], [20, '20 rondas'], [40, '40 rondas']] }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) }, { clave: 'bote', titulo: 'Bote del Paraíso Fiscal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'subasta', titulo: 'Subastas', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { enPausa = false; if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.dinero = v.dinero; cfg.rondas = v.rondas; cfg.vel = v.vel; cfg.bote = v.bote; cfg.subasta = v.subasta; empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏢 Mis empresas', accion: () => gestionarDesdeBoton() }, { texto: '🤝 Intercambiar', accion: () => intercambioDesdeBoton() },
-    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: 'Reglas', accion: reglas }]);
+    { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (G && !G.terminada) { armar(); pintar(); log(`Partida recuperada: ronda ${G.ronda}.`); if (G.p().bot) jugar(); }
   else setup();
 }
@@ -98,7 +99,7 @@ function setup() {
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
     <label class="chk"><input type="checkbox" data-op="bote" ${cfg.bote ? 'checked' : ''}><span><b>Bote del Paraíso Fiscal</b>: los impuestos, multas y fianzas se acumulan y se los lleva quien caiga en el Paraíso Fiscal.</span></label>
     <label class="chk"><input type="checkbox" data-op="subasta" ${cfg.subasta ? 'checked' : ''}><span><b>Subastas</b>: si quien cae en una empresa libre no la compra, se subasta entre todos.</span></label>
-    <div class="bar"><button class="btn on" data-ac="start" ${n < 2 ? 'disabled' : ''}>Empezar</button><button class="btn" data-ac="aspecto">🎨 Apariencia</button><button class="btn" data-ac="reglas">Reglas</button></div>
+    ${pieMenu({ deshabilitado: n < 2 })}
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos.`}</p>`;
 }
 function nuevaSetup() {
