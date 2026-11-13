@@ -37,7 +37,7 @@ if (document.fonts) { document.fonts.load('900 40px Fraunces').then(ajustarCabec
 const cabTxt = t => {
   const e = document.getElementById('titulotxt'); if (!e) return;
   e.style.color = '';
-  if (t === 'JugamiGO') { e.innerHTML = 'Jugami<span class="go">GO</span>'; return; }
+  if (t === 'JugamiGO') { e.innerHTML = '<a class="cab-inicio" href="#/" aria-label="JugamiGO: ir a la pantalla de inicio">Jugami<span class="go">GO</span></a>'; return; }
   e.textContent = t;
 };
 let nombreVista = '';       // nombre de la pantalla actual (título de la hoja de opciones); la cabecera es fija
