@@ -36,9 +36,10 @@ if (document.fonts) { document.fonts.load('900 40px Fraunces').then(ajustarCabec
 const imgIc = (n, w = 22, c = 'ic') => `<img class="${c}" src="img/iconos/${n}.webp" alt="" width="${w}" height="${w}">`;   // icono ilustrado (img/iconos)
 const emblema = (id, w = 46) => `<img class="emb" src="img/sellos/${id}.webp" alt="" width="${w}" height="${w}" loading="lazy">`;   // emblema de un juego (img/sellos)
 // Título de la cabecera: «JugamiGO» con el sello GO; en cada juego, su nombre en tinta
-const cabTxt = t => {
+const cabTxt = (t, href = '') => {
   const e = document.getElementById('titulotxt'); if (!e) return;
   e.style.color = '';
+  if (href) { const a = document.createElement('a'); a.className = 'cab-inicio'; a.href = href; a.textContent = t; a.setAttribute('aria-label', t + ': ver los juegos de su categoría'); e.replaceChildren(a); return; }
   if (t === 'JugamiGO') { e.innerHTML = '<a class="cab-inicio" href="#/" aria-label="JugamiGO: ir a la pantalla de inicio">Jugami<span class="go">GO</span></a>'; return; }
   e.textContent = t;
 };
@@ -460,7 +461,7 @@ async function render() {
 }
 async function abrirJuego(id, t) {
   const j = JUEGOS.find(x => x.id === id);
-  nombreVista = j.nombre; cabTxt(j.nombre);
+  nombreVista = j.nombre; cabTxt(j.nombre, '#/cat/' + j.categoria);
   app.innerHTML = '<p class="note">Cargando…</p>';
   let mod;
   await cargarBarajas();                       // índice de barajas/dorsos de imagen (no falla: sin él solo salen las cartas dibujadas)
@@ -499,8 +500,8 @@ window.addEventListener('hashchange', render);
     const n = RUTAS[i + (dx < 0 ? 1 : -1)]; if (n) location.hash = n[3];
   }, { passive: true });
 })();
-app.addEventListener('keydown', e => { const fv = e.target.closest && e.target.closest('[data-fav]'); if (fv && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); alternarFav(fv.dataset.fav, fv); } });
-app.addEventListener('click', e => { const fv = e.target.closest('[data-fav]'); if (fv) { e.preventDefault(); e.stopPropagation(); alternarFav(fv.dataset.fav, fv); return; } const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); const g = e.target.closest('[data-gen]'); if (g && actual) actual.api.gen(g.dataset.gen); });
+app.addEventListener('keydown', e => { const fv = e.target.closest && e.target.closest('[data-fav],[data-favg]'); if (fv && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); if (fv.dataset.favg) alternarFavGrupo(fv.dataset.favg); else alternarFav(fv.dataset.fav, fv); } });
+app.addEventListener('click', e => { const fv = e.target.closest('[data-fav],[data-favg]'); if (fv) { e.preventDefault(); e.stopPropagation(); if (fv.dataset.favg) alternarFavGrupo(fv.dataset.favg); else alternarFav(fv.dataset.fav, fv); return; } const b = e.target.closest('[data-grupo]'); if (b) elegirJuego(b.dataset.grupo); const g = e.target.closest('[data-gen]'); if (g && actual) actual.api.gen(g.dataset.gen); });
 
 /* ---------- inicio ---------- */
 function enCursoDe(j) { const e = store.getResumen(j.id); return e && !e.fin && e.resumen ? e : null; }
@@ -513,13 +514,28 @@ function ficha(j) {
 // Favoritos: se guardan en los ajustes (y van en la copia de seguridad)
 const favs = () => (aj.ajustes().fav || []).filter(id => JUEGOS.some(j => j.id === id));
 const esFav = id => favs().includes(id);
+const favGrupo = gid => { const g = GRUPOS.find(x => x.id === gid); return g ? g.juegos.filter(id => JUEGOS.some(j => j.id === id)) : []; };
+const grupoFav = gid => { const l = favGrupo(gid); return l.length > 0 && l.every(esFav); };
+const estrellaG = gid => { const f = grupoFav(gid); return `<span class="fav ${f ? 'on' : ''}" data-favg="${gid}" role="button" tabindex="0" aria-pressed="${f}" aria-label="${f ? 'Quitar los juegos de la ficha de favoritos' : 'Añadir los juegos de la ficha a favoritos'}">${f ? '★' : '☆'}</span>`; };
+function pintarFavs() {
+  document.querySelectorAll('[data-fav]').forEach(n => { const f = esFav(n.dataset.fav); n.classList.toggle('on', f); n.textContent = f ? '★' : '☆'; n.setAttribute('aria-pressed', String(f)); n.setAttribute('aria-label', f ? 'Quitar de favoritos' : 'Añadir a favoritos'); });
+  document.querySelectorAll('[data-favg]').forEach(n => { const f = grupoFav(n.dataset.favg); n.classList.toggle('on', f); n.textContent = f ? '★' : '☆'; n.setAttribute('aria-pressed', String(f)); n.setAttribute('aria-label', f ? 'Quitar los juegos de la ficha de favoritos' : 'Añadir los juegos de la ficha a favoritos'); });
+  const nf = favs().length, c = document.getElementById('accFavN'); if (c) c.textContent = nf ? `${nf} juego${nf === 1 ? '' : 's'}` : 'Ninguno aún';
+}
+function alternarFavGrupo(gid) {
+  const ids = favGrupo(gid), g = GRUPOS.find(x => x.id === gid); if (!g || !ids.length) return;
+  const todos = ids.every(esFav), l = favs(), nueva = todos ? l.filter(x => !ids.includes(x)) : [...l, ...ids.filter(x => !l.includes(x))];
+  aj.set('fav', nueva); pintarFavs();
+  const nombres = ids.map(id => JUEGOS.find(j => j.id === id).nombre).join(' y ');
+  aviso(todos ? `☆ ${nombres}: ya no son favoritos` : `★ ${nombres} añadidos a favoritos`, 1800);
+  if (ruta().cat === 'favoritos' && todos) vFavoritos();
+}
 const estrella = id => { const f = esFav(id); return `<span class="fav ${f ? 'on' : ''}" data-fav="${id}" role="button" tabindex="0" aria-pressed="${f}" aria-label="${f ? 'Quitar de favoritos' : 'Añadir a favoritos'}">${f ? '★' : '☆'}</span>`; };
 function alternarFav(id, nodo) {
   const j = JUEGOS.find(x => x.id === id); if (!j) return;
   const l = favs(), ya = l.includes(id), nueva = ya ? l.filter(x => x !== id) : [...l, id];
   aj.set('fav', nueva); 
-  document.querySelectorAll(`[data-fav="${id}"]`).forEach(n => { n.classList.toggle('on', !ya); n.textContent = ya ? '☆' : '★'; n.setAttribute('aria-pressed', String(!ya)); n.setAttribute('aria-label', ya ? 'Añadir a favoritos' : 'Quitar de favoritos'); });
-  const c = document.getElementById('accFavN'); if (c) c.textContent = nueva.length ? `${nueva.length} juego${nueva.length === 1 ? '' : 's'}` : 'Ninguno aún';
+  pintarFavs();
   aviso(ya ? `☆ ${j.nombre} ya no es favorito` : `★ ${j.nombre} añadido a favoritos`, 1600);
   if (ruta().cat === 'favoritos' && ya) vFavoritos();
 }
@@ -547,14 +563,14 @@ function resultadosBusqueda(q) {
 // Ficha de un grupo de juegos: al pulsarla se abre la ventana para elegir uno
 function fichaGrupo(g, js) {
   const cur = js.filter(enCursoDe), sub = cur.length ? 'Continuar · ' + esc(cur.map(j => j.nombre).join(' · ')) : esc(js.map(j => j.nombre).join(' · '));
-  return `<button type="button" class="ficha ${cur.length ? 'curso' : ''}" data-grupo="${g.id}" style="--c:${g.color}" aria-haspopup="dialog"><span class="ico" aria-hidden="true">${emblema(g.juegos[0])}</span><b>${esc(g.nombre)}</b><small>${sub}</small></button>`;
+  return `<button type="button" class="ficha ${cur.length ? 'curso' : ''}" data-grupo="${g.id}" style="--c:${g.color}" aria-haspopup="dialog"><span class="ico" aria-hidden="true">${emblema(g.juegos[0])}</span><b>${esc(g.nombre)}</b><small>${sub}</small>${estrellaG(g.id)}</button>`;
 }
 function elegirJuego(gid) {
   const g = GRUPOS.find(x => x.id === gid); if (!g) return;
   const js = g.juegos.map(id => JUEGOS.find(x => x.id === id));
   const opciones = js.map(j => { const e = store.getResumen(j.id), cur = e && !e.fin && e.resumen;
-    return `<a class="eleg" href="#/juego/${j.id}" data-cerrar style="--c:${j.color}"><span class="ico" aria-hidden="true">${emblema(j.id, 44)}</span><span class="eleg-t"><b>${esc(j.nombre)}</b><small>${cur ? 'Continuar · ' + esc(e.resumen) : esc(j.descripcion)}</small></span><i aria-hidden="true">›</i></a>`; }).join('');
-  const cerrar = hoja([el('h2', {}, `${g.icono} ${g.nombre}`), el('p', { class: 'note' }, '¿A qué quieres jugar?'), (() => { const d = el('div', { class: 'elegir' }); d.innerHTML = opciones; d.addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrar(); }); return d; })(),
+    return `<a class="eleg" href="#/juego/${j.id}" data-cerrar style="--c:${j.color}"><span class="ico" aria-hidden="true">${emblema(j.id, 44)}</span><span class="eleg-t"><b>${esc(j.nombre)}</b><small>${cur ? 'Continuar · ' + esc(e.resumen) : esc(j.descripcion)}</small></span>${estrella(j.id)}<i aria-hidden="true">›</i></a>`; }).join('');
+  const cerrar = hoja([el('h2', {}, `${g.icono} ${g.nombre}`), el('p', { class: 'note' }, '¿A qué quieres jugar?'), (() => { const d = el('div', { class: 'elegir' }); d.innerHTML = opciones; d.addEventListener('click', e => { const fv = e.target.closest('[data-fav]'); if (fv) { e.preventDefault(); e.stopPropagation(); alternarFav(fv.dataset.fav, fv); return; } if (e.target.closest('[data-cerrar]')) cerrar(); }); d.addEventListener('keydown', e => { const fv = e.target.closest('[data-fav]'); if (fv && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); alternarFav(fv.dataset.fav, fv); } }); return d; })(),
     el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'))]);
   const h = [...document.querySelectorAll('.modal > .hoja')].pop(); if (h) h.classList.add('hoja-elegir');
 }

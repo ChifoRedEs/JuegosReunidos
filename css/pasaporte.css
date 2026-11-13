@@ -316,3 +316,8 @@ html[data-anim="no"] #splash{display:none}
 .vacio img.goli{width:min(120px,38%);height:auto}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(.logro.on span img,.lg-mini,.pd-m,.panel h3 .ic,.ini-bus .ic,.acc-i .ic){filter:drop-shadow(0 0 1.2px rgba(244,235,217,.95))}}
 :root[data-theme="dark"] :is(.logro.on span img,.lg-mini,.pd-m,.panel h3 .ic,.ini-bus .ic,.acc-i .ic){filter:drop-shadow(0 0 1.2px rgba(244,235,217,.95))}
+
+/* 3.79: estrella en las fichas de grupo y en la ventana de elegir juego */
+.ficha[data-grupo]{position:relative}
+.eleg:has(.fav){grid-template-columns:auto 1fr auto auto}
+.eleg .fav{position:static;flex:none}
