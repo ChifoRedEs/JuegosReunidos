@@ -33,6 +33,8 @@ function ajustarCabecera() {
 }
 window.addEventListener('resize', ajustarCabecera); ajustarCabecera();
 if (document.fonts) { document.fonts.load('900 40px Fraunces').then(ajustarCabecera).catch(() => {}); document.fonts.ready.then(ajustarCabecera); }
+const imgIc = (n, w = 22, c = 'ic') => `<img class="${c}" src="img/iconos/${n}.webp" alt="" width="${w}" height="${w}">`;   // icono ilustrado (img/iconos)
+const emblema = (id, w = 46) => `<img class="emb" src="img/sellos/${id}.webp" alt="" width="${w}" height="${w}" loading="lazy">`;   // emblema de un juego (img/sellos)
 // Título de la cabecera: «JugamiGO» con el sello GO; en cada juego, su nombre en tinta
 const cabTxt = t => {
   const e = document.getElementById('titulotxt'); if (!e) return;
@@ -75,7 +77,7 @@ function aviso(texto, ms = 2400) {
   document.body.append(t); setTimeout(() => t.remove(), ms);
 }
 // Avisos de logros nuevos (uno detrás de otro)
-function avisarLogros(nuevos) { nuevos.forEach((d, k) => setTimeout(() => { aviso(`🏅 Logro: ${d.icono} ${d.nombre}`, 2800); son.play('ganar'); }, 600 + k * 3000)); }
+function avisarLogros(nuevos) { nuevos.forEach((d, k) => setTimeout(() => { aviso(`🏅 Logro: ${d.nombre}`, 2800); son.play('ganar'); }, 600 + k * 3000)); }
 const revisarLogros = () => avisarLogros(logros.revisar(CAT_IDS));
 // Pedir un texto con la hoja modal (nombres del podio, palabra secreta del Ahorcado…). Devuelve null si se cancela.
 function pedirTexto(titulo, { valor = '', max = 14, nota = '', tipo = 'text', placeholder = '' } = {}) {
@@ -289,7 +291,7 @@ function crearApi(j, ent, mod, root) {
       },
       html(v, { formato = x => x.toLocaleString('es-ES'), marcar = -1 } = {}) {
         const l = this.lista(v); if (!l.length) return '<p class="note">Todavía no hay puntuaciones.</p>';
-        return `<ol class="podio">${l.map((x, k) => `<li class="${k === marcar ? 'yo' : ''}"><span>${['🥇', '🥈', '🥉'][k] || k + 1 + '.'}</span><b>${esc(x.n)}</b><i>${formato(x.p)}</i><small>${new Date(x.f).toLocaleDateString('es-ES')}</small></li>`).join('')}</ol>`;
+        return `<ol class="podio">${l.map((x, k) => `<li class="${k === marcar ? 'yo' : ''}"><span>${['oro', 'plata', 'bronce'][k] ? `<img class="pd-m" src="img/podio/${['oro', 'plata', 'bronce'][k]}.webp" alt="${k + 1}.º" width="22" height="26">` : k + 1 + '.'}</span><b>${esc(x.n)}</b><i>${formato(x.p)}</i><small>${new Date(x.f).toLocaleDateString('es-ES')}</small></li>`).join('')}</ol>`;
       },
     },
     aspecto(defs, alCambiar) {
@@ -462,7 +464,7 @@ async function abrirJuego(id, t) {
   app.innerHTML = '<p class="note">Cargando…</p>';
   let mod;
   await cargarBarajas();                       // índice de barajas/dorsos de imagen (no falla: sin él solo salen las cartas dibujadas)
-  try { mod = await j.cargar(); } catch (e) { console.error(e); if (t === token) app.innerHTML = '<p class="msg err">No se pudo cargar el juego. Comprueba la conexión y recarga.</p>'; return; }
+  try { mod = await j.cargar(); } catch (e) { console.error(e); if (t === token) app.innerHTML = '<div class="vacio"><img class="goli" src="img/goli/confundido.webp" alt="" width="110" height="150"><p class="msg err">No se pudo cargar el juego. Comprueba la conexión y recarga.</p></div>'; return; }
   if (t !== token) return;
   // Desactiva las hojas de estilo de otros juegos abiertos antes (evita choques de nombres de clase) y reactiva las de este.
   document.querySelectorAll('link[data-juego]').forEach(l => { l.disabled = !(l.dataset.juego === '*' || l.dataset.juego === id); });
@@ -506,7 +508,7 @@ function ficha(j) {
   const e = store.getResumen(j.id);
   const curso = e && !e.fin && e.resumen;
   const sub = curso ? 'Continuar · ' + esc(e.resumen) : e && e.fin && e.resumen ? esc(e.resumen) : esc(j.descripcion);
-  return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><b>${esc(j.nombre)}</b><small>${sub}</small>${estrella(j.id)}</a>`;
+  return `<a class="ficha ${curso ? 'curso' : ''}" href="#/juego/${j.id}" style="--c:${j.color}"><span class="ico" aria-hidden="true">${emblema(j.id)}</span><b>${esc(j.nombre)}</b><small>${sub}</small>${estrella(j.id)}</a>`;
 }
 // Favoritos: se guardan en los ajustes (y van en la copia de seguridad)
 const favs = () => (aj.ajustes().fav || []).filter(id => JUEGOS.some(j => j.id === id));
@@ -524,7 +526,7 @@ function alternarFav(id, nodo) {
 function vFavoritos() {
   nombreVista = 'Favoritos'; cabTxt('JugamiGO');
   const js = favs().map(id => JUEGOS.find(j => j.id === id));
-  app.innerHTML = `<section class="panel"><h3>⭐ Mis favoritos</h3>${js.length ? '<p class="note">Tus juegos preferidos, a un toque. Pulsa la ★ de un juego para quitarlo.</p>' : '<div class="vacio"><img src="img/marca/vacio-partidas.webp" alt="" width="190" height="200"><p class="note">Aún no tienes favoritos. Toca la ☆ de cualquier juego (o de un resultado de la búsqueda) para guardarlo aquí.</p></div>'}</section>`
+  app.innerHTML = `<section class="panel"><h3>${imgIc('favorito')} Mis favoritos</h3>${js.length ? '<p class="note">Tus juegos preferidos, a un toque. Pulsa la ★ de un juego para quitarlo.</p>' : '<div class="vacio"><img src="img/marca/vacio-partidas.webp" alt="" width="190" height="200"><p class="note">Aún no tienes favoritos. Toca la ☆ de cualquier juego (o de un resultado de la búsqueda) para guardarlo aquí.</p></div>'}</section>`
     + (js.length ? `<div class="rejilla fav-rej">${js.map(ficha).join('')}</div>` : '') + `<div class="bar" style="margin-top:14px"><a class="btn on" href="#/">‹ Volver al inicio</a></div>`;
   colorearFichas();
 }
@@ -539,19 +541,19 @@ const norm = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toL
 function resultadosBusqueda(q) {
   const ps = norm(q).split(/\s+/).filter(Boolean); if (!ps.length) return '';
   const r = JUEGOS.filter(j => { const t = norm(`${j.nombre} ${j.descripcion} ${CATEGORIAS[j.categoria]}`); return ps.every(p => t.includes(p)); });
-  if (!r.length) return `<p class="note">Ningún juego coincide con «${esc(q)}».</p>`;
-  return r.map(j => `<a class="res" href="#/juego/${j.id}" style="--c:${j.color}"><span class="res-i" aria-hidden="true">${j.icono}</span><span class="res-t"><b>${esc(j.nombre)}</b><small>${esc(CATEGORIAS[j.categoria])} · ${esc(j.descripcion)}</small></span>${estrella(j.id)}</a>`).join('');
+  if (!r.length) return `<div class="vacio"><img class="goli" src="img/goli/buscando.webp" alt="" width="110" height="150"><p class="note">Ningún juego coincide con «${esc(q)}».</p></div>`;
+  return r.map(j => `<a class="res" href="#/juego/${j.id}" style="--c:${j.color}"><span class="res-i" aria-hidden="true">${emblema(j.id, 34)}</span><span class="res-t"><b>${esc(j.nombre)}</b><small>${esc(CATEGORIAS[j.categoria])} · ${esc(j.descripcion)}</small></span>${estrella(j.id)}</a>`).join('');
 }
 // Ficha de un grupo de juegos: al pulsarla se abre la ventana para elegir uno
 function fichaGrupo(g, js) {
   const cur = js.filter(enCursoDe), sub = cur.length ? 'Continuar · ' + esc(cur.map(j => j.nombre).join(' · ')) : esc(js.map(j => j.nombre).join(' · '));
-  return `<button type="button" class="ficha ${cur.length ? 'curso' : ''}" data-grupo="${g.id}" style="--c:${g.color}" aria-haspopup="dialog"><span class="ico" aria-hidden="true">${g.icono}</span><b>${esc(g.nombre)}</b><small>${sub}</small></button>`;
+  return `<button type="button" class="ficha ${cur.length ? 'curso' : ''}" data-grupo="${g.id}" style="--c:${g.color}" aria-haspopup="dialog"><span class="ico" aria-hidden="true">${emblema(g.juegos[0])}</span><b>${esc(g.nombre)}</b><small>${sub}</small></button>`;
 }
 function elegirJuego(gid) {
   const g = GRUPOS.find(x => x.id === gid); if (!g) return;
   const js = g.juegos.map(id => JUEGOS.find(x => x.id === id));
   const opciones = js.map(j => { const e = store.getResumen(j.id), cur = e && !e.fin && e.resumen;
-    return `<a class="eleg" href="#/juego/${j.id}" data-cerrar style="--c:${j.color}"><span class="ico" aria-hidden="true">${j.icono}</span><span class="eleg-t"><b>${esc(j.nombre)}</b><small>${cur ? 'Continuar · ' + esc(e.resumen) : esc(j.descripcion)}</small></span><i aria-hidden="true">›</i></a>`; }).join('');
+    return `<a class="eleg" href="#/juego/${j.id}" data-cerrar style="--c:${j.color}"><span class="ico" aria-hidden="true">${emblema(j.id, 44)}</span><span class="eleg-t"><b>${esc(j.nombre)}</b><small>${cur ? 'Continuar · ' + esc(e.resumen) : esc(j.descripcion)}</small></span><i aria-hidden="true">›</i></a>`; }).join('');
   const cerrar = hoja([el('h2', {}, `${g.icono} ${g.nombre}`), el('p', { class: 'note' }, '¿A qué quieres jugar?'), (() => { const d = el('div', { class: 'elegir' }); d.innerHTML = opciones; d.addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrar(); }); return d; })(),
     el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'))]);
   const h = [...document.querySelectorAll('.modal > .hoja')].pop(); if (h) h.classList.add('hoja-elegir');
@@ -566,8 +568,8 @@ function vInicio(filtro = null) {
   if (!filtro) {                                                    // Pantalla de inicio: el logo de fondo y las categorías a todo el alto (sin desplazamiento)
     const cont = ultimoEnCurso(), reto = retoDeHoy(), nf = favs().length;
     const acc = (href, ico, tit, sub, extra = '') => `<${href ? `a href="${href}"` : 'button type="button"'} class="acc" ${extra}><span class="acc-i" aria-hidden="true">${ico}</span><b>${tit}</b><small>${sub}</small></${href ? 'a' : 'button'}>`;
-    const top = `<div class="ini-top"><label class="ini-bus"><span aria-hidden="true">🔎</span><input type="search" id="iniBus" placeholder="Buscar un juego…" autocomplete="off" enterkeyhint="search" aria-label="Buscar un juego"></label>
-      <div class="ini-acc">${cont ? acc('#/juego/' + cont.id, '▶️', 'Continuar', esc(cont.nombre)) : acc('', '🎲', 'Al azar', 'Sorpréndeme', 'id="accAzar"')}${reto ? acc('#/juego/' + reto.j.id, '📅', 'Reto de hoy', esc(reto.j.nombre) + (reto.hecho ? ' ✓' : '')) : ''}${acc('#/cat/favoritos', '⭐', 'Favoritos', `<span id="accFavN">${nf ? nf + (nf === 1 ? ' juego' : ' juegos') : 'Ninguno aún'}</span>`)}</div>
+    const top = `<div class="ini-top"><label class="ini-bus"><span aria-hidden="true">${imgIc('buscar')}</span><input type="search" id="iniBus" placeholder="Buscar un juego…" autocomplete="off" enterkeyhint="search" aria-label="Buscar un juego"></label>
+      <div class="ini-acc">${cont ? acc('#/juego/' + cont.id, imgIc('continuar', 26), 'Continuar', esc(cont.nombre)) : acc('', '🎲', 'Al azar', 'Sorpréndeme', 'id="accAzar"')}${reto ? acc('#/juego/' + reto.j.id, imgIc('retos', 26), 'Reto de hoy', esc(reto.j.nombre) + (reto.hecho ? ' ✓' : '')) : ''}${acc('#/cat/favoritos', '⭐', 'Favoritos', `<span id="accFavN">${nf ? nf + (nf === 1 ? ' juego' : ' juegos') : 'Ninguno aún'}</span>`)}</div>
       <div class="ini-res" id="iniRes" hidden aria-live="polite"></div></div>`;
     app.innerHTML = `<div class="ini" role="navigation" aria-label="Categorías de juegos">${top}${cats.map(([k, n]) => {
       const js = JUEGOS.filter(j => j.categoria === k), enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
@@ -614,9 +616,9 @@ function vStats_(catSel = null) {
   const rutas = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k)).map(([k, n]) => { const js = JUEGOS.filter(j => j.categoria === k), c = js.filter(sellado).length; return `<div class="pas-ruta"><img src="img/marca/ruta-${k}.webp" alt="" width="40" height="40"><span><b>${esc(n)}</b><small>${c} de ${js.length}</small></span><i class="pas-bar"><u style="width:${Math.round(100 * c / js.length)}%"></u></i></div>`; }).join('');
   const panelPasaporte = `<section class="panel pasaporte" aria-label="Tu pasaporte"><div class="pas-cab"><img src="img/marca/portada.webp" alt="" width="76" height="102"><div><h3>Tu pasaporte</h3><p class="pas-n"><b>${nSell}</b> de ${JUEGOS.length} destinos sellados</p><i class="pas-bar grande"><u style="width:${Math.round(100 * nSell / Math.max(1, JUEGOS.length))}%"></u></i></div></div>
     <div class="pas-num"><div><b>${totPart.toLocaleString('es-ES')}</b><small>partidas</small></div><div><b>${totVic.toLocaleString('es-ES')}</b><small>victorias</small></div><div><b>${mejorR}</b><small>mejor racha</small></div></div>
-    <div class="pas-rutas">${rutas}</div><div class="bar"><button class="btn" id="pasComp" type="button">📤 Compartir mi pasaporte</button></div></section>`;
-  const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => d.icono).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span>${G[d.id] ? d.icono : '🔒'}</span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
-    <div class="panel"><h3>📅 Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas, Puentes Hashi y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
+    <div class="pas-rutas">${rutas}</div><div class="bar"><button class="btn" id="pasComp" type="button">${imgIc('compartir')} Compartir mi pasaporte</button></div></section>`;
+  const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => `<img class="lg-mini" src="img/medallas/${d.id}.webp" alt="${esc(d.nombre)}" width="26" height="29" loading="lazy">`).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span><img src="img/medallas/${d.id}.webp" alt="" width="44" height="50" loading="lazy"></span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
+    <div class="panel"><h3>${imgIc('retos')} Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas, Puentes Hashi y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
   const solicitada = catSel || new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
   const elegida = cats.some(([k]) => k === solicitada) ? solicitada : cats[0]?.[0];
@@ -705,24 +707,24 @@ function vAjustes_() {
   const TT = stats.todas(), nSell = JUEGOS.filter(j => TT[j.id] && TT[j.id].partidas).length;
   app.innerHTML = `
   <section class="panel ajcab"><img src="img/marca/portada.webp" alt="" width="64" height="86"><div><h3>Pasaporte del viajero</h3><p class="note">${nSell} de ${JUEGOS.length} destinos sellados · JugamiGO ${VERSION}</p></div></section>
-  <div class="panel"><h3>Apariencia</h3><div class="fila"><span>Tema</span>${seg('tema', [['auto', 'Auto'], ['claro', 'Papel'], ['oscuro', 'Noche']])}</div><p class="note">Papel: crema y tinta, para el día. Noche: cuero azul y oro, para la oscuridad. «Auto» sigue el modo de tu móvil.</p></div>
-  <div class="panel"><h3>Sonido y vibración</h3>
+  <div class="panel"><h3>${imgIc('apariencia')} Apariencia</h3><div class="fila"><span>Tema</span>${seg('tema', [['auto', 'Auto'], ['claro', 'Papel'], ['oscuro', 'Noche']])}</div><p class="note">Papel: crema y tinta, para el día. Noche: cuero azul y oro, para la oscuridad. «Auto» sigue el modo de tu móvil.</p></div>
+  <div class="panel"><h3>${imgIc('sonido')} Sonido y vibración</h3>
     <div class="fila"><span>Sonidos</span>${seg('sonido', [[true, 'Sí'], [false, 'No']])}</div>
     <div class="fila"><span>Vibración</span>${seg('vibracion', [[true, 'Sí'], [false, 'No']])}</div></div>
-  <div class="panel"><h3>Victorias</h3>
+  <div class="panel"><h3>${imgIc('celebracion')} Victorias</h3>
     <div class="fila"><span>Celebrar al ganar</span>${seg('celebrar', [[true, 'Sí'], [false, 'No']])}</div></div>
-  <div class="panel"><h3>Accesibilidad</h3>
+  <div class="panel"><h3>${imgIc('accesibilidad')} Accesibilidad</h3>
     <div class="fila fila-col"><span>Tamaño del texto</span>${seg('texto', [['normal', 'Normal'], ['grande', 'Grande'], ['enorme', 'Enorme']])}</div>
     <div class="fila"><span>Contraste</span>${seg('contraste', [['normal', 'Normal'], ['alto', 'Alto']])}</div>
     <div class="fila"><span>Animaciones</span>${seg('anim', [[true, 'Sí'], [false, 'No']])}</div>
     <p class="note">El texto grande afecta a paneles, listas y ayudas. «Animaciones: No» quita los movimientos y la bienvenida.</p></div>
-  <div class="panel"><h3>Copia de seguridad</h3>
+  <div class="panel"><h3>${imgIc('copia')} Copia de seguridad</h3>
     <p class="note">Tus partidas y estadísticas se guardan solo en este navegador. Exporta un archivo .json para pasarlas a otro dispositivo o como copia.</p>
     <div class="bar"><button class="btn on" id="gExp">Exportar .json</button>
       <label class="btn file">Importar .json<input type="file" id="gImp" accept=".json,application/json"></label>
       <button class="btn danger" id="gBor">Borrar partidas</button></div>
     <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
-  <div class="sep-ruta" role="presentation"></div><div class="panel"><h3>✈️ Modo avión</h3><div class="vacio"><img src="img/marca/vacio-sin-conexion.webp" alt="" width="170" height="155" loading="lazy"></div><p class="note" id="gOff" role="status">Comprobando…</p>
+  <div class="sep-ruta" role="presentation"></div><div class="panel"><h3>${imgIc('avion')} Modo avión</h3><div class="vacio"><img src="img/marca/vacio-sin-conexion.webp" alt="" width="170" height="155" loading="lazy"></div><p class="note" id="gOff" role="status">Comprobando…</p>
     <div class="prog" id="gProg" hidden><i></i></div><p class="note" id="gDes" role="status"></p>
     <div class="bar"><button class="btn on" id="gDesc" hidden>⬇️ Descargar todo</button><button class="btn" id="gCanc" hidden>Cancelar</button><button class="btn" id="gQuit" hidden>Quitar descarga</button></div>
     <div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>

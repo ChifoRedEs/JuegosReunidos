@@ -9,8 +9,9 @@
 //   deshabilitado  desactiva el principal (faltan jugadores…)
 //   extra     botones secundarios específicos del juego (HTML), antes de Podio
 //   podio     añade «🏆 Podio»     reglas   false → sin «📖 Reglas»     nota  texto suelto tras los botones
+const ic = n => `<img class="ic" src="img/iconos/${n}.webp" alt="" width="22" height="22">`;
 export function pieMenu({ ac = 'start', seguir = null, sinNueva = false, texto = '', deshabilitado = false, extra = '', podio = false, reglas = true, nota = '' } = {}) {
-  const cont = seguir ? `<button class="btn on pm" data-ac="${seguir}">▶️ Continuar partida</button>` : '';
-  const nueva = sinNueva ? '' : `<button class="btn pm${seguir ? '' : ' on'}" data-ac="${ac}"${deshabilitado ? ' disabled' : ''}>${texto || (seguir ? '🆕 Nueva partida' : '▶️ Jugar')}</button>`;
-  return `<div class="bar pie">${cont}${nueva}${extra}${podio ? '<button class="btn" data-ac="podio">🏆 Podio</button>' : ''}<button class="btn" data-ac="aspecto">🎨 Apariencia</button>${reglas ? '<button class="btn" data-ac="reglas">📖 Reglas</button>' : ''}${nota ? `<span class="note">${nota}</span>` : ''}</div>`;
+  const cont = seguir ? `<button class="btn on pm" data-ac="${seguir}">${ic('continuar')} Continuar partida</button>` : '';
+  const nueva = sinNueva ? '' : `<button class="btn pm${seguir ? '' : ' on'}" data-ac="${ac}"${deshabilitado ? ' disabled' : ''}>${texto || (seguir ? ic('nueva') + ' Nueva partida' : ic('jugar') + ' Jugar')}</button>`;
+  return `<div class="bar pie">${cont}${nueva}${extra}${podio ? `<button class="btn" data-ac="podio">${ic('podio')} Podio</button>` : ''}<button class="btn" data-ac="aspecto">${ic('apariencia')} Apariencia</button>${reglas ? `<button class="btn" data-ac="reglas">${ic('reglas')} Reglas</button>` : ''}${nota ? `<span class="note">${nota}</span>` : ''}</div>`;
 }

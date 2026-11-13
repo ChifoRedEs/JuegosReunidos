@@ -299,3 +299,20 @@ html[data-anim="no"] #splash{display:none}
 .vacio .note{max-width:34ch;margin:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .vacio img{filter:drop-shadow(0 0 1.5px rgba(244,235,217,.95))}}
 :root[data-theme="dark"] .vacio img{filter:drop-shadow(0 0 1.5px rgba(244,235,217,.95))}
+
+/* ---------- 3.78: imágenes ilustradas (iconos, emblemas, medallas, podio, Goli) ---------- */
+.ic{display:inline-block;width:1.35em;height:1.35em;vertical-align:-.3em;margin-right:.3em;pointer-events:none;object-fit:contain}
+.panel h3 .ic{width:1.3em;height:1.3em}
+.ficha .ico img.emb{display:block;width:clamp(36px,10.5vw,48px);height:auto;margin:0 auto}
+.eleg .ico img.emb{display:block;width:44px;height:auto}
+.res-i img.emb{display:block;width:34px;height:34px}
+.acc-i img.ic{display:block;width:26px;height:26px;margin:0}
+.ini-bus>span .ic{width:22px;height:22px;margin:0;vertical-align:middle}
+.logro span img{display:block;width:40px;height:auto}
+.logro:not(.on) span img{filter:grayscale(1);opacity:.5}
+.plogi{display:flex;flex-wrap:wrap;gap:3px;letter-spacing:0}
+.lg-mini{width:26px;height:auto;display:block}
+.pd-m{width:22px;height:auto;vertical-align:middle}
+.vacio img.goli{width:min(120px,38%);height:auto}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(.logro.on span img,.lg-mini,.pd-m,.panel h3 .ic,.ini-bus .ic,.acc-i .ic){filter:drop-shadow(0 0 1.2px rgba(244,235,217,.95))}}
+:root[data-theme="dark"] :is(.logro.on span img,.lg-mini,.pd-m,.panel h3 .ic,.ini-bus .ic,.acc-i .ic){filter:drop-shadow(0 0 1.2px rgba(244,235,217,.95))}

@@ -19,7 +19,7 @@ const ANIMACIONES = [
   { img: 'monedas.webp', fondo: 'linear-gradient(180deg,#1b1450,#4a2a8a)', efecto: ['🪙'] },
   { img: 'trofeo.webp', fondo: 'linear-gradient(180deg,#0d3b8e,#1a9b80)', efecto: 'confeti' },
   { img: null, fondo: 'linear-gradient(180deg,#ff9ec4,#ffd9a8)', efecto: ['💐', '🌸', '🌷', '🌹', '🌼', '🌻'], emoji: '💐' },   // ramos de flores (sin imagen)
-  { img: null, fondo: 'linear-gradient(180deg,#1b1450,#3b2a99)', efecto: ['⭐', '✨', '🎉', '🎊'], emoji: '🏆' },
+  { img: null, fondo: 'linear-gradient(180deg,#8fd6cb,#f7e7bf)', efecto: ['⭐', '✨', '🎉', '🎊'], emoji: '🏆', goli: 'victoria' },
 ];
 const COLORES = ['#ff5a5f', '#ffb400', '#2ec4b6', '#4361ee', '#b5179e', '#7ae582', '#ff8fab'];
 const R = a => a[Math.floor(Math.random() * a.length)];
@@ -37,6 +37,7 @@ const CSS = `
 .vic-sello{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;text-align:left}
 .vic-sello-i{position:relative;width:64px;height:64px;flex:none;animation:vicSello .7s .55s cubic-bezier(.2,1.5,.4,1) both}
 .vic-sello-i img{width:100%;height:100%;display:block}
+.vic-m .vic-goli{height:92%;width:auto;max-width:90%;object-fit:contain;margin:auto;display:block}
 .vic-sello-i img.vic-em{position:absolute;left:24%;top:24%;width:52%;height:52%;border-radius:50%}
 .vic-sello-i b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 22px 'Fraunces',Georgia,serif;color:#FFF8EC;transform:rotate(-8deg)}
 .vic-sello span{display:flex;flex-direction:column;line-height:1.15;min-width:0}
@@ -101,6 +102,7 @@ export function celebrar({ nueva = null, etiqueta = 'Nueva partida', sello = nul
   const s = document.createElement('p'); s.className = 'vic-s'; s.textContent = R(SUBTITULOS);
   const m = document.createElement('div'); m.className = 'vic-m'; m.style.background = a.fondo; m.setAttribute('aria-hidden', 'true');
   if (a.img) { const im = new Image(); im.alt = ''; im.decoding = 'async'; im.src = new URL(a.img, BASE).href; m.append(im); }
+  else if (a.goli) { const im = new Image(); im.alt = ''; im.className = 'vic-goli'; im.decoding = 'async'; im.src = new URL('../goli/' + a.goli + '.webp', BASE).href; m.append(im); }
   else { const b = document.createElement('b'); b.textContent = a.emoji; m.append(b); }
   const bs = document.createElement('div'); bs.className = 'vic-b';
   let parar = () => {};
