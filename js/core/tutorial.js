@@ -10,7 +10,7 @@ export function crearTutorial(def, { cerrar = () => {}, hecho = () => {} } = {})
   let i = 0; const resuelto = new Set();
   const dibujar = () => {
     const p = def.pasos[i], ultimo = i === def.pasos.length - 1;
-    raiz.innerHTML = `<div class="tt-cab"><b>🎓 ${esc(def.titulo)}</b><span>${i + 1} / ${def.pasos.length}</span></div>
+    raiz.innerHTML = `<div class="tt-cab"><b><img class="tt-goli" src="img/goli/reglas.webp" alt="" width="34" height="40"> ${esc(def.titulo)}</b><span>${i + 1} / ${def.pasos.length}</span></div>
       <div class="tt-pts" aria-hidden="true">${def.pasos.map((_, k) => `<i class="${k < i ? 'h' : k === i ? 'a' : ''}"></i>`).join('')}</div>
       <h3 class="tt-t">${p.t}</h3><div class="tt-h">${p.h || ''}</div><div class="tt-demo"></div><p class="tt-fb" role="status" aria-live="polite"></p>
       <div class="tt-nav"><button type="button" class="btn" data-t="ant" ${i ? '' : 'hidden'}>‹ Atrás</button><button type="button" class="btn" data-t="ver" hidden>👀 Muéstrame</button>

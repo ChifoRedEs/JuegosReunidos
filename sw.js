@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-3355bf9abb';
+const VERSION = 'jr-d6970b76b9';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -77,6 +77,7 @@ const ARCHIVOS = [
 './js/core/migrar_ids.js',
 './js/core/personajes.js',
 './js/core/pie.js',
+'./js/core/resultado.js',
 './js/core/semilla.js',
 './js/core/sonido.js',
 './js/core/stats.js',
@@ -1704,7 +1705,7 @@ const DICC_TODO = [
 './data/diccionario/lemas-1f6f9c6b.txt'
 /*DICC-FIN*/
 ];
-const DESCARGA_MB = /*MB*/21/*MB-FIN*/;
+const DESCARGA_MB = /*MB*/20/*MB-FIN*/;
 // Tipografías de Google Fonts (Fraunces, Baloo 2, Chewy y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
 // para que sin conexión los textos se vean igual que con internet. Debe ser la MISMA dirección que en index.html.
 const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas', DICC = 'jr-diccionario';      // cachés que se conservan entre versiones

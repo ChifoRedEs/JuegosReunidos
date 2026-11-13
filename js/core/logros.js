@@ -72,6 +72,31 @@ export function definiciones(cat) {
   ];
   return L.map(([id, icono, nombre, desc, cumple]) => ({ id, icono, nombre, desc, cumple }));
 }
+// Progreso numérico [actual, objetivo] para los logros acumulativos (null = sin barra)
+export function progreso(id, T, cat) {
+  let m;
+  const mx = f => Math.max(0, ...Object.values(T).map(f));
+  if ((m = /^p(\d+)$/.exec(id))) return [sum(T, 'partidas'), +m[1]];
+  if ((m = /^v(\d+)$/.exec(id))) return [sum(T, 'victorias'), +m[1]];
+  if ((m = /^racha(\d+)$/.exec(id))) return [mx(s => s.mejorRacha || 0), +m[1]];
+  if ((m = /^explor(\d+)$/.exec(id))) return [jugados(T), +m[1]];
+  if (id === 'explorador') return [jugados(T), 10];
+  if (id === 'coleccion') return [jugados(T), 25];
+  if (id === 'todos50') return [jugados(T), 55];
+  if ((m = /^gana(\d+)$/.exec(id))) return [ganadosDistintos(T), +m[1]];
+  if ((m = /^(logica|tablero|cartas|palabras)25$/.exec(id))) return [sumCat(T, cat[m[1]], 'victorias'), 25];
+  if ((m = /^todo(logica|tablero|cartas|palabras|arcade)$/.exec(id))) { const ids = cat[m[1]] || []; return [ids.filter(i => T[i] && T[i].partidas > 0).length, ids.length]; }
+  if ((m = /^arcade(\d+)k$/.exec(id))) return [maxRecord(T, cat.arcade || []), +m[1] * 1000];
+  if (id === 'arcade1k') return [maxRecord(T, cat.arcade || []), 1000];
+  if ((m = /^esp(\d+)$/.exec(id))) return [mx(s => s.victorias || 0), +m[1]];
+  if (id === 'fiel50') return [mx(s => s.partidas || 0), 50];
+  if (id === 'tablas10') return [sum(T, 'tablas'), 10];
+  if (id === 'reto1') return [Math.min(1, retos()), 1];
+  if (id === 'reto100') return [retos(), 100];
+  if ((m = /^reto(\d+)$/.exec(id))) return [diasReto(), +m[1]];
+  if (id === 'niveles5') return [mx(s => Object.keys(s.tiempos || {}).length), 5];
+  return null;
+}
 export const conseguidos = () => { const g = leer('logros', {}); return g && typeof g === 'object' ? g : {}; };
 export function revisar(cat) {
   const T = todas(), G = conseguidos(), nuevos = [];

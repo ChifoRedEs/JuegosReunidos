@@ -35,6 +35,21 @@ window.addEventListener('resize', ajustarCabecera); ajustarCabecera();
 if (document.fonts) { document.fonts.load('900 40px Fraunces').then(ajustarCabecera).catch(() => {}); document.fonts.ready.then(ajustarCabecera); }
 const imgIc = (n, w = 22, c = 'ic') => `<img class="${c}" src="img/iconos/${n}.webp" alt="" width="${w}" height="${w}">`;   // icono ilustrado (img/iconos)
 const emblema = (id, w = 46) => `<img class="emb" src="img/sellos/${id}.webp" alt="" width="${w}" height="${w}" loading="lazy">`;   // emblema de un juego (img/sellos)
+// Los botones que empiezan por un emoji conocido (💡 Pista, ↶ Deshacer, 🏆 Podio…) se muestran con su icono ilustrado, en todos los juegos.
+const ICONOS_BTN = { '💡': 'pista', '↶': 'deshacer', '↩️': 'deshacer', '↩': 'deshacer', '🏆': 'podio', '🎨': 'apariencia', '📖': 'reglas', '📤': 'compartir' };
+let iconizando = false, iconizarPend = false;
+function iconizar() {
+  iconizarPend = false; iconizando = true;
+  try {
+    document.querySelectorAll('button:not([data-sin-ic]), .btn:not([data-sin-ic])').forEach(b => {
+      const n = b.firstChild; if (!n || n.nodeType !== 3) return;
+      const t = n.nodeValue.trimStart(), k = Object.keys(ICONOS_BTN).find(e => t.startsWith(e)); if (!k) return;
+      const im = document.createElement('img'); im.className = 'ic'; im.alt = ''; im.width = im.height = 22; im.src = 'img/iconos/' + ICONOS_BTN[k] + '.webp';
+      n.nodeValue = ' ' + t.slice(k.length).trimStart(); b.insertBefore(im, n);
+    });
+  } finally { iconizando = false; }
+}
+new MutationObserver(() => { if (iconizando || iconizarPend) return; iconizarPend = true; requestAnimationFrame(iconizar); }).observe(document.body, { childList: true, subtree: true, characterData: true });
 // Título de la cabecera: «JugamiGO» con el sello GO; en cada juego, su nombre en tinta
 const cabTxt = (t, href = '') => {
   const e = document.getElementById('titulotxt'); if (!e) return;
@@ -77,6 +92,7 @@ function aviso(texto, ms = 2400) {
   const t = el('div', { class: 'toast', role: 'status' }, texto);
   document.body.append(t); setTimeout(() => t.remove(), ms);
 }
+window.addEventListener('offline', () => { import('./core/resultado.js').then(m => m.mostrarResultado({ res: 'offline' })).catch(() => {}); });
 // Avisos de logros nuevos (uno detrás de otro)
 function avisarLogros(nuevos) { nuevos.forEach((d, k) => setTimeout(() => { aviso(`🏅 Logro: ${d.nombre}`, 2800); son.play('ganar'); }, 600 + k * 3000)); }
 const revisarLogros = () => avisarLogros(logros.revisar(CAT_IDS));
@@ -155,6 +171,12 @@ function crearApi(j, ent, mod, root) {
       if (!root.isConnected) return;
       import('./core/victoria.js').then(m => { if (root.isConnected) m.celebrar({ sello: selloVictoria(), etiqueta: etiquetaNueva(), nueva: defBarra && defBarra.nueva ? () => defBarra.nueva() : null }); }).catch(() => {});
     }, 900);
+  }
+  let ultRes = 0;
+  function resultadoSuave(res, primero) {          // derrota o tablas: tarjeta pequeña con Goli (se respeta «Celebrar al ganar» = no)
+    if (aj.ajustes().celebrar === false || Date.now() - ultRes < 3000) return;
+    ultRes = Date.now();
+    setTimeout(() => { if (!root.isConnected) return; import('./core/resultado.js').then(m => { if (root.isConnected) m.mostrarResultado({ res, primero, juego: j.nombre, nueva: defBarra && defBarra.nueva ? () => defBarra.nueva() : null, etiqueta: etiquetaNueva() }); }).catch(() => {}); }, 700);
   }
   const etiquetaNueva = () => (defBarra && defBarra.etiqueta) || (j.categoria === 'logica' || PANEL.includes(id) ? 'Nuevo panel' : 'Nueva partida');
   // Pausa: el juego puede dar `pausar()/reanudar()` propios y/o `crono: () => cronómetro` (se para y se reanuda solo si estaba en marcha).
@@ -245,7 +267,12 @@ function crearApi(j, ent, mod, root) {
     cargar() { if (!ent) return null; try { return mod.validar(ent.datos) || null; } catch { return null; } },
     guardar: (datos, resumen = null, fin = false) => store.setJuego(id, datos, resumen, fin),
     borrar: () => store.borrarJuego(id),
-    registrar: r => { stats.registrar(id, r); revisarLogros(); if (r && r.res === 'victoria') victoria(); },
+    registrar: r => {
+      const primero = !((stats.todas()[id] || {}).partidas);
+      stats.registrar(id, r); revisarLogros();
+      if (r && r.res === 'victoria') victoria();
+      else if (r && (r.res === 'derrota' || r.res === 'tablas')) resultadoSuave(r.res, primero);
+    },
     // Victoria: mensaje y animación al azar con el botón de nueva partida (core/victoria.js), común a todos los juegos.
     // Se lanza sola con registrar({ res: 'victoria' }); los modos sin CPU (2 jugadores) que no puntúan llaman a api.victoria() al acabar con ganador.
     victoria,
@@ -578,6 +605,7 @@ function elegirJuego(gid) {
 const COLOR_CAT = { logica: '#6D5FD9', tablero: '#E4572E', cartas: '#1B998B', palabras: '#F2B134', arcade: '#2F7BD9' };
 const ICONO_CAT = { logica: '🧠', tablero: '🎲', cartas: '🃏', palabras: '🔤', arcade: '🕹️' };
 function vInicio(filtro = null) {
+  avisoCopia();
   const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
   nombreVista = nombreFiltro || 'JugamiGO'; cabTxt('JugamiGO');
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
@@ -585,7 +613,7 @@ function vInicio(filtro = null) {
     const cont = ultimoEnCurso(), reto = retoDeHoy(), nf = favs().length;
     const acc = (href, ico, tit, sub, extra = '') => `<${href ? `a href="${href}"` : 'button type="button"'} class="acc" ${extra}><span class="acc-i" aria-hidden="true">${ico}</span><b>${tit}</b><small>${sub}</small></${href ? 'a' : 'button'}>`;
     const top = `<div class="ini-top"><label class="ini-bus"><span aria-hidden="true">${imgIc('buscar')}</span><input type="search" id="iniBus" placeholder="Buscar un juego…" autocomplete="off" enterkeyhint="search" aria-label="Buscar un juego"></label>
-      <div class="ini-acc">${cont ? acc('#/juego/' + cont.id, imgIc('continuar', 26), 'Continuar', esc(cont.nombre)) : acc('', '🎲', 'Al azar', 'Sorpréndeme', 'id="accAzar"')}${reto ? acc('#/juego/' + reto.j.id, imgIc('retos', 26), 'Reto de hoy', esc(reto.j.nombre) + (reto.hecho ? ' ✓' : '')) : ''}${acc('#/cat/favoritos', '⭐', 'Favoritos', `<span id="accFavN">${nf ? nf + (nf === 1 ? ' juego' : ' juegos') : 'Ninguno aún'}</span>`)}</div>
+      <div class="ini-acc">${cont ? acc('#/juego/' + cont.id, imgIc('continuar', 26), 'Continuar', esc(cont.nombre)) : acc('', '<img class="ic" src="img/medallas/primera.webp" alt="" width="26" height="29" style="width:auto;height:26px">', 'Al azar', 'Sorpréndeme', 'id="accAzar"')}${reto ? acc('#/juego/' + reto.j.id, imgIc('retos', 26), 'Reto de hoy', esc(reto.j.nombre) + (reto.hecho ? ' ✓' : '')) : ''}${acc('#/cat/favoritos', '⭐', 'Favoritos', `<span id="accFavN">${nf ? nf + (nf === 1 ? ' juego' : ' juegos') : 'Ninguno aún'}</span>`)}</div>
       <div class="ini-res" id="iniRes" hidden aria-live="polite"></div></div>`;
     app.innerHTML = `<div class="ini" role="navigation" aria-label="Categorías de juegos">${top}${cats.map(([k, n]) => {
       const js = JUEGOS.filter(j => j.categoria === k), enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
@@ -633,7 +661,7 @@ function vStats_(catSel = null) {
   const panelPasaporte = `<section class="panel pasaporte" aria-label="Tu pasaporte"><div class="pas-cab"><img src="img/marca/portada.webp" alt="" width="76" height="102"><div><h3>Tu pasaporte</h3><p class="pas-n"><b>${nSell}</b> de ${JUEGOS.length} destinos sellados</p><i class="pas-bar grande"><u style="width:${Math.round(100 * nSell / Math.max(1, JUEGOS.length))}%"></u></i></div></div>
     <div class="pas-num"><div><b>${totPart.toLocaleString('es-ES')}</b><small>partidas</small></div><div><b>${totVic.toLocaleString('es-ES')}</b><small>victorias</small></div><div><b>${mejorR}</b><small>mejor racha</small></div></div>
     <div class="pas-rutas">${rutas}</div><div class="bar"><button class="btn" id="pasComp" type="button">${imgIc('compartir')} Compartir mi pasaporte</button></div></section>`;
-  const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => `<img class="lg-mini" src="img/medallas/${d.id}.webp" alt="${esc(d.nombre)}" width="26" height="29" loading="lazy">`).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span><img src="img/medallas/${d.id}.webp" alt="" width="44" height="50" loading="lazy"></span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div>`).join('')}</div></details>
+  const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => `<img class="lg-mini" src="img/medallas/${d.id}.webp" alt="${esc(d.nombre)}" width="26" height="29" loading="lazy">`).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => { const pg = G[d.id] ? null : logros.progreso(d.id, T, CAT_IDS), pa = pg ? Math.min(pg[0], pg[1]) : 0; return `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span><img src="img/medallas/${d.id}.webp" alt="" width="44" height="50" loading="lazy"></span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small>${pg && pg[1] > 0 ? `<i class="lg-prog" role="img" aria-label="Progreso: ${pa.toLocaleString('es-ES')} de ${pg[1].toLocaleString('es-ES')}"><u style="width:${Math.round(100 * pa / pg[1])}%"></u></i><em>${pa.toLocaleString('es-ES')} / ${pg[1].toLocaleString('es-ES')}</em>` : ''}</div>`; }).join('')}</div></details>
     <div class="panel"><h3>${imgIc('retos')} Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas, Puentes Hashi y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
   const solicitada = catSel || new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
@@ -655,7 +683,22 @@ function vStats_(catSel = null) {
     const s = T[j.id], n = s && s.partidas ? s.partidas : 0, rot = ((i * 37) % 15) - 7;
     return `<button type="button" class="st-cas ${n ? 'sellada' : ''}" data-stat-juego="${j.id}" style="--rot:${rot}deg" aria-haspopup="dialog" aria-label="${esc(j.nombre)}: ${n ? 'sellado, ' + n + (n === 1 ? ' partida' : ' partidas') : 'sin sellar'}"><span class="st-sl"><span class="st-rot"><img src="img/marca/sello.webp" alt="" width="64" height="64"><img class="st-em" src="img/sellos/${j.id}.webp" alt="" width="34" height="34" loading="lazy"></span>${n ? '<i aria-hidden="true">✓</i>' : ''}</span><b>${esc(j.nombre)}</b><small>${n ? n + (n === 1 ? ' partida' : ' partidas') : 'Sin sellar'}</small>${n && s.ultima ? `<small class="st-f">${fcorta(s.ultima)}</small>` : ''}</button>`;
   }).join('');
-  app.innerHTML = panelPasaporte + (nSell ? '' : '<div class="vacio"><img src="img/marca/vacio-partidas.webp" alt="" width="190" height="200"><p class="note">Tu pasaporte está en blanco. Termina una partida de cualquier juego y se sellará aquí.</p></div>') + panelLogros + '<div class="sep-ruta" role="presentation"></div>' + tabs + `<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
+  const D = stats.dias(), cl = stats.diaClave(), rd = stats.rachaDias(), pHoy = D[cl] || 0;
+  const reto = retoDeHoy(), cont = ultimoEnCurso();
+  const barras = (() => {                                            // últimas 2 semanas
+    const dd = []; const d = new Date(); d.setDate(d.getDate() - 13);
+    for (let i = 0; i < 14; i++) { dd.push([stats.diaClave(d), new Date(d)]); d.setDate(d.getDate() + 1); }
+    const mx = Math.max(1, ...dd.map(([k]) => D[k] || 0)), W = 14 * 22;
+    return `<svg class="gr-dias" viewBox="0 0 ${W} 74" role="img" aria-label="Partidas de los últimos 14 días: ${dd.reduce((a, [k]) => a + (D[k] || 0), 0)}">${dd.map(([k, f], i) => { const v = D[k] || 0, h = v ? Math.max(4, Math.round(52 * v / mx)) : 2; return `<g><rect x="${i * 22 + 3}" y="${58 - h}" width="16" height="${h}" rx="3" class="${v ? 'on' : ''}${k === cl ? ' hoy' : ''}"><title>${f.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}: ${v}</title></rect><text x="${i * 22 + 11}" y="71" text-anchor="middle">${['D', 'L', 'M', 'X', 'J', 'V', 'S'][f.getDay()]}</text></g>`; }).join('')}</svg>`;
+  })();
+  const top = Object.entries(T).filter(([, x]) => x && x.partidas).sort((a, b) => b[1].partidas - a[1].partidas).slice(0, 5).map(([id, x]) => ({ j: JUEGOS.find(j => j.id === id), x })).filter(o => o.j);
+  const mxT = Math.max(1, ...top.map(o => o.x.partidas));
+  const barTop = top.length ? `<div class="gr-top"><h4>Tus juegos más jugados</h4>${top.map(({ j, x }) => `<div class="gr-fila"><span class="gr-n">${j.icono} ${esc(j.nombre)}</span><i class="gr-b"><u style="width:${Math.round(100 * x.partidas / mxT)}%"></u></i><b>${x.partidas}</b></div>`).join('')}</div>` : '';
+  const panelHoy = `<section class="panel hoyp" aria-label="Hoy"><h3>Hoy</h3>
+    <div class="pas-num"><div><b>${rd}</b><small>${rd === 1 ? 'día seguido' : 'días seguidos'}</small></div><div><b>${pHoy}</b><small>${pHoy === 1 ? 'partida hoy' : 'partidas hoy'}</small></div><div><b>${Object.keys(D).length}</b><small>días jugados</small></div></div>
+    ${totPart ? barras : ''}${barTop}
+    <div class="ini-acc hoy-acc">${reto ? `<a class="acc" href="#/juego/${reto.j.id}"><span class="acc-i" aria-hidden="true">${imgIc('retos', 26)}</span><b>Reto del día${reto.hecho ? ' · hecho' : ''}</b><small>${esc(reto.j.nombre)}</small></a>` : ''}${cont ? `<a class="acc" href="#/juego/${cont.id}"><span class="acc-i" aria-hidden="true">${imgIc('continuar', 26)}</span><b>Continuar</b><small>${esc(cont.nombre)}</small></a>` : ''}</div></section>`;
+  app.innerHTML = panelHoy + panelPasaporte + (nSell ? '' : '<div class="vacio"><img class="goli" src="img/goli/sellando.webp" alt="" width="130" height="140"><p class="note">Tu pasaporte está en blanco. Termina una partida de cualquier juego y se sellará aquí.</p></div>') + panelLogros + '<div class="sep-ruta" role="presentation"></div>' + tabs + `<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
   $('#pasComp').addEventListener('click', async () => {
     try { const m = await import('./core/imagen.js'); await m.compartirImagen({ titulo: 'Mi pasaporte JugamiGO', linea: `${nSell} de ${JUEGOS.length} destinos sellados`, pie: `${totVic.toLocaleString('es-ES')} victorias · mejor racha ${mejorR}`, texto: `Llevo ${nSell} de ${JUEGOS.length} destinos sellados en JugamiGO` }, aviso); }
     catch (e) { console.error(e); aviso('No se pudo crear la imagen'); }
@@ -736,6 +779,7 @@ function vAjustes_() {
     <p class="note">El texto grande afecta a paneles, listas y ayudas. «Animaciones: No» quita los movimientos y la bienvenida.</p></div>
   <div class="panel"><h3>${imgIc('copia')} Copia de seguridad</h3>
     <p class="note">Tus partidas y estadísticas se guardan solo en este navegador. Exporta un archivo .json para pasarlas a otro dispositivo o como copia.</p>
+    <p class="note">${(() => { const c = copiaAntigua(); return c.u ? `Última copia: ${new Date(c.u).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}${c.toca ? ' (conviene hacer otra).' : '.'}` : (c.n >= 10 ? 'Todavía no has exportado ninguna copia.' : ''); })()}</p>
     <div class="bar"><button class="btn on" id="gExp">Exportar .json</button>
       <label class="btn file">Importar .json<input type="file" id="gImp" accept=".json,application/json"></label>
       <button class="btn danger" id="gBor">Borrar partidas</button></div>
@@ -778,12 +822,26 @@ function vAjustes_() {
     rd.readAsText(f);
   });
 }
+// Aviso suave de copia de seguridad: ≥10 partidas y ≥14 días sin copia (o nunca), como mucho una vez por sesión
+function copiaAntigua() {
+  const T = stats.todas(), n = Object.values(T).reduce((a, x) => a + (x && x.partidas || 0), 0);
+  const u = +store.leer('ultcopia', 0) || 0, d = u ? Math.floor((Date.now() - u) / 864e5) : null;
+  return { n, u, d, toca: n >= 10 && (d == null || d >= 14) };
+}
+let copiaAvisada = false;
+function avisoCopia() {
+  if (copiaAvisada) return; const c = copiaAntigua(); if (!c.toca) return;
+  const ult = +store.leer('copiaRecordada', 0) || 0; if (Date.now() - ult < 7 * 864e5) return;
+  copiaAvisada = true; store.escribir('copiaRecordada', Date.now());
+  setTimeout(() => aviso(c.d == null ? 'Aún no has hecho copia de seguridad: Ajustes → Exportar' : `Hace ${c.d} días de tu última copia: Ajustes → Exportar`), 2500);
+}
 function exportar() {
   const juegos = {}; JUEGOS.forEach(j => { const e = store.getJuego(j.id); if (e) juegos[j.id] = e; });
   const podios = {}; JUEGOS.forEach(j => { const p = store.leer('podio:' + j.id, null); if (p) podios[j.id] = p; });
-  const obj = { app: 'juegos-reunidos', version: 2, fecha: new Date().toISOString(), juegos, stats: stats.todas(), ajustes: aj.ajustes(), logros: logros.conseguidos(), retos: logros.todosRetos(), podios };
+  const obj = { app: 'juegos-reunidos', version: 2, fecha: new Date().toISOString(), juegos, stats: stats.todas(), ajustes: aj.ajustes(), logros: logros.conseguidos(), retos: logros.todosRetos(), dias: stats.dias(), podios };
   const a = el('a', { href: URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' })), download: `juegos-reunidos-${new Date().toISOString().slice(0, 10)}.json` });
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  store.escribir('ultcopia', Date.now());
   msgAj = { t: 'Archivo exportado.', err: false }; vAjustes();
 }
 // Valida cada partida con el propio módulo del juego (validar / migrarV1) antes de guardarla.
@@ -806,7 +864,7 @@ async function importar(o) {
     } catch (e) { console.error(e); }
   }
   if (o.version === 2) {
-    stats.importar(o.stats); aj.importar(o.ajustes); logros.importar(o.logros); logros.importarRetos(o.retos);
+    stats.importar(o.stats); aj.importar(o.ajustes); logros.importar(o.logros); logros.importarRetos(o.retos); stats.importarDias(o.dias); store.escribir('ultcopia', Date.now());
     if (o.podios && typeof o.podios === 'object') for (const j of JUEGOS) importarPodio(j.id, o.podios[j.id]);
   }
   if (!got.length && o.version !== 2) throw new Error('El archivo no contiene partidas reconocibles de JugamiGO.');

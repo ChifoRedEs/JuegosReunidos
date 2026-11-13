@@ -21,9 +21,26 @@ export function registrar(id, { res, tiempo = null, variante = '', limpio = true
   }
   s.ultima = Date.now();
   escribir(K, T);
+  const D = dias(), h = diaClave(); D[h] = (D[h] || 0) + 1;       // actividad diaria (racha de días y gráfica)
+  const claves = Object.keys(D).sort(); if (claves.length > 400) claves.slice(0, claves.length - 400).forEach(k => delete D[k]);
+  escribir('dias', D);
+}
+export const diaClave = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+export const dias = () => { const D = leer('dias', {}); return D && typeof D === 'object' ? D : {}; };
+export function importarDias(o) {
+  if (!o || typeof o !== 'object') return;
+  const D = {}; for (const [k, v] of Object.entries(o)) if (/^\d{4}-\d\d-\d\d$/.test(k) && Number.isFinite(v) && v > 0) D[k] = Math.round(v);
+  escribir('dias', D);
+}
+// Días seguidos jugando (cuenta hasta ayer si hoy aún no has jugado)
+export function rachaDias() {
+  const D = dias(), d = new Date(); let n = 0;
+  if (!D[diaClave(d)]) d.setDate(d.getDate() - 1);
+  while (D[diaClave(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
 }
 export const record = (id, variante = 'General') => { const s = todas()[id]; return s && s.records && s.records[variante] != null ? s.records[variante] : 0; };
-export const reiniciar = () => escribir(K, {});
+export const reiniciar = () => { escribir(K, {}); escribir('dias', {}); };
 export function importar(o) {
   if (!o || typeof o !== 'object') return;
   const T = {};

@@ -321,3 +321,28 @@ html[data-anim="no"] #splash{display:none}
 .ficha[data-grupo]{position:relative}
 .eleg:has(.fav){grid-template-columns:auto 1fr auto auto}
 .eleg .fav{position:static;flex:none}
+
+/* 3.80: tarjeta de resultado con Goli y Goli en el tutorial */
+.res-card{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:75;display:flex;align-items:center;gap:10px;max-width:min(440px,calc(100vw - 24px));padding:8px 14px 8px 10px;border-radius:16px;background:var(--card);color:var(--ink);border:2px solid var(--borde);box-shadow:var(--duro);animation:resSube .35s cubic-bezier(.2,1.4,.4,1) both}
+.res-card img{flex:none;width:auto;height:64px;display:block}
+.res-card .res-tx{min-width:0;font:800 14px/1.25 var(--f-texto,Nunito,system-ui,sans-serif)}
+.res-card .btn{flex:none;padding:8px 12px;min-height:40px}
+@keyframes resSube{from{transform:translate(-50%,24px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@media (prefers-reduced-motion:reduce){.res-card{animation:none}}
+.tt-goli{height:1.7em;width:auto;vertical-align:middle}
+.btn .ic{flex:none}
+
+/* ===== 3.80: Hoy, gráficas, progreso de logros ===== */
+.hoyp .gr-dias{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 4px}
+.gr-dias rect{fill:var(--line)}.gr-dias rect.on{fill:var(--teal,#1f8a7c)}.gr-dias rect.hoy{stroke:var(--ink);stroke-width:2}
+.gr-dias text{font-size:9px;fill:var(--mut)}
+.gr-top h4{margin:12px 0 6px;font-size:.9rem}
+.gr-fila{display:grid;grid-template-columns:minmax(0,9.5em) 1fr 2.4em;gap:8px;align-items:center;font-size:.82rem;margin:4px 0}
+.gr-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gr-fila b{text-align:right}
+.gr-b{display:block;height:8px;border-radius:5px;background:var(--line);overflow:hidden}.gr-b u{display:block;height:100%;background:var(--teal,#1f8a7c);border-radius:5px}
+.hoy-acc{margin-top:12px}
+.lg-prog{display:block;height:5px;border-radius:4px;background:var(--line);overflow:hidden;margin:6px 8px 0}.lg-prog u{display:block;height:100%;background:var(--teal,#1f8a7c)}
+.logro em{display:block;font-style:normal;font-size:.7rem;opacity:.75;margin-top:2px}
+.res-card{flex-wrap:wrap;justify-content:center;width:max-content}
+.res-card .res-tx{flex:1 1 11em}
+.res-card .btn{margin-left:auto}
