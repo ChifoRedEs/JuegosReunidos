@@ -1,4 +1,4 @@
-// Magnate Urbano · juego de compraventa de empresas tecnológicas (2 a 4 jugadores, personas o CPU).
+// Magnate Urbano · juego de compraventa de calles temáticas (2 a 4 jugadores, personas o CPU).
 import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
@@ -10,14 +10,14 @@ import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
 const ICONO = { nube: '☁️', noticias: '📰', tendencias: '📈', impuesto: '💸' };
-// Iconos de las oficinas (hasta 4 por casilla) y de la sede central, a elegir en 🎨 Apariencia. Los personajes y cajas son los de Encajados.
+// Iconos de las casas (hasta 4 por casilla) y de la mansión, a elegir en 🎨 Apariencia. Los personajes y cajas son los de Encajados.
 const EDIFICIOS = {
-  casas: { nombre: '🏠 + 🏨 Casas y hotel', of: '🏠', sede: '🏨' }, oficinas: { nombre: '🏢 + 🏙️ Oficinas y rascacielos', of: '🏢', sede: '🏙️' },
+  casas: { nombre: '🏠 + 🏨 Casas y hotel', of: '🏠', sede: '🏨' }, oficinas: { nombre: '🏢 + 🏙️ Bloques y rascacielos', of: '🏢', sede: '🏙️' },
   obreros: { nombre: '👷 + 🏗️ Obreros y grúa', of: '👷', sede: '🏗️' }, tecnicos: { nombre: '👨‍🔧 + 🏭 Técnicos y fábrica', of: '👨‍🔧', sede: '🏭' },
   astronautas: { nombre: '👨‍🚀 + 🚀 Astronautas y cohete', of: '👨‍🚀', sede: '🚀' }, cajas: { nombre: '📦 + 🏬 Cajas y almacén', of: '📦', sede: '🏬' },
 };
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550, dado: 900 }, rapida: { nombre: 'Rápida', paso: 45, bot: 200, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
-// Vista 3D opcional (Three.js): tablero en anillo compartido con Hotel (js/core/anillo3d.js). Los edificios son las oficinas (pisos) y la sede (5.º piso con corona).
+// Vista 3D opcional (Three.js): tablero en anillo compartido con Hotel (js/core/anillo3d.js). Los edificios son las casas (pisos) y la mansión (5.º piso con corona).
 let vista = null, mod3d = null, botones3d = null, hay3d = false, tok3 = 0, forzar2d = false, modo3d = false;
 const TIPO3 = { empresa: 'destino', nube: 'aero', red: 'serv', noticias: 'suerte', tendencias: 'imprevisto' };
 // 🧑 Fichas: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
@@ -46,7 +46,7 @@ export async function mount(r, a) {
   if (!vivo) return;
   asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#mtTab'), tt: true }, { ...grupoTablero(), tt: true },
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
-    { clave: 'edif', etiqueta: 'Vista 2D · iconos de oficinas y sede', titulo: 'Estilo de Edificios', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) },
+    { clave: 'edif', etiqueta: 'Vista 2D · iconos de casas y mansión', titulo: 'Estilo de Edificios', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) },
     { clave: 'estilo', junto: 'edif', etiqueta: 'Vista 3D · estilo de los edificios', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) },
     ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🎩', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
   () => {
@@ -70,7 +70,7 @@ export async function mount(r, a) {
     pausar: () => { enPausa = true; },
     reanudar: () => { enPausa = false; },
     config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], dinero: cfg.dinero, rondas: cfg.rondas, vel: cfg.vel, bote: cfg.bote, subasta: cfg.subasta }), grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })), { clave: 'dinero', titulo: 'Dinero', opciones: [1200, 1600, 2000].map(x => [x, x + 'M']) }, { clave: 'rondas', titulo: 'Duración', opciones: [[0, 'Hasta la quiebra'], [20, '20 rondas'], [40, '40 rondas']] }, { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) }, { clave: 'bote', titulo: 'Bote del Paraíso Fiscal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'subasta', titulo: 'Subastas', opciones: [[true, 'Sí'], [false, 'No']] }], aplicar: v => { enPausa = false; if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.dinero = v.dinero; cfg.rondas = v.rondas; cfg.vel = v.vel; cfg.bote = v.bote; cfg.subasta = v.subasta; empezar(); } } });
-  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏢 Mis empresas', accion: () => gestionarDesdeBoton() }, { texto: '🤝 Intercambiar', accion: () => intercambioDesdeBoton() },
+  api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🏢 Mis calles', accion: () => gestionarDesdeBoton() }, { texto: '🤝 Intercambiar', accion: () => intercambioDesdeBoton() },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (G && !G.terminada) { armar(); pintar(); log(`Partida recuperada: ronda ${G.ronda}.`); if (G.p().bot) jugar(); }
   else setup();
@@ -92,13 +92,13 @@ const pausa = async ms => { if (ms) await esperar(ms); while (enPausa && vivo) a
 function setup() {
   G = null; jugando = false; quitarDado(); cerrar3D();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
-  root.innerHTML = `<p class="note">Compra empresas tecnológicas, completa sectores, abre oficinas y cobra alquiler a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
+  root.innerHTML = `<p class="note">Compra calles, completa temas, abre casas y cobra alquiler a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
     ${cfg.jug.map(([nom, t, f], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><button class="mtfichab" data-ficha="${i}" aria-label="Cambiar ficha del jugador ${i + 1}">${FICHAS[f]}</button><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Dinero</span><div class="seg">${[1200, 1600, 2000].map(v => `<button class="btn ${cfg.dinero === v ? 'on' : ''}" data-dinero="${v}">${v}M</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [20, '20 rondas'], [40, '40 rondas']].map(([v, l]) => `<button class="btn ${cfg.rondas === v ? 'on' : ''}" data-rondas="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
     <label class="chk"><input type="checkbox" data-op="bote" ${cfg.bote ? 'checked' : ''}><span><b>Bote del Paraíso Fiscal</b>: los impuestos, multas y fianzas se acumulan y se los lleva quien caiga en el Paraíso Fiscal.</span></label>
-    <label class="chk"><input type="checkbox" data-op="subasta" ${cfg.subasta ? 'checked' : ''}><span><b>Subastas</b>: si quien cae en una empresa libre no la compra, se subasta entre todos.</span></label>
+    <label class="chk"><input type="checkbox" data-op="subasta" ${cfg.subasta ? 'checked' : ''}><span><b>Subastas</b>: si quien cae en una calle libre no la compra, se subasta entre todos.</span></label>
     ${pieMenu({ deshabilitado: n < 2 })}
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos.`}</p>`;
 }
@@ -134,7 +134,7 @@ function armar() {
   quitarDado(); cerrar3D(); modo3d = quiere3D();
   const centro = `<b class="mttit">Magnate<br>Urbano</b>
         <div class="mtturno" id="mtTurno"></div>
-        <div class="mtacc"><button class="btn" data-ac="gestionar" id="mtGes">🏢 Empresas</button><button class="btn" data-ac="trato" id="mtTrato">🤝 Trato</button></div>
+        <div class="mtacc"><button class="btn" data-ac="gestionar" id="mtGes">🏢 Calles</button><button class="btn" data-ac="trato" id="mtTrato">🤝 Trato</button></div>
         <small class="mtbote" id="mtBote"></small>`;
   const pie = `<div class="dadozona" id="mtDado"></div>
     <div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
@@ -191,7 +191,7 @@ function pintar() {
     d.style.setProperty('--dueno', o ? cj(o.color) : 'transparent'); d.classList.toggle('propia', !!o); d.classList.toggle('hip', s.hip);
     const b = d.querySelector('.mtbanda'), ed = EDIFICIOS[asp.valores.edif] || EDIFICIOS.casas;
     if (b) { d.classList.toggle('con', s.of > 0); b.innerHTML = s.of === 5 ? `<i class="mtsede">${ed.sede}</i>` : [1, 2, 3, 4].map(k => `<i class="${k <= s.of ? 'on' : ''}">${k <= s.of ? ed.of : ''}</i>`).join(''); }
-    d.setAttribute('aria-label', `${s.nombre}${s.precio ? ` · ${s.precio}M` : ''}${o ? ` · de ${o.nombre}` : ''}${s.hip ? ' · hipotecada' : ''}${s.of ? ` · ${s.of === 5 ? 'sede central' : s.of + ' oficinas'}` : ''}`);
+    d.setAttribute('aria-label', `${s.nombre}${s.precio ? ` · ${s.precio}M` : ''}${o ? ` · de ${o.nombre}` : ''}${s.hip ? ' · hipotecada' : ''}${s.of ? ` · ${s.of === 5 ? 'sede central' : s.of + ' casas'}` : ''}`);
   });
   const act = G.terminada ? -1 : G.turno;
   $('#mtJug').innerHTML = G.jug.map((p, i) => {
@@ -234,7 +234,7 @@ function dialogo(titulo, cuerpo, botones, { cancelable = false, auto = 0 } = {})
 }
 function fichaEmpresa(s) {
   const filas = s.tipo === 'empresa'
-    ? [['Alquiler', s.alquiler + 'M'], ['Con el sector completo', s.alquiler * 2 + 'M'], ...[1, 2, 3, 4, 5].map(k => [k < 5 ? `${k} oficina${k > 1 ? 's' : ''}` : '🏢 Sede central', Math.round(s.alquiler * GRUPOS[s.g].mult[k - 1]) + 'M']), ['Cada oficina cuesta', GRUPOS[s.g].oficina + 'M']]
+    ? [['Alquiler', s.alquiler + 'M'], ['Con el tema completo', s.alquiler * 2 + 'M'], ...[1, 2, 3, 4, 5].map(k => [k < 5 ? `${k} casa${k > 1 ? 's' : ''}` : '🏢 Mansión central', Math.round(s.alquiler * GRUPOS[s.g].mult[k - 1]) + 'M']), ['Cada casa cuesta', GRUPOS[s.g].oficina + 'M']]
     : s.tipo === 'nube' ? NUBE.alquiler.map((v, k) => [`${k + 1} nube${k ? 's' : ''}`, v + 'M'])
       : [['1 red', `${RED.veces[0]} × dados`], ['2 redes', `${RED.veces[1]} × dados`]];
   filas.push(['Hipoteca', s.precio / 2 + 'M']);
@@ -267,7 +267,7 @@ return {
     if (v > 0) api.sonido('ok');
   },
   pregunta: async (t, x, b) => vigila(await dialogo(esc(t), `<p>${x}</p>`, b)),
-  carta: async (mazo, t, auto) => { vigila(); api.sonido('ok'); return vigila(await dialogo(mazo === 'noticias' ? '📰 Noticias Tech' : '📈 Tendencias Tech', `<p class="mtcartatxt mt${mazo}">${esc(t)}</p>`, ['Entendido'], { auto: auto ? (vel().bot ? 1700 : 600) : 0 })); },
+  carta: async (mazo, t, auto) => { vigila(); api.sonido('ok'); return vigila(await dialogo(mazo === 'noticias' ? '📰 Noticias' : '📈 Tendencias', `<p class="mtcartatxt mt${mazo}">${esc(t)}</p>`, ['Entendido'], { auto: auto ? (vel().bot ? 1700 : 600) : 0 })); },
   comprar: async (s, p) => vigila(await dialogo(`${esc(p.nombre)}: ¿comprar ${esc(s.nombre)}?`, fichaEmpresa(s) + `<p class="note">Tienes ${p.dinero}M.</p>`, [`Comprar por ${s.precio}M`, 'No comprar'])) === `Comprar por ${s.precio}M`,
   puja: async (s, q, actual) => {
     const cont = document.createElement('div'), min = actual + 10;
@@ -312,22 +312,22 @@ async function jugar() {
   if (vivo) { pintar(); if (G && G.terminada) guardar(); }
 }
 
-/* ---------- gestionar empresas ---------- */
+/* ---------- gestionar calles ---------- */
 async function gestionar(p, sid = sesion) {
   const i = G.idx(p), cont = document.createElement('div');
   const dibujar = () => {
     const mias = G.propias(i);
-    cont.innerHTML = `<p class="note">Dinero: <b>${p.dinero}M</b> · el banco tiene ${G.oficinas} oficinas y ${G.sedes} sedes.</p>` + (mias.length ? mias.map(s => `<div class="mtges"><i style="background:${s.g ? GRUPOS[s.g].color : 'var(--mut)'}"></i><span>${esc(s.nombre)}${s.of ? ` <small>${s.of === 5 ? '🏢 sede' : '▪'.repeat(s.of)}</small>` : ''}${s.hip ? ' <small>· hipotecada</small>' : ''}</span>
-      ${s.tipo === 'empresa' ? `<button class="btn" data-g="mas" data-s="${s.id}" ${G.puedeConstruir(s) ? '' : 'disabled'} aria-label="Abrir oficina en ${esc(s.nombre)} (${GRUPOS[s.g].oficina}M)">＋</button><button class="btn" data-g="menos" data-s="${s.id}" ${G.puedeVender(s) ? '' : 'disabled'} aria-label="Vender oficina de ${esc(s.nombre)}">－</button>` : ''}
+    cont.innerHTML = `<p class="note">Dinero: <b>${p.dinero}M</b> · el banco tiene ${G.oficinas} casas y ${G.sedes} mansiones.</p>` + (mias.length ? mias.map(s => `<div class="mtges"><i style="background:${s.g ? GRUPOS[s.g].color : 'var(--mut)'}"></i><span>${esc(s.nombre)}${s.of ? ` <small>${s.of === 5 ? '🏢 mansión' : '▪'.repeat(s.of)}</small>` : ''}${s.hip ? ' <small>· hipotecada</small>' : ''}</span>
+      ${s.tipo === 'empresa' ? `<button class="btn" data-g="mas" data-s="${s.id}" ${G.puedeConstruir(s) ? '' : 'disabled'} aria-label="Abrir casa en ${esc(s.nombre)} (${GRUPOS[s.g].oficina}M)">＋</button><button class="btn" data-g="menos" data-s="${s.id}" ${G.puedeVender(s) ? '' : 'disabled'} aria-label="Vender casa de ${esc(s.nombre)}">－</button>` : ''}
       ${s.hip ? `<button class="btn" data-g="desh" data-s="${s.id}" ${G.puedeDeshipotecar(s) ? '' : 'disabled'}>Pagar ${G.costeDeshipotecar(s)}M</button>` : `<button class="btn" data-g="hip" data-s="${s.id}" ${G.puedeHipotecar(s) ? '' : 'disabled'}>Hipotecar +${s.precio / 2}M</button>`}</div>`).join('')
-      : '<p>Todavía no tienes ninguna empresa.</p>') + '<p class="note">Para abrir oficinas necesitas el sector completo y sin hipotecas, y hay que construir de forma pareja. Con 4 oficinas, la siguiente es la 🏢 sede central.</p>';
+      : '<p>Todavía no tienes ninguna calle.</p>') + '<p class="note">Para abrir casas necesitas el tema completo y sin hipotecas, y hay que construir de forma pareja. Con 4 casas, la siguiente es la 🏢 mansión.</p>';
   };
   cont.addEventListener('click', e => {
     const b = e.target.closest('[data-g]'); if (!b) return; const s = G.c[+b.dataset.s];
     ({ mas: () => G.construir(s), menos: () => G.vender(s), hip: () => G.hipotecar(s), desh: () => G.deshipotecar(s) })[b.dataset.g]();
     api.sonido('click'); dibujar(); pintar();
   });
-  dibujar(); const r = await dialogo(`🏢 Empresas de ${esc(p.nombre)}`, cont, ['Cerrar'], { cancelable: true }); if (r === ABORTO) vigilaSesion(-1); vigilaSesion(sid);
+  dibujar(); const r = await dialogo(`🏢 Calles de ${esc(p.nombre)}`, cont, ['Cerrar'], { cancelable: true }); if (r === ABORTO) vigilaSesion(-1); vigilaSesion(sid);
 }
 async function gestionarDesdeBoton() {
   if (!G || jugando || G.terminada || G.p().bot) return;
@@ -346,7 +346,7 @@ async function intercambioDesdeBoton() {
     const libres = j => G.propias(G.idx(j)).filter(s => !G.grupo(s).some(x => x.of));
     const dibujar = () => {
       cont.innerHTML = `<div class="bar"><span class="lbl">Con</span><div class="seg">${otros.map(q => `<button type="button" class="btn ${q === b ? 'on' : ''}" data-con="${G.idx(q)}">${esc(q.ficha)} ${esc(q.nombre)}</button>`).join('')}</div></div>
-        <div class="mttrato">${[[a, 'Tú das', 'da'], [b, `Pides a ${esc(b.nombre)}`, 'pide']].map(([j, t, k]) => `<div><b>${t}</b>${libres(j).map(s => `<label class="mtop"><input type="checkbox" data-${k}="${s.id}"><i style="background:${s.g ? GRUPOS[s.g].color : 'var(--mut)'}"></i>${esc(s.nombre)}${s.hip ? ' <small>(hip.)</small>' : ''}</label>`).join('') || '<p class="note">Sin empresas que ofrecer.</p>'}
+        <div class="mttrato">${[[a, 'Tú das', 'da'], [b, `Pides a ${esc(b.nombre)}`, 'pide']].map(([j, t, k]) => `<div><b>${t}</b>${libres(j).map(s => `<label class="mtop"><input type="checkbox" data-${k}="${s.id}"><i style="background:${s.g ? GRUPOS[s.g].color : 'var(--mut)'}"></i>${esc(s.nombre)}${s.hip ? ' <small>(hip.)</small>' : ''}</label>`).join('') || '<p class="note">Sin calles que ofrecer.</p>'}
           <label class="mtdinero">Dinero <input class="pedir" type="number" inputmode="numeric" min="0" max="${j.dinero}" step="10" value="0" data-m="${k}"></label><small class="note">Tiene ${j.dinero}M</small></div>`).join('')}</div>`;
     };
     cont.addEventListener('click', e => { const x = e.target.closest('[data-con]'); if (x) { b = G.jug[+x.dataset.con]; dibujar(); } });
@@ -382,14 +382,14 @@ function textoCasilla(s) {
 }
 function reglas() {
   api.modal('Magnate Urbano', `<ul>
-    <li>Tira los dos dados y avanza. Si caes en una empresa, nube o red libre, puedes comprarla; si no la compras, se subasta (si las subastas están activadas).</li>
-    <li>Si caes en una empresa de otro jugador, le pagas el alquiler. Con todo el <b>sector</b> (mismo color) el alquiler básico se duplica y puedes abrir <b>oficinas</b> (hasta 4) y luego la <b>🏢 sede central</b>, que lo multiplican.</li>
+    <li>Tira los dos dados y avanza. Si caes en una calle, nube o red libre, puedes comprarla; si no la compras, se subasta (si las subastas están activadas).</li>
+    <li>Si caes en una calle de otro jugador, le pagas el alquiler. Con todo el <b>tema</b> (mismo color) el alquiler básico se duplica y puedes abrir <b>casas</b> (hasta 4) y luego la <b>🏢 mansión</b>, que lo multiplican.</li>
     <li>Las <b>nubes</b> ☁️ cobran según cuántas tenga su dueño (${NUBE.alquiler.join(', ')}M) y las <b>redes</b> 📡🛰️, ${RED.veces[0]} veces lo que saques en los dados (${RED.veces[1]} veces si tiene las dos).</li>
-    <li>Al pasar por la <b>Ronda de Inversión</b> cobras ${SALARIO}M. En 📰 Noticias Tech y 📈 Tendencias Tech robas una carta.</li>
+    <li>Al pasar por la <b>Ronda de Inversión</b> cobras ${SALARIO}M. En 📰 Noticias y 📈 Tendencias robas una carta.</li>
     <li>La <b>Auditoría Fiscal</b> te retiene en la Sala de Espera: sal pagando ${FIANZA}M, con un 🎫 pase o sacando dobles (tienes tres intentos). Tres dobles seguidos también te mandan allí.</li>
-    <li>Con dobles vuelves a tirar. Puedes <b>hipotecar</b> empresas (cobras la mitad de su precio; recuperarlas cuesta un 10 % más) y vender oficinas a mitad de precio.</li>
-    <li>🤝 <b>Tratos</b>: en tu turno puedes proponer cambiar empresas y dinero con otro jugador. Las CPU también te harán ofertas cuando les falte una empresa para completar un sector.</li>
-    <li>Si no puedes pagar, quiebras y quedas fuera. Gana el último que siga en pie (o quien tenga más patrimonio si elegiste un límite de rondas). El banco tiene ${OFICINAS} oficinas y ${SEDES} sedes.</li>
+    <li>Con dobles vuelves a tirar. Puedes <b>hipotecar</b> calles (cobras la mitad de su precio; recuperarlas cuesta un 10 % más) y vender casas a mitad de precio.</li>
+    <li>🤝 <b>Tratos</b>: en tu turno puedes proponer cambiar calles y dinero con otro jugador. Las CPU también te harán ofertas cuando les falte una calle para completar un tema.</li>
+    <li>Si no puedes pagar, quiebras y quedas fuera. Gana el último que siga en pie (o quien tenga más patrimonio si elegiste un límite de rondas). El banco tiene ${OFICINAS} casas y ${SEDES} mansiones.</li>
     <li>Toca cualquier casilla para ver su ficha. Con la tecla Espacio también se tiran los dados.</li></ul>
-    <p class="note">Las marcas de las empresas pertenecen a sus dueños: el juego no tiene relación con ellas.</p>`);
+    <p class="note">Todas las calles, nubes y redes son inventadas: el juego no tiene relación con ninguna marca ni empresa real.</p>`);
 }

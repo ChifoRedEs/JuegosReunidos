@@ -36,6 +36,11 @@ if (document.fonts) { document.fonts.load('900 40px Fraunces').then(ajustarCabec
 const imgIc = (n, w = 22, c = 'ic') => `<img class="${c}" src="img/iconos/${n}.webp" alt="" width="${w}" height="${w}">`;   // icono ilustrado (img/iconos)
 const emblema = (id, w = 46) => `<img class="emb" src="img/sellos/${id}.webp" alt="" width="${w}" height="${w}" loading="lazy">`;   // emblema de un juego (img/sellos)
 // Los botones que empiezan por un emoji conocido (💡 Pista, ↶ Deshacer, 🏆 Podio…) se muestran con su icono ilustrado, en todos los juegos.
+// Icono ilustrado con respaldo: mientras el archivo no esté en ICONOS_LISTOS se muestra el emoji (sin pedir una imagen que no existe).
+// Al añadir img/iconos/<nombre>.webp basta con incluir el nombre aquí.
+const ICONOS_LISTOS = new Set([]);   // pendientes: configurar, pausa, diario, ajustes, ver3d, ver2d
+const icoF = (n, emoji, w = 22, c = 'ic') => ICONOS_LISTOS.has(n) ? `<img class="${c}" src="img/iconos/${n}.webp" alt="" width="${w}" height="${w}" data-fb="${emoji}">` : emoji;
+document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG' && t.dataset.fb) t.replaceWith(document.createTextNode(t.dataset.fb)); }, true);
 const ICONOS_BTN = { '💡': 'pista', '↶': 'deshacer', '↩️': 'deshacer', '↩': 'deshacer', '🏆': 'podio', '🎨': 'apariencia', '📖': 'reglas', '📤': 'compartir' };
 let iconizando = false, iconizarPend = false;
 function iconizar() {
@@ -70,8 +75,8 @@ const RUTAS = [
   ['cat-cartas', 'img:ruta-cartas', 'Cartas', '#/cat/cartas'],
   ['cat-palabras', 'img:ruta-palabras', 'Palabras', '#/cat/palabras'],
   ['cat-arcade', 'img:ruta-arcade', 'Arcade', '#/cat/arcade'],
-  ['stats', '📖', 'Diario', '#/stats'],
-  ['ajustes', '⚙️', 'Ajustes', '#/ajustes']
+  ['stats', 'ico:diario:📖', 'Diario', '#/stats'],
+  ['ajustes', 'ico:ajustes:⚙️', 'Ajustes', '#/ajustes']
 ];
 let actual = null, token = 0, menuItems = [];
 // Antes había un menú ⋯ en la cabecera. Ahora «Reglas» va en la barra inferior y el resto de entradas (Historial, Pista, Podio, Compartir…) se abren desde «Pausa / Salir» → «Más opciones».
@@ -247,7 +252,7 @@ function crearApi(j, ent, mod, root) {
   return {
     barra(def) { defBarra = def; },
     barraHtml() {
-      return `<div class="barra-gen" role="group" aria-label="Controles de la partida"><button type="button" data-gen="nueva"><span aria-hidden="true">🆕</span>${esc(etiquetaNueva())}</button><button type="button" data-gen="config"><span aria-hidden="true">⚙️</span>Configurar partida</button>${abrirAsp ? '<button type="button" data-gen="aspecto"><span aria-hidden="true">🎨</span>Apariencia</button>' : ''}<button type="button" data-gen="reglas"><span aria-hidden="true">📖</span>Reglas</button><button type="button" data-gen="salir"><span aria-hidden="true">⏸️</span>Pausa / Salir</button></div>`;
+      return `<div class="barra-gen" role="group" aria-label="Controles de la partida"><button type="button" data-gen="nueva"><span aria-hidden="true">${imgIc('nueva', 26)}</span>${esc(etiquetaNueva())}</button><button type="button" data-gen="config"><span aria-hidden="true">${icoF('configurar', '⚙️', 26)}</span>Configurar partida</button>${abrirAsp ? `<button type="button" data-gen="aspecto"><span aria-hidden="true">${imgIc('apariencia', 26)}</span>Apariencia</button>` : ''}<button type="button" data-gen="reglas"><span aria-hidden="true">${imgIc('reglas', 26)}</span>Reglas</button><button type="button" data-gen="salir"><span aria-hidden="true">${icoF('pausa', '⏸️', 26)}</span>Pausa / Salir</button></div>`;
     },
     gen(ac) {
       if (!defBarra) return;
@@ -353,7 +358,7 @@ function crearApi(j, ent, mod, root) {
       defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
       resolver(true); poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
-      const refrescarVista = () => { if (btnVista) { const es3 = vals.vista === '3d'; btnVista.textContent = es3 ? '🔲 Ver en 2D' : '🧊 Ver en 3D'; btnVista.setAttribute('aria-label', es3 ? 'Cambiar a la vista 2D' : 'Cambiar a la vista 3D'); } };
+      const refrescarVista = () => { if (btnVista) { const es3 = vals.vista === '3d'; btnVista.innerHTML = es3 ? icoF('ver2d', '🔲') + 'Ver en 2D' : icoF('ver3d', '🧊') + 'Ver en 3D'; btnVista.setAttribute('aria-label', es3 ? 'Cambiar a la vista 2D' : 'Cambiar a la vista 3D'); } };
       quitarVista();
       if (defs.some(g => g.clave === 'vista')) {
         btnVista = el('button', { type: 'button', class: 'btn vista-flot' }); document.body.append(btnVista); root.classList.add('con-vista'); posVista(); refrescarVista();
@@ -474,7 +479,7 @@ async function render() {
   // Dentro de un juego queda marcada la pestaña de su categoría
   nav.innerHTML = RUTAS.map(([k, ic, tx, h]) => {
     const activa = k === 'cat-' + (r.cat || '') ? (r.v === 'inicio' || r.v === 'juego') : k === r.v;
-    return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span class="${ic.startsWith('img:') ? 'im' : ''}" aria-hidden="true">${ic.startsWith('img:') ? `<img src="img/marca/${ic.slice(4)}.webp" alt="" width="30" height="30">` : ic}</span><b>${tx}</b></a>`;
+    return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span class="${/^(img|ico):/.test(ic) ? 'im' : ''}" aria-hidden="true">${ic.startsWith('img:') ? `<img src="img/marca/${ic.slice(4)}.webp" alt="" width="30" height="30">` : ic.startsWith('ico:') ? icoF(ic.split(':')[1], ic.split(':')[2], 30, 'nv') : ic}</span><b>${tx}</b></a>`;
   }).join('');
   app.innerHTML = '';
   const enFav = r.v === 'inicio' && r.cat === 'favoritos';

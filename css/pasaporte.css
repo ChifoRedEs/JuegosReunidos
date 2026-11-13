@@ -346,3 +346,10 @@ html[data-anim="no"] #splash{display:none}
 .res-card{flex-wrap:wrap;justify-content:center;width:max-content}
 .res-card .res-tx{flex:1 1 11em}
 .res-card .btn{margin-left:auto}
+/* barra inferior de los juegos e iconos de menú ilustrados */
+.barra-gen button span .ic{display:block;width:26px;height:26px;margin:0 auto}
+.barra-gen button span{display:flex;align-items:center;justify-content:center;min-height:26px}
+@media (max-width:440px){.barra-gen button span .ic{width:24px;height:24px}}
+#nav a img.nv{width:clamp(22px,6.2vw,30px);height:clamp(22px,6.2vw,30px)}
+:root[data-theme="dark"] :is(.barra-gen .ic,.vista-btn .ic){filter:drop-shadow(0 0 1px #FFF8EC) drop-shadow(0 0 3px rgba(255,248,236,.55))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(.barra-gen .ic,.vista-btn .ic){filter:drop-shadow(0 0 1px #FFF8EC) drop-shadow(0 0 3px rgba(255,248,236,.55))}}

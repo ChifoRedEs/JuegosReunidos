@@ -31,7 +31,7 @@ class IA {
       if (!b) break; g.construir(b);
     }
   }
-  reunir(p, importe) {      // vende oficinas e hipoteca hasta reunir el importe
+  reunir(p, importe) {      // vende casas e hipoteca hasta reunir el importe
     const g = this.g, i = g.idx(p);
     while (p.dinero < importe) {
       const o = g.propias(i), s = o.find(x => g.puedeVender(x));
@@ -53,7 +53,7 @@ class IA {
     }, o.pideM);
     return recibe >= entrega * 1.05 && b.dinero + o.daM - o.pideM >= 50;
   }
-  // Al empezar su turno, el bot intenta comprar la empresa que le falta para completar un grupo (como mucho una oferta por turno)
+  // Al empezar su turno, el bot intenta comprar la calle que le falta para completar un grupo (como mucho una oferta por turno)
   async negociar(p) {
     const g = this.g, i = g.idx(p);
     for (const k of Object.keys(GRUPOS)) {
@@ -111,7 +111,7 @@ export class Partida {
     return this.tieneGrupo(s.dueno, s.g) ? s.alquiler * 2 : s.alquiler;
   }
 
-  // ---------- oficinas (construcción uniforme, con límite del banco) e hipotecas ----------
+  // ---------- casas (construcción uniforme, con límite del banco) e hipotecas ----------
   puedeConstruir(s) {
     return s.tipo === 'empresa' && s.dueno !== null && s.of < 5 && (s.of < 4 ? this.oficinas > 0 : this.sedes > 0) && this.tieneGrupo(s.dueno, s.g)
       && this.grupo(s).every(x => !x.hip && x.of >= s.of) && this.jug[s.dueno].dinero >= GRUPOS[s.g].oficina;
@@ -129,8 +129,8 @@ export class Partida {
   async pagar(p, importe, a) {
     while (p.dinero < importe && !p.fuera) {
       if (p.bot) { if (!this.ia.reunir(p, importe)) await this.quiebra(p, a); this.h.render(); continue; }
-      const c = await this.h.pregunta('Fondos insuficientes', `${this.n(p)} debe ${importe}M y solo tiene ${p.dinero}M. Vende oficinas o hipoteca empresas para reunirlo.`, ['Gestionar empresas', 'Declarar bancarrota']);
-      if (c === 'Gestionar empresas') await this.h.gestionar(this, p); else await this.quiebra(p, a);
+      const c = await this.h.pregunta('Fondos insuficientes', `${this.n(p)} debe ${importe}M y solo tiene ${p.dinero}M. Vende casas o hipoteca calles para reunirlo.`, ['Gestionar calles', 'Declarar bancarrota']);
+      if (c === 'Gestionar calles') await this.h.gestionar(this, p); else await this.quiebra(p, a);
     }
     if (p.fuera) return false;
     p.dinero -= importe; this.h.flash(p, -importe);
@@ -180,7 +180,7 @@ export class Partida {
       if (!mov || orden.every(q => fuera.has(q) || q === gana)) break;
     }
     if (gana) { gana.dinero -= puja; s.dueno = this.idx(gana); this.h.flash(gana, -puja); this.log(`${this.n(gana)} gana <b>${esc(s.nombre)}</b> por ${puja}M.`, 'compra'); this.h.render(); }
-    else this.log('Nadie puja: la empresa sigue libre.');
+    else this.log('Nadie puja: la calle sigue libre.');
   }
   // oferta: { da: [ids que entrega a], daM: dinero que entrega a, pide: [ids que pide a b], pideM }
   ofertaValida(a, b, o) {
