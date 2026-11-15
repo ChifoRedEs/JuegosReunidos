@@ -32,7 +32,11 @@ const fmtReloj = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return s <
 
 const casillaDe = d => (flip ? 63 - d : d);
 const color = p => (p >> 3) + 1;                    // 1 blancas · 2 negras
-const piezaHTML = p => `<span class="pz ${p >> 3 ? 'n' : 'b'}">${GLIFO[p & 7]}</span>`;
+// Piezas ilustradas (img/ajedrez/<w|b><K|Q|R|B|N|P>.webp) o, como alternativa, las de tipografía con los colores de 🎨 Apariencia
+let estiloPz = 'img';
+const ALTO_PZ = { K: 1, Q: .95, R: .75, B: .86, N: .78, P: .65 };      // altura relativa (las ilustraciones no miden todas lo mismo)
+const imgPz = (t, n) => { const k = 'PNBRQK'[t - 1]; return `<img class="pzi" src="img/ajedrez/${n ? 'b' : 'w'}${k}.webp" alt="" draggable="false" style="--r:${ALTO_PZ[k]}">`; };
+const piezaHTML = p => estiloPz === 'img' ? imgPz(p & 7, p >> 3) : `<span class="pz ${p >> 3 ? 'n' : 'b'}">${GLIFO[p & 7]}</span>`;
 
 function montar(c, ctx) {
   cerrar3D(); cont = c; ctxR = ctx; eAct = null; sel = null; prom = null; arr = null; cuentaAnt = -1; rev = null; posRev = [];
@@ -208,7 +212,7 @@ function pintar(eReal, ctx) {
   }
   if (rev != null && (!eAct.movs || rev > eAct.n)) rev = null;
   const revisando = rev != null && rev !== eAct.n, e = revisando ? posicion(rev) : eAct;   // en revisión se pinta la posición elegida
-  flip = ctx.modo() === 'cpu' && ctx.yo() === 2;
+  flip = ctx.modo() === 'cpu' && ctx.yo() === 2; estiloPz = (ctx.valores().pzestilo || 'img') === 'img' ? 'img' : 'txt';
   const jq = e.fin && e.fin.motivo !== 'Jaque mate' ? -1 : jaque(e), marcas = (ctx.valores().marcas || 'si') === 'si';
   const destinos = new Map(); if (sel != null) legal.filter(m => de(m) === sel).forEach(m => destinos.set(a(m), true));
   const pd = ctx.pista != null ? de(ctx.pista) : -1, pa = ctx.pista != null ? a(ctx.pista) : -1, ult = e.ult || [];
@@ -239,7 +243,7 @@ function pintar(eReal, ctx) {
   // piezas capturadas y ventaja de material
   const cuenta = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]], mat = [0, 0];
   e.b.forEach(p => { if (p) { cuenta[p >> 3][p & 7]++; mat[p >> 3] += VALOR[p & 7]; } });
-  const comidas = s => [5, 4, 3, 2, 1].map(t => (GLIFO[t] ? `<span class="pz ${s ? 'n' : 'b'}">${GLIFO[t]}</span>`.repeat(Math.max(0, INICIALES[t] - cuenta[s][t])) : '')).join('');
+  const comidas = s => [5, 4, 3, 2, 1].map(t => (GLIFO[t] ? (estiloPz === 'img' ? imgPz(t, s) : `<span class="pz ${s ? 'n' : 'b'}">${GLIFO[t]}</span>`).repeat(Math.max(0, INICIALES[t] - cuenta[s][t])) : '')).join('');
   const abajo = flip ? 1 : 0, arriba = abajo ^ 1, dif = mat[abajo] - mat[arriba];
   cont.querySelector('#axCapA').innerHTML = comidas(abajo) + (dif < 0 ? `<b>+${-dif}</b>` : '');
   cont.querySelector('#axCapB').innerHTML = comidas(arriba) + (dif > 0 ? `<b>+${dif}</b>` : '');
@@ -271,6 +275,7 @@ const duelo = crearDuelo({
   chip: n => `<i class="ch axch${n}">${GLIFO[6]}</i>`,
   aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#duTab'), tt: true }, 
     { clave: 'tablero', tt: true, titulo: 'Colores del tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#F0D9B5', '#B58863'] }, { id: 'torneo', nombre: 'Torneo', sw: ['#EEEED2', '#769656'] }, { id: 'oceano', nombre: 'Océano', sw: ['#E4EDFF', '#5B7FD6'] }, { id: 'uva', nombre: 'Uva', sw: ['#F3E8FF', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#4A5486', '#232A55'] }] },
+    { clave: 'pzestilo', titulo: 'Estilo de piezas', icono: '♟️', def: 'img', opciones: [{ id: 'img', nombre: '🎨 Ilustradas' }, { id: 'txt', nombre: 'Clásicas (con colores propios)' }] },
     ...gruposFichas({ pocos: true, titulo: 'Piezas', icono: '♟️', lados: ['Blancas', 'Negras'], tituloColor: 'Color de Piezas', formas: false }),
     { clave: 'marcas', titulo: 'Marcar las casillas posibles', def: 'si', opciones: [{ id: 'si', nombre: 'Sí' }, { id: 'no', nombre: 'No' }] },
   ],

@@ -37,3 +37,11 @@
 /* 🎨 Fichas · Textura: conservar el color bajo la textura */
 [data-ftex]:not([data-ftex="original"]) .pc.w{background-color:var(--pw2)}
 [data-ftex]:not([data-ftex="original"]) .pc.b{background-color:var(--pb2)}
+
+/* 3.82: fichas ilustradas (img/fichas): las blancas son marfil y las del otro bando rojas; la dama lleva corona */
+.juego-damas[data-fichas="ilustrada"] .pc{background:url(../../../img/fichas/blanca.webp) center/contain no-repeat;border:0;border-radius:0;box-shadow:none;overflow:visible;width:88%;height:88%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+.juego-damas[data-fichas="ilustrada"] .pc.b{background-image:url(../../../img/fichas/roja.webp)}
+.juego-damas[data-fichas="ilustrada"] .pc.w.rey{background-image:url(../../../img/fichas/dama-blanca.webp)}
+.juego-damas[data-fichas="ilustrada"] .pc.b.rey{background-image:url(../../../img/fichas/dama-roja.webp)}
+.juego-damas[data-fichas="ilustrada"] .pc.rey:not(.pj){font-size:0}
+.juego-damas[data-fichas="ilustrada"][data-ftex] .pc.w,.juego-damas[data-fichas="ilustrada"][data-ftex] .pc.b{background-color:transparent}

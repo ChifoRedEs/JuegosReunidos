@@ -95,3 +95,11 @@
 .axtab .pz,.axghost .pz{scale:var(--fx-esc,1)}
 [data-ftex]:not([data-ftex="original"]) .pz{background-image:var(--fx-img),linear-gradient(var(--pzc),var(--pzc));background-size:var(--fx-bs,auto),100% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 .pz.b{--pzc:var(--pzb)}.pz.n{--pzc:var(--pzn)}
+
+/* 3.82: piezas ilustradas */
+.pzi{display:block;width:auto;height:calc(var(--pz-h,0px) * var(--r,1));pointer-events:none;user-select:none;filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.28));margin:0 auto}
+.axtab{--pz-h:calc(var(--ax-tam) / 8 * .98)}
+.axghost .pzi{--pz-h:calc(var(--tam) * .98);scale:1.12}
+.axpo .pzi{--pz-h:54px;margin:0 auto}
+.axcap .pzi{--pz-h:22px;display:inline-block;margin-right:-4px;filter:none}
+.axtab .sq.mia:active .pzi{transform:scale(1.08)}

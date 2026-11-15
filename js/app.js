@@ -38,7 +38,7 @@ const emblema = (id, w = 46) => `<img class="emb" src="img/sellos/${id}.webp" al
 // Los botones que empiezan por un emoji conocido (💡 Pista, ↶ Deshacer, 🏆 Podio…) se muestran con su icono ilustrado, en todos los juegos.
 // Icono ilustrado con respaldo: mientras el archivo no esté en ICONOS_LISTOS se muestra el emoji (sin pedir una imagen que no existe).
 // Al añadir img/iconos/<nombre>.webp basta con incluir el nombre aquí.
-const ICONOS_LISTOS = new Set([]);   // pendientes: configurar, pausa, diario, ajustes, ver3d, ver2d
+const ICONOS_LISTOS = new Set(['configurar', 'pausa', 'diario', 'ajustes', 'ver3d', 'ver2d']);
 const icoF = (n, emoji, w = 22, c = 'ic') => ICONOS_LISTOS.has(n) ? `<img class="${c}" src="img/iconos/${n}.webp" alt="" width="${w}" height="${w}" data-fb="${emoji}">` : emoji;
 document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG' && t.dataset.fb) t.replaceWith(document.createTextNode(t.dataset.fb)); }, true);
 const ICONOS_BTN = { '💡': 'pista', '↶': 'deshacer', '↩️': 'deshacer', '↩': 'deshacer', '🏆': 'podio', '🎨': 'apariencia', '📖': 'reglas', '📤': 'compartir' };

@@ -45,3 +45,9 @@
 .juego-cuatroenlinea .ch.c41{background:var(--r);box-shadow:inset 0 0 0 2px rgba(0,0,0,.2)}.juego-cuatroenlinea .ch.c42{background:var(--y);box-shadow:inset 0 0 0 2px rgba(0,0,0,.2)}
 /* 🎨 Fichas · Textura: conservar el color bajo la textura */
 [data-ftex]:not([data-ftex="original"]) .d.p1,[data-ftex]:not([data-ftex="original"]) .d.p2{background-color:var(--dc)}
+
+/* 3.82: fichas ilustradas (img/fichas): rojas y amarillas */
+.juego-cuatroenlinea[data-forma="ilustrada"] .d.p1,.juego-cuatroenlinea[data-forma="ilustrada"] .d.p2{background:url(../../../img/fichas/roja.webp) center/contain no-repeat;box-shadow:none;border:0;inset:3%;filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.3))}
+.juego-cuatroenlinea[data-forma="ilustrada"] .d.p2{background-image:url(../../../img/fichas/amarilla.webp)}
+.juego-cuatroenlinea[data-forma="ilustrada"] .ch.c41{background:url(../../../img/fichas/roja.webp) center/contain no-repeat;box-shadow:none}
+.juego-cuatroenlinea[data-forma="ilustrada"] .ch.c42{background:url(../../../img/fichas/amarilla.webp) center/contain no-repeat;box-shadow:none}

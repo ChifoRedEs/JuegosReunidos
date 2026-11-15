@@ -15,7 +15,7 @@ async function activar3D() {
   try {
     const base = await import('../../core/escena3d.js'); if (!base.hayWebGL()) return;
     const { crearMesa3D } = await import('../../core/mesa3d.js'); if (t !== tok3 || !rootEl || !C) return;
-    const host = $('#dm3d'); if (!host) return; host.hidden = false; forma3 = asp.valores.fichas || 'disco'; tn3 = R().n;
+    const host = $('#dm3d'); if (!host) return; host.hidden = false; forma3 = (asp.valores.fichas || 'ilustrada') === 'ilustrada' ? 'disco' : asp.valores.fichas; tn3 = R().n;
     const m = await crearMesa3D(host, { n: tn3, juego: 'damas', forma: forma3, alTocar: (r, c) => tocar(r, c) });
     if (t !== tok3 || !rootEl) { m.destruir(); return; }
     base.botonesCamara(host, m.E); m3 = m; $('#dmTab').hidden = true; pintar();
@@ -58,8 +58,8 @@ export async function mount(root, a) {
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#dmTab'), tt: true }, grupoPersonaje('Personajes (tus fichas)'), 
     { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
     ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '⚪', lados: ['Tuyas', 'CPU'], leyenda: ['Jugador 1 (tuyas)', 'CPU'], formas: false }),
-    { clave: 'fichas', enEstilos: true, etiqueta: 'Forma de la ficha', titulo: 'Forma de las fichas', def: 'disco', opciones: [{ id: 'disco', nombre: '● Disco' }, { id: 'anillo', nombre: '◎ Anillo' }, { id: 'gema', nombre: '⬢ Gema' }, { id: 'cuadrada', nombre: '▢ Cuadrada' }] },
-  ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '2d') !== '3d') || (m3 && forma3 !== (asp.valores.fichas || 'disco')))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
+    { clave: 'fichas', enEstilos: true, etiqueta: 'Forma de la ficha', titulo: 'Forma de las fichas', def: 'ilustrada', opciones: [{ id: 'ilustrada', nombre: '🎨 Ilustrada' }, { id: 'disco', nombre: '● Disco' }, { id: 'anillo', nombre: '◎ Anillo' }, { id: 'gema', nombre: '⬢ Gema' }, { id: 'cuadrada', nombre: '▢ Cuadrada' }] },
+  ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '2d') !== '3d') || (m3 && forma3 !== ((asp.valores.fichas || 'ilustrada') === 'ilustrada' ? 'disco' : asp.valores.fichas)))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
   api.barra({
@@ -233,7 +233,7 @@ function pintar() {
     if (s.dataset.k === key) continue;
     s.dataset.k = key;
     s.className = 'sq' + ((r + c) % 2 ? ' d' : '') + [...fl].map(x => ' ' + x).join('');
-    s.innerHTML = p ? `<div class="pc fx ${dueno(p)}${pj ? ' pj' : ''}">${pj ? `${emo}${esRey(p) ? '<b class="cr">♛\uFE0E</b>' : ''}` : esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
+    s.innerHTML = p ? `<div class="pc fx ${dueno(p)}${pj ? ' pj' : ''}${esRey(p) ? ' rey' : ''}">${pj ? `${emo}${esRey(p) ? '<b class="cr">♛\uFE0E</b>' : ''}` : esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
     if ((r + c) % 2) s.setAttribute('aria-label', `Fila ${r + 1}, columna ${c + 1}, ${p ? (dueno(p) === 'w' ? 'ficha blanca' : 'ficha roja') + (esRey(p) ? ' dama' : '') : 'vacía'}`);
   }
   if (anim) {
