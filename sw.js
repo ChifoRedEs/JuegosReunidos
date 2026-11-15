@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-d18288d4e4';
+const VERSION = 'jr-85c4090e0f';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -9,11 +9,27 @@ const ARCHIVOS = [
 './css/base.css',
 './css/cartas.css',
 './css/fichas.css',
+'./css/fuentes.css',
 './css/marca.css',
 './css/pasaporte.css',
 './css/tutorial.css',
 './data/diccionario/indice.json',
 './data/nonogramas/pixelart.json',
+'./fonts/baloo-2-latin-600-normal.woff2',
+'./fonts/baloo-2-latin-800-normal.woff2',
+'./fonts/baloo-2-latin-ext-600-normal.woff2',
+'./fonts/baloo-2-latin-ext-800-normal.woff2',
+'./fonts/chewy-latin-400-normal.woff2',
+'./fonts/fraunces-latin-700-normal.woff2',
+'./fonts/fraunces-latin-900-normal.woff2',
+'./fonts/fraunces-latin-ext-700-normal.woff2',
+'./fonts/fraunces-latin-ext-900-normal.woff2',
+'./fonts/nunito-latin-500-normal.woff2',
+'./fonts/nunito-latin-700-normal.woff2',
+'./fonts/nunito-latin-800-normal.woff2',
+'./fonts/nunito-latin-ext-500-normal.woff2',
+'./fonts/nunito-latin-ext-700-normal.woff2',
+'./fonts/nunito-latin-ext-800-normal.woff2',
 './icons/icon-192.png',
 './icons/icon-512.png',
 './icons/icon-maskable-512.png',
@@ -1813,7 +1829,7 @@ async function guardarApp() {
 self.addEventListener('install', e => {
   e.waitUntil(Promise.all([
     guardarApp(),
-    guardarFuentes().catch(() => {}),             // sin conexión o si Google falla, la app se instala igual
+    // las tipografías son locales (fonts/, css/fuentes.css) y van dentro de guardarApp(): ya no se piden a Google
   ]).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
