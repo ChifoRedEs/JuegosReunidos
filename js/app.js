@@ -329,6 +329,7 @@ function crearApi(j, ent, mod, root) {
     },
     aspecto(defs, alCambiar) {
       // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
+      defs = defs.filter(g => g.clave !== 'pj' && !/tex$/.test(g.clave));   // Personajes y Texturas ya no forman parte de la Apariencia
       defs = defs.filter(g => g.opciones.some(o => !o.azar && !o.nada) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
       // Grupos propios «Forma de las fichas» (enEstilos) se integran en el desplegable «Estilos de Fichas» si el juego lo tiene.
       defs.forEach(g => { if (g.clave === 'vista') g.oculto = true; });                // 2D/3D: ya está el botón flotante de la esquina superior izquierda

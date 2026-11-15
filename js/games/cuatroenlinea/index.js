@@ -60,9 +60,8 @@ function pintar(e, ctx, v) {
 const duelo = crearDuelo({
   id: 'cuatroenlinea', css: [new URL('../../../css/fichas.css', import.meta.url), new URL('./cuatroenlinea.css', import.meta.url)], iaModulo: new URL('./reglas.js', import.meta.url).href, variantes: VARIANTES, nombres: ['Rojo', 'Amarillo'],
   chip: n => `<i class="ch c4${n}"></i>`,
-  aspecto: [{ ...grupoFondo('#duTab'), tt: true }, grupoPersonaje('Personajes (tus fichas)'), ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🔴', lados: ['Rojas', 'Amarillas'], formas: false }),
+  aspecto: [{ ...grupoFondo('#duTab'), tt: true },
     { clave: 'tablero', tt: true, titulo: 'Color del tablero', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2457A6'] }, { id: 'morado', nombre: 'Morado', sw: ['#6B3FD4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0B9A6B'] }, { id: 'coral', nombre: 'Coral', sw: ['#F0572D'] }, { id: 'negro', nombre: 'Noche', sw: ['#262B4A'] }] },
-    { clave: 'forma', enEstilos: true, etiqueta: 'Forma de la ficha', titulo: 'Forma de las fichas', def: 'ilustrada', opciones: [{ id: 'ilustrada', nombre: '🎨 Ilustrada' }, { id: 'redonda', nombre: '● Redonda' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'corazon', nombre: '♥ Corazón' }] },
   ],
   estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML, vista: { montar, pintar },
 });
