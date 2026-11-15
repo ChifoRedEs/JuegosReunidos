@@ -353,3 +353,7 @@ html[data-anim="no"] #splash{display:none}
 #nav a img.nv{width:clamp(22px,6.2vw,30px);height:clamp(22px,6.2vw,30px)}
 :root[data-theme="dark"] :is(.barra-gen .ic,.vista-btn .ic){filter:drop-shadow(0 0 1px #FFF8EC) drop-shadow(0 0 3px rgba(255,248,236,.55))}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(.barra-gen .ic,.vista-btn .ic){filter:drop-shadow(0 0 1px #FFF8EC) drop-shadow(0 0 3px rgba(255,248,236,.55))}}
+
+/* 3.82.2: los títulos de las fichas de categoría ocupan siempre una sola línea (el tamaño se ajusta al ancho disponible) */
+.ini-t{container-type:inline-size}
+.ini-t b{white-space:nowrap;font-size:min(clamp(18px,2.7vh,24px),9.6cqw)}
