@@ -4,6 +4,7 @@ import { elegirPorRegla } from './ia.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 import { gruposFichas, estilo, claro, oscuro, luz } from '../../core/fichas.js';
+import { gruposColor, variablesTintadas, hexDe, matDe, MATERIALES } from '../../core/tinte.js';
 // Vista 3D (Three.js, opcional en 🎨 Apariencia): solo dibuja; los toques vuelven a `tocar`
 let m3 = null, tok3 = 0, forma3 = '', tn3 = 0;
 const TABLEROS = { madera: ['#8A5A34', '#F3DDB6'], esmeralda: ['#1F9D68', '#E7F6E2'], hielo: ['#4F8DF0', '#EAF4FF'], caramelo: ['#E0409B', '#FFE9F4'], noche: ['#141A3D', '#39447A'] };
@@ -57,6 +58,8 @@ export async function mount(root, a) {
   api = a; rootEl = root; pensando = false; anim = null;
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#dmTab'), tt: true },
     { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
+    ...gruposColor({ clave: 'dm', lados: ['Blancas', 'Rojas'], defs: ['marfil', 'coral'], titulo: 'Color de las fichas' }),
+    { clave: 'dmmat', titulo: 'Material de las fichas', def: 'liso', opciones: MATERIALES },
   ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '2d') !== '3d') || (m3 && forma3 !== ((asp.valores.fichas || 'ilustrada') === 'ilustrada' ? 'disco' : asp.valores.fichas)))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./damas.css', import.meta.url));
   const g = api.cargar();
@@ -215,7 +218,9 @@ function pintarMsg() { const m = $('#dmMsg'); if (m) { m.textContent = mensaje()
 function aplicarFichas() {
   const e = estilo(asp.valores), r = rootEl; if (!r) return;
   const par = (h, a, b, i) => { if (!h) { for (const n of [a, b, i]) r.style.removeProperty(n); return; } r.style.setProperty(a, claro(h, .45)); r.style.setProperty(b, h); r.style.setProperty(i, luz(h) > .55 ? oscuro(h, .55) : claro(h, .85)); };
-  par(e.hex, '--pw1', '--pw2', '--pwi'); par(e.hex2, '--pb1', '--pb2', '--pbi'); r.style.setProperty('--fx-esc', e.esc);
+  par(hexDe(asp.valores.dmcolor || 'marfil'), '--pw1', '--pw2', '--pwi'); par(hexDe(asp.valores.dmcolor2 || 'coral'), '--pb1', '--pb2', '--pbi'); r.style.setProperty('--fx-esc', e.esc);
+  { const v = asp.valores, m = matDe(v.dmmat), c1 = v.dmcolor || 'marfil', c2 = v.dmcolor2 || 'coral', u = n => `img/fichas/n/${m}-${n}.webp`;
+    variablesTintadas(r, [['--dm-w', u('disco'), hexDe(c1)], ['--dm-wr', u('corona'), hexDe(c1)], ['--dm-b', u('disco'), hexDe(c2)], ['--dm-br', u('corona'), hexDe(c2)]], [m, c1, c2].join('|')); }
 }
 function pintar() {
   aplicarFichas();
@@ -243,7 +248,7 @@ function pintar() {
     const piezas = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) { const p = C.b[r][c]; if (p) piezas.push({ r, c, t: esRey(p) ? 'rey' : 'man', col: dueno(p) === 'w' ? 0 : 1, emoji: emo && dueno(p) === 'w' ? emo : '' }); }
     const tb = TABLEROS[asp.valores.tablero] || TABLEROS.madera, fc = FICHAS_COL[asp.valores.colores] || FICHAS_COL.clasico, ef = estilo(asp.valores);
-    m3.fichas(ef); m3.colores({ oscuro: tb[0], claro: tb[1], marco: oscurecer(tb[0], .55), p0: ef.hex || fc[0], p1: ef.hex2 || fc[1] });
+    m3.fichas(ef); m3.colores({ oscuro: tb[0], claro: tb[1], marco: oscurecer(tb[0], .55), p0: hexDe(asp.valores.dmcolor || 'marfil'), p1: hexDe(asp.valores.dmcolor2 || 'coral') });
     m3.pintar({ piezas, ult: C.ultimo ? C.ultimo.path : [], sel: C.ruta ? [C.ruta[0]] : [], ruta: C.ruta ? C.ruta.slice(1) : [], dest: [...sig].map(k => k.split(',').map(Number)), marcas: true });
   }
   const cn = contar(C.b), ini = fichasIniciales(R());

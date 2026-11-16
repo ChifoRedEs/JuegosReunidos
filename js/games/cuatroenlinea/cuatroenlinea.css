@@ -46,8 +46,8 @@
 /* 🎨 Fichas · Textura: conservar el color bajo la textura */
 [data-ftex]:not([data-ftex="original"]) .d.p1,[data-ftex]:not([data-ftex="original"]) .d.p2{background-color:var(--dc)}
 
-/* 3.82: fichas ilustradas (img/fichas): rojas y amarillas */
-.juego-cuatroenlinea:not([data-forma]) .d.p1,.juego-cuatroenlinea:not([data-forma]) .d.p2{background:url(../../../img/fichas/roja.webp) center/contain no-repeat;box-shadow:none;border:0;inset:3%;filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.3))}
-.juego-cuatroenlinea:not([data-forma]) .d.p2{background-image:url(../../../img/fichas/amarilla.webp)}
-.juego-cuatroenlinea:not([data-forma]) .ch.c41{background:url(../../../img/fichas/roja.webp) center/contain no-repeat;box-shadow:none}
-.juego-cuatroenlinea:not([data-forma]) .ch.c42{background:url(../../../img/fichas/amarilla.webp) center/contain no-repeat;box-shadow:none}
+/* 3.83: fichas en gris neutro teñidas con el color elegido (core/tinte.js → --c4-1 y --c4-2) */
+.juego-cuatroenlinea:not([data-forma]) .d.p1,.juego-cuatroenlinea:not([data-forma]) .d.p2{background-image:var(--c4-1,url(../../../img/fichas/n/liso-disco.webp));background-position:center;background-size:contain;background-repeat:no-repeat;background-color:transparent;box-shadow:none;border:0;inset:3%;filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.3))}
+.juego-cuatroenlinea:not([data-forma]) .d.p2{background-image:var(--c4-2,url(../../../img/fichas/n/liso-disco.webp))}
+.juego-cuatroenlinea:not([data-forma]) .ch.c41{background:var(--c4-1,url(../../../img/fichas/n/liso-disco.webp)) center/contain no-repeat;box-shadow:none}
+.juego-cuatroenlinea:not([data-forma]) .ch.c42{background:var(--c4-2,url(../../../img/fichas/n/liso-disco.webp)) center/contain no-repeat;box-shadow:none}

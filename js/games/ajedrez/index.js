@@ -3,6 +3,7 @@ import { esc } from '../../core/dom.js';
 import { gruposFichas, estilo, claro, oscuro, luz } from '../../core/fichas.js';
 import { VARIANTES, estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML, rendirse, jaque, de, a, coronacion, NOMBRE_PIEZA, aPGN, dePGN } from './reglas.js';
 import { grupoFondo } from '../../core/aspectos.js';
+import { gruposColor, tintarTodas, hexDe } from '../../core/tinte.js';
 
 const GLIFO = ['', '♟', '♞', '♝', '♜', '♛', '♚'].map(g => g && g + '\uFE0E');   // \uFE0E: forzar el dibujo de texto (no emoji)
 const INICIALES = [0, 8, 2, 2, 2, 1, 0], VALOR = [0, 1, 3, 3, 5, 9, 0];
@@ -32,10 +33,21 @@ const fmtReloj = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return s <
 
 const casillaDe = d => (flip ? 63 - d : d);
 const color = p => (p >> 3) + 1;                    // 1 blancas · 2 negras
-// Piezas ilustradas (img/ajedrez/<w|b><K|Q|R|B|N|P>.webp) o, como alternativa, las de tipografía con los colores de 🎨 Apariencia
+// Piezas ilustradas en gris neutro (img/ajedrez/n/<cl|mo>-<liso|madera|piedra>-<K|Q|R|B|N|P>.webp) que se tiñen con el color elegido para cada bando (core/tinte.js)
 let estiloPz = 'img';
-const ALTO_PZ = { K: 1, Q: .95, R: .75, B: .86, N: .78, P: .65 };      // altura relativa (las ilustraciones no miden todas lo mismo)
-const imgPz = (t, n) => { const k = 'PNBRQK'[t - 1]; return `<img class="pzi" src="img/ajedrez/${n ? 'b' : 'w'}${k}.webp" alt="" draggable="false" style="--r:${ALTO_PZ[k]}">`; };
+const ALTO = { cl: { K: 1, Q: .933, R: .82, B: .917, N: .838, P: .704 }, mo: { K: 1, Q: .979, R: .858, B: .896, N: .929, P: .704 } };   // altura relativa de cada pieza
+let pzSet = 'cl', pzMat = 'liso', pzSig = '', pzUrl = {};                                  // lo que se está mostrando · firma de lo pedido · urls ya teñidas
+const urlNeutra = k => `img/ajedrez/n/${pzSet}-${pzMat}-${k}.webp`;
+const imgPz = (t, n) => { const k = 'PNBRQK'[t - 1]; return `<img class="pzi" src="${pzUrl[(n ? 'b' : 'w') + k] || urlNeutra(k)}" alt="" draggable="false" style="--r:${ALTO[pzSet][k]}">`; };
+async function prepararPiezas(set, mat, cW, cB, sig) {
+  const ks = [...'KQRBNP'], urls = k => `img/ajedrez/n/${set}-${mat}-${k}.webp`;
+  try {
+    const [w, b] = await Promise.all([tintarTodas(ks.map(k => ['w' + k, urls(k)]), hexDe(cW)), tintarTodas(ks.map(k => ['b' + k, urls(k)]), hexDe(cB))]);
+    if (sig !== pzSig) return;                                                            // mientras tanto se pidió otra cosa
+    pzUrl = { ...w, ...b }; pzSet = set; pzMat = mat;
+    celdas.forEach(c => { c.lastElementChild.dataset.p = ''; }); repintar();
+  } catch { /* sin lienzo: se queda con el gris */ }
+}
 const piezaHTML = p => estiloPz === 'img' ? imgPz(p & 7, p >> 3) : `<span class="pz ${p >> 3 ? 'n' : 'b'}">${GLIFO[p & 7]}</span>`;
 
 function montar(c, ctx) {
@@ -212,7 +224,9 @@ function pintar(eReal, ctx) {
   }
   if (rev != null && (!eAct.movs || rev > eAct.n)) rev = null;
   const revisando = rev != null && rev !== eAct.n, e = revisando ? posicion(rev) : eAct;   // en revisión se pinta la posición elegida
-  flip = ctx.modo() === 'cpu' && ctx.yo() === 2; estiloPz = (ctx.valores().pzestilo || 'img') === 'img' ? 'img' : 'txt';
+  flip = ctx.modo() === 'cpu' && ctx.yo() === 2; estiloPz = 'img';
+  { const v = ctx.valores(), set = v.pzset === 'mo' ? 'mo' : 'cl', mat = ['madera', 'piedra'].includes(v.pzmat) ? v.pzmat : 'liso', sig = [set, mat, v.pzcolor || 'marfil', v.pzcolor2 || 'grafito'].join('|');
+    if (sig !== pzSig) { pzSig = sig; prepararPiezas(set, mat, v.pzcolor || 'marfil', v.pzcolor2 || 'grafito', sig); } }
   const jq = e.fin && e.fin.motivo !== 'Jaque mate' ? -1 : jaque(e), marcas = (ctx.valores().marcas || 'si') === 'si';
   const destinos = new Map(); if (sel != null) legal.filter(m => de(m) === sel).forEach(m => destinos.set(a(m), true));
   const pd = ctx.pista != null ? de(ctx.pista) : -1, pa = ctx.pista != null ? a(ctx.pista) : -1, ult = e.ult || [];
@@ -229,13 +243,13 @@ function pintar(eReal, ctx) {
     c.setAttribute('aria-label', `${'abcdefgh'[f]}${8 - r}${p ? ', ' + NOMBRE_PIEZA[p & 7] + (p >> 3 ? ' negro' : ' blanco') : ''}${sq === jq ? ', en jaque' : ''}`);
   });
   cont.querySelector('#axTab').classList.toggle('on', puede);
-  { // 🎨 Piezas: color de cada bando (--pzb/--pzn y su contorno), tamaño y textura
-    const ef = estilo(ctx.valores()), r = cont.closest('.juego-ajedrez') || cont, par = (h, a, l) => { if (h) { r.style.setProperty(a, h); r.style.setProperty(l, luz(h) > .5 ? oscuro(h, .6) : claro(h, .8)); } else { r.style.removeProperty(a); r.style.removeProperty(l); } };
-    par(ef.hex, '--pzb', '--pzb-l'); par(ef.hex2, '--pzn', '--pzn-l'); r.style.setProperty('--fx-esc', ef.esc);
+  { // color de cada bando (fichas de jugador, marcador y 3D)
+    const v = ctx.valores(), r = cont.closest('.juego-ajedrez') || cont, hW = hexDe(v.pzcolor || 'marfil'), hB = hexDe(v.pzcolor2 || 'grafito');
+    r.style.setProperty('--pzb', hW); r.style.setProperty('--pzb-l', oscuro(hW, .6)); r.style.setProperty('--pzn', hB); r.style.setProperty('--pzn-l', claro(hB, .8));
   }
   if (m3) {
     const xy = q => [q >> 3, q & 7], tp = ctx.valores().tablero || 'madera', pz = PIEZAS[ctx.valores().piezas] || PIEZAS.clasicas, tb = TABLEROS[tp] || TABLEROS.madera;
-    const ef = estilo(ctx.valores()); m3.fichas(ef); m3.colores({ claro: tb[0], oscuro: tb[1], marco: MARCOS[tp] || '#5A3A22', p0: ef.hex || pz[0], p1: ef.hex2 || pz[1] });
+    const ef = estilo(ctx.valores()); m3.fichas(ef); m3.colores({ claro: tb[0], oscuro: tb[1], marco: MARCOS[tp] || '#5A3A22', p0: hexDe(ctx.valores().pzcolor || 'marfil'), p1: hexDe(ctx.valores().pzcolor2 || 'grafito') });
     m3.pintar({ piezas: e.b.map((p, q) => (p ? { r: q >> 3, c: q & 7, t: 'PNBRQK'[(p & 7) - 1], col: p >> 3 } : null)).filter(Boolean),
       ult: ult.map(xy), sel: sel != null ? [xy(sel)] : [], dest: [...destinos.keys()].map(q => [...xy(q), !!e.b[q] || (e.ep === q && (e.b[sel] & 7) === 1)]),
       jaque: jq >= 0 ? xy(jq) : null, pista: pd >= 0 ? [xy(pd), xy(pa)] : [], marcas, flip });
@@ -275,6 +289,9 @@ const duelo = crearDuelo({
   chip: n => `<i class="ch axch${n}">${GLIFO[6]}</i>`,
   aspecto: [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#duTab'), tt: true }, 
     { clave: 'tablero', tt: true, titulo: 'Colores del tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#F0D9B5', '#B58863'] }, { id: 'torneo', nombre: 'Torneo', sw: ['#EEEED2', '#769656'] }, { id: 'oceano', nombre: 'Océano', sw: ['#E4EDFF', '#5B7FD6'] }, { id: 'uva', nombre: 'Uva', sw: ['#F3E8FF', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#4A5486', '#232A55'] }] },
+    ...gruposColor({ clave: 'pz', lados: ['Blancas', 'Negras'], defs: ['marfil', 'grafito'], titulo: 'Color de las piezas' }),
+    { clave: 'pzset', titulo: 'Estilo de las piezas', def: 'cl', opciones: [{ id: 'cl', nombre: 'Clásicas' }, { id: 'mo', nombre: 'Modernas' }] },
+    { clave: 'pzmat', titulo: 'Material de las piezas', def: 'liso', opciones: [{ id: 'liso', nombre: 'Lisas' }, { id: 'madera', nombre: 'Madera' }, { id: 'piedra', nombre: 'Piedra' }] },
     { clave: 'marcas', titulo: 'Marcar las casillas posibles', def: 'si', opciones: [{ id: 'si', nombre: 'Sí' }, { id: 'no', nombre: 'No' }] },
   ],
   cfgExtra: {

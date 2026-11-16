@@ -38,10 +38,10 @@
 [data-ftex]:not([data-ftex="original"]) .pc.w{background-color:var(--pw2)}
 [data-ftex]:not([data-ftex="original"]) .pc.b{background-color:var(--pb2)}
 
-/* 3.82: fichas ilustradas (img/fichas): las blancas son marfil y las del otro bando rojas; la dama lleva corona */
-.juego-damas:not([data-fichas]) .pc{background:url(../../../img/fichas/blanca.webp) center/contain no-repeat;border:0;border-radius:0;box-shadow:none;overflow:visible;width:88%;height:88%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
-.juego-damas:not([data-fichas]) .pc.b{background-image:url(../../../img/fichas/roja.webp)}
-.juego-damas:not([data-fichas]) .pc.w.rey{background-image:url(../../../img/fichas/dama-blanca.webp)}
-.juego-damas:not([data-fichas]) .pc.b.rey{background-image:url(../../../img/fichas/dama-roja.webp)}
+/* 3.83: fichas de piedra, madera o lisas en gris, teñidas con el color elegido (core/tinte.js → --dm-w, --dm-wr, --dm-b, --dm-br) */
+.juego-damas:not([data-fichas]) .pc{background-image:var(--dm-w,url(../../../img/fichas/n/liso-disco.webp));background-position:center;background-size:contain;background-repeat:no-repeat;border:0;border-radius:0;box-shadow:none;overflow:visible;width:90%;height:90%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+.juego-damas:not([data-fichas]) .pc.b{background-image:var(--dm-b,url(../../../img/fichas/n/liso-disco.webp))}
+.juego-damas:not([data-fichas]) .pc.w.rey{background-image:var(--dm-wr,url(../../../img/fichas/n/liso-corona.webp))}
+.juego-damas:not([data-fichas]) .pc.b.rey{background-image:var(--dm-br,url(../../../img/fichas/n/liso-corona.webp))}
 .juego-damas:not([data-fichas]) .pc.rey:not(.pj){font-size:0}
 .juego-damas:not([data-fichas])[data-ftex] .pc.w,.juego-damas:not([data-fichas])[data-ftex] .pc.b{background-color:transparent}
