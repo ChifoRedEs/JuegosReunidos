@@ -32,8 +32,7 @@ export async function mount(r, a) {
   api = a; root = r; sel = 0; vertical = false; pista = -1; efecto = null; forzar2d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#flCuerpo'), tt: true }, 
-    { clave: 'mar', tt: true, etiqueta: 'Color del mar', titulo: 'Color del mar', def: 'oceano', opciones: [{ id: 'oceano', nombre: 'Océano', sw: ['#2F80ED', '#1B4FA8'] }, { id: 'tropical', nombre: 'Tropical', sw: ['#16C1C8', '#0B8A9A'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3A78', '#141C40'] }, { id: 'papel', nombre: 'Papel', sw: ['#EEF2FB', '#9DB0D8'] }] },
-    ...gruposFichas({ pocos: true, titulo: 'Barcos', icono: '🚢', nombresColor: ['Color de Barcos'], formas: false, tamano: ['pequeno', 'normal'] }),
+    { clave: 'mar', tt: true, etiqueta: 'Mar', titulo: 'Mar', def: 'dia', opciones: [{ id: 'dia', nombre: 'Día en calma', sw: ['#2E918C'] }, { id: 'olas', nombre: 'Día con olas', sw: ['#4AA39A'] }, { id: 'noche', nombre: 'Noche en calma', sw: ['#1C2640'] }, { id: 'noche2', nombre: 'Noche con olas', sw: ['#223156'] }] },
   ], () => { aplicarFichas(); if (!S) return; if (quiere3D() && !V3) iniciar3D(); else if (V3 && !quiere3D()) cerrar3D(); else if (V3) V3.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./batallanaval.css', import.meta.url));
@@ -101,11 +100,13 @@ function empezar() {
 }
 
 /* ---------- tableros ---------- */
+// Ilustración de cada barco (img/naval/barco1…6.webp): por tamaño, y el submarino con su propia imagen
+const imgBarco = b => b.len >= 5 ? 1 : b.len === 4 ? 2 : /^Submarino/.test(b.nombre) ? 4 : b.len === 3 ? 3 : b.len === 2 ? (b.k % 2 ? 6 : 5) : 6;
 // Dibuja un tablero n×n. tipo: 'propio' (tus barcos y los disparos del rival) o 'rival' (tus disparos).
 function tablero(id, p, tipo, opts = {}) {
   const n = S.n, rival = 1 - p, tiros = tipo === 'propio' ? S.tiros[rival] : S.tiros[p];
   const mios = tipo === 'propio' ? S.barcos[p] : (opts.revelar ? S.barcos[rival] : []);
-  const enBarco = new Map(); mios.forEach((b, k) => b.celdas && b.celdas.forEach((c, j) => enBarco.set(c, { k, j, len: b.len, v: b.len > 1 && b.celdas[1] - b.celdas[0] === n })));
+  const enBarco = new Map(); mios.forEach((b, k) => b.celdas && b.celdas.forEach((c, j) => enBarco.set(c, { k, j, len: b.len, nombre: b.nombre, v: b.len > 1 && b.celdas[1] - b.celdas[0] === n })));
   const ult = S.ultimo && (tipo === 'propio' ? S.ultimo.p === rival : S.ultimo.p === p) ? S.ultimo.i : -1;
   let h = `<div class="fltab ${tipo} ${opts.clase || ''}" id="${id}" style="--n:${n}" role="grid" aria-label="${tipo === 'propio' ? 'Tu flota' : 'Mar enemigo'}"><span class="esq"></span>`;
   for (let c = 0; c < n; c++) h += `<span class="cab">${c + 1}</span>`;
@@ -114,12 +115,13 @@ function tablero(id, p, tipo, opts = {}) {
     for (let c = 0; c < n; c++) {
       const i = f * n + c, t = tiros[i], b = enBarco.get(i);
       const cls = ['cel'];
-      if (b) { cls.push('barco', 'fxb', b.v ? 'v' : 'h'); if (b.j === 0) cls.push('ini'); if (b.j === b.len - 1) cls.push('fin'); if (b.len === 1) cls.push('uno'); if (opts.marcado === b.k) cls.push('marcado'); if (tipo === 'rival') cls.push('revelado'); }
+      if (b) { cls.push('barco', 'fxb', b.v ? 'v' : 'h'); if (b.j === 0) cls.push('proa'); if (b.j === b.len - 1) cls.push('fin'); if (b.len === 1) cls.push('uno'); if (opts.marcado === b.k) cls.push('marcado'); if (tipo === 'rival') cls.push('revelado'); }
       cls.push(['', 'agua', 'tocado', 'hundido', 'deducida'][t]);
       if (i === ult) cls.push('ult'); if (i === pista && tipo === 'rival') cls.push('pista');
       if (efecto && efecto.i === i && efecto.tablero === id) cls.push('fx-' + efecto.res);
       const est = ['sin disparar', 'agua', 'tocado', 'hundido', 'agua'][t];
-      h += `<button type="button" class="${cls.join(' ')}" data-t="${id}" data-i="${i}" aria-label="${F.nombreCasilla(n, i)}: ${b && tipo === 'propio' ? 'barco, ' : ''}${est}"></button>`;
+      const nav = b && b.j === 0 ? `<img class="nav${b.v ? ' ver' : ''}" src="img/naval/barco${imgBarco(b)}.webp" alt="" draggable="false" style="--len:${b.len}">` : '';
+      h += `<button type="button" class="${cls.join(' ')}" data-t="${id}" data-i="${i}" aria-label="${F.nombreCasilla(n, i)}: ${b && tipo === 'propio' ? 'barco, ' : ''}${est}">${nav}</button>`;
     }
   }
   return h + '</div>';

@@ -2,19 +2,25 @@
 import { pieMenu } from '../../core/pie.js';
 import { $ } from '../../core/dom.js';
 import * as A from './motor.js';
-import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
-import { imagenTapete, pintarTapete } from '../../core/cartas.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, esc = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, dedos = new Map(), obj = [null, null], teclas = {}, rastro = [], cartel = null, ultGolpe = 0, hudAnt = '';
 let eraJugando = false;
 let cfg = { modo: 'cpu', nivel: 'medio', meta: 7 };
-const TEMAS = {
-  hielo: { nombre: 'Hielo', mesa: '#EAF6FF', linea: '#9CC9F0', borde: '#2F6BFF', disco: '#1B2340', sw: ['#EAF6FF', '#2F6BFF'] },
-  neon: { nombre: 'Neón', mesa: '#0E0B2B', linea: '#7B5CFF', borde: '#FF3EA5', disco: '#F5F5FF', sw: ['#0E0B2B', '#FF3EA5'] },
-  bosque: { nombre: 'Bosque', mesa: '#E9F7EC', linea: '#9AD3A8', borde: '#0FB56A', disco: '#173B26', sw: ['#E9F7EC', '#0FB56A'] },
-};
-const COL = ['#FF4757', '#2F6BFF'];
+const IMG = 'img/airhockey/';
+const MESAS = [
+  ['clasica-1', 'Verde azulado', ['#1B7870', '#E3DCCC']], ['clasica-2', 'Mostaza', ['#9F893E', '#E2DAC5']], ['clasica-3', 'Ciruela', ['#4C2542', '#E0D5C1']],
+  ['neon-1', 'Neón azul', ['#061D2B', '#33D6FF']], ['neon-2', 'Neón naranja', ['#2C0F09', '#FF7A2E']], ['neon-3', 'Neón turquesa', ['#071F21', '#2EF0D0']],
+];
+const MAZOS = [['rojo', 'Rojo', '#E0483C'], ['azul', 'Azul', '#2F6BFF'], ['verde', 'Verde', '#1CAE69'], ['amarillo', 'Amarillo', '#E9B23B'], ['naranja', 'Naranja', '#E8602F'], ['morado', 'Morado', '#7A4FC9'], ['menta', 'Menta', '#4FD3BD'], ['turquesa', 'Turquesa', '#1E8B85']];
+const DISCOS = [['crema', 'Crema', '#FBF3E2'], ['cian', 'Cian', '#4FD6C4'], ['verde', 'Verde', '#3CC63C'], ['rojo', 'Rojo', '#D82A2A']];
+const COLM = Object.fromEntries(MAZOS.map(m => [m[0], m[2]]));
+const colJ = j => COLM[asp && asp.valores[j === 0 ? 'mazo' : 'mazo2']] || (j === 0 ? '#E0483C' : '#2F6BFF');
+// Mesa: la imagen lleva su propio marco; el campo de juego (canvas) ocupa el recuadro interior
+const CAMPO = { x: 50 / 572, y: 52 / 1024, w: 472 / 572, h: 920 / 1024 };
+const imgs = {};
+const imgDe = n => { let i = imgs[n]; if (!i) { i = imgs[n] = new Image(); i.onload = () => { if (S && cv) dibujar(); }; i.src = IMG + n + '.webp'; } return i; };
 const nombres = () => (S && S.modo === 'dos' ? ['Jugador 1', 'Jugador 2'] : ['Tú', 'CPU']);
 
 /* ---------- validación / resumen ---------- */
@@ -28,7 +34,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; dedos = new Map(); obj = [null, null]; rastro = []; cartel = null;
-  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (tu mazo)'), { clave: 'tema', titulo: 'Mesa', def: 'hielo', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (tu mazo)'), { clave: 'mesa', titulo: 'Mesa', def: 'clasica-1', opciones: MESAS.map(([id, nombre, sw]) => ({ id, nombre, sw })) }, { clave: 'mazo', titulo: 'Tu mazo', def: 'rojo', opciones: MAZOS.map(([id, nombre, c]) => ({ id, nombre, sw: [c, c] })) }, { clave: 'mazo2', titulo: 'Mazo rival', def: 'azul', opciones: MAZOS.map(([id, nombre, c]) => ({ id, nombre, sw: [c, c] })) }, { clave: 'disco', titulo: 'Disco', def: 'crema', opciones: DISCOS.map(([id, nombre, c]) => ({ id, nombre, sw: [c, c] })) }], () => { if (S) dibujar(); });
   await api.css(new URL('./airhockey.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && A.MODOS[c0.modo] && A.NIVELES[c0.nivel] && A.METAS.includes(c0.meta)) cfg = { ...c0 };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -77,10 +83,13 @@ function armar() {
 function ajustar() {
   if (!cv) return;
   const zona = $('#ahZona'), anchoMax = zona.parentElement.getBoundingClientRect().width;
-  const altoDisp = Math.max(360, innerHeight - zona.getBoundingClientRect().top - 90);       // que quepa entera en pantalla
-  const ancho = Math.floor(Math.min(anchoMax, 460, altoDisp * A.ANCHO / A.ALTO)), alto = Math.round(ancho * A.ALTO / A.ANCHO);
-  zona.style.width = ancho + 'px';
-  cv.width = ancho * dpr; cv.height = alto * dpr; cv.style.height = alto + 'px'; esc = ancho / A.ANCHO;
+  const proporcion = (A.ANCHO / CAMPO.w) / (A.ALTO / CAMPO.h);                              // ancho / alto de toda la mesa (marco incluido)
+  const altoDisp = Math.max(400, innerHeight - zona.getBoundingClientRect().top - 90);       // que quepa entera en pantalla
+  const zw = Math.floor(Math.min(anchoMax, 520, altoDisp * proporcion)), zh = Math.round(zw / proporcion);
+  zona.style.width = zw + 'px'; zona.style.height = zh + 'px';
+  const cw = zw * CAMPO.w, ch = zh * CAMPO.h;
+  cv.style.cssText = `left:${(CAMPO.x * 100).toFixed(3)}%;top:${(CAMPO.y * 100).toFixed(3)}%;width:${(CAMPO.w * 100).toFixed(3)}%;height:${(CAMPO.h * 100).toFixed(3)}%`;
+  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); esc = cw / A.ANCHO;
 }
 function empezar() {
   api.setPref('cfg', cfg);
@@ -118,7 +127,7 @@ function objetivoTeclado(dt) {
 /* ---------- bucle ---------- */
 function bucle(t) {
   if (!S || !cv) return;
-  const dt = Math.min((t - tPrev) / 1000, 1 / 20); tPrev = t;
+  const dt = Math.max(1 / 240, Math.min((t - tPrev) / 1000, 1 / 20)); tPrev = t;
   if (S.fase === 'juego' || S.fase === 'gol') {
     const o0 = objetivoTeclado(dt) || obj[0];
     const ev = A.avanzar(S, dt, [o0, S.modo === 'dos' ? obj[1] : null]);
@@ -135,7 +144,7 @@ function efectos(ev) {
   if (ev.includes('golpe') && ahora - ultGolpe > 70) { ultGolpe = ahora; api.sonido('click'); api.vibrar(12); }
   for (const g of ['gol0', 'gol1']) if (ev.includes(g)) {
     const j = +g[3], n = nombres(); rastro = [];
-    cartel = { texto: S.modo === 'cpu' ? (j === 0 ? '¡GOOOL!' : 'Gol de la CPU') : `¡Gol de ${n[j]}!`, color: COL[j], t: 1.1 };
+    cartel = { texto: S.modo === 'cpu' ? (j === 0 ? '¡GOOOL!' : 'Gol de la CPU') : `¡Gol de ${n[j]}!`, color: colJ(j), t: 1.1 };
     api.sonido(S.modo === 'cpu' && j === 1 ? 'error' : 'ok'); api.vibrar(j === 0 || S.modo === 'dos' ? [40, 30, 40] : 80); guardar();
   }
   if (ev.includes('fin')) terminar();
@@ -153,48 +162,34 @@ function terminar() {
 /* ---------- dibujo ---------- */
 function dibujar() {
   if (!cv || !S) return;
-  const T = TEMAS[asp.valores.tema] || TEMAS.hielo, k = esc * dpr, W = A.ANCHO, H = A.ALTO, bocaX = (W - A.PORTERIA) / 2;
-  ctx.setTransform(k, 0, 0, k, 0, 0);
-  const tap = tapeteElegido(asp), im = tap ? imagenTapete(tap, () => dibujar()) : null;      // «Fondo de Tablero»
-  if (im) pintarTapete(ctx, im, W, H, .35); else { ctx.fillStyle = T.mesa; ctx.fillRect(0, 0, W, H); }
-  ctx.strokeStyle = T.linea; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(W / 2, H / 2, 90, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(W / 2, 0, A.PORTERIA / 2 + 30, 0, Math.PI); ctx.stroke();
-  ctx.beginPath(); ctx.arc(W / 2, H, A.PORTERIA / 2 + 30, Math.PI, 0); ctx.stroke();
-  ctx.fillStyle = T.linea; ctx.beginPath(); ctx.arc(W / 2, H / 2, 10, 0, Math.PI * 2); ctx.fill();
-  // bandas y porterías
-  ctx.lineWidth = 14; ctx.strokeStyle = T.borde;
-  ctx.beginPath(); ctx.moveTo(bocaX, 0); ctx.lineTo(0, 0); ctx.lineTo(0, H); ctx.lineTo(bocaX, H); ctx.moveTo(W - bocaX, H); ctx.lineTo(W, H); ctx.lineTo(W, 0); ctx.lineTo(W - bocaX, 0); ctx.stroke();
-  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bocaX, 0, A.PORTERIA, 8); ctx.fillRect(bocaX, H - 8, A.PORTERIA, 8);
+  const k = esc * dpr, W = A.ANCHO, H = A.ALTO, bocaX = (W - A.PORTERIA) / 2, v = asp.valores;
+  const zona = $('#ahZona'), mesa = MESAS.some(m => m[0] === v.mesa) ? v.mesa : 'clasica-1', url = `url(${IMG}mesa-${mesa}.webp)`;
+  if (zona && zona.dataset.mesa !== mesa) { zona.dataset.mesa = mesa; zona.style.backgroundImage = url; }
+  ctx.setTransform(k, 0, 0, k, 0, 0); ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bocaX, 0, A.PORTERIA, 8); ctx.fillRect(bocaX, H - 8, A.PORTERIA, 8);      // bocas de las porterías
   // estela y disco
-  const d = S.disco;
-  rastro.forEach((p, i) => { ctx.globalAlpha = (i + 1) / rastro.length * .18; ctx.fillStyle = T.disco; ctx.beginPath(); ctx.arc(p.x, p.y, A.R_DISCO * (.5 + i / rastro.length / 2), 0, Math.PI * 2); ctx.fill(); });
+  const d = S.disco, di = imgDe('disco-' + (DISCOS.some(x => x[0] === v.disco) ? v.disco : 'crema')), ok = i => i.complete && i.naturalWidth;
+  const estelaCol = { crema: '#FBF3E2', cian: '#4FD6C4', verde: '#3CC63C', rojo: '#D82A2A' }[v.disco] || '#FBF3E2';
+  rastro.forEach((p, i) => { ctx.globalAlpha = (i + 1) / rastro.length * .22; ctx.fillStyle = estelaCol; ctx.beginPath(); ctx.arc(p.x, p.y, A.R_DISCO * (.5 + i / rastro.length / 2), 0, Math.PI * 2); ctx.fill(); });
   ctx.globalAlpha = 1;
-  if (d.y > -A.R_DISCO && d.y < H + A.R_DISCO) {
-    ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.arc(d.x + 4, d.y + 5, A.R_DISCO, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = T.disco; ctx.beginPath(); ctx.arc(d.x, d.y, A.R_DISCO, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(d.x, d.y, A.R_DISCO * .6, 0, Math.PI * 2); ctx.stroke();
-  }
+  ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.arc(d.x + 4, d.y + 6, A.R_DISCO, 0, Math.PI * 2); ctx.fill();
+  const rd = A.R_DISCO * 1.12; if (ok(di)) ctx.drawImage(di, d.x - rd, d.y - rd, rd * 2, rd * 2); else { ctx.fillStyle = estelaCol; ctx.beginPath(); ctx.arc(d.x, d.y, A.R_DISCO, 0, Math.PI * 2); ctx.fill(); }
   // mazos
   S.m.forEach((m, j) => {
-    ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.arc(m.x + 4, m.y + 6, A.R_MAZO, 0, Math.PI * 2); ctx.fill();
-    const g = ctx.createRadialGradient(m.x - 12, m.y - 14, 6, m.x, m.y, A.R_MAZO); g.addColorStop(0, '#fff'); g.addColorStop(.25, COL[j]); g.addColorStop(1, shade(COL[j]));
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(m.x, m.y, A.R_MAZO, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = shade(COL[j]); ctx.beginPath(); ctx.arc(m.x, m.y, A.R_MAZO * .42, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = COL[j]; ctx.beginPath(); ctx.arc(m.x - 3, m.y - 4, A.R_MAZO * .3, 0, Math.PI * 2); ctx.fill();
+    const id = j === 0 ? v.mazo : v.mazo2, nombre = COLM[id] ? id : (j === 0 ? 'rojo' : 'azul'), im = imgDe('mazo-' + nombre), r = A.R_MAZO * 1.14;
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.arc(m.x + 4, m.y + 7, A.R_MAZO, 0, Math.PI * 2); ctx.fill();
+    if (ok(im)) ctx.drawImage(im, m.x - r, m.y - r, r * 2, r * 2); else { ctx.fillStyle = COLM[nombre]; ctx.beginPath(); ctx.arc(m.x, m.y, A.R_MAZO, 0, Math.PI * 2); ctx.fill(); }
     const emo = j === 0 ? emojiPersonaje(asp) : null;      // «Personajes»: tu mazo lleva tu personaje
-    if (emo) { ctx.font = `${Math.round(A.R_MAZO * 1.5)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, m.x, m.y + A.R_MAZO * .06); }
+    if (emo) { ctx.font = `${Math.round(A.R_MAZO * 1.2)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, m.x, m.y - A.R_MAZO * .1); }
   });
   if (cartel) {
     ctx.globalAlpha = Math.min(1, cartel.t * 2); ctx.fillStyle = cartel.color; ctx.font = "800 64px 'Baloo 2', system-ui, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 10; ctx.strokeText(cartel.texto, W / 2, H / 2); ctx.fillText(cartel.texto, W / 2, H / 2); ctx.globalAlpha = 1;
   }
 }
-const shade = c => { const n = parseInt(c.slice(1), 16), f = .62; return `rgb(${(n >> 16) * f | 0},${(n >> 8 & 255) * f | 0},${(n & 255) * f | 0})`; };
 function pintarHud() {
   const h = $('#ahHud'); if (!h || !S) return;
-  const n = nombres(), html = `<span style="--c:${COL[0]}"><small>${n[0]}</small><b>${S.goles[0]}</b></span><em>a ${S.meta}${S.modo === 'cpu' ? ` · ${A.NIVELES[S.nivel].nombre}` : ''}</em><span style="--c:${COL[1]}"><small>${n[1]}</small><b>${S.goles[1]}</b></span>`;
+  const n = nombres(), html = `<span style="--c:${colJ(0)}"><small>${n[0]}</small><b>${S.goles[0]}</b></span><em>a ${S.meta}${S.modo === 'cpu' ? ` · ${A.NIVELES[S.nivel].nombre}` : ''}</em><span style="--c:${colJ(1)}"><small>${n[1]}</small><b>${S.goles[1]}</b></span>`;
   if (html !== hudAnt) { hudAnt = html; h.innerHTML = html; }
 }
 function pintarOver() {
@@ -205,7 +200,7 @@ function pintarOver() {
   if (S.fase === 'fin') {
     const g = A.ganador(S), gano = S.modo === 'cpu' ? g === 0 : null;
     o.innerHTML = `<div class="fin"><b>${gano === null ? `🏆 ¡Gana ${n[g]}!` : gano ? '🏆 ¡Has ganado!' : 'Ha ganado la CPU'}</b><span class="g">${S.goles[0]} – ${S.goles[1]}</span><span>${S.golpes} golpes · tiro más rápido ${Math.round(S.maxVel / 10)} km/h</span><span class="bts"><button class="btn on" data-ac="start">🔁 Revancha</button><button class="btn" data-ac="opciones">Opciones</button></span></div>`;
-  } else o.innerHTML = `<div><b>${S.fase === 'pausa' ? '⏸️ En pausa' : '🏒 ¿Preparado?'}</b><span>${S.modo === 'dos' ? 'Cada jugador mueve su mazo desde su mitad' : 'Arrastra tu mazo rojo por tu mitad de la mesa'}</span><span>Toca para ${S.fase === 'pausa' ? 'seguir' : 'empezar'}</span></div>`;
+  } else o.innerHTML = `<div><b>${S.fase === 'pausa' ? '⏸️ En pausa' : '🏒 ¿Preparado?'}</b><span>${S.modo === 'dos' ? 'Cada jugador mueve su mazo desde su mitad' : 'Arrastra tu mazo por tu mitad de la mesa'}</span><span>Toca para ${S.fase === 'pausa' ? 'seguir' : 'empezar'}</span></div>`;
 }
 
 /* ---------- botones ---------- */
@@ -218,7 +213,7 @@ function clic(e) {
   else if (a === 'opciones') { e.stopPropagation(); pausar(); setup(); } else if (a === 'aspecto') { pausar(); asp.abrir(); } else if (a === 'reglas') { pausar(); reglas(); }
 }
 function reglas() {
-  api.modal('Air Hockey', `<ul><li>Arrastra tu mazo (el rojo, abajo) para golpear el disco y meterlo en la portería de arriba. Solo puedes moverte por tu mitad.</li>
+  api.modal('Air Hockey', `<ul><li>Arrastra tu mazo (el de abajo) para golpear el disco y meterlo en la portería de arriba. Solo puedes moverte por tu mitad.</li>
     <li>Cuanto más rápido muevas el mazo al golpear, más fuerte sale el disco. Los rebotes en las bandas sirven para engañar al rival.</li>
     <li>Tras cada gol saca quien lo ha recibido. Gana quien llegue antes a los goles elegidos (5, 7 o 10).</li>
     <li><b>2 jugadores</b>: poned el móvil plano sobre la mesa; cada uno juega con un dedo en su mitad, a la vez.</li>
