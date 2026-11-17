@@ -4,6 +4,7 @@ import * as B from './motor.js';
 import { grupoFondo, grupoPantalla, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 import { gruposFichas, estilo, spriteFicha, variantes } from '../../core/fichas.js';
+import { tintar } from '../../core/tinte.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, onKey = null, onKeyUp = null, onVis = null;
 let cv = null, ctx = null, cvR = null, cvN = null, dpr = 1, bajando = false, rep = null, gesto = null, flash = null, letrero = null, nuevoRecord = false, onRes = null, hudAnt = '', rejilla = null, podioPos = -1;
@@ -31,6 +32,7 @@ const reloj = ms => { const s = Math.max(0, ms) / 1000; return `${Math.floor(s /
 export async function mount(r, a) {
   api = a; root = r; bajando = false; flash = null; letrero = null; nuevoRecord = false;
   asp = api.aspecto([grupoFondo(''), grupoPantalla(''), { clave: 'paleta', titulo: 'Colores de las piezas', def: 'clasica', opciones: Object.entries(PALETAS).map(([id, c]) => ({ id, nombre: { clasica: 'Clásica', pastel: 'Pastel', neon: 'Neón' }[id], sw: c.slice(1, 5) })) },
+    { clave: 'bimg', titulo: 'Estilo de los bloques', icono: '🧱', def: 'gominola', opciones: [{ id: 'gominola', nombre: 'Gominola' }, { id: 'liso', nombre: 'Biselado' }, { id: 'marco', nombre: 'Marco' }, { id: 'gema', nombre: 'Gema' }, { id: 'madera', nombre: 'Madera' }, { id: 'madera2', nombre: 'Madera clara' }, { id: 'piedra', nombre: 'Piedra' }, { id: 'clasico', nombre: 'Clásico (el de siempre)' }] },
     ...gruposFichas({ titulo: 'Bloques', icono: '🧱', color: false }),
     { clave: 'fantasma', titulo: 'Pieza fantasma', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] }], () => { EST = estilo(asp.valores); if (S) dibujar(); });
   EST = estilo(asp.valores);
@@ -198,8 +200,16 @@ function gestoFin(e) {
 
 /* ---------- dibujo ---------- */
 let EST = estilo({});
+const bimgs = new Map();
+function bloqueImg(color) {
+  const est = asp && asp.valores.bimg; if (!est || est === 'clasico' || !/^#[0-9a-f]{6}$/i.test(color)) return null;
+  const k = est + color; let i = bimgs.get(k);
+  if (!i) { i = { im: null }; bimgs.set(k, i); tintar(new URL(`../../../img/bloques/b-${est}.webp`, import.meta.url).href, color).then(u => { const im = new Image(); im.onload = () => { i.im = im; if (S && cv) dibujar(); }; im.src = u; }).catch(() => {}); }
+  return i.im;
+}
 function bloque(c, x, y, s, color, alfa = 1) {
   c.globalAlpha = alfa;
+  const bi = bloqueImg(color); if (bi) { c.drawImage(bi, x + 1, y + 1, s - 2, s - 2); c.globalAlpha = 1; return; }
   if (EST.tex || EST.forma || EST.esc !== 1) {       // 🎨 Fichas: textura, forma o tamaño elegidos
     const t = Math.max(2, (s - 2) * EST.esc), m = (s - t) / 2;
     c.drawImage(spriteFicha(color, EST, t, t, s * .08), x + m, y + m); c.globalAlpha = 1; return;

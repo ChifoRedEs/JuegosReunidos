@@ -57,7 +57,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; ancla = null; sel = null; arrastre = false; pistaCel = -1;
-  asp = api.aspecto([grupoFondo('.spw0'), grupoTablero(),
+  asp = api.aspecto([{ ...grupoFondo('.spw0'), def: 't-n-mesa-madera-palabras' }, grupoTablero(),
     { clave: 'marca', titulo: 'Subrayado de palabras', def: 'arcoiris', opciones: [{ id: 'arcoiris', nombre: 'Arcoíris', sw: ['#FF4757', '#E6B800', '#2ED573', '#2F6BFF'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#FF8FA3', '#F2D14B', '#6FD99B', '#8FA8FF'] }, { id: 'mono', nombre: 'Un color', sw: ['#2F6BFF'] }] },
     { clave: 'letras', titulo: 'Letras', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondas' }, { id: 'imprenta', nombre: 'Imprenta' }, { id: 'clasico', nombre: 'Clásicas' }] }],
     () => { if (S) pintar(); });

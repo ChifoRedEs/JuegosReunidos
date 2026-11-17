@@ -29,6 +29,7 @@ export const resumen = d => M.resumen(d.s);
 export async function mount(r, a) {
   api = a; root = r; efectos = []; nuevoRecord = false; hold = false;
   asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personaje'),
+    { clave: 'heroe', titulo: 'Aspecto', def: 'pajaro', opciones: [{ id: 'pajaro', nombre: 'Pajarito' }, { id: 'avion', nombre: 'Avión de papel' }, { id: 'globo', nombre: 'Globo' }, { id: 'libelula', nombre: 'Libélula' }, { id: 'clasico', nombre: 'Emoji clásico' }] },
     { clave: 'esc', titulo: 'Escenario', def: 'auto', opciones: [{ id: 'auto', nombre: 'Según el nivel', sw: ['#6EC1F2', '#0A1038'] }, ...Object.entries(TH).map(([id, t]) => ({ id, nombre: t.n, sw: [t.cielo[0], t.cielo[1]] }))] }], () => { if (S) dibujar(); });
   await api.css(new URL('./vuelaalto.css', import.meta.url));
   const c0 = M.cfgValida({ ...M.CFG_DEF, ...api.pref('cfg', null) }); if (c0) cfg = c0;
@@ -250,9 +251,11 @@ function obstaculo(o, x, T) {
   }
 }
 function moneda(x, y) {
+  const im = imgVA('moneda'); if (im && asp.valores.heroe !== 'clasico') { ctx.drawImage(im, x - 11, y - 11, 22, 22); return; }
   ctx.fillStyle = '#FFD43B'; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.283); ctx.fill(); ctx.strokeStyle = '#C58A00'; ctx.lineWidth = 2; ctx.stroke();
   ctx.fillStyle = '#FFF3A3'; ctx.beginPath(); ctx.arc(x - 2.5, y - 2.5, 3, 0, 6.283); ctx.fill();
 }
+const IMGS = {}; const imgVA = n => { if (!IMGS[n]) { const i = new Image(); i.src = `img/vuelaalto/${n}.webp`; IMGS[n] = i; } const i = IMGS[n]; return i.complete && i.naturalWidth ? i : null; };
 function pajaro(x, y, t) {
   ctx.save(); ctx.translate(x, y); ctx.font = "24px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.rotate(Math.sin(t / 120) * .15); ctx.fillText('🦅', 0, 1); ctx.restore();
 }
@@ -263,6 +266,11 @@ function meta(x) {
   ctx.font = '800 16px system-ui,sans-serif'; ctx.fillStyle = '#FFF'; ctx.strokeStyle = '#111'; ctx.lineWidth = 3; ctx.textAlign = 'center'; ctx.strokeText('META', x + 14, 20); ctx.fillText('META', x + 14, 20);
 }
 function personaje(t) {
+  const hv = asp.valores.heroe, him = !emojiPersonaje(asp) && hv !== 'clasico' ? imgVA(hv || 'pajaro') : null;
+  if (him) {
+    const y = S.y + (S.fase === 'listo' ? Math.sin(t / 250) * 5 : 0), ang = Math.max(-.6, Math.min(.9, S.vy / 360)), w = hv === 'globo' ? 36 : 46, h = w * him.naturalHeight / him.naturalWidth;
+    ctx.save(); ctx.translate(M.PX, y); ctx.rotate(S.fase === 'fin' ? Math.min(1.4, ang + .5) : (hv === 'globo' ? ang * .4 : ang)); ctx.drawImage(him, -w / 2, -h / 2, w, h); ctx.restore(); return;
+  }
   const emo = emojiPersonaje(asp) || '🐦', y = S.y + (S.fase === 'listo' ? Math.sin(t / 250) * 5 : 0);
   ctx.save(); ctx.translate(M.PX, y);
   const ang = Math.max(-.6, Math.min(.9, S.vy / 360)); ctx.rotate(S.fase === 'fin' ? Math.min(1.4, ang + .5) : ang);

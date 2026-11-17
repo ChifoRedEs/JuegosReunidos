@@ -38,7 +38,7 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; ocupado = false; tok++; claim = null;
   cfg = { ...(api.pref('cfg', null) || {}) }; banco = +api.pref('fichas', 500); if (!(banco >= 0)) banco = 500;
   asp = api.aspecto([
-    grupoFondo('#bmEsc'),
+    { ...grupoFondo('#bmEsc'), def: 't-n-sala-bingo-1' },
     { clave: 'bolas', titulo: 'Bolas · Color', icono: '🎨', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicas', sw: ['#E53935', '#F9C80E', '#1E88E5'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#F28B82', '#FDE293', '#8AB4F8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FF1744', '#FFEA00', '#2979FF'] }] },
     ...gruposFichas({ clave: 'bola', titulo: 'Bola', color: false, formas: false, tamano: false, tituloEstilos: 'Texturas', icono: '✨' }),
     { clave: 'marca', titulo: 'Color de las marcas', icono: '🔴', def: 'rojo', opciones: Object.entries(COLORES_MARCA).map(([id, c]) => ({ id, nombre: id[0].toUpperCase() + id.slice(1), sw: [c] })) },

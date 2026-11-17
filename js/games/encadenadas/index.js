@@ -26,7 +26,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; texto = ''; duda = ''; bocadillo = '';
-  asp = api.aspecto([grupoFondo('#enCadena'), { clave: 'tema', titulo: 'Colores', def: 'menta', opciones: [{ id: 'menta', nombre: 'Menta', sw: ['#12B76A', '#0B7A4B'] }, { id: 'coral', nombre: 'Coral', sw: ['#FF6B6B', '#C2334D'] }, { id: 'lila', nombre: 'Lila', sw: ['#8B5CF6', '#5B2DD4'] }] }], () => { if (S) pintar(); });
+  asp = api.aspecto([{ ...grupoFondo('#enCadena'), def: 't-n-mesa-marmol-palabras' }, { clave: 'tema', titulo: 'Colores', def: 'menta', opciones: [{ id: 'menta', nombre: 'Menta', sw: ['#12B76A', '#0B7A4B'] }, { id: 'coral', nombre: 'Coral', sw: ['#FF6B6B', '#C2334D'] }, { id: 'lila', nombre: 'Lila', sw: ['#8B5CF6', '#5B2DD4'] }] }], () => { if (S) pintar(); });
   await api.css(new URL('./encadenadas.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && ['solo', 'cpu', 'grupo'].includes(c0.modo) && E.NIVEL[c0.nivel] && E.ENLACES[c0.enlace] && E.TIEMPOS.includes(c0.tiempo)) cfg = { ...cfg, ...c0 };
   E.diccionario(aprendidas());

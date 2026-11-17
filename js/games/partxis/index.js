@@ -58,7 +58,7 @@ function guardar() {
 const DEFS_ASPECTO = [
   ...grupoDado(),
   { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
-  { ...grupoFondo('#pzView'), tt: true }, grupoPersonaje('Personajes (tus fichas)'),
+  { ...{ ...grupoFondo('#pzView'), def: 't-n-mesa-juegos-1' }, tt: true }, grupoPersonaje('Personajes (tus fichas)'),
   { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
   { clave: 'fichas', enEstilos: true, etiqueta: 'Forma de la ficha', titulo: 'Forma de las fichas', def: 'canica', opciones: [{ id: 'canica', nombre: '● Canica' }, { id: 'peon', nombre: '♟ Peón' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }] },
   ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🎲', lados: ['Amarillo', 'Azul', 'Rojo', 'Verde'], formas: false }),

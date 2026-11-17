@@ -31,7 +31,7 @@ const acertada = d => letrasDe(d.palabra).every(l => d.usadas.includes(l));
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; recienRevelada = new Set();
-  asp = api.aspecto([grupoFondo('#ahFig'), grupoPantalla('raiz'), grupoTablero(), { clave: 'dibujo', titulo: 'Dibujo', def: 'clasico', opciones: Object.entries(DISENOS).map(([id, d]) => ({ id, nombre: d.nombre })) }], () => pintar(false));
+  asp = api.aspecto([grupoFondo('#ahFig'), grupoPantalla('raiz'), grupoTablero(), { clave: 'dibujo', titulo: 'Dibujo', def: 'esqueleto', opciones: Object.entries(DISENOS).map(([id, d]) => ({ id, nombre: d.nombre })) }], () => pintar(false));
   await api.css(new URL('./elahorcado.css', import.meta.url));
   const g = api.cargar(); S = g ? { ...g } : null;
   root.innerHTML = `
@@ -149,7 +149,7 @@ function reglas() {
     <li><b>Fácil y Medio</b> usan palabras cotidianas del crucigrama; <b>Difícil y Experto</b> usan términos del banco de 450 definiciones (geografía, historia, ciencia, arte, gastronomía…), con la pista oculta.</li>
     <li>La <b>pista</b> es la definición de la palabra. En Difícil y Experto verla cuesta un fallo, igual que 💡 Letra (en Fácil tienes una letra gratis).</li>
     <li>Las tildes no importan: la A vale para «á». Toca las casillas de la palabra (o ⌨️) para abrir el teclado: puedes arrastrarlo por la pantalla desde su barra y cerrarlo con ✕. Con el teclado del ordenador también puedes escribir las letras.</li>
-    <li>En 🎨 Apariencia eliges paleta y dibujo: clásico, robot, globos o flor.</li>
+    <li>En 🎨 Apariencia eliges paleta y dibujo: esqueleto, momia, clásico, robot, globos o flor.</li>
     <li>📚 <b>Diccionario</b>: palabras al azar del diccionario de LibreOffice (unas 47.000). No tienen definición: la pista dice si es verbo o sustantivo/adjetivo y por qué letra empieza. ¡Muchas son raras!</li>
     <li>👥 <b>2 jugadores</b>: uno escribe la palabra secreta (y, si quiere, una pista) y le pasa el móvil al otro para que la adivine. Los fallos permitidos son los del nivel elegido.</li></ul>`);
 }

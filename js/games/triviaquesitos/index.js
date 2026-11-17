@@ -17,7 +17,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; rodando = false;
-  asp = api.aspecto([grupoFondo('#tvB'), grupoPersonaje('Personajes (tu ficha)'), grupoTablero(), { clave: 'ficha', titulo: 'Fichas de los jugadores', def: 'circulo', opciones: [{ id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'cuadrado', nombre: '■ Cuadrado' }] }], () => { if (S) pintar(); });
+  asp = api.aspecto([{ ...grupoFondo('#tvB'), def: 't-n-plato-concurso' }, grupoPersonaje('Personajes (tu ficha)'), grupoTablero(), { clave: 'ficha', titulo: 'Fichas de los jugadores', def: 'circulo', opciones: [{ id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }, { id: 'cuadrado', nombre: '■ Cuadrado' }] }], () => { if (S) pintar(); });
   await api.css(new URL('./triviaquesitos.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && [6, 9].includes(c0.nCat) && ['opciones', 'escribir'].includes(c0.modo) && T.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...c0, banco: T.BANCOS[c0.banco] ? c0.banco : 'mix', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;

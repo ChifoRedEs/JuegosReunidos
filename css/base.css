@@ -392,3 +392,34 @@ body.fondo,body.jfondo,body.fijo{--ink:#000;--mut:#000;--halo:0 0 3px rgba(255,2
 :root[data-theme="dark"] :is(body.fondo,body.jfondo,body.fijo){--ink:#fff;--mut:#F4F7FF;--halo:0 0 3px rgba(5,10,30,.95),0 0 8px rgba(5,10,30,.8)}
 :is(body.fondo,body.jfondo) :is(.note,.lbl,.msg,.version,.cat){text-shadow:var(--halo)}
 :is(body.fondo,body.jfondo) :is(.panel,.hoja,.ficha,.st-ficha,.btn,.stats-tab) :is(.note,.lbl,.msg,.version){text-shadow:none}
+
+/* Emojis sustituidos por iconos ilustrados (js/core/iconos.js): el glifo sigue en el texto pero se oculta */
+.emo{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em;overflow:hidden;white-space:nowrap;color:transparent!important;text-shadow:none!important;-webkit-text-fill-color:transparent;font-size:inherit;line-height:1;letter-spacing:0;background:var(--ico) center/contain no-repeat;user-select:none;font-style:normal}
+.emo[data-i="apreton"]{--ico:url(../img/ui/apreton.webp)}
+.emo[data-i="aviso"]{--ico:url(../img/ui/aviso.webp)}
+.emo[data-i="bombilla"]{--ico:url(../img/ui/bombilla.webp)}
+.emo[data-i="calendario"]{--ico:url(../img/ui/calendario.webp)}
+.emo[data-i="candado"]{--ico:url(../img/ui/candado.webp)}
+.emo[data-i="candado-abierto"]{--ico:url(../img/ui/candado-abierto.webp)}
+.emo[data-i="cartas"]{--ico:url(../img/ui/cartas.webp)}
+.emo[data-i="corazon"]{--ico:url(../img/ui/corazon.webp)}
+.emo[data-i="corazon-roto"]{--ico:url(../img/ui/corazon-roto.webp)}
+.emo[data-i="crono"]{--ico:url(../img/ui/crono.webp)}
+.emo[data-i="dados"]{--ico:url(../img/ui/dados.webp)}
+.emo[data-i="disquete"]{--ico:url(../img/ui/disquete.webp)}
+.emo[data-i="escoba"]{--ico:url(../img/ui/escoba.webp)}
+.emo[data-i="estrella"]{--ico:url(../img/ui/estrella.webp)}
+.emo[data-i="grafico"]{--ico:url(../img/ui/grafico.webp)}
+.emo[data-i="jugadores"]{--ico:url(../img/ui/jugadores.webp)}
+.emo[data-i="lapiz"]{--ico:url(../img/ui/lapiz.webp)}
+.emo[data-i="llama"]{--ico:url(../img/ui/llama.webp)}
+.emo[data-i="medalla"]{--ico:url(../img/ui/medalla.webp)}
+.emo[data-i="mezclar"]{--ico:url(../img/ui/mezclar.webp)}
+.emo[data-i="moneda"]{--ico:url(../img/ui/moneda.webp)}
+.emo[data-i="mundo"]{--ico:url(../img/ui/mundo.webp)}
+.emo[data-i="ojo"]{--ico:url(../img/ui/ojo.webp)}
+.emo[data-i="papelera"]{--ico:url(../img/ui/papelera.webp)}
+.emo[data-i="rayo"]{--ico:url(../img/ui/rayo.webp)}
+.emo[data-i="repetir"]{--ico:url(../img/ui/repetir.webp)}
+.emo[data-i="robot"]{--ico:url(../img/ui/robot.webp)}
+.emo[data-i="trofeo"]{--ico:url(../img/ui/trofeo.webp)}

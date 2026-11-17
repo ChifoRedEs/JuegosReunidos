@@ -40,7 +40,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
-  asp = api.aspecto([grupoFondo('#kkTab'), grupoTablero(), { clave: 'jaulas', titulo: 'Jaulas', def: 'bordes', opciones: [{ id: 'bordes', nombre: 'Solo bordes' }, { id: 'colores', nombre: 'De colores', sw: ['#FF8FA3', '#FFC857', '#6FD99B', '#6FCFE8', '#B79BFF'] }] }, { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
+  asp = api.aspecto([{ ...grupoFondo('#kkTab'), def: 't-n-papel-cuaderno-1' }, grupoTablero(), { clave: 'jaulas', titulo: 'Jaulas', def: 'bordes', opciones: [{ id: 'bordes', nombre: 'Solo bordes' }, { id: 'colores', nombre: 'De colores', sw: ['#FF8FA3', '#FFC857', '#6FD99B', '#6FCFE8', '#B79BFF'] }] }, { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
   await api.css(new URL('./calcudoku.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;

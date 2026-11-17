@@ -39,7 +39,7 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; ocupado = false; tok++;
   cfg = { ...(api.pref('cfg', null) || api.pref('aspecto', {}) || {}) };
   asp = api.aspecto([
-    grupoFondo('#bgEsc'),
+    { ...grupoFondo('#bgEsc'), def: 't-n-sala-bingo-1' },
     { clave: 'bolas', titulo: 'Bolas · Color', icono: '🎨', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásicas', sw: ['#E53935', '#F9C80E', '#1E88E5'] }, { id: 'pastel', nombre: 'Pastel', sw: ['#F28B82', '#FDE293', '#8AB4F8'] }, { id: 'neon', nombre: 'Neón', sw: ['#FF1744', '#FFEA00', '#2979FF'] }] },
     ...gruposFichas({ clave: 'bola', titulo: 'Bola', color: false, formas: false, tamano: false, tituloEstilos: 'Texturas', icono: '✨' }),
     { clave: 'calidad', titulo: 'Calidad 3D', icono: '🧊', def: 'alta', opciones: [{ id: 'alta', nombre: 'Alta' }, { id: 'ligera', nombre: 'Ligera (móviles flojos)' }] },

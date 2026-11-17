@@ -41,7 +41,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; malas = new Set();
-  asp = api.aspecto([grupoFondo('.cwv'), grupoTablero(), { clave: 'letras', titulo: 'Letras', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondas' }, { id: 'imprenta', nombre: 'Imprenta' }, { id: 'clasico', nombre: 'Clásicas' }] }]);
+  asp = api.aspecto([{ ...grupoFondo('.cwv'), def: 't-n-papel-cuaderno-1' }, grupoTablero(), { clave: 'letras', titulo: 'Letras', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondas' }, { id: 'imprenta', nombre: 'Imprenta' }, { id: 'clasico', nombre: 'Clásicas' }] }]);
   await api.css(new URL('./crucigramas.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: null, done: completo(g) } : null;

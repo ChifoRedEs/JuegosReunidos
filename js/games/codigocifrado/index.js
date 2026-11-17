@@ -41,7 +41,7 @@ export async function mount(r, a) {
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   asp = api.aspecto([
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
-    grupoFondo('#mmTab'),
+    { ...grupoFondo('#mmTab'), def: 't-n-escritorio-codigo' },
     { clave: 'marco', titulo: 'Tablero', icono: '🪵', def: 'madera', opciones: Object.entries(MARCOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'paleta', titulo: 'Colores de las bolas', icono: '🎨', def: 'vivo', opciones: Object.entries(PALETAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'estilo', titulo: 'Estilo de las bolas', icono: '🔴', def: 'bola', opciones: Object.entries(ESTILOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },

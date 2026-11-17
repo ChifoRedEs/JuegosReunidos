@@ -945,6 +945,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   if (!ahorro) navigator.serviceWorker.ready.then(r => setTimeout(() => r.active && r.active.postMessage({ tipo: 'guardar-cartas', ids: elegidas() }), 4000)).catch(() => {});
 }
 migrarV1().then(render).then(() => {
+  import('./core/iconos.js').then(m => m.iniciarIconos()).catch(() => {});
   try { if (sessionStorage.getItem('jr2:upd')) { sessionStorage.removeItem('jr2:upd'); aviso(`✨ JugamiGO se ha actualizado (versión ${VERSION})`, 3200); } } catch { /* sin sessionStorage */ }
   setTimeout(ofrecerInstalar, 3500);
 });

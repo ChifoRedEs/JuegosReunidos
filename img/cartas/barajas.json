@@ -214,6 +214,211 @@
    "archivo": "tapetes/marmol.webp"
   },
   {
+   "id": "t-n-almacen",
+   "nombre": "N almacen",
+   "archivo": "tapetes/n-almacen.webp"
+  },
+  {
+   "id": "t-n-almacen-neon",
+   "nombre": "N almacen neon",
+   "archivo": "tapetes/n-almacen-neon.webp"
+  },
+  {
+   "id": "t-n-billar-amarillo",
+   "nombre": "N billar amarillo",
+   "archivo": "tapetes/n-billar-amarillo.webp"
+  },
+  {
+   "id": "t-n-billar-azul",
+   "nombre": "N billar azul",
+   "archivo": "tapetes/n-billar-azul.webp"
+  },
+  {
+   "id": "t-n-billar-burdeos",
+   "nombre": "N billar burdeos",
+   "archivo": "tapetes/n-billar-burdeos.webp"
+  },
+  {
+   "id": "t-n-billar-morado",
+   "nombre": "N billar morado",
+   "archivo": "tapetes/n-billar-morado.webp"
+  },
+  {
+   "id": "t-n-billar-verde",
+   "nombre": "N billar verde",
+   "archivo": "tapetes/n-billar-verde.webp"
+  },
+  {
+   "id": "t-n-campo-bombardeo",
+   "nombre": "N campo bombardeo",
+   "archivo": "tapetes/n-campo-bombardeo.webp"
+  },
+  {
+   "id": "t-n-campo-bombardeo-noche",
+   "nombre": "N campo bombardeo noche",
+   "archivo": "tapetes/n-campo-bombardeo-noche.webp"
+  },
+  {
+   "id": "t-n-casino-amarillo",
+   "nombre": "N casino amarillo",
+   "archivo": "tapetes/n-casino-amarillo.webp"
+  },
+  {
+   "id": "t-n-casino-burdeos",
+   "nombre": "N casino burdeos",
+   "archivo": "tapetes/n-casino-burdeos.webp"
+  },
+  {
+   "id": "t-n-casino-morado",
+   "nombre": "N casino morado",
+   "archivo": "tapetes/n-casino-morado.webp"
+  },
+  {
+   "id": "t-n-casino-turquesa",
+   "nombre": "N casino turquesa",
+   "archivo": "tapetes/n-casino-turquesa.webp"
+  },
+  {
+   "id": "t-n-ciudad-dia",
+   "nombre": "N ciudad dia",
+   "archivo": "tapetes/n-ciudad-dia.webp"
+  },
+  {
+   "id": "t-n-ciudad-noche",
+   "nombre": "N ciudad noche",
+   "archivo": "tapetes/n-ciudad-noche.webp"
+  },
+  {
+   "id": "t-n-escritorio-codigo",
+   "nombre": "N escritorio codigo",
+   "archivo": "tapetes/n-escritorio-codigo.webp"
+  },
+  {
+   "id": "t-n-hotel-dia",
+   "nombre": "N hotel dia",
+   "archivo": "tapetes/n-hotel-dia.webp"
+  },
+  {
+   "id": "t-n-hotel-noche",
+   "nombre": "N hotel noche",
+   "archivo": "tapetes/n-hotel-noche.webp"
+  },
+  {
+   "id": "t-n-mesa-juegos-1",
+   "nombre": "N mesa juegos 1",
+   "archivo": "tapetes/n-mesa-juegos-1.webp"
+  },
+  {
+   "id": "t-n-mesa-juegos-2",
+   "nombre": "N mesa juegos 2",
+   "archivo": "tapetes/n-mesa-juegos-2.webp"
+  },
+  {
+   "id": "t-n-mesa-juegos-3",
+   "nombre": "N mesa juegos 3",
+   "archivo": "tapetes/n-mesa-juegos-3.webp"
+  },
+  {
+   "id": "t-n-mesa-juegos-4",
+   "nombre": "N mesa juegos 4",
+   "archivo": "tapetes/n-mesa-juegos-4.webp"
+  },
+  {
+   "id": "t-n-mesa-madera-palabras",
+   "nombre": "N mesa madera palabras",
+   "archivo": "tapetes/n-mesa-madera-palabras.webp"
+  },
+  {
+   "id": "t-n-mesa-madera-palabras-noche",
+   "nombre": "N mesa madera palabras noche",
+   "archivo": "tapetes/n-mesa-madera-palabras-noche.webp"
+  },
+  {
+   "id": "t-n-mesa-marmol-palabras",
+   "nombre": "N mesa marmol palabras",
+   "archivo": "tapetes/n-mesa-marmol-palabras.webp"
+  },
+  {
+   "id": "t-n-mesa-marmol-palabras-noche",
+   "nombre": "N mesa marmol palabras noche",
+   "archivo": "tapetes/n-mesa-marmol-palabras-noche.webp"
+  },
+  {
+   "id": "t-n-papel-cuaderno-1",
+   "nombre": "N papel cuaderno 1",
+   "archivo": "tapetes/n-papel-cuaderno-1.webp"
+  },
+  {
+   "id": "t-n-papel-cuaderno-2",
+   "nombre": "N papel cuaderno 2",
+   "archivo": "tapetes/n-papel-cuaderno-2.webp"
+  },
+  {
+   "id": "t-n-papel-cuaderno-noche-1",
+   "nombre": "N papel cuaderno noche 1",
+   "archivo": "tapetes/n-papel-cuaderno-noche-1.webp"
+  },
+  {
+   "id": "t-n-papel-cuaderno-noche-2",
+   "nombre": "N papel cuaderno noche 2",
+   "archivo": "tapetes/n-papel-cuaderno-noche-2.webp"
+  },
+  {
+   "id": "t-n-plato-concurso",
+   "nombre": "N plato concurso",
+   "archivo": "tapetes/n-plato-concurso.webp"
+  },
+  {
+   "id": "t-n-plato-concurso-claro",
+   "nombre": "N plato concurso claro",
+   "archivo": "tapetes/n-plato-concurso-claro.webp"
+  },
+  {
+   "id": "t-n-plato-concurso-neon",
+   "nombre": "N plato concurso neon",
+   "archivo": "tapetes/n-plato-concurso-neon.webp"
+  },
+  {
+   "id": "t-n-sala-bingo-1",
+   "nombre": "N sala bingo 1",
+   "archivo": "tapetes/n-sala-bingo-1.webp"
+  },
+  {
+   "id": "t-n-sala-bingo-2",
+   "nombre": "N sala bingo 2",
+   "archivo": "tapetes/n-sala-bingo-2.webp"
+  },
+  {
+   "id": "t-n-taberna-clara",
+   "nombre": "N taberna clara",
+   "archivo": "tapetes/n-taberna-clara.webp"
+  },
+  {
+   "id": "t-n-taberna-oscura",
+   "nombre": "N taberna oscura",
+   "archivo": "tapetes/n-taberna-oscura.webp"
+  },
+  {
+   "id": "t-n-tapete-amarillo",
+   "nombre": "N tapete amarillo",
+   "archivo": "tapetes/n-tapete-amarillo.webp"
+  },
+  {
+   "id": "t-n-tapete-burdeos",
+   "nombre": "N tapete burdeos",
+   "archivo": "tapetes/n-tapete-burdeos.webp"
+  },
+  {
+   "id": "t-n-tapete-morado",
+   "nombre": "N tapete morado",
+   "archivo": "tapetes/n-tapete-morado.webp"
+  },
+  {
+   "id": "t-n-tapete-verde",
+   "nombre": "N tapete verde",
+   "archivo": "tapetes/n-tapete-verde.webp"
+  },
+  {
    "id": "t-rojo",
    "nombre": "Rojo",
    "archivo": "tapetes/rojo.webp"

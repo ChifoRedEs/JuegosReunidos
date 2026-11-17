@@ -43,7 +43,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; pausado = false; sel = null; pista = null; clearTimeout(tim); tim = 0;
   asp = api.aspecto([
-    { ...grupoFondo('#dmMesa'), tt: true },
+    { ...{ ...grupoFondo('#dmMesa'), def: 't-n-mesa-juegos-1' }, tt: true },
     { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'verde', opciones: [{ id: 'verde', nombre: 'Verde', sw: ['#1F6B46'] }, { id: 'azul', nombre: 'Azul', sw: ['#1F4F9E'] }, { id: 'burdeos', nombre: 'Burdeos', sw: ['#7A1F36'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#4B3592'] }, { id: 'madera', nombre: 'Madera', sw: ['#8A5A34'] }, { id: 'noche', nombre: 'Noche', sw: ['#1A2150'] }] },
     { clave: 'fichas', titulo: 'Color de Fichas', icono: '🎨', def: 'marfil', soloColor: true, opciones: COLORES.filter(c => IDS_POCOS.includes(c.id)).map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] })) },
     { clave: 'textura', etiqueta: 'Textura', titulo: 'Estilos de Fichas', icono: '✨', def: 'brillante', opciones: Object.entries(TEXTURAS).map(([id, [nombre, sw]]) => ({ id, nombre, sw })) },

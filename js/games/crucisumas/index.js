@@ -43,7 +43,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
-  asp = api.aspecto([grupoFondo('#kaTab'), grupoTablero(), { clave: 'negras', titulo: 'Casillas de las sumas', def: 'oscuras', opciones: [{ id: 'oscuras', nombre: 'Oscuras', sw: ['#1B2340'] }, { id: 'tablero', nombre: 'Color del tablero', sw: ['#6A3DF0'] }, { id: 'claras', nombre: 'Claras', sw: ['#D7DCEB'] }] },
+  asp = api.aspecto([{ ...grupoFondo('#kaTab'), def: 't-n-papel-cuaderno-1' }, grupoTablero(), { clave: 'negras', titulo: 'Casillas de las sumas', def: 'oscuras', opciones: [{ id: 'oscuras', nombre: 'Oscuras', sw: ['#1B2340'] }, { id: 'tablero', nombre: 'Color del tablero', sw: ['#6A3DF0'] }, { id: 'claras', nombre: 'Claras', sw: ['#D7DCEB'] }] },
     { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
   await api.css(new URL('./crucisumas.css', import.meta.url));
   const g = api.cargar();

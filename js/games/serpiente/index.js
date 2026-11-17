@@ -2,13 +2,17 @@ import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
 import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { gruposColor, hexDe, tintarTodas } from '../../core/tinte.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, cv = null, ctx = null, dpr = 1, raf = 0, acc = 0, tPrev = 0, cola = [], reg = false;
 let onKey = null, onVis = null, onRes = null, toque = null, efecto = null, nuevoRecord = false, recordAct = 0, hudAnt = '', fondo = null, podioPos = -1;
 let eraJugando = false;
 let cfg = { modo: 'clasico', vel: 'normal', tam: 'normal', cruceta: true };
+const IMG = n => new URL(`../../../img/serpiente/${n}.webp`, import.meta.url).href;
+const CAMPOS = [['hierba-1', 'Hierba clara', ['#B7D493']], ['hierba-2', 'Hierba con trébol', ['#A9CB84']], ['noche-1', 'Noche con luciérnagas', ['#0F3340']], ['noche-2', 'Noche con tréboles', ['#173F3E']]];
 const TEMAS = {
+  ilustrado: { a: '#AAD751', b: '#A2D149', muro: '#7B8B5E', marco: '#3E5B2E', s1: '#4E7CF6', s2: '#2F55D4', ojo: '#FFFFFF', comida: '#E7471D', hoja: '#3E8E2F', txt: '#1B2340', brillo: 0, img: true },
   jardin: { a: '#AAD751', b: '#A2D149', muro: '#5B7A2E', marco: '#4A752C', s1: '#4E7CF6', s2: '#2F55D4', ojo: '#FFFFFF', comida: '#E7471D', hoja: '#3E8E2F', txt: '#1B2340', brillo: 0 },
   retro: { a: '#9BBC0F', b: '#93B30E', muro: '#306230', marco: '#0F380F', s1: '#0F380F', s2: '#0F380F', ojo: '#9BBC0F', comida: '#306230', hoja: '#0F380F', txt: '#0F380F', brillo: 0, pixel: true },
   neon: { a: '#0E1330', b: '#11173A', muro: '#7C4DFF', marco: '#2A2F6B', s1: '#00F5D4', s2: '#00A8E8', ojo: '#0E1330', comida: '#FF2E88', hoja: '#7CFF6B', txt: '#E8ECFF', brillo: 14 },
@@ -22,7 +26,9 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; cola = []; efecto = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (cabeza)'), { clave: 'tema', titulo: 'Estilo', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] }], () => { if (S) dibujar(); });
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (cabeza)'), { clave: 'tema', titulo: 'Estilo', def: 'ilustrado', opciones: [{ id: 'ilustrado', nombre: 'Ilustrado', sw: ['#B7D493', '#4E7CF6'] }, { id: 'jardin', nombre: 'Jardín', sw: ['#AAD751', '#4E7CF6'] }, { id: 'retro', nombre: 'Retro', sw: ['#9BBC0F', '#0F380F'] }, { id: 'neon', nombre: 'Neón', sw: ['#0E1330', '#00F5D4'] }] },
+    { clave: 'campo', titulo: 'Campo (estilo Ilustrado)', icono: '🌿', def: 'hierba-1', opciones: CAMPOS.map(([id, nombre, sw]) => ({ id, nombre, sw, img: IMG('campo-' + id) })) },
+    ...gruposColor({ clave: 'sn', lados: ['Serpiente'], defs: ['salvia'], titulo: 'Color de la serpiente (estilo Ilustrado)' })], () => { if (S) dibujar(); });
   await api.css(new URL('./serpiente.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.MODOS[c0.modo] && M.VELOCIDADES[c0.vel] && M.TAMANOS[c0.tam]) cfg = { ...cfg, ...c0, cruceta: c0.cruceta !== false };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
@@ -157,11 +163,14 @@ function dibujar() {
   // muros
   ctx.fillStyle = T.muro; for (const i of S.muros) redondo(i % n * c + c * .06, Math.floor(i / n) * c + c * .06, c * .88, c * .88, T.pixel ? 0 : c * .18);
   // comida y estrella
-  if (S.comida >= 0) manzana(S.comida % n * c, Math.floor(S.comida / n) * c, c, T, ahora);
-  if (S.estrella) estrella(S.estrella.i % n * c + c / 2, Math.floor(S.estrella.i / n) * c + c / 2, c, S.estrella.t, ahora);
-  // serpiente: de la cola a la cabeza, con degradado y uniones entre trozos
-  const N = S.serp.length;
-  for (let k = N - 1; k >= 0; k--) {
+  const fr = T.img ? frutas() : null;
+  if (S.comida >= 0) { if (fr && fr[0]) fruta(fr[0], S.comida % n * c, Math.floor(S.comida / n) * c, c, ahora); else manzana(S.comida % n * c, Math.floor(S.comida / n) * c, c, T, ahora); }
+  if (S.estrella && fr && fr[1 + S.estrella.i % 9]) fruta(fr[1 + S.estrella.i % 9], S.estrella.i % n * c, Math.floor(S.estrella.i / n) * c, c, ahora, S.estrella.t < 12 && Math.floor(ahora / 150) % 2);
+  else if (S.estrella) estrella(S.estrella.i % n * c + c / 2, Math.floor(S.estrella.i / n) * c + c / 2, c, S.estrella.t, ahora);
+  // serpiente
+  const N = S.serp.length, spr = T.img ? sprites() : null;
+  if (spr) { serpienteImg(spr, n, c, N); }
+  else for (let k = N - 1; k >= 0; k--) {
     if (k === 0 && T.brillo) { ctx.shadowColor = T.s1; ctx.shadowBlur = T.brillo; }   // brillo solo en la cabeza (el desenfoque es caro en móvil)
     const i = S.serp[k], x = i % n * c, y = Math.floor(i / n) * c, f = N > 1 ? k / (N - 1) : 0;
     ctx.fillStyle = mezcla(T.s1, T.s2, f);
@@ -177,7 +186,7 @@ function dibujar() {
   const cab = S.serp[0], hx = cab % n * c + c / 2, hy = Math.floor(cab / n) * c + c / 2, d = S.dir, px = [0, 1, 0, -1][d], py = [-1, 0, 1, 0][d];
   const emo = emojiPersonaje(asp);      // «Personajes»: tu personaje es la cabeza de la serpiente
   if (emo) { ctx.font = `${Math.round(c * .95)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, hx, hy + c * .04); }
-  else for (const s of [-1, 1]) {
+  else if (!spr) for (const s of [-1, 1]) {
     const ex = hx + px * c * .12 + (-py) * s * c * .2, ey = hy + py * c * .12 + px * s * c * .2;
     ctx.fillStyle = T.ojo; ctx.beginPath(); ctx.arc(ex, ey, c * .14, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = S.fase === 'fin' && S.motivo !== 'lleno' ? T.comida : T.txt; ctx.beginPath();
@@ -192,15 +201,64 @@ function dibujar() {
 }
 function fondoDe(T, n, L, c) {
   const tap = tapeteElegido(asp), im = tap ? imagenTapete(tap, () => { fondo = null; dibujar(); }) : null;      // «Fondo de Tablero»
-  const clave = `${asp.valores.tema}|${n}|${L}|${S.modo}|${im ? tap : ''}`;
+  const ci = T.img && !im ? campoImg() : null, clave = `${asp.valores.tema}|${n}|${L}|${S.modo}|${im ? tap : ''}|${ci ? asp.valores.campo + (ci.complete && ci.naturalWidth ? 1 : 0) : ''}`;
   if (fondo && fondo.clave === clave) return fondo.cv;
   const f = document.createElement('canvas'); f.width = f.height = L; const g = f.getContext('2d');
   if (im) pintarTapete(g, im, L, L, .3);
+  else if (T.img) { const ci = campoImg(); if (ci.complete && ci.naturalWidth) g.drawImage(ci, 0, 0, L, L); else { g.fillStyle = '#B7D493'; g.fillRect(0, 0, L, L); } }
   else for (let y = 0; y < n; y++) for (let k = 0; k < n; k++) { g.fillStyle = (y + k) % 2 ? T.b : T.a; g.fillRect(k * c, y * c, c + 1, c + 1); }
   g.strokeStyle = T.marco; g.lineWidth = Math.max(2, c * .12); g.strokeRect(g.lineWidth / 2, g.lineWidth / 2, L - g.lineWidth, L - g.lineWidth);
   if (S.modo === 'libre') { g.setLineDash([c * .3, c * .3]); g.strokeStyle = T.s1; g.globalAlpha = .35; g.strokeRect(1, 1, L - 2, L - 2); }
   fondo = { clave, cv: f };
   return f;
+}
+/* ---------- estilo Ilustrado: piezas de imagen (la serpiente se tiñe con la paleta) ---------- */
+const imgCache = new Map();
+const imagen = url => { let i = imgCache.get(url); if (!i) { i = new Image(); i.onload = () => { fondo = null; if (S && cv) dibujar(); }; i.src = url; imgCache.set(url, i); } return i; };
+const campoImg = () => imagen(IMG('campo-' + (CAMPOS.some(x => x[0] === asp.valores.campo) ? asp.valores.campo : 'hierba-1')));
+let spritesTint = null, spritesHex = '';
+function sprites() {
+  const hex = hexDe(asp.valores.sncolor);
+  if (spritesHex !== hex) {
+    spritesHex = hex; spritesTint = null;
+    tintarTodas([['cab', IMG('cabeza')], ['cue', IMG('cuerpo')], ['col', IMG('cola')]], hex).then(u => {
+      if (spritesHex !== hex) return; const o = { hex }; let q = 3;
+      for (const k of ['cab', 'cue', 'col']) { const i = new Image(); i.onload = () => { if (--q === 0) { spritesTint = o; if (S && cv) dibujar(); } }; i.src = u[k]; o[k] = i; }
+    }).catch(() => {});
+  }
+  return spritesTint;
+}
+const FRUTAS = ['fruta-0', 'fruta-1', 'fruta-2', 'fruta-3', 'fruta-4', 'fruta-5', 'fruta-6', 'fruta-7', 'fruta-8', 'fruta-9'];
+const frutas = () => { const l = FRUTAS.map(f => imagen(IMG(f))); return l.every(i => i.complete && i.naturalWidth) || l[0].complete ? l.map(i => (i.complete && i.naturalWidth ? i : null)) : null; };
+function fruta(im, x, y, c, t, tenue) {
+  const k = c * .9 * (1 + Math.sin(t / 220) * .04), r = im.naturalWidth / im.naturalHeight, w = r >= 1 ? k : k * r, h = r >= 1 ? k / r : k;
+  if (tenue) ctx.globalAlpha = .45; ctx.drawImage(im, x + c / 2 - w / 2, y + c / 2 - h / 2, w, h); ctx.globalAlpha = 1;
+}
+// dirección (0 arriba, 1 derecha, 2 abajo, 3 izquierda) de la celda i a la celda j (con tablero que se enrolla)
+function dirA(i, j, n) {
+  const dx = j % n - i % n, dy = Math.floor(j / n) - Math.floor(i / n), fx = Math.abs(dx) > 1 ? -Math.sign(dx) : dx, fy = Math.abs(dy) > 1 ? -Math.sign(dy) : dy;
+  return fy < 0 ? 0 : fx > 0 ? 1 : fy > 0 ? 2 : 3;
+}
+function serpienteImg(sp, n, c, N) {
+  const w = c * .8, esc = w / sp.cue.naturalWidth, ctr = i => [i % n * c + c / 2, Math.floor(i / n) * c + c / 2];
+  const pieza = (im, cx, cy, ang, sw, sh, dw, dh, off) => { ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang); ctx.drawImage(im, 0, sh.y0 || 0, sw, sh.h || im.naturalHeight, -dw / 2, off, dw, dh); ctx.restore(); };
+  const colorJ = sp.hex, contorno = '#1B2A41';
+  for (let k = N - 1; k >= 1; k--) {                          // tramos del cuerpo y de la cola: del extremo hacia la cabeza
+    const [x1, y1] = ctr(S.serp[k]), d = dirA(S.serp[k], S.serp[k - 1], n), vx = [0, 1, 0, -1][d], vy = [-1, 0, 1, 0][d];
+    ctx.save(); ctx.translate(x1 + vx * c / 2, y1 + vy * c / 2); ctx.rotate(d * Math.PI / 2);
+    ctx.drawImage(sp.cue, 0, 0, sp.cue.naturalWidth, sp.cue.naturalHeight, -w / 2, -c * .56, w, c * 1.12); ctx.restore();
+    if (k < N - 1) {                                          // codo: cierra la esquina con una bola del mismo color
+      const dn = dirA(S.serp[k], S.serp[k + 1], n); if (dn !== (d + 2) % 4) { const [cx, cy] = ctr(S.serp[k]); ctx.fillStyle = contorno; ctx.beginPath(); ctx.arc(cx, cy, w * .5, 0, 7); ctx.fill(); ctx.fillStyle = colorJ; ctx.beginPath(); ctx.arc(cx, cy, w * .5 - c * .035, 0, 7); ctx.fill(); }
+    }
+  }
+  if (N > 1) {                                                // cola
+    const i = S.serp[N - 1], [cx, cy] = ctr(i), d = dirA(S.serp[N - 2], i, n), cl = sp.col, ra = cl.naturalWidth / cl.naturalHeight, h = c * 1.35, wt = Math.min(w, h * ra);
+    const [px, py] = ctr(S.serp[N - 2]); ctx.save(); ctx.translate(cx, cy); ctx.rotate((d - 2) * Math.PI / 2);
+    ctx.drawImage(cl, 0, cl.naturalHeight * .2, cl.naturalWidth, cl.naturalHeight * .8, -wt / 2, -c * .3, wt, h); ctx.restore(); void px; void py;
+  }
+  const [hx, hy] = ctr(S.serp[0]), dh = S.dir, cb = sp.cab, rr = cb.naturalWidth / cb.naturalHeight, hw = c * 1.2, hh = hw / rr * .72;
+  ctx.save(); ctx.translate(hx, hy); ctx.rotate(dh * Math.PI / 2);
+  ctx.drawImage(cb, 0, 0, cb.naturalWidth, cb.naturalHeight * .72, -hw / 2, -c * .58, hw, hh); ctx.restore();
 }
 function redondo(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect && r) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); ctx.fill(); }
 function manzana(x, y, c, T, t) {

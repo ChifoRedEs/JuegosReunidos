@@ -4,6 +4,7 @@ import * as L from './motor.js';
 import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 import { gruposFichas, estilo, spriteFicha, variantes } from '../../core/fichas.js';
+import { tintar } from '../../core/tinte.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, escala = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, gesto = null, teclas = { izq: false, der: false }, palaX = null, particulas = [], aviso = null, nuevoRecord = false;
@@ -22,7 +23,7 @@ export function resumen(d) { const s = d.s; return s.fase === 'fin' ? { texto: `
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; particulas = []; aviso = null; nuevoRecord = false;
-  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (la bola)'), { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] },
+  asp = api.aspecto([grupoFondo(''), grupoPantalla(''), grupoPersonaje('Personajes (la bola)'), { clave: 'ldest', titulo: 'Estilo de pala, bola y ladrillos', icono: '🧱', def: 'ilustrado', opciones: [{ id: 'ilustrado', nombre: 'Ilustrado' }, { id: 'clasico', nombre: 'Clásico (el de siempre)' }] }, { clave: 'fondo', titulo: 'Fondo', def: 'noche', opciones: [{ id: 'noche', nombre: 'Noche', sw: TEMAS.noche }, { id: 'aurora', nombre: 'Aurora', sw: TEMAS.aurora }, { id: 'atardecer', nombre: 'Atardecer', sw: TEMAS.atardecer }] },
     ...gruposFichas({ titulo: 'Ladrillos', icono: '🧱', color: false })], () => { EST = estilo(asp.valores); VARS = EST.hex ? variantes(EST.hex, 6) : null; if (S) dibujar(); });
   EST = estilo(asp.valores); VARS = EST.hex ? variantes(EST.hex, 6) : null;
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./rompeladrillos.css', import.meta.url));
@@ -233,6 +234,22 @@ function dibujar() {
   dibujarResto(k, ahora);
 }
 let EST = estilo({}), VARS = null;
+/* ---------- imágenes (estilo Ilustrado) ---------- */
+const IMGS = new Map(), TINTES = new Map();
+const urlImg = n => new URL(`../../../img/ladrillos/${n}.webp`, import.meta.url).href;
+function im(n) { let i = IMGS.get(n); if (!i) { i = new Image(); i.onload = () => { capaLad = null; if (S && cv) dibujar(); }; i.src = urlImg(n); IMGS.set(n, i); } return i.complete && i.naturalWidth ? i : null; }
+function ladTint(hex) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return null; let t = TINTES.get(hex);
+  if (!t) { t = { im: null }; TINTES.set(hex, t); tintar(urlImg('ladrillo'), hex).then(u => { const i = new Image(); i.onload = () => { t.im = i; capaLad = null; if (S && cv) dibujar(); }; i.src = u; }).catch(() => {}); }
+  return t.im;
+}
+const ilustrado = () => !(asp && asp.valores.ldest === 'clasico') && !(EST.tex || EST.forma || EST.esc !== 1);
+function ladImg(l, c1) { if (!ilustrado()) return null; if (l.tipo === 'm') return im('metal'); if (l.tipo === 's') return null; return ladTint(c1); }
+function palaImg(px, w, y, h, nom) {
+  const i = im(nom); if (!i) return false; const cap = i.naturalWidth * .2, dc = Math.min(h * .55, w * .3);
+  ctx.drawImage(i, 0, 0, cap, i.naturalHeight, px, y, dc, h); ctx.drawImage(i, i.naturalWidth - cap, 0, cap, i.naturalHeight, px + w - dc, y, dc, h);
+  ctx.drawImage(i, cap, 0, i.naturalWidth - 2 * cap, i.naturalHeight, px + dc, y, w - 2 * dc, h); return true;
+}
 function pintarLadrillo(ctx, l, ahora) {
   {
     const r = L.rectLadrillo(l), x = r.x + 3, y = r.y + 3, w = r.w - 6, h = r.h - 6;
@@ -242,7 +259,9 @@ function pintarLadrillo(ctx, l, ahora) {
     else if (l.tipo === 't') { c1 = '#FFE9A6'; c2 = '#E0A400'; }
     else if (l.tipo === 's') { const h2 = (ahora / 8 + l.c * 30) % 360; c1 = `hsl(${h2},90%,72%)`; c2 = `hsl(${(h2 + 60) % 360},85%,55%)`; }
     else { c1 = c2 = VARS ? VARS[l.color - 1] : COLORES[l.color]; }
-    if (l.tipo !== 's' && (EST.tex || EST.forma || EST.esc !== 1)) {           // 🎨 Ladrillos: textura, forma o tamaño elegidos
+    const bi = ladImg(l, c1);
+    if (bi) ctx.drawImage(bi, x - 2, y - 2, w + 4, h + 4);
+    else if (l.tipo !== 's' && (EST.tex || EST.forma || EST.esc !== 1)) {           // 🎨 Ladrillos: textura, forma o tamaño elegidos
       const w2 = w * EST.esc, h2 = h * EST.esc;
       ctx.drawImage(spriteFicha(c2, { ...EST, hex: null }, w2, h2, 8), x + (w - w2) / 2, y + (h - h2) / 2);
     } else {
@@ -250,7 +269,7 @@ function pintarLadrillo(ctx, l, ahora) {
       ctx.fillStyle = gg; rrEn(ctx, x, y, w, h, 8); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,.35)'; rrEn(ctx, x + 4, y + 3, w - 8, 7, 4); ctx.fill();
     }
-    if (l.tipo === 'm') { ctx.fillStyle = '#5B6474'; for (const px of [x + 9, x + w - 9]) { ctx.beginPath(); ctx.arc(px, y + h / 2, 4, 0, Math.PI * 2); ctx.fill(); } }
+    if (l.tipo === 'm' && !bi) { ctx.fillStyle = '#5B6474'; for (const px of [x + 9, x + w - 9]) { ctx.beginPath(); ctx.arc(px, y + h / 2, 4, 0, Math.PI * 2); ctx.fill(); } }
     if (l.tipo === 's') { ctx.fillStyle = '#fff'; ctx.font = '800 26px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', x + w / 2, y + h / 2 + 2); }
     if ((l.tipo === 'd' && l.golpes === 1) || (l.tipo === 't' && l.golpes < 3)) {                  // grietas
       ctx.strokeStyle = 'rgba(30,30,60,.55)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x + w * .3, y); ctx.lineTo(x + w * .42, y + h * .5); ctx.lineTo(x + w * .36, y + h);
@@ -262,6 +281,8 @@ function rrEn(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x,
 function dibujarResto(k, ahora) {
   // cápsulas
   for (const c of S.capsulas) {
+    const ci = ilustrado() ? im({ ancha: 'cap-ancha', multi: 'cap-multi', lenta: 'cap-lenta', laser: 'cap-laser', fuego: 'cap-bomba', vida: 'cap-vida' }[c.tipo]) : null;
+    if (ci) { ctx.drawImage(ci, c.x - 38, c.y - 38 * ci.naturalHeight / ci.naturalWidth, 76, 76 * ci.naturalHeight / ci.naturalWidth); continue; }
     ctx.fillStyle = CAP_COLOR[c.tipo]; rr(c.x - 34, c.y - 16, 68, 32, 16); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(c.x - 28, c.y - 13, 56, 9, 5); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.font = '800 22px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(L.CAPSULAS[c.tipo].letra, c.x, c.y + 1);
@@ -270,15 +291,20 @@ function dibujarResto(k, ahora) {
   ctx.fillStyle = '#FF6B7A'; for (const d of S.disparos) ctx.fillRect(d.x - 3, d.y - 18, 6, 18);
   // pala
   const p = S.pala, px = p.x - p.w / 2;
+  const paladib = ilustrado() && palaImg(px, p.w, L.PALA_Y - L.PALA_H * .35, L.PALA_H * 1.7, S.efectos.laser ? 'pala-laser' : 'pala');
+  if (!paladib) {
   const gp = ctx.createLinearGradient(0, L.PALA_Y, 0, L.PALA_Y + L.PALA_H); gp.addColorStop(0, '#FFFFFF'); gp.addColorStop(1, S.efectos.ancha ? '#7FB2FF' : '#B8C2E0');
   ctx.fillStyle = gp; rr(px, L.PALA_Y, p.w, L.PALA_H, 13); ctx.fill();
   ctx.fillStyle = S.efectos.fuego ? '#FF9F1C' : '#FF4757'; rr(px, L.PALA_Y, 22, L.PALA_H, 11); ctx.fill(); rr(px + p.w - 22, L.PALA_Y, 22, L.PALA_H, 11); ctx.fill();
   if (S.efectos.laser) { ctx.fillStyle = '#FF4757'; ctx.fillRect(px + 10, L.PALA_Y - 14, 8, 16); ctx.fillRect(px + p.w - 18, L.PALA_Y - 14, 8, 16); }
+  }
   // bolas
   for (const b of S.bolas) {                                    // halo con un círculo translúcido (shadowBlur es muy caro en móvil)
     ctx.fillStyle = S.efectos.fuego ? 'rgba(255,159,28,.28)' : 'rgba(159,208,255,.28)'; ctx.beginPath(); ctx.arc(b.x, b.y, L.RADIO * 1.9, 0, Math.PI * 2); ctx.fill();
     const emo = emojiPersonaje(asp);      // «Personajes»: la bola es tu personaje
     if (emo) { ctx.font = `${Math.round(L.RADIO * 3)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, b.x, b.y + L.RADIO * .1); continue; }
+    const bo = ilustrado() ? im('bola') : null;
+    if (bo) { ctx.drawImage(bo, b.x - L.RADIO * 1.2, b.y - L.RADIO * 1.2, L.RADIO * 2.4, L.RADIO * 2.4); continue; }
     ctx.fillStyle = S.efectos.fuego ? '#FFB347' : '#FFFFFF'; ctx.beginPath(); ctx.arc(b.x, b.y, L.RADIO, 0, Math.PI * 2); ctx.fill();
   }
   // partículas

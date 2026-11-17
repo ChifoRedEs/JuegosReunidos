@@ -38,7 +38,7 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
-  api = a; rootEl = root; asp = api.aspecto([grupoFondo('#sdTab'), grupoTablero(), { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }, { id: 'color', nombre: 'De colores', sw: ['#E5383B', '#F77F00', '#2BA84A', '#2F6BFF', '#7A4DFF'] }] }]);
+  api = a; rootEl = root; asp = api.aspecto([{ ...grupoFondo('#sdTab'), def: 't-n-papel-cuaderno-1' }, grupoTablero(), { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }, { id: 'color', nombre: 'De colores', sw: ['#E5383B', '#F77F00', '#2BA84A', '#2F6BFF', '#7A4DFF'] }] }]);
   notasOn = false; ocupado = false; malas = new Set();
   await api.css(new URL('./sudoku.css', import.meta.url));
   const guardado = api.cargar();

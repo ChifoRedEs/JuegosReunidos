@@ -21,7 +21,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; sel = []; pasos = []; pend = null;
-  asp = api.aspecto([{ ...grupoFondo('.cymesa'), def: 'azar' }, grupoTablero(),
+  asp = api.aspecto([{ ...{ ...grupoFondo('.cymesa'), def: 't-n-mesa-madera-palabras' }, def: 'azar' }, grupoTablero(),
     { clave: 'fichas', titulo: 'Fichas', def: 'tele', opciones: Object.entries(FICHAS).map(([id, f]) => ({ id, nombre: f.nombre, sw: f.sw })) }], () => pintar());
   await api.css(new URL('./numerosyletras.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && C.RONDAS.includes(c0.rondas) && C.TIEMPOS.includes(c0.tiempo) && NIVEL[c0.nivel]) cfg = { ...cfg, ...c0 };

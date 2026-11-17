@@ -59,7 +59,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; temp = []; sel = -1; cursor = null; cambio = null; previa = null; pensando = false; tapado = false; arr = null; aviso = '';
   asp = api.aspecto([
-    { ...grupoFondo('.scmesa'), def: 'azar' },
+    { ...{ ...grupoFondo('.scmesa'), def: 't-n-mesa-madera-palabras' }, def: 'azar' },
     { clave: 'tabsc', titulo: 'Tablero', icono: '🟥', ventana: true, def: 'clasico', opciones: Object.entries(TABLEROS).map(([id, [n, sw]]) => ({ id, nombre: n, sw })) },
     { clave: 'fichas', titulo: 'Fichas', icono: '🔤', ventana: true, def: 'marfil', opciones: Object.entries(FICHAS).map(([id, [n, sw]]) => ({ id, nombre: n, sw })) },
     { clave: 'rotulo', titulo: 'Casillas de premio', def: 'si', opciones: [{ id: 'si', nombre: 'Con texto (3P, 2L…)' }, { id: 'no', nombre: 'Solo color' }] },
