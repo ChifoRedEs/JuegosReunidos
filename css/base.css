@@ -424,5 +424,5 @@ body.fondo,body.jfondo,body.fijo{--ink:#000;--mut:#000;--halo:0 0 3px rgba(255,2
 .emo[data-i="robot"]{--ico:url(../img/ui/robot.webp)}
 .emo[data-i="trofeo"]{--ico:url(../img/ui/trofeo.webp)}
 /* Categorías: la cabecera lleva el nombre; solo se desplazan las fichas (dentro de su propia zona) */
-body.fijo .cat-seccion .rejilla{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:136px;align-content:start;padding:2px 2px 14px}
-body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:136px;min-height:0;padding-bottom:5px}
+body.fijo .cat-seccion .rejilla{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:137px;align-content:start;padding:2px 2px 14px}
+body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;padding-bottom:5px}
