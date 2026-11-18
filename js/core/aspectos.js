@@ -84,3 +84,28 @@ export function filtrarTapetes(defs, juego) {
   }
   return defs;
 }
+
+/* ---------- Opciones clásicas retiradas de la Apariencia ---------- */
+// Solo se mantienen tapetes, fondos, colores de tablero y de panel, y las opciones que son imágenes IA. El resto (color/forma/material de fichas, dados, mazos,
+// bolas, trazos, subrayados, estilos de número y letra…) deja de mostrarse: el grupo sigue existiendo y toma siempre su valor por defecto.
+// Cada entrada es el principio del título del grupo (sin icono).
+const COLOR_FICHAS = ['Color de Fichas', 'Color de las fichas', 'Colores de las fichas', 'Estilos de Fichas', 'Estilo de las fichas', 'Material de las fichas', 'Forma de las fichas'];
+export const OCULTAS = {
+  sudoku: ['Números'], nonogram: ['Color del relleno', 'Forma de las casillas'], damas: ['Color de las fichas', 'Material de las fichas'], domino: COLOR_FICHAS, tresenraya: COLOR_FICHAS,
+  cuatroenlinea: ['Color de las fichas', 'Material de las fichas'], sopaletras: ['Subrayado', 'Letras'], bombardeo: ['Estilo de las casillas'], crucigramas: ['Letras'],
+  calcudoku: ['Jaulas', 'Números'], akari: ['Casillas', 'Color de las casillas'], futoshiki: ['Casillas', 'Color de las casillas', 'Números'], crucisumas: ['Casillas de las sumas', 'Números'],
+  encajados: ['Cajas'], deslizadas: ['Colores de las fichas', 'Estilo de las fichas'], codigocifrado: ['Colores de las bolas', 'Estilo de las bolas'],
+  matchup: ['Color de las cartas', 'Forma de las cartas'], quecaratienes: ['Color de las cartas'], ruletamillonaria: ['Colores de la ruleta'], ajedrez: ['Color de las piezas', 'Estilo de las piezas', 'Material de las piezas'],
+  rummy: ['Color de Fichas'], juegodelaoca: ['Estilos de Dados', ...COLOR_FICHAS], elrosco: ['Colores del rosco'], encadenadas: ['Colores'], numerosyletras: ['Fichas'], palabrascruzadas: ['Fichas'],
+  serpiente: ['Color de la serpiente'], quantix: ['Color del trazo'], bloques: ['Colores de las piezas', 'Estilo de los bloques'], catapulta: ['Parábola'], rompeladrillos: ['Estilo de pala'],
+  airhockey: ['Tu mazo', 'Mazo rival', 'Disco'], billar: ['Bandas', 'Bolas', 'Taco'], guerraorugas: ['Terreno'], triviaquesitos: ['Fichas de los jugadores'],
+  partxis: ['Estilos de Dados', ...COLOR_FICHAS], magnateurbano: ['Estilos de Dados', 'Color de Fichas', 'Estilos de Fichas'], hotel: ['Estilos de Dados', ...COLOR_FICHAS],
+  bingolive: ['Bolas · Color'], bingomobile: ['Bolas · Color', 'Color de las marcas'],
+};
+const sinIcono = t => String(t || '').replace(/^[^A-Za-zÁ-ú]+/, '').trim().toLowerCase();
+export function ocultarClasicas(defs, juego) {
+  const lista = (OCULTAS[juego] || []).map(sinIcono);
+  for (const g of defs) if (lista.some(p => sinIcono(g.titulo).startsWith(p))) { g.oculto = true; g.fijo = true; }
+  for (const d of defs) if (d.sub) d.sub = d.sub.filter(x => !x.fijo || x === d);
+  return defs;
+}

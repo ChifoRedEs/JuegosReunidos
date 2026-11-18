@@ -166,3 +166,7 @@ No nombrar archivos ni carpetas con `_` inicial en lo que se sirve por GitHub Pa
 ## Nombres y carpetas
 
 El `id` de un juego es su nombre público en minúsculas, sin tildes, espacios ni signos (`Código Cifrado` → `codigocifrado`) y es el nombre de todo lo suyo: `js/games/<id>/`, `js/tutoriales/<id>.js`, `tests/<id>.mjs`, `img/<id>/`, la clase `.juego-<id>` y las claves guardadas. Si algún día se cambia un id, hay que añadirlo a `IDS_ANTIGUOS` en `js/core/migrar_ids.js` para no perder los datos de los jugadores. Los ids antiguos (klotski, mastermind, hashi, memorama…) ya no existen.
+
+## Apariencia de un juego nuevo
+- Tapetes: añade el juego a `TAPETES_JUEGO` (`js/core/aspectos.js`) con sus familias y si lleva «Clásicos».
+- No ofrezcas color, forma o material de fichas, dados ni selectores de color: solo imágenes IA, colores de tablero/panel y ajustes funcionales. Si el grupo existe pero no debe verse, añade su título a `OCULTAS`.

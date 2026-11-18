@@ -7,7 +7,7 @@ import * as aj from './core/ajustes.js';
 import * as stats from './core/stats.js';
 import * as son from './core/sonido.js';
 import { BARAJAS, urlTapete, buscarFondo, cargarBarajas, precargarSeleccion } from './core/cartas.js';
-import { filtrarTapetes } from './core/aspectos.js';
+import { filtrarTapetes, ocultarClasicas } from './core/aspectos.js';
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION } from './version.js';
@@ -338,6 +338,7 @@ function crearApi(j, ent, mod, root) {
       // `junto: clave` = este grupo se une, como subgrupo, al desplegable de otro grupo (p. ej. los edificios 2D y 3D de Magnate).
       defs.filter(g => g.junto).forEach(g => { const d = defs.find(x => x.clave === g.junto); if (d) { d.sub = d.sub || [d]; d.sub.push(g); g.oculto = true; } });
       // «Tapete y Tablero»: el tapete (imagen de fondo) y el color del tablero (grupos marcados con `tt`) comparten un único desplegable.
+      ocultarClasicas(defs, id);                                                         // opciones clásicas (fichas, dados, mazos…): ya no se muestran y quedan en su valor por defecto
       const tts = defs.filter(g => g.tt).sort((x, y) => (/tapete|mesa/.test(y.clave) ? 1 : 0) - (/tapete|mesa/.test(x.clave) ? 1 : 0));
       if (tts.length > 1) { tts.forEach(g => { if (!g.etiqueta) g.etiqueta = /tapete|mesa/.test(g.clave) ? 'Tapete' : 'Tablero'; }); tts[0].sub = tts; tts[0].titulo = tts[0].ttTitulo || 'Tapete y Tablero'; tts[0].icono = '🖼️'; tts.slice(1).forEach(g => { g.oculto = true; }); }
       const est = defs.find(g => g.sub && g.estilos);
@@ -358,7 +359,7 @@ function crearApi(j, ent, mod, root) {
         let t = null; for (const g of gFs) { const x = buscarFondo(vals[g.clave]); if (x) t = x; }       // «Fondo de Pantalla» (último grupo) pasa por delante del «Tapete»
         if (t) root.style.setProperty('--tapete-url', `url("${urlTapete(t)}")`); else root.style.removeProperty('--tapete-url');
       };
-      defs.forEach(g => { elec[g.clave] = g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
+      defs.forEach(g => { elec[g.clave] = !g.fijo && g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
       resolver(true); poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
       const refrescarVista = () => { if (btnVista) { const es3 = vals.vista === '3d'; btnVista.innerHTML = es3 ? icoF('ver2d', '🔲') + 'Ver en 2D' : icoF('ver3d', '🧊') + 'Ver en 3D'; btnVista.setAttribute('aria-label', es3 ? 'Cambiar a la vista 2D' : 'Cambiar a la vista 3D'); } };
