@@ -795,8 +795,7 @@ function vAjustes_() {
     <div class="bar"><button class="btn on" id="gDesc" hidden>⬇️ Descargar todo</button><button class="btn" id="gCanc" hidden>Cancelar</button><button class="btn" id="gQuit" hidden>Quitar descarga</button></div>
     <div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
   <div class="panel"><h3>Acerca de</h3><p class="note">JugamiGO · ${JUEGOS.length} juegos${enApp() ? '. ✅ Instalada en este dispositivo.' : '.'}</p>
-    ${enApp() ? '' : promptInstalar ? '<div class="bar"><button class="btn on" id="gInst" type="button">📲 Instalar la app</button></div>' : `<p class="note">${esIOS() ? 'Para instalarla: pulsa Compartir ⬆️ y «Añadir a pantalla de inicio».' : 'Puedes instalarla desde el menú del navegador («Instalar app» o «Añadir a pantalla de inicio»).'}</p>`}
-    <p class="note">Créditos: los dibujos de las caras de «¿Qué Cara Tienes?» están basados en <b>Vue Color Avatar</b>, de LeoKu (licencia MIT).</p></div>
+    ${enApp() ? '' : promptInstalar ? '<div class="bar"><button class="btn on" id="gInst" type="button">📲 Instalar la app</button></div>' : `<p class="note">${esIOS() ? 'Para instalarla: pulsa Compartir ⬆️ y «Añadir a pantalla de inicio».' : 'Puedes instalarla desde el menú del navegador («Instalar app» o «Añadir a pantalla de inicio»).'}</p>`}</div>
   <p class="version">JugamiGO · versión ${VERSION} · by ChifoRedEs</p>`;
   app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = leerScroll(); vAjustes(); ponerScroll(y);

@@ -1,7 +1,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
-import { svgDe } from './avatar.js';
+import { imgDe } from './avatar.js';
 import { GRUPOS_PREGUNTAS, disponibles } from './preguntas.js';
 import { grupoFondo, grupoDorso } from '../../core/aspectos.js';
 import { BARAJAS, cargarBarajas, urlDorso } from '../../core/cartas.js';
@@ -89,7 +89,7 @@ function armar() {
   const cols = COLUMNAS[S.n] || 5;
   root.innerHTML = `<div class="qcmsg" id="qcMsg" role="status" aria-live="polite"></div>
     <div class="qctab" id="qcTab" style="--c:${cols}" role="group" aria-label="Tablero de caras">${S.caras.map((f, i) =>
-      `<button type="button" class="qcc" data-i="${i}"><span class="qci"><span class="qcfront">${svgDe(f)}<b>${esc(f.nm)}</b></span><span class="qcback"><i>?</i></span></span></button>`).join('')}</div>
+      `<button type="button" class="qcc" data-i="${i}"><span class="qci"><span class="qcfront">${imgDe(f)}<b>${esc(f.nm)}</b></span><span class="qcback"><i>?</i></span></span></button>`).join('')}</div>
     <div class="qcpanel" id="qcPanel"></div>
     <ul class="qclog" id="qclog" aria-label="Preguntas hechas"></ul>
     ${api.barraHtml()}`;
@@ -101,7 +101,7 @@ function aplicarAspecto() {
   if (d) tab.style.setProperty('--dorso', `url("${urlDorso(d)}")`); else tab.style.removeProperty('--dorso');
   tab.classList.toggle('con-dorso', !!d);
 }
-const miniCara = i => `<div class="qcmini">${svgDe(S.caras[i])}</div>`;
+const miniCara = i => `<div class="qcmini">${imgDe(S.caras[i])}</div>`;
 const quienDijo = p => (S.modo === 'cpu' ? (p === 0 ? 'Tú' : 'La CPU') : nom()[p]);
 
 function banner(p) {
@@ -242,7 +242,7 @@ function abrirPreguntas() {
 }
 function confirmarArriesgo(i) {
   const f = S.caras[i], p = turnoActual();
-  const m = api.modal('🎯 ¿Es esta la cara?', `<div class="qcgrande">${svgDe(f)}</div><p class="qcnombre"><b>${esc(f.nm)}</b></p>
+  const m = api.modal('🎯 ¿Es esta la cara?', `<div class="qcgrande">${imgDe(f)}</div><p class="qcnombre"><b>${esc(f.nm)}</b></p>
     <p class="note">${S.fallo === 'pierde' ? 'Si fallas, pierdes la partida.' : 'Si fallas, pierdes el turno.'}</p>
     <div class="bar"><button class="btn on" data-q="si">Sí, arriesgo con ${esc(f.nm)}</button></div>`);
   m.cuerpo.addEventListener('click', e => {
@@ -267,7 +267,7 @@ function reglas() {
     <li><b>Arriesgar</b>: si aciertas, <b>ganas</b>. Si fallas, según la regla elegida, <b>pierdes la partida</b> (como en el juego original) o <b>solo el turno</b>.</li>
     <li><b>Rasgos que se pueden preguntar</b>: persona, color y tipo de pelo, sombreros y gorros, lazo o diadema, color de ojos, sombra de ojos, gafas, barba, bigote, perilla, pecas, pendientes, sonrisa, tono de piel y color de la ropa. Los sombreros tapan el pelo: quien lleva uno no tiene «pelo de color» a la vista.</li>
     <li><b>Contra la CPU</b>: Fácil (pregunta casi al azar), Medio (hace buenas preguntas) y Difícil (siempre la que mejor divide las caras que le quedan).</li>
-    <li>Tableros de 12, 20, 24 (el clásico) o 30 caras, con las 30 caras por defecto o caras nuevas al azar cada partida.</li>
-    <li>Dibujos de las caras: <b>Vue Color Avatar</b>, de LeoKu (licencia MIT, github.com/Codennnn/vue-color-avatar). Las piezas de bigote, perilla, barba, gafas de sol, pecas, pelo rizado, entradas, gorra, sombrero de ala y de copa, lazo y diadema son nuevas, dibujadas para este juego en el mismo estilo.</li>
+    <li>Tableros de 12, 20, 24 (el clásico) o 30 caras, con las 30 caras por defecto o 60 caras de las que salen al azar en cada partida.</li>
+    <li>Las 60 caras son ilustraciones propias de JugamiGO, hechas con IA.</li>
   </ul>`);
 }

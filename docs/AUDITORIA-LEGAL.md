@@ -35,7 +35,7 @@ Ajedrez, Damas, Dominó, 3 en raya, Sopa de letras, Crucigramas, BlackJack, Klon
 
 ## 🔵 Licencias de terceros (cumplir condiciones)
 - **Three.js** (MIT): conservar `js/vendor/three.LICENSE` (ya está).
-- **Vue Color Avatar** (MIT): conservar `LICENSE-vue-color-avatar.txt` (ya está) y añadir crédito en la app (Ajustes → Acerca de).
+- ~~Vue Color Avatar~~: retirado en 3.91.7; las caras de «¿Qué cara tienes?» son ilustraciones propias (IA), sin créditos de terceros.
 - **Diccionario RLA-ES** (MPL 1.1 / LGPL / GPL): MPL 1.1 exige conservar el aviso y ofrecer el código de esos archivos (ya documentado en `data/diccionario/LEEME.md`); añadir crédito en Acerca de.
 - **Fuentes Baloo 2 y Nunito** (SIL OFL): se cargan desde Google Fonts, es lícito, pero la app deja de ser 100 % offline y envía la IP a Google: menciónalo en la política de privacidad o aloja las fuentes tú (también mejora el uso sin conexión).
 - **Emojis**: se muestran con la fuente del sistema (Noto Emoji en Android), sin problema.

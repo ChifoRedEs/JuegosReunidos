@@ -6,7 +6,7 @@ import { pregunta, responde, disponibles, vectorDe } from './preguntas.js';
 export const MODOS = { cpu: 'Contra CPU', dos: '2 jugadores' };
 export const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 export const TAMANOS = { 12: '12', 20: '20', 24: '24 (clásico)', 30: '30' };
-export const CONJUNTOS = { clasicas: 'Las 30 por defecto', azar: 'Aleatorias' };
+export const CONJUNTOS = { clasicas: 'Las 30 por defecto', azar: 'Aleatorias (de las 60)' };
 export const FALLO = { pierde: 'Pierdes la partida', turno: 'Pierdes el turno' };
 export const TUMBAR = { mano: 'Las tumbo yo', auto: 'Automático' };
 export const EMPIEZA = { azar: 'Al azar', j1: 'Jugador 1', j2: 'Jugador 2' };

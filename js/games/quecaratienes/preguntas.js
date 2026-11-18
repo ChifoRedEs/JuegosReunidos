@@ -2,7 +2,7 @@
 import { SOMBREROS } from './avatar.js';
 
 const hayPelo = f => !Object.hasOwn(SOMBREROS, f.pe) && f.pe !== 'clean';   // el sombrero tapa el pelo; «clean» es una cabeza sin pelo
-const CALVO = ['clean', 'funny', 'receding'], LARGO = ['wave', 'danny', 'pixie'], CORTO = ['fonze', 'punk'];
+const CALVO = ['clean', 'receding'], LARGO = ['long'], CORTO = ['short', 'pixie', 'slick'];
 
 export const GRUPOS_PREGUNTAS = [
   ['persona', '🧑 Persona'], ['pelo', '💇 Pelo'], ['cabeza', '🎩 Cabeza'], ['cara', '🙂 Cara'], ['piel', '🎨 Piel'], ['ropa', '👕 Ropa'],
@@ -19,8 +19,8 @@ for (const [c, t] of [['negro', 'negro'], ['castano', 'castaño'], ['rubio', 'ru
 q('calvo', 'pelo', '¿Es calvo o casi calvo?', f => CALVO.includes(f.pe));
 q('largo', 'pelo', '¿Tiene el pelo largo?', f => LARGO.includes(f.pe));
 q('corto', 'pelo', '¿Tiene el pelo corto?', f => CORTO.includes(f.pe));
-q('rizado', 'pelo', '¿Tiene el pelo rizado?', f => f.pe === 'curly');
-q('cresta', 'pelo', '¿Tiene cresta?', f => f.pe === 'punk');
+q('rizado', 'pelo', '¿Tiene el pelo rizado?', f => f.pe === 'curly' || f.pe === 'afro');
+q('cresta', 'pelo', '¿Tiene cresta?', f => f.pe === 'mohawk');
 
 q('sombrero', 'cabeza', '¿Lleva sombrero, gorra o gorro?', f => Object.hasOwn(SOMBREROS, f.pe));
 q('gorro', 'cabeza', '¿Lleva un gorro de lana?', f => f.pe === 'beanie');
@@ -45,6 +45,9 @@ q('bigote', 'cara', '¿Tiene bigote?', f => f.bd === 'mustache' || f.bd === 'ful
 q('perilla', 'cara', '¿Tiene perilla?', f => f.bd === 'goatee');
 q('pecas', 'cara', '¿Tiene pecas?', f => !!f.pk);
 q('pendientes', 'cara', '¿Lleva pendientes?', f => f.ar !== 'none');
+q('sorpresa', 'cara', '¿Parece sorprendido?', f => f.bc === 'surprised');
+q('triste', 'cara', '¿Parece triste o serio?', f => f.bc === 'sad' || f.bc === 'frown');
+q('nervioso', 'cara', '¿Parece nervioso?', f => f.bc === 'nervous');
 q('sonrie', 'cara', '¿Está sonriendo?', f => ['smile', 'laughing', 'smirk'].includes(f.bc));
 q('abierta', 'cara', '¿Tiene la boca abierta?', f => f.bc === 'laughing' || f.bc === 'surprised');
 

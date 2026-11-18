@@ -16,8 +16,8 @@
 .qcsec b{font:800 17px var(--f-titulo)}
 .qcque{flex:none!important;text-align:center}
 .qcque b{font-size:22px}
-.qcmini{flex:none;width:52px;aspect-ratio:248/361;border-radius:8px;overflow:hidden;border:2px solid var(--qc-borde);background:var(--qc-cara)}
-.qcmini svg,.qcgrande svg{display:block;width:100%;height:100%}
+.qcmini{flex:none;width:52px;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid var(--qc-borde);background:var(--qc-cara)}
+.qcmini img,.qcgrande img{object-fit:cover;display:block;width:100%;height:100%}
 .qcres{text-align:center;font-size:14px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 12px}
 .qcres .gr{font:800 24px var(--f-titulo);margin-top:2px}
 .qcres b.si,.qclog b.si{color:var(--ok,#1FA971)}
@@ -31,13 +31,13 @@
 /* tablero de cartas con giro */
 .qctab{--g:clamp(5px,1.8vw,9px);display:grid;grid-template-columns:repeat(var(--c),1fr);gap:var(--g);width:min(100%,calc(var(--c) * 128px + (var(--c) - 1) * var(--g)));margin:8px auto 4px;container-type:inline-size;user-select:none;-webkit-user-select:none}
 .qctab[hidden]{display:none}
-.qcc{position:relative;aspect-ratio:248/410;border:0;padding:0;background:none;perspective:700px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-width:0}
+.qcc{position:relative;aspect-ratio:1/1.2;border:0;padding:0;background:none;perspective:700px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-width:0}
 .qcc:focus-visible{outline:3px solid var(--yel);outline-offset:2px;border-radius:10px}
 .qci{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.3,1)}
 .qcc.down .qci{transform:rotateY(180deg)}
 .qcfront,.qcback{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;overflow:hidden;border:3px solid var(--qc-borde);box-shadow:0 3px 7px rgba(0,0,0,.28)}
 .qcfront{display:flex;flex-direction:column;background:var(--qc-cara)}
-.qcfront svg{display:block;flex:1;min-height:0;width:100%}
+.qcfront img{display:block;flex:1;min-height:0;width:100%;object-fit:cover}
 .qcfront b{display:block;padding:2px 2px 3px;text-align:center;font:800 clamp(10px,calc(100cqw / var(--c) * .14),14px)/1.15 var(--f-texto);color:var(--qc-tinta);background:var(--qc-cara);border-top:2px solid var(--qc-borde);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .juego-quecaratienes[data-nombres="no"] .qcfront b{display:none}
 .qcback{transform:rotateY(180deg);display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(45deg,#4B3FD1 0 8px,#6A5CF2 8px 16px);border-color:#fff}
@@ -56,7 +56,7 @@
 .qctabs{margin:8px 0}
 .qclista{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto;padding:2px}
 .qclista .btn{justify-content:flex-start;text-align:left}
-.qcgrande{width:min(56%,190px);aspect-ratio:248/361;margin:6px auto;border-radius:12px;overflow:hidden;border:3px solid var(--qc-borde);background:var(--qc-cara)}
+.qcgrande{width:min(62%,210px);aspect-ratio:1;margin:6px auto;border-radius:12px;overflow:hidden;border:3px solid var(--qc-borde);background:var(--qc-cara)}
 .qcnombre{text-align:center;font-size:18px;margin:2px 0 6px}
 @media (prefers-reduced-motion:reduce){.qci{transition:none}.qctab.arriesgando .qcc:not(.down) .qcfront{animation:none}}
 

@@ -1,7 +1,9 @@
 // Pruebas de «¿Qué cara tienes?»: caras, preguntas, reglas y CPU. Uso: node tests/quecaratienes.mjs
 import * as M from '../js/games/quecaratienes/motor.js';
 import { CARAS_DEFECTO } from '../js/games/quecaratienes/defecto.js';
-import { caraValida, svgDe, generarCaras, generarSimple, crearRng } from '../js/games/quecaratienes/avatar.js';
+import { CARAS } from '../js/games/quecaratienes/caras.js';
+import { existsSync } from 'node:fs';
+import { caraValida, imgDe, generarCaras, generarSimple, crearRng } from '../js/games/quecaratienes/avatar.js';
 import { PREGUNTAS, vectorDe, responde, disponibles } from '../js/games/quecaratienes/preguntas.js';
 let ok = 0; const t = (n, f) => { try { f(); ok++; console.log('✓', n); } catch (e) { console.log('✗', n, e.message); process.exitCode = 1; } };
 const aser = (c, m) => { if (!c) throw new Error(m); };
@@ -16,27 +18,29 @@ t('las 30 caras por defecto son válidas, con nombre único y se distinguen por 
   const h = CARAS_DEFECTO.filter(f => f.sx === 'h').length; aser(h >= 14 && h <= 16, 'reparto de sexos ' + h);
 });
 t('todas las preguntas útiles en el tablero por defecto (48 de 48 como mucho 1 sin usar)', () => { aser(disponibles(CARAS_DEFECTO).length >= 44, 'pocas preguntas ' + disponibles(CARAS_DEFECTO).length); });
-t('cada cara dibuja un SVG con ids únicos', () => {
-  const a = svgDe(CARAS_DEFECTO[0]), b = svgDe(CARAS_DEFECTO[0]); aser(a.startsWith('<svg') && a.endsWith('</svg>'), 'svg');
-  const ids = s => [...s.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
-  aser(ids(a).length > 0 && !ids(a).some(i => ids(b).includes(i)), 'ids repetidos entre caras');
-  aser(!svgDe(CARAS_DEFECTO[0]).includes('$fillColor'), 'color sin sustituir');
+t('las 60 caras: ids 1–60, nombres únicos, mitad y mitad, imagen existente y todas se distinguen por ≥ 2 preguntas', () => {
+  aser(CARAS.length === 60 && CARAS.every((f, i) => f.id === i + 1), 'ids');
+  aser(new Set(CARAS.map(f => f.nm)).size === 60, 'nombres');
+  aser(CARAS.filter(f => f.sx === 'h').length === 30, 'reparto');
+  for (const f of CARAS) { aser(existsSync(new URL(`../img/quecaratienes/${String(f.id).padStart(2, '0')}.webp`, import.meta.url)), 'falta imagen ' + f.id); aser(imgDe(f).startsWith('<img') && !imgDe(f).includes('undefined'), 'img'); }
+  for (let i = 0; i < 60; i++) for (let j = i + 1; j < 60; j++) aser(dist(CARAS[i], CARAS[j]) >= 2, `${CARAS[i].nm} y ${CARAS[j].nm} casi iguales`);
 });
 t('generador aleatorio: caras válidas, distintas y repetibles', () => {
-  for (const n of [12, 20, 24, 30]) {
+  for (const n of [12, 20, 24, 30, 60]) {
     const c = generarCaras(n, 100 + n, vectorDe) || generarSimple(n, 100 + n); aser(c.length === n, 'cantidad');
     for (const f of c) aser(caraValida(f), 'inválida');
     aser(new Set(c.map(f => f.nm)).size === n, 'nombres');
   }
   aser(JSON.stringify(generarCaras(30, 5, vectorDe)) === JSON.stringify(generarCaras(30, 5, vectorDe)), 'no repetible');
-  for (let s = 1; s <= 25; s++) { const c = generarSimple(12, s); for (const f of c) aser(caraValida(f), 'simple inválida'); }
+  aser(new Set([1, 2, 3, 4, 5, 6].map(x => generarCaras(12, x, vectorDe).map(f => f.id).join())).size > 1, 'siempre las mismas');
 });
 t('caraValida rechaza basura', () => {
   const f = CARAS_DEFECTO[0];
-  for (const x of [null, 3, {}, { ...f, sx: 'x' }, { ...f, pe: '__proto__' }, { ...f, pi: 9 }, { ...f, oc: 'rojo' }, { ...f, pc: 'verde' }, { ...f, nm: '' }, { ...f, ro: 'constructor' }]) aser(caraValida(x) === null, 'acepta ' + JSON.stringify(x).slice(0, 50));
+  for (const x of [null, 3, {}, { ...f, id: 0 }, { ...f, id: 61 }, { ...f, id: '6' }, { nm: 'Ana' }]) aser(caraValida(x) === null, 'acepta ' + JSON.stringify(x).slice(0, 50));
+  const g = caraValida({ id: 6, pe: '__proto__', sx: 'x' }); aser(g && g.pe === 'afro' && g.sx === 'm', 'los rasgos salen de la tabla');
 });
 t('las preguntas responden coherentemente', () => {
-  const g = { ...CARAS_DEFECTO.find(f => f.sx === 'h'), ga: 'sun', bd: 'full', pe: 'cap', pc: 'rojo', oc: 'azul', pk: 1, pi: 4 };
+  const g = { ...CARAS_DEFECTO.find(f => f.sx === 'h'), ga: 'sun', bd: 'full', pe: 'cap', pc: 'rojo', oc: 'azul', pk: 1, pi: 4, bc: 'smile' };
   const si = ['chico', 'gafas', 'gafas-sol', 'barba', 'bigote', 'sombrero', 'gorra', 'ojos-azul', 'pecas', 'piel-oscura'], no = ['chica', 'perilla', 'gafas-redondas', 'copa', 'ojos-verde', 'pelo-rojo', 'pelo-negro', 'calvo'];
   for (const id of si) aser(responde(g, id), id + ' debería ser sí');
   for (const id of no) aser(!responde(g, id), id + ' debería ser no');
