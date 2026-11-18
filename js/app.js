@@ -7,6 +7,7 @@ import * as aj from './core/ajustes.js';
 import * as stats from './core/stats.js';
 import * as son from './core/sonido.js';
 import { BARAJAS, urlTapete, buscarFondo, cargarBarajas, precargarSeleccion } from './core/cartas.js';
+import { filtrarTapetes } from './core/aspectos.js';
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION } from './version.js';
@@ -330,6 +331,7 @@ function crearApi(j, ent, mod, root) {
     aspecto(defs, alCambiar) {
       // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
       defs = defs.filter(g => g.clave !== 'pj' && !/tex$/.test(g.clave));   // Personajes y Texturas ya no forman parte de la Apariencia
+      defs = filtrarTapetes(defs, id);                                                  // cada juego solo ofrece los tapetes de su estilo (+ «Clásicos»)
       defs = defs.filter(g => g.opciones.some(o => !o.azar && !o.nada) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
       // Grupos propios «Forma de las fichas» (enEstilos) se integran en el desplegable «Estilos de Fichas» si el juego lo tiene.
       defs.forEach(g => { if (g.clave === 'vista') g.oculto = true; });                // 2D/3D: ya está el botón flotante de la esquina superior izquierda
@@ -344,7 +346,7 @@ function crearApi(j, ent, mod, root) {
       const resolver = nuevo => defs.forEach(g => {
         if (elec[g.clave] !== 'azar') { vals[g.clave] = elec[g.clave]; return; }
         if (!nuevo && vals[g.clave]) return;
-        const az = g.opciones.find(o => o.azar), l = g.opciones.filter(o => !o.azar && !o.nada && (!az || !az.solo || az.solo.includes(o.id))), c = l.length > 1 ? l.filter(o => o.id !== vals[g.clave]) : l;   // distinta de la anterior
+        const az = g.opciones.find(o => o.azar), l = g.opciones.filter(o => !o.azar && !o.nada && !o.clasico && (!az || !az.solo || az.solo.includes(o.id))), c = l.length > 1 ? l.filter(o => o.id !== vals[g.clave]) : l;   // distinta de la anterior
         vals[g.clave] = c[Math.random() * c.length | 0].id;
       });
       // Grupo con `sel` («Fondo de Tablero»): la imagen elegida va a --tapete-url y una regla de <style> la pone detrás del tablero del juego.
@@ -415,8 +417,15 @@ function crearApi(j, ent, mod, root) {
           if (g.multi) return cuerpoMulti(g);
           if (g.sub) return cuerpoSub(g);
           const imgs = g.opciones.some(o => o.img) && g.forma;
-          if (imgs) return el('div', { class: 'ap-rej ap-' + g.forma }, ...g.opciones.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
-            o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || (o.nada ? '🚫' : '🎲')), el('small', {}, o.nombre))));
+          if (imgs) {
+            const rej = lista => el('div', { class: 'ap-rej ap-' + g.forma }, ...lista.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
+              o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || (o.nada ? '🚫' : '🎲')), el('small', {}, o.nombre))));
+            const cl = g.opciones.filter(o => o.clasico), pr = g.opciones.filter(o => !o.clasico);
+            if (!cl.length) return rej(g.opciones);
+            // «Clásicos»: desplegable al final de la lista (se abre solo si el tapete elegido es uno de ellos)
+            const det = el('details', { class: 'ap-clasicos' }, el('summary', {}, `Clásicos (${cl.length})`), rej(cl)); det.open = cl.some(o => o.id === elec[g.clave]);
+            return el('div', { class: 'ap-conclasicos' }, rej(pr), det);
+          }
           const out = []; let sec = null;
           for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); }
           return el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, out);

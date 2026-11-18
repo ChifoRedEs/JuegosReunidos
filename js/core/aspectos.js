@@ -48,3 +48,39 @@ export const ESCENARIOS_WORMS = ['t-bosque', 't-ciudad', 't-deportivo', 't-desie
 export const ESCENARIOS_GUERRA = [...ESCENARIOS_WORMS, 't-pradera', 't-huerto', 't-isla', 't-cueva', 't-mar', 't-pajaros'];
 export const grupoEscenario = (sel, titulo = 'Fondo de Pantalla', lista = ESCENARIOS_WORMS) => ({ clave: 'esc', titulo, icono: '🏞️', ventana: true, forma: 'tapete', def: 'azar', sel,
   opciones: [AZAR, ...BARAJAS.fondos.filter(t => lista.includes(t.id)).map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
+
+/* ---------- Tapetes por juego ---------- */
+// Cada juego ofrece solo los tapetes de su estilo (familia) y, donde tiene sentido, un desplegable «Clásicos» al final con los 11 tapetes lisos antiguos.
+export const CLASICOS = ['t-amarillo', 't-arcoiris', 't-azul-claro', 't-azul-oscuro', 't-ladrillos', 't-madera', 't-marmol', 't-morado', 't-rojo', 't-turquesa', 't-verde'];
+const FAMILIAS = {
+  casino: /^t-n-casino/, filete: /^t-n-tapete-/, viajero: /^t-0-/, mesajuegos: /^t-n-mesa-juegos/, cuaderno: /^t-n-papel-cuaderno/, maderamarmol: /^t-n-mesa-(madera|marmol)-palabras/,
+  plato: /^t-n-plato/, billar: /^t-n-billar/, bingo: /^t-n-sala-bingo/, mahjong: /^t-n-mahjong/, ciudad: /^t-n-ciudad/, hotel: /^t-n-hotel/, almacen: /^t-n-almacen/,
+  bombardeo: /^t-n-campo-bombardeo/, escritorio: /^t-n-escritorio/, taberna: /^t-n-taberna/,
+};
+const CARTAS = { f: ['casino', 'filete', 'viajero'], c: true }, MESA = { f: ['mesajuegos', 'viajero'], c: true }, TABLERO = { f: ['taberna', 'mesajuegos', 'viajero'], c: true };
+export const TAPETES_JUEGO = {
+  blackjack: CARTAS, brisca: CARTAS, chinchon: CARTAS, cinquillo: CARTAS, continental: CARTAS, corazones: CARTAS, hijoputa: CARTAS, holdem: CARTAS, klondike: CARTAS, spider: CARTAS,
+  cartablanca: CARTAS, mus: CARTAS, pokercubierto: CARTAS, rummy: CARTAS,
+  tresenraya: MESA, cuatroenlinea: MESA, domino: MESA, partxis: MESA, juegodelaoca: MESA, deslizadas: MESA, batallanaval: MESA,
+  ajedrez: TABLERO, damas: TABLERO, matchup: { f: ['mesajuegos', 'casino', 'viajero'], c: true }, quecaratienes: { f: ['mesajuegos', 'casino', 'viajero'], c: true },
+  sudoku: { f: ['cuaderno'] }, nonogram: { f: ['cuaderno'] }, calcudoku: { f: ['cuaderno'] }, akari: { f: ['cuaderno'] }, futoshiki: { f: ['cuaderno'] }, crucisumas: { f: ['cuaderno'] },
+  crucigramas: { f: ['cuaderno'] }, sopaletras: { f: ['cuaderno', 'maderamarmol'] }, elahorcado: { f: ['cuaderno', 'taberna'] },
+  encadenadas: { f: ['maderamarmol'] }, palabrascruzadas: { f: ['maderamarmol'] }, numerosyletras: { f: ['maderamarmol', 'plato'] },
+  ruletamillonaria: { f: ['plato'] }, elrosco: { f: ['plato'] }, triviaquesitos: { f: ['plato'] },
+  billar: { f: ['billar'] }, bingolive: { f: ['bingo'] }, bingomobile: { f: ['bingo'] }, mahjong: { f: ['mahjong'] }, magnateurbano: { f: ['ciudad'] }, hotel: { f: ['hotel'] },
+  encajados: { f: ['almacen'] }, bombardeo: { f: ['bombardeo'] }, codigocifrado: { f: ['escritorio'] },
+  serpiente: { f: ['viajero'], c: true }, vuelaalto: { f: ['viajero'], c: true }, bloques: { f: ['viajero'], c: true }, rompeladrillos: { f: ['viajero'], c: true }, airhockey: { f: ['mesajuegos'], c: true },
+};
+// Filtra las opciones de los grupos «Tapete» según el juego. Sin entrada para el juego (o sin tapetes) no cambia nada.
+export function filtrarTapetes(defs, juego) {
+  const cfg = TAPETES_JUEGO[juego]; if (!cfg) return defs;
+  const res = cfg.f.map(k => FAMILIAS[k]);
+  for (const g of defs) {
+    if (g.clave !== 'tapete' && g.clave !== 'mesa') continue;
+    const base = g.opciones.filter(o => !o.img), pro = g.opciones.filter(o => o.img && res.some(r => r.test(o.id)));
+    const cl = cfg.c ? g.opciones.filter(o => CLASICOS.includes(o.id)).map(o => ({ ...o, clasico: true })) : [];
+    g.opciones = [...base, ...pro, ...cl];
+    if (!g.opciones.some(o => o.id === g.def)) g.def = (base.find(o => o.nada) || base[0] || g.opciones[0]).id;
+  }
+  return defs;
+}
