@@ -4,7 +4,10 @@
 
 export const COLORES_JUGADOR = ['#E0243A', '#2F6BFF', '#12A05C', '#F2B600'];
 export const NOMBRES_COLOR = ['Rojo', 'Azul', 'Verde', 'Amarillo'];
-export const COCHES = ['🚗', '🚕', '🚙', '🏎️'];
+export const COCHES = ['🚗', '🚕', '🚙', '🏎️'];   // identificadores guardados en las partidas; se dibujan con las imágenes de COCHE_IMG
+export const COCHE_IMG = { '🚗': 'c-berlina', '🚕': 'c-taxi', '🚙': 'c-suv', '🏎️': 'c-deportivo' };
+export const HOTEL_IMG = { fuji: 'h1', boom: 'h2', etoile: 'h3', pres: 'h4', royal: 'h5', waik: 'h6', taj: 'h7', safari: 'h8' };
+export const IMG = n => `img/hotel/${n}.webp`;
 
 // ---------- reglas generales ----------
 export const DINERO_INICIAL = 18000;
@@ -53,18 +56,18 @@ export const N = CAMINO.length;
 const TIPOS = 'PCOCCECCFCO' + 'CNCCOCCCOCE' + 'CCNCOFNOCNCCOEN' + 'CCOFCNCCOCC';
 export const TIPO = TIPOS.slice(0, N).split('');
 export const INFO_TIPO = {
-  P: { nombre: 'Salida', corto: 'SALIDA', ico: '🅿️', color: '#3B6FD8', desc: 'Casilla de salida: aquí empiezan los coches. No pasa nada al caer.' },
-  C: { nombre: 'Solar en venta', corto: 'COMPRA', ico: '🏷️', color: '#E5A100', desc: 'Puedes comprar el terreno de un hotel pegado a esta casilla (solo uno por turno). Si el terreno de un rival sigue vacío, puedes quedártelo por la mitad del precio. No puedes construir en él hasta tu siguiente turno.' },
-  O: { nombre: 'Licencia de obras', corto: 'OBRAS', ico: '📋', color: '#2F7DE1', desc: 'Si tienes algún terreno, declaras qué construyes (edificio principal, luego ampliaciones) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, H gratis, ×2 doble precio.' },
-  E: { nombre: 'Acceso gratuito', corto: 'ENTRADA', ico: '🚪', color: '#1E9E63', desc: 'Pones gratis una entrada en un hotel tuyo que ya tenga edificio principal, en una casilla del camino junto a su terreno.' },
-  F: { nombre: 'Obra gratis', corto: 'FASE', ico: '🏗️', color: '#E8690F', desc: 'Construyes gratis una fase: el edificio principal de un terreno vacío tuyo, o la siguiente ampliación de un hotel en obras.' },
+  P: { nombre: 'Salida', corto: 'SALIDA', ico: '', color: '#3B6FD8', desc: 'Casilla de salida: aquí empiezan los coches. No pasa nada al caer.' },
+  C: { nombre: 'Solar en venta', corto: 'COMPRA', ico: 'cartel', color: '#E5A100', desc: 'Puedes comprar el terreno de un hotel pegado a esta casilla (solo uno por turno). Si el terreno de un rival sigue vacío, puedes quedártelo por la mitad del precio. No puedes construir en él hasta tu siguiente turno.' },
+  O: { nombre: 'Licencia de obras', corto: 'OBRAS', ico: 'mazo', color: '#2F7DE1', desc: 'Si tienes algún terreno, declaras qué construyes (edificio principal, luego ampliaciones) y tiras el dado de permiso: verde = concedido (pagas), rojo = denegado, H gratis, ×2 doble precio.' },
+  E: { nombre: 'Acceso gratuito', corto: 'ENTRADA', ico: 'verja', color: '#1E9E63', desc: 'Pones gratis una entrada en un hotel tuyo que ya tenga edificio principal, en una casilla del camino junto a su terreno.' },
+  F: { nombre: 'Obra gratis', corto: 'FASE', ico: 'h12', color: '#E8690F', desc: 'Construyes gratis una fase: el edificio principal de un terreno vacío tuyo, o la siguiente ampliación de un hotel en obras.' },
   N: { nombre: 'Calle', corto: '', ico: '', color: '#C3C9D6', desc: 'Casilla normal. Si tiene una entrada de un hotel rival, pagas las noches (dado × tarifa por noche del hotel).' },
 };
 export const EXTRA_LEYENDA = [
-  { ico: '🏦', nombre: 'Línea de Cobro', color: '#F2B600', desc: 'Cada vez que cruzas la línea dorada cobras 3.000 € (con 3-4 jugadores, deja de pagar cuando quedan dos).' },
-  { ico: '🏛️', nombre: 'Línea de Accesos', color: '#2F9BFF', desc: 'Al cruzar la línea azul puedes comprar una entrada por cada hotel tuyo con edificio principal (máximo 8 por hotel, una por casilla).' },
-  { ico: '⛩️', nombre: 'Entrada de un hotel', color: '#888', desc: 'Pórtico del color del hotel en el borde del camino. Si un rival cae en esa casilla, tira el dado y te paga noches × tarifa del hotel.' },
-  { ico: '🚩', nombre: 'Bandera del dueño', color: '#E0243A', desc: 'Marca de qué jugador es el propietario del hotel.' },
+  { ico: 'billetes', nombre: 'Línea de Cobro', color: '#F2B600', desc: 'Cada vez que cruzas la línea dorada cobras 3.000 € (con 3-4 jugadores, deja de pagar cuando quedan dos).' },
+  { ico: 'balanza', nombre: 'Línea de Accesos', color: '#2F9BFF', desc: 'Al cruzar la línea azul puedes comprar una entrada por cada hotel tuyo con edificio principal (máximo 8 por hotel, una por casilla).' },
+  { ico: 'verja', nombre: 'Entrada de un hotel', color: '#888', desc: 'Pórtico del color del hotel en el borde del camino. Si un rival cae en esa casilla, tira el dado y te paga noches × tarifa del hotel.' },
+  { ico: 'llave', nombre: 'Bandera del dueño', color: '#E0243A', desc: 'Marca de qué jugador es el propietario del hotel.' },
 ];
 // Líneas que se cruzan entre dos casillas consecutivas: el Banco (cobras 3000) y el Ayuntamiento (compras entradas)
 export const LINEA_BANCO = 41;          // entre la casilla 41 y la 42

@@ -1,6 +1,7 @@
 // Vista 2D (SVG) de Hotel: respaldo cuando no hay WebGL o si el jugador elige «2D clásica». Misma API que vista3d.js.
-import { INFO_TIPO, CAJA, MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
+import { INFO_TIPO, CAJA, MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif, IMG, COCHE_IMG, HOTEL_IMG } from './datos.js';
 
+const im = (n, x, y, w, h = w, at = {}) => el('image', { href: IMG(n), x, y, width: w, height: h, preserveAspectRatio: 'xMidYMid meet', 'pointer-events': 'none', ...at });
 const U = 40, W = MAPA.W, H = MAPA.H, NS = 'http://www.w3.org/2000/svg';
 const el = (tag, at = {}, txt) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; return e; };
 
@@ -16,9 +17,9 @@ export function crearHotel2D(cont) {
   svg.insertBefore(el('rect', { x: LAGO.c0 * U, y: LAGO.f0 * U, width: (LAGO.c1 - LAGO.c0 + 1) * U, height: (LAGO.f1 - LAGO.f0 + 1) * U, rx: 18, fill: '#4DB7E8' }), capaLote);
   const publico = (R, fill, emoji, nombre) => {
     svg.insertBefore(el('rect', { x: R.c0 * U + 3, y: R.f0 * U + 3, width: (R.c1 - R.c0 + 1) * U - 6, height: (R.f1 - R.f0 + 1) * U - 6, rx: 8, fill, stroke: '#0003' }), capaLote);
-    capaTxt.append(el('text', { x: (R.c0 + R.c1 + 1) * U / 2, y: (R.f0 + R.f1 + 1) * U / 2 - 2, 'text-anchor': 'middle', 'font-size': 26 }, emoji), el('text', { x: (R.c0 + R.c1 + 1) * U / 2, y: (R.f0 + R.f1 + 1) * U / 2 + 16, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 800, fill: '#fff' }, nombre));
+    capaTxt.append(im(emoji, (R.c0 + R.c1 + 1) * U / 2 - 17, (R.f0 + R.f1 + 1) * U / 2 - 26, 34), el('text', { x: (R.c0 + R.c1 + 1) * U / 2, y: (R.f0 + R.f1 + 1) * U / 2 + 16, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 800, fill: '#fff' }, nombre));
   };
-  publico(BANCO, '#B8902B', '🏦', 'BANCO'); publico(AYUNTAMIENTO, '#3A4F8F', '🏛️', 'AYUNTAMIENTO');
+  publico(BANCO, '#B8902B', 'banco', 'BANCO'); publico(AYUNTAMIENTO, '#3A4F8F', 'balanza', 'AYUNTAMIENTO');
   // terrenos
   const celdas = {};
   for (const id of IDS_HOTEL) {
@@ -30,7 +31,7 @@ export function crearHotel2D(cont) {
     const [x, y] = px(r, c), g = el('g', { 'data-sq': i }), I = INFO_TIPO[TIPO[i]];
     g.append(el('rect', { x: x + 1.5, y: y + 1.5, width: U - 3, height: U - 3, rx: 6, fill: I.color, stroke: '#fff', 'stroke-width': 2 }));
     if (TIPO[i] === 'P') g.append(el('text', { x: x + U / 2, y: y + 22, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 900, fill: '#fff' }, 'P'));
-    else if (I.ico) g.append(el('text', { x: x + U / 2, y: y + 22, 'text-anchor': 'middle', 'font-size': 18 }, I.ico));
+    else if (I.ico) g.append(im(I.ico, x + U / 2 - 11, y + 4, 22));
     if (I.corto) g.append(el('text', { x: x + U / 2, y: y + 35, 'text-anchor': 'middle', 'font-size': 8, 'font-weight': 900, fill: '#fff', 'pointer-events': 'none' }, I.corto));
     capaCam.append(g); return g;
   });
@@ -62,16 +63,16 @@ export function crearHotel2D(cont) {
   let escF = 1; V.fichas = e => { escF = e.esc; };                       // 🚗 Apariencia: tamaño de los coches (el color llega en p.color)
   V.pintar = S => {
     S.jug.forEach((p, j) => {
-      if (!coches[j]) { const g = el('g'); g.append(el('circle', { r: 11, fill: p.color, stroke: '#fff', 'stroke-width': 2.5 }), el('text', { y: 5, 'text-anchor': 'middle', 'font-size': 13 }, p.coche)); capaCoche.append(g); coches[j] = g; }
-      const g = coches[j]; g.firstChild.setAttribute('fill', p.color); g.firstChild.setAttribute('r', 11 * escF); g.lastChild.setAttribute('font-size', 13 * escF); g.lastChild.setAttribute('y', 5 * escF); g.style.display = p.vivo ? '' : 'none'; if (!g.dataset.anim) { const [x, y] = posCoche(j, p.pos); ponCoche(j, x, y); }
+      if (!coches[j]) { const g = el('g'); g.append(el('circle', { r: 11, fill: p.color, stroke: '#fff', 'stroke-width': 2.5 }), im(COCHE_IMG[p.coche] || 'c-berlina', -13, -13, 26)); capaCoche.append(g); coches[j] = g; }
+      const g = coches[j]; g.firstChild.setAttribute('fill', p.color); g.firstChild.setAttribute('r', 11 * escF); { const w = 26 * escF, l = g.lastChild; l.setAttribute('x', -w / 2); l.setAttribute('y', -w / 2); l.setAttribute('width', w); l.setAttribute('height', w); } g.style.display = p.vivo ? '' : 'none'; if (!g.dataset.anim) { const [x, y] = posCoche(j, p.pos); ponCoche(j, x, y); }
     });
     for (const id of IDS_HOTEL) {
       const Hh = S.hot[id], D = HOTELES[id], sig = Hh.dueno + '|' + Hh.etapa + '|' + Hh.inst;
       if (cargados.get(id) !== sig) {
         cargados.set(id, sig);
         for (const e of [...capaEdif.querySelectorAll(`[data-h="${id}"]`)]) e.remove();
-        for (let k = 0; k < Hh.etapa; k++) { const g = el('g', { 'data-h': id, 'data-lote': id }), a = rectAncla(ANCLAS[id][k]); g.append(el('rect', { ...a, rx: 6, fill: D.color, stroke: '#0006', 'stroke-width': 1.5, 'data-lote': id }), el('text', { x: a.x + a.width / 2, y: a.y + a.height / 2 + 5, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 900, fill: '#fff', 'pointer-events': 'none' }, k === 0 ? '🏨' : '+' + k)); capaEdif.append(g); }
-        if (Hh.inst) { const g = el('g', { 'data-h': id, 'data-lote': id }), a = rectAncla(ANCLAS[id][nEdif(id)]); g.append(el('rect', { ...a, rx: 8, fill: '#3EC1EA', stroke: '#fff', 'stroke-width': 3, 'data-lote': id }), el('text', { x: a.x + a.width / 2, y: a.y + a.height / 2 + 6, 'text-anchor': 'middle', 'font-size': 16, 'pointer-events': 'none' }, '🏊')); capaEdif.append(g); }
+        for (let k = 0; k < Hh.etapa; k++) { const g = el('g', { 'data-h': id, 'data-lote': id }), a = rectAncla(ANCLAS[id][k]); g.append(el('rect', { ...a, rx: 6, fill: D.color, stroke: '#0006', 'stroke-width': 1.5, 'data-lote': id }), k === 0 ? im(HOTEL_IMG[id], a.x + 1, a.y + 1, a.width - 2, a.height - 2) : el('text', { x: a.x + a.width / 2, y: a.y + a.height / 2 + 5, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 900, fill: '#fff', 'pointer-events': 'none' }, '+' + k)); capaEdif.append(g); }
+        if (Hh.inst) { const g = el('g', { 'data-h': id, 'data-lote': id }), a = rectAncla(ANCLAS[id][nEdif(id)]); g.append(el('rect', { ...a, rx: 8, fill: '#3EC1EA', stroke: '#fff', 'stroke-width': 3, 'data-lote': id }), im('piscina', a.x + 1, a.y + 1, a.width - 2, a.height - 2)); capaEdif.append(g); }
         const dueno = Hh.dueno >= 0 ? S.jug[Hh.dueno] : null;
         for (const e of celdas[id]) { e.setAttribute('stroke', dueno ? dueno.color : D.color); e.setAttribute('stroke-width', dueno ? 3 : 1); e.setAttribute('stroke-opacity', dueno ? 1 : .5); }
         rotulos[id].textContent = D.nombre + (Hh.etapa ? ' ' + '★'.repeat(Math.min(5, Hh.etapa)) : '');

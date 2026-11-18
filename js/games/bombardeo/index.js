@@ -6,7 +6,8 @@ import { NIVELES, LIMITES, maxMinas, medidas, nuevo, abrir, acorde, bandera, pis
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'Personalizado' };
 const RETO = 'medio';
-const MINAS = { bomba: '💣', calavera: '☠️', pez: '🐡', volcan: '🌋' }, BANDERAS = { bandera: '🚩', estrella: '⭐', corazon: '❤️', pirata: '🏴‍☠️' };
+const IMG = n => `<img class="em" src="img/bombardeo/${n}.webp" alt="" draggable="false">`;
+const carita = (fin, pulsando) => IMG(fin === 'gana' ? 'ok' : fin === 'pierde' ? 'bombatriste' : 'radar');
 let flot = null, S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false;
 
 /* ---------- validación / resumen ---------- */
@@ -38,10 +39,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; modo = 'abrir'; pst = null; press = null; pulsando = false;
-  asp = api.aspecto([{ ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo' }, grupoTablero(),
-    { clave: 'minas', titulo: 'Minas', def: 'bomba', opciones: Object.entries(MINAS).map(([id, e]) => ({ id, nombre: e })) },
-    { clave: 'banderas', titulo: 'Banderas', def: 'bandera', opciones: Object.entries(BANDERAS).map(([id, e]) => ({ id, nombre: e })) },
-    { clave: 'estilo', titulo: 'Estilo de las casillas', def: 'relieve', opciones: [{ id: 'relieve', nombre: 'Relieve' }, { id: 'plano', nombre: 'Planas' }] }],
+  asp = api.aspecto([{ ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo' }, grupoTablero()],
     () => { cel.forEach(b => { b.dataset.k = ''; }); pintar(); });
   await api.css(new URL('./bombardeo.css', import.meta.url));
   const g = api.cargar();
@@ -49,7 +47,7 @@ export async function mount(r, a) {
   S = g ? { ...g } : { ...nuevo(nivel, dims()), nivel, t: 0, pistas: 0, reg: false, sa: api.pref('sa', true) };
   cache = crearCache();
   root.innerHTML = `<div id="bmReto"></div>
-    <div class="bmtop"><div class="bmc" id="bmMinas" aria-label="Minas restantes">000</div><button class="bmf" id="bmCara" data-ac="nueva" aria-label="Nueva partida">😀</button><div class="bmc t" id="bmT" aria-label="Tiempo">000</div></div>
+    <div class="bmtop"><div class="bmc" id="bmMinas" aria-label="Minas restantes">000</div><button class="bmf" id="bmCara" data-ac="nueva" aria-label="Nueva partida">${IMG('radar')}</button><div class="bmc t" id="bmT" aria-label="Tiempo">000</div></div>
     <div class="bm" id="bmTab" role="group" aria-label="Campo de minas"></div>
     <div class="msg" id="bmMsg" role="status" aria-live="polite"></div>
 ${api.barraHtml()}`;
@@ -132,17 +130,17 @@ const pad3 = n => String(Math.max(-99, Math.min(999, n))).padStart(3, '0');
 function pintarTiempo() { const t = $('#bmT'); if (t) t.textContent = pad3(Math.min(999, S.t)); }
 function pintar() {
   if (!S) return;
-  const N = S.minas ? cache.get(S) : null, em = MINAS[asp.valores.minas], bd = BANDERAS[asp.valores.banderas], fin = S.fin;
+  const N = S.minas ? cache.get(S) : null, fin = S.fin;
   for (let i = 0; i < cel.length; i++) {
     const v = S.rev[i], esM = N && N.esM[i], num = N ? N.num[i] : 0;
     let cls = 'bc', html = '', lab = 'oculta';
     if (v === 1) {
-      cls += ' r'; if (esM) { cls += i === S.boom ? ' boom' : ''; html = `<i class="em">${em}</i>`; lab = 'mina'; }
+      cls += ' r'; if (esM) { cls += i === S.boom ? ' boom' : ''; html = IMG(i === S.boom ? 'explosion' : 'bomba'); lab = 'mina'; }
       else if (num) { cls += ' n' + num; html = num; lab = String(num); } else lab = 'vacía';
     } else if (v === 2) {
-      if (fin === 'pierde' && !esM) { cls += ' h mal'; html = `<i class="em">${bd}</i>`; lab = 'bandera errónea'; }
-      else { cls += ' h'; html = `<i class="em">${bd}</i>`; lab = 'bandera'; }
-    } else if (fin === 'pierde' && esM) { cls += ' r'; html = `<i class="em">${em}</i>`; lab = 'mina'; }
+      if (fin === 'pierde' && !esM) { cls += ' h mal'; html = IMG('errada'); lab = 'bandera errónea'; }
+      else { cls += ' h'; html = IMG('bandera'); lab = 'bandera'; }
+    } else if (fin === 'pierde' && esM) { cls += ' r'; html = IMG('bomba'); lab = 'mina'; }
     else cls += ' h';
     if (pst && pst.i === i) cls += ' pst' + (pst.tipo === 'mina' ? ' mina' : '');
     const key = cls + '|' + html; const b = cel[i];
@@ -152,7 +150,7 @@ function pintar() {
   pintarReto();
   $('#bmMinas').textContent = pad3(S.m - banderas(S));
   pintarTiempo();
-  $('#bmCara').textContent = fin === 'gana' ? '😎' : fin === 'pierde' ? '😵' : pulsando ? '😮' : '😀';
+  $('#bmCara').innerHTML = carita(fin, pulsando);
   if (flot) { flot.marcar('abrir', modo === 'abrir'); flot.marcar('bandera', modo === 'bandera'); flot.activar('pista', !fin); }
   const m = $('#bmMsg'); m.className = 'msg' + (fin === 'gana' ? ' win' : fin === 'pierde' ? ' err' : '');
   m.textContent = fin === 'gana' ? `¡Despejado en ${fmtTiempo(S.t)}!` : fin === 'pierde' ? '¡Boom! Toca la carita para jugar otra vez.' : pst ? (pst.tipo === 'mina' ? 'Pista: aquí hay una mina.' : 'Pista: esta casilla es segura.') : modo === 'abrir' ? 'Toca para abrir · mantén pulsado para poner bandera.' : 'Toca para poner bandera · mantén pulsado para abrir.';
@@ -174,12 +172,12 @@ function pDown(e) {
 function pUp(e) {
   pulsando = false; if (!press) return;
   const p = press; press = null; clearTimeout(p.lp);
-  if (S) $('#bmCara').textContent = S.fin === 'gana' ? '😎' : S.fin === 'pierde' ? '😵' : '😀';
+  if (S) $('#bmCara').innerHTML = carita(S.fin);
   if (p.largo) return;
   const b = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('.bc'); if (!b || +b.dataset.i !== p.i) return;
   accion(p.i, modo === 'abrir' ? 'abrir' : 'bandera');
 }
-function pCancel() { pulsando = false; if (press) { clearTimeout(press.lp); press = null; } if (S) $('#bmCara').textContent = S.fin === 'gana' ? '😎' : S.fin === 'pierde' ? '😵' : '😀'; }
+function pCancel() { pulsando = false; if (press) { clearTimeout(press.lp); press = null; } if (S) $('#bmCara').innerHTML = carita(S.fin); }
 function teclado(e) {
   const b = e.target.closest('.bc'); if (!b || !S) return;
   const i = +b.dataset.i, w = S.w;
@@ -213,5 +211,5 @@ function reglas() {
     <li><b>Toca</b> para abrir y <b>mantén pulsado</b> para poner o quitar una bandera (o cambia el modo «Al tocar»).</li>
     <li>Toca un número que ya tiene sus banderas puestas para abrir de golpe el resto de casillas de su alrededor.</li>
     <li>💡 <b>Pista</b>: deduce una casilla segura o una mina con lo que ya ves (con pistas no cuenta el récord de tiempo).</li>
-    <li>En 🎨 Apariencia cambias colores, minas, banderas y estilo de las casillas.</li></ul>`);
+    <li>En 🎨 Apariencia cambias el fondo y los colores del tablero.</li></ul>`);
 }

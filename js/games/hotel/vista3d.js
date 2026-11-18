@@ -3,7 +3,9 @@
 //   V.pintar(S) · V.mover(j, camino, ms) · V.dado(v, ms) · V.resaltar({ casillas:[], lotes:[] }) · V.alTocar = ({tipo:'casilla'|'lote', id}) => … · V.recolor() · V.camara(modo) · V.destruir()
 import { lienzoTextura } from '../../core/fichas.js';
 import { T, crearEscena, lienzo, textura, emojiTextura, EMOJI_FUENTE } from '../../core/escena3d.js';
-import { INFO_TIPO, CAJA, MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif } from './datos.js';
+import { INFO_TIPO, CAJA, MAPA, CAMINO, N, TIPO, HOTELES, IDS_HOTEL, TERRENOS, ANCLAS, LADOS, BANCO, AYUNTAMIENTO, LAGO, LINEA_BANCO, LINEA_AYTO, nEdif, IMG } from './datos.js';
+// Textura a partir de una imagen de img/hotel (se dibuja cuando carga y se avisa a Three.js)
+const imgTextura = (n, tam = 96) => { const c = lienzo(tam, tam), t = textura(c), i = new Image(); i.onload = () => { const k = Math.min(tam / i.width, tam / i.height); c.getContext('2d').drawImage(i, (tam - i.width * k) / 2, (tam - i.height * k) / 2, i.width * k, i.height * k); t.needsUpdate = true; }; i.src = IMG(n); return t; };
 
 const W = MAPA.W, H = MAPA.H, cx = c => c - W / 2, cz = r => r - H / 2;
 const centro = ([r0, c0, r1, c1]) => ({ x: cx((c0 + c1 + 1) / 2), z: cz((r0 + r1 + 1) / 2), w: c1 - c0 + 1, d: r1 - r0 + 1 });
@@ -39,10 +41,10 @@ export async function crearHotel3D(cont) {
     x.textAlign = 'center'; x.textBaseline = 'middle';
     if (t === 'N') { x.fillStyle = 'rgba(255,255,255,.7)'; for (let k = 0; k < 3; k++) { x.beginPath(); x.arc(34 + k * 30, 64, 6, 0, 6.3); x.fill(); } }
     else {
-      if (t === 'P') { x.fillStyle = '#fff'; x.font = '900 70px Nunito, sans-serif'; x.fillText('P', 64, 52); } else { x.font = `62px ${EMOJI_FUENTE}`; x.fillText(I.ico, 64, 54); }
+      if (t === 'P') { x.fillStyle = '#fff'; x.font = '900 70px Nunito, sans-serif'; x.fillText('P', 64, 52); } else { const im = new Image(); im.onload = () => { const k = Math.min(70 / im.width, 70 / im.height); x.drawImage(im, 64 - im.width * k / 2, 54 - im.height * k / 2, im.width * k, im.height * k); tx.needsUpdate = true; }; im.src = IMG(I.ico); }
       x.fillStyle = '#fff'; x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 4; x.font = '900 23px Nunito, sans-serif'; x.fillText(I.corto, 64, 104);
     }
-    return (texTile[t] = textura(c));
+    const tx = textura(c); return (texTile[t] = tx);
   };
   const asfalto = mat('#5E6370');
   CAMINO.forEach(([r, c]) => { const b = caja(1.04, .06, 1.04, mat('#3F4450'), cx(c + .5), .03, cz(r + .5), false); b.receiveShadow = true; S3.add(b); });
@@ -110,11 +112,11 @@ export async function crearHotel3D(cont) {
     if (tipo === 'banco') {
       g.add(cuerpo(a.w * .9, .62, a.d * .86, '#F3EBD6')); for (let i = 0; i < 5; i++) { const col = new T.Mesh(new T.CylinderGeometry(.05, .05, .6, 8), mat('#fff')); col.position.set(-a.w * .38 + i * a.w * .19, .3, a.d * .46); col.castShadow = true; g.add(col); }
       const sh = new T.Shape(); sh.moveTo(-a.w * .5, 0); sh.lineTo(a.w * .5, 0); sh.lineTo(0, .38); sh.closePath(); const fr = new T.Mesh(new T.ExtrudeGeometry(sh, { depth: a.d * .86, bevelEnabled: false }), mat('#C9A24A')); fr.position.set(0, .62, -a.d * .43); fr.rotation.y = 0; fr.castShadow = true; g.add(fr);
-      const e = etiqueta('🏦 BANCO', '#7A5A12', '#fff', 1.5); e.position.y = 1.35; g.add(e);
+      const e = etiqueta('BANCO', '#7A5A12', '#fff', 1.5); e.position.y = 1.35; g.add(e);
     } else {
       g.add(cuerpo(a.w * .86, .7, a.d * .8, '#C4694B')); g.add(cono(Math.max(a.w, a.d) * .6, .3, 4, '#5A3A2F', .7).clone()); g.children[g.children.length - 1].scale.set(a.w / Math.max(a.w, a.d) * 1.1, 1, a.d / Math.max(a.w, a.d) * 1.1);
       const to = cuerpo(.34, .95, .34, '#C4694B', a.w * .22, .7, 0); g.add(to); g.add(cono(.26, .3, 4, '#5A3A2F', 1.65).clone()); g.children[g.children.length - 1].position.x = a.w * .22;
-      const e = etiqueta('🏛️ AYUNTAMIENTO', '#3A4F8F', '#fff', 1.9); e.position.y = 2.3; g.add(e);
+      const e = etiqueta('AYUNTAMIENTO', '#3A4F8F', '#fff', 1.9); e.position.y = 2.3; g.add(e);
     }
     S3.add(g); return g;
   };
@@ -131,9 +133,9 @@ export async function crearHotel3D(cont) {
   const linea = (i, color, emoji) => {
     const a = centroCasilla(i), b = centroCasilla((i + 1) % N), mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2, horiz = Math.abs(b.x - a.x) > .1;
     const m = caja(horiz ? .12 : .98, .13, horiz ? .98 : .12, mat(color, { emissive: color, emissiveIntensity: .25 }), mx, .1, mz, false); S3.add(m);
-    const s = new T.Sprite(new T.SpriteMaterial({ map: emojiTextura(emoji, 96), transparent: true, depthTest: false })); s.scale.set(.5, .5, .5); s.position.set(mx, .65, mz); s.renderOrder = 15; S3.add(s);
+    const s = new T.Sprite(new T.SpriteMaterial({ map: imgTextura(emoji, 96), transparent: true, depthTest: false })); s.scale.set(.5, .5, .5); s.position.set(mx, .65, mz); s.renderOrder = 15; S3.add(s);
   };
-  linea(LINEA_BANCO, '#F2B600', '🏦'); linea(LINEA_AYTO, '#2F9BFF', '🏛️');
+  linea(LINEA_BANCO, '#F2B600', 'billetes'); linea(LINEA_AYTO, '#2F9BFF', 'balanza');
 
   // ----- coches -----
   const coches = [];

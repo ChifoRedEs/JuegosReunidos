@@ -9,13 +9,14 @@ import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
-const ICONO = { nube: '☁️', noticias: '📰', tendencias: '📈', impuesto: '💸' };
-// Iconos de las casas (hasta 4 por casilla) y de la mansión, a elegir en 🎨 Apariencia. Los personajes y cajas son los de Encajados.
-const EDIFICIOS = {
-  casas: { nombre: '🏠 + 🏨 Casas y hotel', of: '🏠', sede: '🏨' }, oficinas: { nombre: '🏢 + 🏙️ Bloques y rascacielos', of: '🏢', sede: '🏙️' },
-  obreros: { nombre: '👷 + 🏗️ Obreros y grúa', of: '👷', sede: '🏗️' }, tecnicos: { nombre: '👨‍🔧 + 🏭 Técnicos y fábrica', of: '👨‍🔧', sede: '🏭' },
-  astronautas: { nombre: '👨‍🚀 + 🚀 Astronautas y cohete', of: '👨‍🚀', sede: '🚀' }, cajas: { nombre: '📦 + 🏬 Cajas y almacén', of: '📦', sede: '🏬' },
-};
+const IM = (n, c = 'mi') => `<img class="${c}" src="img/magnate/${n}.webp" alt="" draggable="false">`;
+const ICONO = { nube: 'i-agua', noticias: 'noticias', tendencias: 'sube', impuesto: 'i-bolsa' };
+const ICO_ESQ = { Salida: 'i-salida', Espera: 'i-carcel', 'Paraíso': 'i-banco', 'Auditoría': 'i-policia' };
+const ICO_RED = ['i-central', 'i-estacion'];
+const TEMA = { red: 't-insectos', mus: 't-acuaticos', mov: 't-aves', for: 't-terrestres', vid: 't-dinos', ele: 't-gemas', chi: 't-plantas', gig: 't-planeta' };
+// Edificios de la vista 2D: casa (hasta 4 por casilla) y hotel (sede central)
+const ED = { of: 'casa', sede: 'hotel' };
+function icoCasilla(s, i) { const n = s.tipo === 'red' ? ICO_RED[G.c.filter((c, k) => c.tipo === 'red' && k < i).length] : s.tipo === 'empresa' ? TEMA[s.g] : ICONO[s.tipo]; return n ? `<i>${IM(n)}</i>` : ''; }
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550, dado: 900 }, rapida: { nombre: 'Rápida', paso: 45, bot: 200, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
 // Vista 3D opcional (Three.js): tablero en anillo compartido con Hotel (js/core/anillo3d.js). Los edificios son las casas (pisos) y la mansión (5.º piso con corona).
 let vista = null, mod3d = null, botones3d = null, hay3d = false, tok3 = 0, forzar2d = false, modo3d = false;
@@ -46,8 +47,7 @@ export async function mount(r, a) {
   if (!vivo) return;
   asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...{ ...grupoFondo('#mtTab'), def: 't-n-ciudad-dia' }, tt: true }, { ...grupoTablero(), tt: true },
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
-    { clave: 'edif', etiqueta: 'Vista 2D · iconos de casas y mansión', titulo: 'Estilo de Edificios', icono: '🏠', def: 'casas', opciones: Object.entries(EDIFICIOS).map(([id, e]) => ({ id, nombre: e.nombre })) },
-    { clave: 'estilo', junto: 'edif', etiqueta: 'Vista 3D · estilo de los edificios', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) },
+    { clave: 'estilo', etiqueta: 'Vista 3D · estilo de los edificios', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) },
     ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🎩', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
   () => {
     if (D3) D3.estilo(asp.valores);
@@ -150,7 +150,7 @@ function armar() {
   root.innerHTML = `<div class="mtjug" id="mtJug"></div>
     <div class="mttab" id="mtTab">
       ${G.c.map((s, i) => { const [f, c] = celda(i); return `<button type="button" class="mtc ${lado(i)} ${s.tipo}" data-c="${i}" style="grid-row:${f};grid-column:${c}" aria-label="${esc(s.nombre)}">
-        ${s.g ? `<span class="mtbanda" style="--g:${GRUPOS[s.g].color}"></span>` : ''}<span class="mtnom ${s.nombre.length > 8 && s.tipo === 'empresa' ? 'largo' : ''}">${s.tipo === 'esquina' ? `<i>${s.ico}</i>${esc(s.corto)}` : `${s.ico || ICONO[s.tipo] ? `<i>${s.ico || ICONO[s.tipo]}</i>` : ''}${esc(s.nombre)}`}</span><span class="mttk"></span></button>`; }).join('')}
+        ${s.g ? `<span class="mtbanda" style="--g:${GRUPOS[s.g].color}"></span>` : ''}<span class="mtnom ${s.nombre.length > 8 && s.tipo === 'empresa' ? 'largo' : ''}">${s.tipo === 'esquina' ? `<i>${IM(ICO_ESQ[s.corto])}</i>${esc(s.corto)}` : `${icoCasilla(s, i)}${esc(s.nombre)}`}</span><span class="mttk"></span></button>`; }).join('')}
       <div class="mtcentro">
         ${centro}
       </div>
@@ -189,8 +189,8 @@ function pintar() {
   if (!modo3d) G.c.forEach((s, i) => {
     const d = root.querySelector(`.mtc[data-c="${i}"]`), o = s.dueno === null ? null : G.jug[s.dueno];
     d.style.setProperty('--dueno', o ? cj(o.color) : 'transparent'); d.classList.toggle('propia', !!o); d.classList.toggle('hip', s.hip);
-    const b = d.querySelector('.mtbanda'), ed = EDIFICIOS[asp.valores.edif] || EDIFICIOS.casas;
-    if (b) { d.classList.toggle('con', s.of > 0); b.innerHTML = s.of === 5 ? `<i class="mtsede">${ed.sede}</i>` : [1, 2, 3, 4].map(k => `<i class="${k <= s.of ? 'on' : ''}">${k <= s.of ? ed.of : ''}</i>`).join(''); }
+    const b = d.querySelector('.mtbanda'), ed = ED;
+    if (b) { d.classList.toggle('con', s.of > 0); b.innerHTML = s.of === 5 ? `<i class="mtsede">${IM(ed.sede)}</i>` : [1, 2, 3, 4].map(k => `<i class="${k <= s.of ? 'on' : ''}">${k <= s.of ? IM(ed.of) : ''}</i>`).join(''); }
     d.setAttribute('aria-label', `${s.nombre}${s.precio ? ` · ${s.precio}M` : ''}${o ? ` · de ${o.nombre}` : ''}${s.hip ? ' · hipotecada' : ''}${s.of ? ` · ${s.of === 5 ? 'sede central' : s.of + ' casas'}` : ''}`);
   });
   const act = G.terminada ? -1 : G.turno;
@@ -267,7 +267,7 @@ return {
     if (v > 0) api.sonido('ok');
   },
   pregunta: async (t, x, b) => vigila(await dialogo(esc(t), `<p>${x}</p>`, b)),
-  carta: async (mazo, t, auto) => { vigila(); api.sonido('ok'); return vigila(await dialogo(mazo === 'noticias' ? '📰 Noticias' : '📈 Tendencias', `<p class="mtcartatxt mt${mazo}">${esc(t)}</p>`, ['Entendido'], { auto: auto ? (vel().bot ? 1700 : 600) : 0 })); },
+  carta: async (mazo, t, auto) => { vigila(); api.sonido('ok'); return vigila(await dialogo(mazo === 'noticias' ? 'Noticias' : 'Tendencias', `<p class="mtcartatxt mt${mazo}">${IM(mazo === 'noticias' ? 'noticias' : 'sube', 'mi mig')}${esc(t)}</p>`, ['Entendido'], { auto: auto ? (vel().bot ? 1700 : 600) : 0 })); },
   comprar: async (s, p) => vigila(await dialogo(`${esc(p.nombre)}: ¿comprar ${esc(s.nombre)}?`, fichaEmpresa(s) + `<p class="note">Tienes ${p.dinero}M.</p>`, [`Comprar por ${s.precio}M`, 'No comprar'])) === `Comprar por ${s.precio}M`,
   puja: async (s, q, actual) => {
     const cont = document.createElement('div'), min = actual + 10;

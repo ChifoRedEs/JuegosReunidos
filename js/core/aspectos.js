@@ -92,7 +92,7 @@ export function filtrarTapetes(defs, juego) {
 const COLOR_FICHAS = ['Color de Fichas', 'Color de las fichas', 'Colores de las fichas', 'Estilos de Fichas', 'Estilo de las fichas', 'Material de las fichas', 'Forma de las fichas'];
 export const OCULTAS = {
   sudoku: ['Números'], nonogram: ['Color del relleno', 'Forma de las casillas'], damas: ['Color de las fichas', 'Material de las fichas'], domino: COLOR_FICHAS, tresenraya: COLOR_FICHAS,
-  cuatroenlinea: ['Color de las fichas', 'Material de las fichas'], sopaletras: ['Subrayado', 'Letras'], bombardeo: ['Estilo de las casillas'], crucigramas: ['Letras'],
+  cuatroenlinea: ['Color de las fichas', 'Material de las fichas'], sopaletras: ['Subrayado', 'Letras'], bombardeo: [], crucigramas: ['Letras'],
   calcudoku: ['Jaulas', 'Números'], akari: ['Casillas', 'Color de las casillas'], futoshiki: ['Casillas', 'Color de las casillas', 'Números'], crucisumas: ['Casillas de las sumas', 'Números'],
   encajados: ['Cajas'], deslizadas: ['Colores de las fichas', 'Estilo de las fichas'], codigocifrado: ['Colores de las bolas', 'Estilo de las bolas'],
   matchup: ['Color de las cartas', 'Forma de las cartas'], quecaratienes: ['Color de las cartas'], ruletamillonaria: ['Colores de la ruleta'], ajedrez: ['Color de las piezas', 'Estilo de las piezas', 'Material de las piezas'],

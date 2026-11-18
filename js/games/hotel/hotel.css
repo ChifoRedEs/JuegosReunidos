@@ -76,3 +76,8 @@
 .juego.juego-hotel[data-tablero="nieve"]{--ht-hierba:#E3EEF8;--ht-marco:#6B7F99}
 .juego.juego-hotel[data-tablero="rosa"]{--ht-hierba:#F4C6DA;--ht-marco:#9A4F6D}
 .juego.juego-hotel[data-tablero="noche"]{--ht-hierba:#3A4A7A;--ht-marco:#232B50}
+
+/* imágenes IA (img/hotel) en lugar de emojis (sin prefijo: también se usan en los diálogos) */
+.hti{width:1.25em;height:1.25em;object-fit:contain;vertical-align:middle;pointer-events:none}
+.htji .hti,.htfichab .hti{width:1.6em;height:1.6em}
+.htlsw b .hti{width:34px;height:34px;display:block}

@@ -4,7 +4,7 @@ import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoFondo } from '../../core/aspectos.js';
-import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, EXTRA_LEYENDA, TIPO, LADOS } from './datos.js';
+import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, COCHE_IMG, IMG, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, EXTRA_LEYENDA, TIPO, LADOS } from './datos.js';
 import * as M from './motor.js';
 import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 
@@ -17,7 +17,8 @@ const vel = () => VELOCIDAD[cfg.vel] || VELOCIDAD.normal;
 let enPausa = false;
 const pausa = async ms => { if (ms) await esperar(ms); while (enPausa && vivo) await esperar(120); };   // «Pausa / Salir» congela los turnos de la CPU y las animaciones
 const eur = n => M.fmt(n);
-const estrellas = h => { const e = S.hot[h].etapa; return e ? '★'.repeat(Math.min(5, e)) + (S.hot[h].inst ? '🏊' : '') : ''; };
+const ic = n => `<img class="hti" src="${IMG(n)}" alt="" draggable="false">`, coche = c => ic(COCHE_IMG[c] || 'c-berlina');
+const estrellas = h => { const e = S.hot[h].etapa; return e ? '★'.repeat(Math.min(5, e)) + (S.hot[h].inst ? ic('piscina') : '') : ''; };
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) { return M.validar(d) ? d : null; }
@@ -65,7 +66,7 @@ function setup() {
   S = null; quitarDado(); cerrarVista(); sel = null; plan = {};
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra los terrenos junto al camino, pide <b>licencias de obras</b> y levanta tus hoteles fase a fase. Abre <b>entradas</b> al pasar por el Ayuntamiento: cada vez que un rival cae en una, te paga las noches. Gana el último jugador que no se arruine${cfg.limite ? ` (o quien tenga más patrimonio tras ${cfg.limite} rondas)` : ''}.</p>
-    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="htfichab" aria-hidden="true">${COCHES[i]}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="htfichab" aria-hidden="true">${coche(COCHES[i])}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [40, '40 rondas'], [80, '80 rondas']].map(([v, l]) => `<button class="btn ${cfg.limite === v ? 'on' : ''}" data-limite="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel de la CPU</span><div class="seg">${[1, 2, 3].map(k => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-nivel="${k}">${NIVELES[k]}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
@@ -132,12 +133,12 @@ function pintar() {
   if (!S || !$('#htJug')) return;
   const j = M.actor(S), tj = S.turno;
   if ((S.fase === 'ayto' || S.fase === 'entLibre') && !(sel && sel.h) && !S.jug[j].cpu) { const hs = [...new Set(M.legales(S).entradas.map(o => o.h))]; if (hs.length === 1) sel = { h: hs[0] }; }
-  $('#htJug').innerHTML = S.jug.map((p, i) => `<div class="htj ${i === tj && S.fase !== 'fin' ? 'turno' : ''} ${p.vivo ? '' : 'fuera'} ${i === S.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="htji">${p.coche}</span><b>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</b><span class="htdin">${eur(p.dinero)}</span>
+  $('#htJug').innerHTML = S.jug.map((p, i) => `<div class="htj ${i === tj && S.fase !== 'fin' ? 'turno' : ''} ${p.vivo ? '' : 'fuera'} ${i === S.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="htji">${coche(p.coche)}</span><b>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</b><span class="htdin">${eur(p.dinero)}</span>
     <small>${p.vivo ? M.titulos(S, i).map(h => `${HOTELES[h].nombre} ${estrellas(h)}`).join(' · ') || 'Sin hoteles' : 'Eliminado'}</small>
     <span class="htchips">${M.titulos(S, i).map(h => `<i style="background:${HOTELES[h].color}" title="${HOTELES[h].nombre}"></i>`).join('')}</span></div>`).join('');
   const p = S.jug[tj];
   $('#htTurno').innerHTML = S.fase === 'fin' ? `🏆 <b>${esc(S.jug[S.ganador].nombre)}</b> gana la partida<br><small>${esc(S.motivo)}</small>`
-    : `<span style="color:${cj(p.color)}">${p.coche} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
+    : `<span style="color:${cj(p.color)}">${coche(p.coche)} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
   $('#htAcc').innerHTML = accionesHTML(j);
   if (D3) { D3.color(cj(p.color)); D3.activar(S.fase === 'tirar' && !S.jug[j].cpu && !bloqueado, `Toca el dado para tirar · ${p.nombre}`); }
   const L = S.log.slice(-60).reverse(); $('#htLog').innerHTML = L.map(t => `<li>${esc(t)}</li>`).join(''); const m = $('#htMsg'); if (m && S.log.length) m.textContent = S.log[S.log.length - 1];
@@ -161,22 +162,22 @@ function accionesHTML(j) {
   if (bloqueado) return '<small class="htesp">…</small>';
   const B = (ac, txt, on = true, dis = false) => `<button class="btn ${on ? 'on' : ''}" data-ac="${ac}" ${dis ? 'disabled' : ''}>${txt}</button>`;
   switch (S.fase) {
-    case 'tirar': return L.inst.map(o => B('inst:' + o.h, `🏊 Instalación ${HOTELES[o.h].nombre} · ${eur(o.coste)}`, false)).join('');
+    case 'tirar': return L.inst.map(o => B('inst:' + o.h, `${ic('piscina')} Instalación ${HOTELES[o.h].nombre} · ${eur(o.coste)}`, false)).join('');
     case 'ayto': case 'entLibre': {
       const hs = [...new Set(L.entradas.map(o => o.h))], gr = S.fase === 'entLibre';
       return `<p class="htex">${gr ? 'Entrada gratis' : 'Compra una entrada por hotel con edificio principal'}. Elige hotel y toca una casilla resaltada del camino.</p>`
         + hs.map(h => `<button class="btn ${sel && sel.h === h ? 'on' : ''}" data-ac="ent:${h}"><i class="htpt" style="background:${HOTELES[h].color}"></i>${HOTELES[h].nombre} · ${gr ? 'gratis' : eur(HOTELES[h].entrada)}</button>`).join('')
-        + (sel && sel.h ? B('entauto', '📍 Elegir por mí', false) : '') + B('saltar', gr ? 'No poner' : 'Ahora no', false);
+        + (sel && sel.h ? B('entauto', 'Elegir por mí', false) : '') + B('saltar', gr ? 'No poner' : 'Ahora no', false);
     }
-    case 'compra': return L.lotes.map(o => B('comprar:' + o.h, `${o.forzosa ? '⚖️ Compra obligatoria' : '🏷️ Comprar'} ${HOTELES[o.h].nombre} · ${eur(o.precio)}`)).join('') + B('saltar', 'No comprar', false);
+    case 'compra': return L.lotes.map(o => B('comprar:' + o.h, `${o.forzosa ? ic('balanza') + ' Compra obligatoria' : ic('cartel') + ' Comprar'} ${HOTELES[o.h].nombre} · ${eur(o.precio)}`)).join('') + B('saltar', 'No comprar', false);
     case 'obras': {
       const filas = L.obras.map(o => { const n = plan[o.h] || 0, rest = nEdif(o.h) - o.etapa; return `<div class="htplan"><span><i class="htpt" style="background:${HOTELES[o.h].color}"></i><b>${HOTELES[o.h].nombre}</b> · ${o.etapa === 0 ? 'edificio principal' : 'ampliación ' + o.etapa} <small>${eur(o.coste)}</small></span><span class="htcont"><button class="btn" data-ac="plan-:${o.h}" ${n ? '' : 'disabled'} aria-label="Quitar una fase">−</button><b>${n}</b><button class="btn" data-ac="plan+:${o.h}" ${n < rest && planCoste(o.h) <= p.dinero ? '' : 'disabled'} aria-label="Añadir una fase">＋</button></span></div>`; }).join('');
       const arr = planArr(), c = arr.length ? M.costePlan(S, j, arr) : 0;
-      return `<p class="htex">Declara qué quieres construir y tira el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, <b>H</b> gratis, <b>×2</b> doble precio.</p>${filas}` + B('permiso', `🎲 Pedir permiso · ${eur(c)}`, true, !arr.length) + B('saltar', 'No construir', false);
+      return `<p class="htex">Declara qué quieres construir y tira el dado de permiso: <b>verde</b> concedido (pagas), <b>rojo</b> denegado, <b>H</b> gratis, <b>×2</b> doble precio.</p>${filas}` + B('permiso', `🎲 Pedir permiso · ${eur(c)}`, true, !arr.length) + B('saltar', 'No construir', false);
     }
-    case 'faseLibre': return L.obras.map(o => B('fase:' + o.h, `🏗️ ${HOTELES[o.h].nombre} · ${o.etapa === 0 ? 'edificio principal' : 'ampliación ' + o.etapa}`)).join('') + B('saltar', 'No construir', false);
+    case 'faseLibre': return L.obras.map(o => B('fase:' + o.h, `${ic('h12')} ${HOTELES[o.h].nombre} · ${o.etapa === 0 ? 'edificio principal' : 'ampliación ' + o.etapa}`)).join('') + B('saltar', 'No construir', false);
     case 'deuda': return `<p class="htex neg">Debes <b>${eur(S.deuda.cant)}</b>${S.deuda.a >= 0 ? ' a ' + esc(S.jug[S.deuda.a].nombre) : ' al banco'}. Elige un hotel para subastarlo (se vende entero; si nadie puja, se derriba).</p>`
-      + L.vender.map(h => B('vender:' + h, `🔨 ${HOTELES[h].nombre} ${estrellas(h)} · invertido ${eur(M.invertido(S, h))}`, false)).join('');
+      + L.vender.map(h => B('vender:' + h, `${ic('mazo')} ${HOTELES[h].nombre} ${estrellas(h)} · invertido ${eur(M.invertido(S, h))}`, false)).join('');
     case 'subasta': {
       const B2 = S.sub, mj = B2.mejor, q = S.jug[j], ops = [L.min, L.min + 400, L.min + 900].filter((x, i, a) => a.indexOf(x) === i);
       return `<p class="htex">Subasta de <b>${HOTELES[B2.h].nombre}</b> ${estrellas(B2.h)} · ${mj ? `mejor puja ${eur(mj.cant)} (${esc(S.jug[mj.j].nombre)})` : 'sin pujas'}. <b>${esc(q.nombre)}</b> tiene ${eur(q.dinero)}.</p>`
@@ -199,7 +200,7 @@ async function animar(evs) {
       case 'mover': api.sonido('mover'); if (V) await V.mover(e.j, e.camino, v.paso); break;
       case 'cobra': flash(e.j, '+' + eur(e.cant), 'pos'); api.sonido('ok'); await pausa(v.paso * 3); break;
       case 'paga': flash(e.j, '−' + eur(e.cant), 'neg'); if (e.a >= 0) flash(e.a, '+' + eur(e.cant), 'pos'); api.sonido('click'); await pausa(v.paso * 3); break;
-      case 'permiso': api.sonido(e.cara === 'rojo' ? 'error' : 'ok'); aviso(`Dado de permiso: ${{ verde: '🟢 concedido', rojo: '🔴 DENEGADO', H: '🅷 concedido y GRATIS', x2: '✖️2 concedido a doble precio' }[e.cara]}`); await pausa(v.paso * 6); break;
+      case 'permiso': api.sonido(e.cara === 'rojo' ? 'error' : 'ok'); aviso(`Dado de permiso: ${{ verde: 'verde: concedido', rojo: 'rojo: DENEGADO', H: 'H: concedido y GRATIS', x2: '×2: concedido a doble precio' }[e.cara]}`); await pausa(v.paso * 6); break;
       case 'estancia': aviso(`${S.jug[e.j].nombre} se aloja ${e.noches} noche${e.noches > 1 ? 's' : ''} en ${HOTELES[e.h].nombre}: ${eur(e.coste)}`); await pausa(v.paso * 4); break;
       case 'compra': case 'obra': case 'inst': case 'entrada': case 'vendido': api.sonido('ok'); if (V) pintarV(); await pausa(v.paso * 3); break;
       case 'demolido': case 'quiebra': api.sonido('perder'); await pausa(v.paso * 4); break;
@@ -301,10 +302,10 @@ function fichaHotel(h) {
 }
 function leyenda(resalta, sq) {
   const aqui = S && S.fase !== 'fin' ? TIPO[S.jug[S.turno].pos] : null, tipo = resalta || aqui, cont = document.createElement('div');
-  const fila = (ico, corto, nombre, desc, color, marca) => `<div class="htley ${marca ? 'on' : ''}"><span class="htlsw" style="background:${color}"><b>${ico}</b><small>${corto}</small></span><div><b>${nombre}</b>${marca ? `<em> ${marca}</em>` : ''}<p>${desc}</p></div></div>`;
+  const fila = (ico, corto, nombre, desc, color, marca) => `<div class="htley ${marca ? 'on' : ''}"><span class="htlsw" style="background:${color}"><b>${ico && /^[a-z0-9-]+$/.test(ico) && ico.length > 1 ? ic(ico) : ico}</b><small>${corto}</small></span><div><b>${nombre}</b>${marca ? `<em> ${marca}</em>` : ''}<p>${desc}</p></div></div>`;
   let extra = '';
   if (sq != null) { const h = S && S.entDe[sq]; extra = `<p class="note">Casilla tocada: <b>${esc(NOMBRE_CASILLA(sq))}</b>${h ? ` · Entrada de <b>${HOTELES[h].nombre}</b>${S.hot[h].dueno >= 0 ? ' (de ' + esc(S.jug[S.hot[h].dueno].nombre) + ')' : ''}` : ''}.</p>`; }
-  cont.innerHTML = extra + Object.entries(INFO_TIPO).map(([k, I]) => fila(k === 'P' ? 'P' : I.ico || '·', I.corto || 'CAMINO', I.nombre, I.desc, I.color, k === tipo ? (resalta && sq != null ? '← la que has tocado' : '📍 estás aquí') : '')).join('')
+  cont.innerHTML = extra + Object.entries(INFO_TIPO).map(([k, I]) => fila(k === 'P' ? 'P' : I.ico || '·', I.corto || 'CAMINO', I.nombre, I.desc, I.color, k === tipo ? (resalta && sq != null ? '← la que has tocado' : '← estás aquí') : '')).join('')
     + '<h3 class="htlh">Otras marcas del tablero</h3>' + EXTRA_LEYENDA.map(e => fila(e.ico, '', e.nombre, e.desc, e.color, '')).join('');
   modal('📖 Leyenda de casillas', cont);
 }
@@ -326,11 +327,11 @@ function reglas() {
   api.modal('Hotel', `<ul>
     <li><b>Objetivo</b>: ser el último jugador en pie. Cada uno empieza con ${eur(DINERO_INICIAL)} y un coche en el aparcamiento.</li>
     <li>Tira el dado y avanza. Los coches no comparten casilla (si está ocupada, avanzas a la siguiente libre). Con un <b>6</b> vuelves a tirar al terminar.</li>
-    <li>Al pasar por la <b>Caja</b> 🏦 cobras ${eur(SALARIO)} (con 3-4 jugadores, deja de pagar cuando quedan dos).</li>
-    <li>🏷️ <b>Solar en venta</b>: compras el terreno de un hotel pegado a esa casilla (uno por turno). No puedes construir en él hasta tu siguiente turno. Si el terreno de un rival sigue <b>vacío</b>, puedes quedártelo por la mitad del precio (compra obligatoria).</li>
-    <li>📋 <b>Licencia de obras</b>: necesitas algún terreno. Declaras lo que construyes (edificio principal, luego ampliaciones, en orden) y tiras el dado de permiso: 🟢 concedido (pagas), 🔴 denegado, <b>H</b> gratis, <b>×2</b> doble precio. Si te lo conceden, tienes que construir y pagar (si no llegas, subastas hoteles).</li>
-    <li>🏊 <b>Instalaciones de ocio</b>: con el hotel completo, antes de tirar puedes comprar su instalación (sin permiso). Sube mucho la tarifa.</li>
-    <li>🏛️ Al pasar por el <b>Ayuntamiento</b> compras una <b>entrada</b> por cada hotel con edificio principal (en una casilla del camino junto a su terreno; máximo ${MAX_ENTRADAS}, una por casilla). 🚪 En «entrada libre» la pones gratis; 🏗️ «fase libre» te regala un edificio.</li>
+    <li>Al pasar por la <b>Caja</b> ${ic('billetes')} cobras ${eur(SALARIO)} (con 3-4 jugadores, deja de pagar cuando quedan dos).</li>
+    <li>${ic('cartel')} <b>Solar en venta</b>: compras el terreno de un hotel pegado a esa casilla (uno por turno). No puedes construir en él hasta tu siguiente turno. Si el terreno de un rival sigue <b>vacío</b>, puedes quedártelo por la mitad del precio (compra obligatoria).</li>
+    <li>${ic('mazo')} <b>Licencia de obras</b>: necesitas algún terreno. Declaras lo que construyes (edificio principal, luego ampliaciones, en orden) y tiras el dado de permiso: <b>verde</b> concedido (pagas), <b>rojo</b> denegado, <b>H</b> gratis, <b>×2</b> doble precio. Si te lo conceden, tienes que construir y pagar (si no llegas, subastas hoteles).</li>
+    <li>${ic('piscina')} <b>Instalaciones de ocio</b>: con el hotel completo, antes de tirar puedes comprar su instalación (sin permiso). Sube mucho la tarifa.</li>
+    <li>${ic('balanza')} Al pasar por el <b>Ayuntamiento</b> compras una <b>entrada</b> por cada hotel con edificio principal (en una casilla del camino junto a su terreno; máximo ${MAX_ENTRADAS}, una por casilla). ${ic('verja')} En «entrada libre» la pones gratis; 🏗️ «fase libre» te regala un edificio.</li>
     <li><b>Estancias</b>: si caes en una entrada de un hotel ajeno, tiras el dado para saber las noches y pagas noches × tarifa por noche del hotel (según lo construido).</li>
     <li><b>Deudas</b>: si no puedes pagar, subastas hoteles enteros entre los demás (sin precio mínimo). Si nadie puja, el hotel se derriba. Sin dinero ni hoteles, quedas eliminado.</li>
     <li>Precios y tarifas de la edición de 1986. El trazado del camino es propio y se ha simplificado el «robo» de entradas y el reparto de dinero.</li>
