@@ -304,6 +304,21 @@
    "archivo": "tapetes/n-hotel-noche.webp"
   },
   {
+   "id": "t-n-mahjong-ciruela",
+   "nombre": "N mahjong ciruela",
+   "archivo": "tapetes/n-mahjong-ciruela.webp"
+  },
+  {
+   "id": "t-n-mahjong-dorada",
+   "nombre": "N mahjong dorada",
+   "archivo": "tapetes/n-mahjong-dorada.webp"
+  },
+  {
+   "id": "t-n-mahjong-jade",
+   "nombre": "N mahjong jade",
+   "archivo": "tapetes/n-mahjong-jade.webp"
+  },
+  {
    "id": "t-n-mesa-juegos-1",
    "nombre": "N mesa juegos 1",
    "archivo": "tapetes/n-mesa-juegos-1.webp"

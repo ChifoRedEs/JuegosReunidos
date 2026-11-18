@@ -14,6 +14,7 @@ import * as PC from '../js/games/pokercubierto/motor.js';
 import { readFileSync } from 'node:fs';
 import * as AK from '../js/games/akari/motor.js';
 import * as FU from '../js/games/futoshiki/motor.js';
+import * as MJ from '../js/games/mahjong/motor.js';
 import * as DIC from '../js/core/diccionario.js';
 import { Partida as MTPartida, validar as validarMT, MAZOS as MTMAZOS } from '../js/games/magnateurbano/motor.js';
 import { CASILLAS as MTC, GRUPOS as MTG } from '../js/games/magnateurbano/datos.js';
@@ -741,4 +742,17 @@ console.log(`\n${n} pruebas correctas`);
     if (d === 'facil') assert.ok(!FU.resolver(p, { tope: 2, sinRamas: true }).atascado, `Futoshiki ${n} facil: requiere adivinar`);
   }
   console.log('Futoshiki OK');
+}
+
+// ---- Mahjong solitario: repartos completos, emparejables y con jugadas; el mezclado conserva la solución
+{
+  assert.equal(MJ.posiciones('tortuga').length, 144); assert.equal(MJ.posiciones('piramide').length, 104); assert.equal(MJ.posiciones('mini').length, 44);
+  for (const id of Object.keys(MJ.DISTRIBUCIONES)) {
+    const pos = MJ.posiciones(id), g = MJ.generar(id), vivo = pos.map(() => true);
+    assert.ok(g.caras.every(MJ.valida) && MJ.emparejable(g.caras, vivo), `Mahjong ${id}: reparto inválido`);
+    assert.ok(MJ.jugadas(pos, vivo, g.caras).length > 0, `Mahjong ${id}: sin jugadas al empezar`);
+    for (let k = 0; k < 6; k++) { const j = MJ.jugadas(pos, vivo, g.caras); if (!j.length) break; const m = j[0]; vivo[m[0]] = vivo[m[1]] = false; }
+    const m2 = MJ.mezclar(pos, vivo, g.caras); assert.ok(m2 && MJ.emparejable(m2, vivo), `Mahjong ${id}: el mezclado falla`);
+  }
+  console.log('Mahjong OK');
 }
