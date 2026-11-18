@@ -634,7 +634,7 @@ function vInicio(filtro = null) {
     const es = entradas(k), js = JUEGOS.filter(j => j.categoria === k);
     const enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
     return `<section class="cat-seccion" data-cat="${k}">
-      <h2 class="cat"><a class="cat-link" href="#/cat/${k}" aria-label="${esc(n)}: subir al principio"><span class="cico" aria-hidden="true"><img src="img/marca/ruta-${k}.webp" alt="" width="44" height="44"></span><span class="cnom">${esc(n)}</span></a></h2>
+      <h2 class="cat"><a class="cat-link" href="#/cat/${k}" aria-label="${esc(n)}: subir al principio"><span class="cnom">${esc(n)}</span></a></h2>
       <div class="rejilla">${es.map(x => x.tipo === 'grupo' ? fichaGrupo(x.g, x.js) : ficha(x.j)).join('')}</div></section>`;
   }).join('');
   app.innerHTML = grupos + '';
