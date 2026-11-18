@@ -67,20 +67,8 @@ export const JUEGOS = [
 
 // Juegos agrupados: en Inicio salen como UNA ficha y, al pulsarla, una ventana pregunta a cuál se quiere jugar.
 // Cada juego conserva su propio id, su partida guardada y sus estadísticas (no se mezclan).
+// Ya no hay fichas compartidas: cada juego tiene la suya. (Se conserva el mecanismo por si se vuelve a agrupar.)
 export const GRUPOS = [
-  { id: 'solitarios', nombre: 'Solitarios', icono: '♠️', color: '#1F8A5B', categoria: 'cartas', descripcion: 'Klondike (siempre con solución y modo Vegas), Spider (104 cartas, de 1 a 4 palos) o Carta Blanca (FreeCell).', juegos: ['klondike', 'spider', 'cartablanca'] },
-  { id: 'partxis-oca', nombre: 'Partxis & Oca', icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: 'Dos clásicos de dados: el Partxis y el Juego de la Oca.', juegos: ['partxis', 'juegodelaoca'] },
-  { id: 'serpiente-vuelaalto', nombre: 'Serpiente & Vuela Alto', icono: '🐍', color: '#4E7CF6', categoria: 'arcade', descripcion: 'Serpiente (4 modos) o Vuela Alto (mantén pulsado para subir).', juegos: ['serpiente', 'vuelaalto'] },
-  { id: 'bingos', nombre: "Bingo's", icono: '🎱', color: '#E8453C', categoria: 'tablero', descripcion: 'Dos bingos de 90 bolas: Bingo Live (sala, cartones de papel y voz) y Bingo Mobile (cartones 3D, CPU y apuestas).', juegos: ['bingolive', 'bingomobile'] },
-  { id: 'magnateurbano-hotel', nombre: 'Magnate & Hotel', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Dos juegos de compra y venta: Magnate Urbano (calles temáticas) y Hotel (terrenos y hoteles en 3D).', juegos: ['magnateurbano', 'hotel'] },
-  { id: 'ajedrez-damas', nombre: 'Ajedrez & Damas', icono: '♟️', color: '#6B4426', categoria: 'tablero', descripcion: 'Los dos grandes juegos de tablero con fichas.', juegos: ['ajedrez', 'damas'] },
-  { id: 'bombardeo-deslizadas', nombre: 'Bombardeo & Deslizadas', icono: '💣', color: '#E0356E', categoria: 'logica', descripcion: 'Bombardeo (sin adivinar, reto del día) o Deslizadas (bloques deslizantes y números).', juegos: ['bombardeo', 'deslizadas'] },
-  { id: 'tresenraya-cuatroenlinea', nombre: 'Cuatro en Línea &\nTres en Raya', icono: '⭕', color: '#7A5BC7', categoria: 'tablero', descripcion: 'Dos duelos de líneas: 3 en raya y Cuatro en Línea, contra la CPU.', juegos: ['tresenraya', 'cuatroenlinea'] },
-  { id: 'domino-rummy', nombre: 'Dominó & Rummy', icono: '🁣', color: '#2F7D5B', categoria: 'tablero', descripcion: 'Dos juegos de fichas: Dominó (varias modalidades) y Rummy.', juegos: ['domino', 'rummy'] },
-  { id: 'encajados-cifrado', nombre: 'Encajados &\nCódigo Cifrado', icono: '📦', color: '#7B4DD8', categoria: 'logica', descripcion: 'Dos juegos de ingenio: Encajados (empuja las cajas a su sitio) y Código Cifrado (descifra el código de colores).', juegos: ['encajados', 'codigocifrado'] },
-  { id: 'cinquillo-corazones', nombre: 'Cinquillo & Corazones', icono: '♥️', color: '#C0392B', categoria: 'cartas', descripcion: 'Dos juegos de cartas contra la CPU: Cinquillo (baraja española) y Corazones (baraja francesa).', juegos: ['cinquillo', 'corazones'] },
-  { id: 'poker', nombre: 'Poker & BlackJack', icono: '♦️', color: '#B02A47', categoria: 'cartas', descripcion: "Texas Hold'em, Póker cubierto o BlackJack contra la banca.", juegos: ['holdem', 'pokercubierto', 'blackjack'] },
-  { id: 'sopaletras-crucigramas', nombre: 'Sopa & Crucigramas', icono: '🔤', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Sopa de letras o Crucigramas con definiciones.', juegos: ['sopaletras', 'crucigramas'] },
 ];
 export const grupoDe = id => GRUPOS.find(g => g.juegos.includes(id)) || null;
 // Entradas de Inicio de una categoría: fichas sueltas y fichas de grupo (el grupo ocupa el sitio de su primer juego)

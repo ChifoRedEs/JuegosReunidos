@@ -423,3 +423,6 @@ body.fondo,body.jfondo,body.fijo{--ink:#000;--mut:#000;--halo:0 0 3px rgba(255,2
 .emo[data-i="repetir"]{--ico:url(../img/ui/repetir.webp)}
 .emo[data-i="robot"]{--ico:url(../img/ui/robot.webp)}
 .emo[data-i="trofeo"]{--ico:url(../img/ui/trofeo.webp)}
+/* Categorías: rejilla de 2 columnas, todas las fichas del mismo alto, con scroll */
+body:not(.fijo) .cat-seccion .rejilla{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr}
+body:not(.fijo) .cat-seccion .ficha{aspect-ratio:auto;height:100%;min-height:128px}

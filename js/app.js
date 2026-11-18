@@ -484,8 +484,9 @@ async function render() {
   }).join('');
   app.innerHTML = '';
   const enFav = r.v === 'inicio' && r.cat === 'favoritos';
-  document.body.classList.toggle('fijo', r.v === 'inicio' && !enFav);
-  document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes' || enFav);
+  const enCat = r.v === 'inicio' && !!r.cat;                       // categorías: rejilla de 2 columnas con scroll
+  document.body.classList.toggle('fijo', r.v === 'inicio' && !enCat);
+  document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes' || enCat);
   document.body.classList.toggle('jfondo', r.v === 'juego');                 // páginas de juego: mismo fondo y scroll interno
   { const tp = document.querySelector('.top'); if (tp) document.documentElement.style.setProperty('--htop', tp.offsetHeight + 'px'); }   // mismo fondo que las categorías          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
