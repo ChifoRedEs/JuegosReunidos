@@ -1,0 +1,18 @@
+.ak{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));grid-template-rows:repeat(var(--n),minmax(0,1fr));width:min(100%,440px);aspect-ratio:1;margin:10px auto;gap:0;touch-action:manipulation}
+.ac{position:relative;display:block;padding:0;border:0;min-width:0;min-height:0;cursor:pointer;background:var(--a0) center/100% 100% no-repeat;font-family:'Baloo 2',system-ui,sans-serif}
+.ac.l{background-image:var(--a1)}
+.ac.b,.ac.f.b{background-image:var(--a4)}
+.ac.c{background-image:var(--a6)}
+.ac.k{background-image:var(--a5)}
+.ac.m{background-image:var(--a2);cursor:default}
+.ac.mn{background-image:var(--a3);cursor:default}
+.ac.s::after{content:"";position:absolute;inset:8%;border-radius:22%;box-shadow:0 0 0 3px var(--blue,#3A7BD5);pointer-events:none}
+.ac.w::before{content:"";position:absolute;inset:0;border-radius:18%;background:rgba(255,71,87,.3);pointer-events:none}
+.ac .an{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(min(88vw,420px) / var(--n) * .5);color:#FFF4C9;text-shadow:0 1px 0 rgba(0,0,0,.4);pointer-events:none}
+.ac.mn.ok .an{color:#9BE7A8}
+.ac.mn.x .an{color:#FF8A8A}
+.juego-akari[data-akm="liso"] .ac .an,.juego-akari[data-akm="madera"] .ac .an,.juego-akari[data-akm="piedra"] .ac .an{color:#FFF}
+.juego-akari .ac.mn.x .an{color:#FF9A9A}
+.kpad{display:grid;grid-template-columns:repeat(var(--n2),1fr);gap:7px;width:min(100%,440px);margin:7px auto}
+.kpad .acc{position:relative;padding:8px 2px;font:800 13.5px/1.15 Nunito,sans-serif;white-space:nowrap;background:var(--card);border:2px solid var(--line);border-radius:14px;min-height:50px;color:var(--ink);box-shadow:0 3px 0 var(--line)}
+.kpad .acc:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}

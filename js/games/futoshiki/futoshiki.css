@@ -1,0 +1,22 @@
+.juego-futoshiki{--fu-font:'Baloo 2',system-ui,sans-serif}
+.juego-futoshiki[data-numeros="clasico"]{--fu-font:Georgia,'Times New Roman',serif}
+.fu{display:grid;width:min(100%,440px);aspect-ratio:1;margin:10px auto;gap:0;touch-action:manipulation}
+.fu>i{display:block;min-width:0;min-height:0}
+.fc{position:relative;display:block;padding:0;border:0;min-width:0;min-height:0;cursor:pointer;background:var(--f4) center/100% 100% no-repeat;color:#6A4B00;font-family:var(--fu-font)}
+.fc.fijo{background-image:var(--f5);color:#1F2A5A;cursor:default}
+.fc.s{background-image:var(--f6)}
+.fc.fijo.s{background-image:var(--f6)}
+.fc.x{background-image:var(--f7);color:#7A0F0F}
+.fc .fv{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:calc(min(88vw,420px) / (var(--n) * 1.42) * .56);font-weight:800}
+.fc .fn{position:absolute;inset:16% 12% 12% 12%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;font:800 max(8px,calc(min(88vw,420px) / (var(--n) * 1.42) * .2))/1.15 Nunito,sans-serif;color:#6B5B2A;text-align:center;pointer-events:none}
+.fc.ok .fv{color:#176B3A}
+.fa{display:block;background:center/contain no-repeat;pointer-events:none;align-self:center;justify-self:center;width:100%;height:78%}
+.fa[data-d="i"]{background-image:var(--f0)}.fa[data-d="d"]{background-image:var(--f1)}
+.fa[data-d="a"]{background-image:var(--f2);height:100%;width:78%}.fa[data-d="b"]{background-image:var(--f3);height:100%;width:78%}
+.fa.x{filter:sepia(1) saturate(5) hue-rotate(-45deg) brightness(.85)}
+.kpad{display:grid;grid-template-columns:repeat(var(--n2),1fr);gap:7px;width:min(100%,440px);margin:7px auto}
+.kpad button{position:relative;padding:10px 0 8px;font:800 21px 'Baloo 2',system-ui,sans-serif;background:var(--card);border:2px solid var(--line);border-radius:14px;min-height:50px;color:var(--blue,#3A7BD5);box-shadow:0 3px 0 var(--line)}
+.kpad button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.kpad button:disabled{opacity:.5}
+.kpad .acc{font:800 12.5px/1.15 Nunito,sans-serif;color:var(--ink);padding:8px 1px;white-space:nowrap}
+.kpad .acc.on{background:linear-gradient(135deg,var(--purple,#7A4DFF),var(--blue,#3A7BD5));color:#fff;border-color:transparent}

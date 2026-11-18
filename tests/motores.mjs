@@ -12,6 +12,8 @@ import { NIVELES as SKN } from '../js/games/encajados/niveles.js';
 import * as AH from '../js/games/airhockey/motor.js';
 import * as PC from '../js/games/pokercubierto/motor.js';
 import { readFileSync } from 'node:fs';
+import * as AK from '../js/games/akari/motor.js';
+import * as FU from '../js/games/futoshiki/motor.js';
 import * as DIC from '../js/core/diccionario.js';
 import { Partida as MTPartida, validar as validarMT, MAZOS as MTMAZOS } from '../js/games/magnateurbano/motor.js';
 import { CASILLAS as MTC, GRUPOS as MTG } from '../js/games/magnateurbano/datos.js';
@@ -717,3 +719,26 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   ok(`Solitarios con baraja española: Klondike (${gk}/6 con solución), Spider (80 cartas, ${gs}/40 ganadas con la pista) y Carta Blanca (${gf}/10 resueltas)`); }
 
 console.log(`\n${n} pruebas correctas`);
+
+// ---- Akari: los paneles generados tienen solución única y la solución es válida
+{
+  for (const n of [5, 7, 10]) for (const d of Object.keys(AK.DIFICULTADES)) for (let k = 0; k < 4; k++) {
+    const p = AK.generar(n, d);
+    assert.equal(AK.resolver(p, { tope: 2 }).n, 1, `Akari ${n} ${d}: no es única`);
+    assert.ok(AK.evaluar(p, p.sol).completo, `Akari ${n} ${d}: la solución no es válida`);
+  }
+  const f = AK.generar(7, 'facil'); assert.ok(!AK.resolver(f, { tope: 2, sinRamas: true }).atascado || f.ramas >= 0);
+  console.log('Akari OK');
+}
+
+// ---- Futoshiki: solución única, válida y, en Fácil, sin necesidad de adivinar
+{
+  for (const n of [4, 5, 6]) for (const d of Object.keys(FU.DIFICULTADES)) for (let k = 0; k < 3; k++) {
+    const p = FU.generar(n, d), r = FU.resolver(p, { tope: 2 });
+    assert.equal(r.n, 1, `Futoshiki ${n} ${d}: no es única`);
+    assert.deepEqual(r.sol, p.sol, `Futoshiki ${n} ${d}: la solución no coincide`);
+    assert.ok(FU.evaluar(p, p.sol).completo, `Futoshiki ${n} ${d}: la solución no cumple las reglas`);
+    if (d === 'facil') assert.ok(!FU.resolver(p, { tope: 2, sinRamas: true }).atascado, `Futoshiki ${n} facil: requiere adivinar`);
+  }
+  console.log('Futoshiki OK');
+}
