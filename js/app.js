@@ -484,6 +484,7 @@ async function render() {
   }).join('');
   app.innerHTML = '';
   const enFav = r.v === 'inicio' && r.cat === 'favoritos';
+  document.body.dataset.hcat = r.v === 'inicio' && r.cat && CATEGORIAS[r.cat] ? r.cat : '';   // la cabecera de cada categoría lleva su banner
   document.body.classList.toggle('fijo', r.v === 'inicio' && !enFav);          // inicio y categorías: pantalla fija (en las categorías solo se desplazan las fichas)
   document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes' || enFav);
   document.body.classList.toggle('jfondo', r.v === 'juego');                 // páginas de juego: mismo fondo y scroll interno
@@ -614,6 +615,7 @@ function vInicio(filtro = null) {
   avisoCopia();
   const nombreFiltro = filtro ? CATEGORIAS[filtro] : null;
   nombreVista = nombreFiltro || 'JugamiGO'; cabTxt('JugamiGO');
+  if (nombreFiltro) { const e = document.getElementById('titulotxt'); if (e) e.innerHTML = `<a class="cab-inicio" href="#/" aria-label="${esc(nombreFiltro)} GO: ir a la pantalla de inicio">${esc(nombreFiltro)}<span class="go">GO</span></a>`; }
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k) && (!filtro || filtro === k));
   if (!filtro) {                                                    // Pantalla de inicio: el logo de fondo y las categorías a todo el alto (sin desplazamiento)
     const cont = ultimoEnCurso(), reto = retoDeHoy(), nf = favs().length;
@@ -633,12 +635,9 @@ function vInicio(filtro = null) {
   const grupos = cats.map(([k, n]) => {
     const es = entradas(k), js = JUEGOS.filter(j => j.categoria === k);
     const enCurso = js.filter(j => { const e = store.getResumen(j.id); return e && !e.fin && e.resumen; }).length;
-    return `<section class="cat-seccion" data-cat="${k}">
-      <h2 class="cat"><a class="cat-link" href="#/cat/${k}" aria-label="${esc(n)}: subir al principio"><span class="cnom">${esc(n)}</span></a></h2>
-      <div class="rejilla">${es.map(x => x.tipo === 'grupo' ? fichaGrupo(x.g, x.js) : ficha(x.j)).join('')}</div></section>`;
+    return `<section class="cat-seccion" data-cat="${k}">      <div class="rejilla">${es.map(x => x.tipo === 'grupo' ? fichaGrupo(x.g, x.js) : ficha(x.j)).join('')}</div></section>`;
   }).join('');
   app.innerHTML = grupos + '';
-  app.querySelectorAll('.cat-link').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const rj = a.closest('.cat-seccion').querySelector('.rejilla'); if (rj) rj.scrollTo({ top: 0, behavior: 'smooth' }); }));
 }
 
 /* ---------- estadísticas ---------- */
