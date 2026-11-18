@@ -15,6 +15,9 @@ import { readFileSync } from 'node:fs';
 import * as AK from '../js/games/akari/motor.js';
 import * as FU from '../js/games/futoshiki/motor.js';
 import * as MJ from '../js/games/mahjong/motor.js';
+import * as PB from '../js/games/pinball/motor.js';
+import * as DV from '../js/games/daleotravez/motor.js';
+import { TEMAS as DVT } from '../js/games/daleotravez/temas.js';
 import * as DIC from '../js/core/diccionario.js';
 import { Partida as MTPartida, validar as validarMT, MAZOS as MTMAZOS } from '../js/games/magnateurbano/motor.js';
 import { CASILLAS as MTC, GRUPOS as MTG } from '../js/games/magnateurbano/datos.js';
@@ -755,4 +758,38 @@ console.log(`\n${n} pruebas correctas`);
     const m2 = MJ.mezclar(pos, vivo, g.caras); assert.ok(m2 && MJ.emparejable(m2, vivo), `Mahjong ${id}: el mezclado falla`);
   }
   console.log('Mahjong OK');
+}
+
+{ // Dale Otra Vez
+  assert.ok(DVT.length >= 25);
+  for (const t of DVT) {
+    const e = DV.preparar(t); assert.ok(e.length >= 20, `Dale Otra Vez ${t.id}: pocas respuestas`);
+    for (const x of e) assert.equal(DV.buscar(e, x.nombre), x.i, `Dale Otra Vez ${t.id}: «${x.nombre}» no se reconoce`);
+  }
+  const fr = DV.preparar(DVT.find(t => t.id === 'frutas'));
+  assert.equal(DV.buscar(fr, 'Las MANZANAS'), 0); assert.ok(DV.buscar(fr, 'sandía') >= 0); assert.equal(DV.buscar(fr, 'coche'), -1); assert.equal(DV.buscar(fr, 'mel'), -1);
+  assert.ok(DV.buscar(fr, 'frambuesas') >= 0 && DV.buscar(fr, 'frambuesa') === DV.buscar(fr, 'frambuesas')); assert.ok(DV.buscar(fr, 'albaricoqe') >= 0, 'una errata en palabra larga');
+  for (const nv of Object.keys(DV.NIVELES)) { const k = DV.conocimiento(40, nv), usadas = new Set(); let n = 0; for (;;) { const i = DV.turnoCPU(40, usadas, k); if (i < 0) break; assert.ok(!usadas.has(i)); usadas.add(i); n++; } assert.equal(n, k.size); }
+  assert.ok(DV.ganaPartida(2, 3) && !DV.ganaPartida(1, 3) && DV.ganaPartida(4, 7) && !DV.ganaPartida(3, 7));
+  console.log('Dale Otra Vez OK');
+}
+
+{ // Pinball
+  let fines = 0, tot = 0;
+  for (let g = 0; g < 12; g++) {
+    const S = PB.crear({ bolas: 3 }); let t = 0, subio = false;
+    while (S.fase !== 'fin' && t < 240) {
+      if (S.fase === 'lanzar') PB.lanzar(S, 0.7 + Math.random() * 0.3);
+      const b = S.bola; PB.aleta(S, 0, b.y > 780 && b.x < 290 && Math.random() < 0.8); PB.aleta(S, 1, b.y > 780 && b.x > 250 && Math.random() < 0.8);
+      PB.avanzar(S, 1 / 60); t += 1 / 60; S.ev.length = 0;
+      assert.ok(Number.isFinite(S.bola.x) && Number.isFinite(S.bola.y), 'Pinball: la bola se sale de la simulación');
+      if (S.bola.y < 150) subio = true;
+      assert.ok(S.bola.x > -60 && S.bola.x < PB.W + 60, 'Pinball: bola fuera de la mesa');
+    }
+    assert.ok(subio, 'Pinball: la bola lanzada no llega arriba'); tot++; if (S.fase === 'fin') fines++; assert.ok(S.pts >= 0);
+  }
+  assert.ok(fines >= 10, `Pinball: las partidas no terminan (${fines}/${tot})`);
+  const S2 = PB.crear({ bolas: 3 }); PB.lanzar(S2, 0.3); PB.avanzar(S2, 6);
+  assert.ok(S2.fase === 'lanzar' || S2.bola.y > 400, 'Pinball: un lanzamiento flojo debe caer de vuelta');
+  console.log('Pinball OK');
 }
