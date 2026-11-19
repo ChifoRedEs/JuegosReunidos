@@ -1,7 +1,7 @@
 // Logros: se calculan a partir de las estadísticas (core/stats.js) y de los retos del día completados.
 // Se guardan como { id: fecha } en jr2:logros. revisar() devuelve los recién conseguidos para avisar al jugador.
 import { leer, escribir } from './storage.js';
-import { todas } from './stats.js';
+import { todas, dias } from './stats.js';
 
 const sum = (T, k) => Object.values(T).reduce((a, s) => a + (s[k] || 0), 0);
 const jugados = T => Object.values(T).filter(s => s.partidas > 0).length;
@@ -14,6 +14,22 @@ const algun = (T, f) => Object.values(T).some(s => { try { return f(s); } catch 
 const mejorTiempo = T => Math.min(Infinity, ...Object.values(T).flatMap(s => Object.values(s.tiempos || {})).filter(v => v > 0));
 const retos = () => { const r = leer('retos', {}); return r && typeof r === 'object' ? Object.values(r).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0) : 0; };
 const diasReto = () => { const r = leer('retos', {}); return r && typeof r === 'object' ? Object.keys(r).filter(k => Array.isArray(r[k]) && r[k].length).length : 0; };
+
+// Rachas de días consecutivos: dado un conjunto de claves 'AAAA-MM-DD', la tirada más larga
+const rachaMax = claves => {
+  const ds = [...new Set(claves)].map(k => Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10))).sort((a, b) => a - b);
+  let mejor = 0, act = 0;
+  ds.forEach((d, i) => { act = i && d - ds[i - 1] === 864e5 ? act + 1 : 1; mejor = Math.max(mejor, act); });
+  return mejor;
+};
+const diasJugados = () => Object.keys(dias()).filter(k => dias()[k] > 0);
+const maxPartidasDia = () => Math.max(0, ...Object.values(dias()));
+const retosDia = () => { const r = leer('retos', {}); return r && typeof r === 'object' ? Object.entries(r).filter(([, l]) => Array.isArray(l) && l.length) : []; };
+const topRetosDia = () => Math.max(0, ...retosDia().map(([, l]) => l.length));
+const equilibrio = (T, cat) => Math.min(...['logica', 'tablero', 'cartas', 'palabras'].map(k => sumCat(T, cat[k], 'victorias')));
+const arcadeAltos = (T, cat) => (cat.arcade || []).filter(id => maxRecord(T, [id]) >= 10000).length;
+const nTiempos = T => Object.values(T).reduce((a, s) => a + Object.keys(s.tiempos || {}).length, 0);
+const mejorInvicto = T => Math.max(0, ...Object.values(T).map(s => (s.derrotas || 0) === 0 ? s.victorias || 0 : 0));
 
 // cat: ids de cada categoría (los pasa app.js desde registry.js)
 export function definiciones(cat) {
@@ -69,6 +85,17 @@ export function definiciones(cat) {
     ['reto60', '📆', 'Dos meses de retos', 'Completa retos del día en 60 días distintos.', () => diasReto() >= 60],
     ['reto100', '🔟', 'Retador', 'Completa 100 retos del día en total.', () => retos() >= 100],
     ['niveles5', '🪜', 'Todas las dificultades', 'Consigue tu mejor tiempo en 5 variantes distintas de un mismo juego.', T => algun(T, s => Object.keys(s.tiempos || {}).length >= 5)],
+    // — Los 10 últimos —
+    ['dias14', '🔥', 'Quincena de hierro', 'Juega 14 días seguidos.', () => rachaMax(diasJugados()) >= 14],
+    ['dias100', '🗓️', 'Cien jornadas', 'Juega en 100 días distintos.', () => diasJugados().length >= 100],
+    ['maraton', '🏃', 'Maratoniano', 'Termina 25 partidas en un mismo día.', () => maxPartidasDia() >= 25],
+    ['equilibrio', '⚖️', 'Equilibrista', 'Gana 10 partidas en cada una de Lógica, Tablero, Cartas y Palabras.', T => equilibrio(T, cat) >= 10],
+    ['maestro', '🏆', 'Maestro absoluto', 'Gana al menos una vez en los 60 juegos.', T => ganadosDistintos(T) >= 60],
+    ['invicto', '🛡️', 'Invicto', 'Gana 15 partidas a un juego sin perder ninguna.', T => mejorInvicto(T) >= 15],
+    ['arcade3', '👑', 'Tres coronas', 'Consigue 10.000 puntos en 3 juegos Arcade distintos.', T => arcadeAltos(T, cat) >= 3],
+    ['tiempos15', '⏱️', 'Cronometrista', 'Logra tu mejor tiempo en 15 variantes distintas (entre todos los juegos).', T => nTiempos(T) >= 15],
+    ['triplete', '🎴', 'Triplete', 'Completa 3 retos del día en un mismo día.', () => topRetosDia() >= 3],
+    ['semana7', '📅', 'Semana perfecta', 'Completa el reto del día 7 días seguidos.', () => rachaMax(retosDia().map(([k]) => k)) >= 7],
   ];
   return L.map(([id, icono, nombre, desc, cumple]) => ({ id, icono, nombre, desc, cumple }));
 }
@@ -95,6 +122,16 @@ export function progreso(id, T, cat) {
   if (id === 'reto100') return [retos(), 100];
   if ((m = /^reto(\d+)$/.exec(id))) return [diasReto(), +m[1]];
   if (id === 'niveles5') return [mx(s => Object.keys(s.tiempos || {}).length), 5];
+  if (id === 'dias14') return [rachaMax(diasJugados()), 14];
+  if (id === 'dias100') return [diasJugados().length, 100];
+  if (id === 'maraton') return [maxPartidasDia(), 25];
+  if (id === 'equilibrio') return [Math.min(10, equilibrio(T, cat)), 10];
+  if (id === 'maestro') return [ganadosDistintos(T), 60];
+  if (id === 'invicto') return [mejorInvicto(T), 15];
+  if (id === 'arcade3') return [arcadeAltos(T, cat), 3];
+  if (id === 'tiempos15') return [nTiempos(T), 15];
+  if (id === 'triplete') return [topRetosDia(), 3];
+  if (id === 'semana7') return [rachaMax(retosDia().map(([k]) => k)), 7];
   return null;
 }
 export const conseguidos = () => { const g = leer('logros', {}); return g && typeof g === 'object' ? g : {}; };

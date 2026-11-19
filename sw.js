@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-99ecc3fe8b';
+const VERSION = 'jr-ab48f70303';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -1766,10 +1766,14 @@ const EXTRA = [
 './img/matchup/transportes/velero.webp',
 './img/medallas/arcade10k.webp',
 './img/medallas/arcade1k.webp',
+'./img/medallas/arcade3.webp',
 './img/medallas/arcade30k.webp',
 './img/medallas/cartas.webp',
 './img/medallas/cartas25.webp',
 './img/medallas/coleccion.webp',
+'./img/medallas/dias100.webp',
+'./img/medallas/dias14.webp',
+'./img/medallas/equilibrio.webp',
 './img/medallas/esp100.webp',
 './img/medallas/esp25.webp',
 './img/medallas/explor40.webp',
@@ -1778,8 +1782,11 @@ const EXTRA = [
 './img/medallas/gana10.webp',
 './img/medallas/gana25.webp',
 './img/medallas/imbatible.webp',
+'./img/medallas/invicto.webp',
 './img/medallas/logica.webp',
 './img/medallas/logica25.webp',
+'./img/medallas/maestro.webp',
+'./img/medallas/maraton.webp',
 './img/medallas/niveles5.webp',
 './img/medallas/p10.webp',
 './img/medallas/p1000.webp',
@@ -1799,9 +1806,11 @@ const EXTRA = [
 './img/medallas/reto30.webp',
 './img/medallas/reto60.webp',
 './img/medallas/reto7.webp',
+'./img/medallas/semana7.webp',
 './img/medallas/tablas10.webp',
 './img/medallas/tablero.webp',
 './img/medallas/tablero25.webp',
+'./img/medallas/tiempos15.webp',
 './img/medallas/todoarcade.webp',
 './img/medallas/todocartas.webp',
 './img/medallas/todologica.webp',
@@ -1809,6 +1818,7 @@ const EXTRA = [
 './img/medallas/todos50.webp',
 './img/medallas/todotablero.webp',
 './img/medallas/todoterreno.webp',
+'./img/medallas/triplete.webp',
 './img/medallas/v100.webp',
 './img/medallas/v25.webp',
 './img/medallas/v250.webp',
@@ -2371,7 +2381,7 @@ const DICC_TODO = [
 './data/diccionario/lemas-1f6f9c6b.txt'
 /*DICC-FIN*/
 ];
-const DESCARGA_MB = /*MB*/25/*MB-FIN*/;
+const DESCARGA_MB = /*MB*/26/*MB-FIN*/;
 // Tipografías de Google Fonts (Fraunces, Baloo 2, Chewy y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
 // para que sin conexión los textos se vean igual que con internet. Debe ser la MISMA dirección que en index.html.
 const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas', DICC = 'jr-diccionario';      // cachés que se conservan entre versiones

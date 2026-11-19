@@ -311,8 +311,8 @@ html[data-anim="no"] #splash{display:none}
 .ini-bus>span .ic{width:22px;height:22px;margin:0;vertical-align:middle}
 .logro span img{display:block;width:40px;height:auto}
 .logro:not(.on) span img{filter:grayscale(1);opacity:.5}
-.plogi{display:flex;flex-wrap:wrap;gap:3px;letter-spacing:0}
-.lg-mini{width:26px;height:auto;display:block}
+.plogi{display:flex;flex-wrap:wrap;align-items:flex-start;gap:3px;letter-spacing:0}
+.lg-mini{width:26px;height:29px;object-fit:contain;display:block;align-self:flex-start;overflow:hidden;font-size:0}
 .pd-m{width:22px;height:auto;vertical-align:middle}
 .vacio img.goli{width:min(120px,38%);height:auto}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(.logro.on span img,.lg-mini,.pd-m,.panel h3 .ic,.ini-bus .ic,.acc-i .ic){filter:drop-shadow(0 0 1.2px rgba(244,235,217,.95))}}
