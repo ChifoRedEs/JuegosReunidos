@@ -438,3 +438,10 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 .ap-clasicos>summary::-webkit-details-marker{display:none}
 .ap-clasicos>summary::before{content:"▸ "}
 .ap-clasicos[open]>summary::before{content:"▾ "}
+
+/* fichas con color claro (ámbar, lima, limón, aguamarina, rosa): texto oscuro para que se lea */
+.ficha.clara{color:#1D2433}
+.ficha.clara b{text-shadow:none}
+.ficha.clara small{color:rgba(29,36,51,.9)}
+.ficha.clara.curso small{background:rgba(29,36,51,.14)}
+.ficha.clara .ico{filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}

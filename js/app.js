@@ -651,15 +651,30 @@ function vInicio(filtro = null) {
 }
 
 /* ---------- estadísticas ---------- */
-/* Las fichas de juegos (categorías y Estadísticas) toman al azar uno de estos colores del pasaporte cada vez que se pinta la pantalla.
-   Se reparten en tandas barajadas, así que en cada pantalla se repiten lo menos posible y nunca salen otros colores. */
-const COLORES_FICHA = ['#C9441C' /* coral */, '#137A6F' /* mar */, '#5B4FCF' /* ultramar */, '#2563C9' /* cielo */, '#14213D' /* tinta */, '#9A3412' /* sello */];
-const COLORES_STATS = [...COLORES_FICHA, '#7A3E9D' /* ciruela */, '#0F766E' /* pino */, '#A16207' /* ocre */, '#B91C1C' /* carmín */];
-function colorearFichas(sel = '.ficha', paleta = COLORES_FICHA) {
-  let cola = [];
+/* Las fichas de juegos (categorías y Estadísticas) usan estos 14 colores. Cada pantalla los baraja y los reparte en orden, así que no se
+   repite ninguno mientras haya colores (hasta 14 fichas) y dos fichas seguidas nunca llevan tonos parecidos (SIMILARES). [nombre, hex, texto oscuro] */
+const COLORES_FICHA = [
+  ['rojo', '#E5484D'], ['naranja', '#F76B15'], ['ambar', '#FFB224', 1], ['lima', '#A2C93A', 1], ['verde', '#30A46C'], ['turquesa', '#12A594'], ['aguamarina', '#62D8C4', 1],
+  ['azul', '#3E63DD'], ['limon', '#F4E83A', 1], ['violeta', '#A64DC4'], ['magenta', '#D6409F'], ['rosa', '#FF7BA5', 1], ['marron', '#A0693F'], ['pizarra', '#687887']];
+const SIMILARES = [['rojo', 'naranja'], ['rojo', 'rosa'], ['rojo', 'magenta'], ['naranja', 'ambar'], ['naranja', 'marron'], ['ambar', 'limon'], ['ambar', 'lima'], ['limon', 'lima'], ['lima', 'verde'], ['verde', 'turquesa'],
+  ['turquesa', 'aguamarina'], ['verde', 'aguamarina'], ['azul', 'violeta'], ['azul', 'turquesa'], ['magenta', 'rosa'], ['magenta', 'violeta']];
+const parecidos = (x, y) => x === y || SIMILARES.some(([p, q]) => (p === x && q === y) || (p === y && q === x));
+function barajaColores(previo) {
+  let mejor = null;
+  for (let t = 0; t < 300; t++) {
+    const a = [...COLORES_FICHA];
+    for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; }
+    mejor = a;
+    if (a.every((c, i) => !parecidos(c[0], i ? a[i - 1][0] : previo))) return a;
+  }
+  return mejor;
+}
+function colorearFichas(sel = '.ficha') {
+  let cola = [], previo = null;
   app.querySelectorAll(sel).forEach(f => {
-    if (!cola.length) { cola = [...paleta]; for (let i = cola.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [cola[i], cola[k]] = [cola[k], cola[i]]; } }
-    f.style.setProperty('--c', cola.pop());
+    if (!cola.length) cola = barajaColores(previo).reverse();
+    const c = cola.pop(); previo = c[0];
+    f.style.setProperty('--c', c[1]); f.classList.toggle('clara', !!c[2]);
   });
 }
 function vStats(catSel = null) { const y = leerScroll(); vStats_(catSel); if (ruta().v === 'stats') ponerScroll(y); }
