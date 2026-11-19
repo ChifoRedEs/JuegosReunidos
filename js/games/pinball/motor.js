@@ -70,7 +70,7 @@ function choqueBumper(S, b, k, i) {
   const vn = b.vx * nx + b.vy * ny; if (vn < 0) { b.vx -= 2 * vn * nx; b.vy -= 2 * vn * ny; }
   const v = Math.hypot(b.vx, b.vy), nv = Math.max(560, v * 0.9 + 140);
   b.vx = nx * nv; b.vy = ny * nv; puntos(S, k.p, 'bumper', { i });
-  if (!S.luces[i]) { S.luces[i] = true; if (S.luces.every(Boolean)) { S.luces.fill(false); S.mult = Math.min(5, S.mult + 1); puntos(S, 1000, 'bonus'); emit(S, 'mult', { mult: S.mult }); } }
+  if (!S.luces[i]) { S.luces[i] = true; if (S.luces.every(Boolean)) { S.luces.fill(false); S.mult = Math.min(5, S.mult + 1); S.ganado = true; puntos(S, 1000, 'bonus'); emit(S, 'mult', { mult: S.mult }); } }
 }
 function puntos(S, p, tipo, d = {}) { S.pts += p * S.mult; S.ultimoPunto = S.t; emit(S, tipo, { p: p * S.mult, ...d }); }
 

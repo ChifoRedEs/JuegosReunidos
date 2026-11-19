@@ -205,7 +205,7 @@ async function animar(evs) {
       case 'compra': case 'obra': case 'inst': case 'entrada': case 'vendido': api.sonido('ok'); if (V) pintarV(); await pausa(v.paso * 3); break;
       case 'demolido': case 'quiebra': api.sonido('perder'); await pausa(v.paso * 4); break;
       case 'extra': aviso('¡Un 6! Vuelve a tirar.'); break;
-      case 'fin': api.sonido('ganar'); break;
+      case 'fin': api.sonido('ganar'); if (!S.reg) { S.reg = true; api.registrar({ res: S.jug[S.ganador] && !S.jug[S.ganador].cpu ? 'victoria' : 'derrota', variante: `${S.jug.length} jugadores` }); } break;
     }
   }
 }

@@ -132,7 +132,7 @@ function finPartida(ev) {
   cancelAnimationFrame(raf); raf = 0;
   efecto = { tipo: 'muerte', t: performance.now() };
   const v = M.variante(S), antes = api.record(v);
-  if (!reg) { reg = true; api.registrar({ res: 'partida', variante: v, puntos: S.puntos }); }
+  if (!reg) { reg = true; api.registrar({ res: ev === 'lleno' || S.comidas >= 15 ? 'victoria' : 'derrota', variante: v, puntos: S.puntos });   // ganas si llenas el tablero o comes 15 manzanas }
   nuevoRecord = S.puntos > antes && S.puntos > 0;
   if (ev === 'lleno') { api.sonido('ganar'); api.vibrar([60, 40, 60, 40, 120]); } else { api.sonido('perder'); api.vibrar([80, 40, 120]); }
   guardar(); pintarHud();
@@ -312,4 +312,5 @@ function reglas() {
     <li><b>Controles</b>: desliza el dedo sobre el tablero en la dirección que quieras (puedes encadenar giros sin levantarlo), usa la cruceta o las flechas / WASD. Espacio o ⏸️ para pausar.</li>
     <li>La serpiente acelera a medida que come. Tus mejores puntuaciones se guardan en 📊 Estadísticas.</li>
     <li>Si sales de la app, la partida se pausa y se guarda para continuarla luego.</li></ul>`);
+}
 }

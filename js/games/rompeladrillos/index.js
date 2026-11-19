@@ -194,7 +194,7 @@ function pausar() { if (!S || (S.fase !== 'jugar' && S.fase !== 'listo')) return
 function terminar() {
   if (!reg) {
     reg = true; const v = L.variante(S), antes = api.record(v); nuevoRecord = S.puntos > antes && S.puntos > 0;
-    api.registrar({ res: 'partida', variante: v, puntos: S.puntos });
+    api.registrar({ res: (S.limpios || 0) >= 2 ? 'victoria' : 'derrota', variante: v, puntos: S.puntos });   // ganas si despejas 2 niveles
     api.sonido(nuevoRecord ? 'ganar' : 'perder');
   }
   guardar(); pintarOver(); anotarPodio();

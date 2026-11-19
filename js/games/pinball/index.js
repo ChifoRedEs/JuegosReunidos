@@ -113,7 +113,7 @@ function eventos() {
 }
 async function terminar() {
   if (reg) return; reg = true; nuevoRecord = S.pts > record; guardar();
-  api.registrar({ res: 'partida', variante: variante(S.bolas), puntos: S.pts });
+  api.registrar({ res: S.mult >= 2 || S.ganado ? 'victoria' : 'derrota', variante: variante(S.bolas), puntos: S.pts });   // ganas si enciendes las 5 luces (multiplicador ×2 o más)
   const o = $('#pbOver'); fin(o);
   const v = variante(S.bolas); if (api.podio.entra(v, S.pts)) { podioPos = await api.podio.anotar(v, S.pts); if (root) fin($('#pbOver')); }
 }

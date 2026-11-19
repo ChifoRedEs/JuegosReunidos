@@ -137,7 +137,7 @@ export function avanzar(S, dt, entrada = {}) {
     if (c.y + 20 >= PALA_Y && c.y - 20 <= PALA_Y + PALA_H && Math.abs(c.x - S.pala.x) <= S.pala.w / 2 + 30) { aplicar(S, c.tipo); ev.push('capsula:' + c.tipo); return false; }
     return true;
   });
-  if (!quedan(S)) { S.fase = 'nivel'; S.puntos += 500 + S.vidas * 100; ev.push('nivel'); return ev; }
+  if (!quedan(S)) { S.limpios = (S.limpios || 0) + 1; S.fase = 'nivel'; S.puntos += 500 + S.vidas * 100; ev.push('nivel'); return ev; }
   if (!S.bolas.length) {
     S.vidas--; ev.push('vida');
     if (S.vidas <= 0) { S.fase = 'fin'; S.motivo = 'vidas'; ev.push('fin'); }

@@ -207,7 +207,7 @@ function comprobarCarton() {
 
 /* ---------- fin y nueva partida ---------- */
 function finPartida(bingo) {
-  if (!S.reg) { S.reg = true; api.registrar({ res: 'partida', variante: 'Live' }); guardar(); }
+  if (!S.reg) { S.reg = true; api.registrar({ res: bingo ? 'victoria' : 'partida', variante: 'Live' }); guardar(); }
   hud(); botones(); parar();
   if (bingo) api.aviso('🏆 ¡Bingo! Fin de la partida.'); else api.aviso('Ya han salido las 90 bolas.');
 }

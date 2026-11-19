@@ -46,7 +46,7 @@ export function definiciones(cat) {
     ['v500', '🐉', 'Invencible', 'Gana 500 partidas.', T => sum(T, 'victorias') >= 500],
     ['racha20', '☄️', 'Racha legendaria', 'Gana 20 partidas seguidas a un mismo juego.', T => Object.values(T).some(s => s.mejorRacha >= 20)],
     ['explor40', '🔭', 'Casi completo', 'Termina partidas en 40 juegos distintos.', T => jugados(T) >= 40],
-    ['todos50', '🎖️', 'Completista', 'Termina partidas en los 55 juegos.', T => jugados(T) >= 55],
+    ['todos50', '🎖️', 'Completista', 'Termina partidas en los 60 juegos.', T => jugados(T) >= 60],
     ['gana10', '🎭', 'Polivalente', 'Gana al menos una vez en 10 juegos distintos.', T => ganadosDistintos(T) >= 10],
     ['gana25', '🦸', 'Campeón de campeones', 'Gana al menos una vez en 25 juegos distintos.', T => ganadosDistintos(T) >= 25],
     ['logica25', '💡', 'Mente brillante', 'Gana 25 partidas en juegos de Lógica.', T => sumCat(T, cat.logica, 'victorias') >= 25],
@@ -82,7 +82,7 @@ export function progreso(id, T, cat) {
   if ((m = /^explor(\d+)$/.exec(id))) return [jugados(T), +m[1]];
   if (id === 'explorador') return [jugados(T), 10];
   if (id === 'coleccion') return [jugados(T), 25];
-  if (id === 'todos50') return [jugados(T), 55];
+  if (id === 'todos50') return [jugados(T), 60];
   if ((m = /^gana(\d+)$/.exec(id))) return [ganadosDistintos(T), +m[1]];
   if ((m = /^(logica|tablero|cartas|palabras)25$/.exec(id))) return [sumCat(T, cat[m[1]], 'victorias'), 25];
   if ((m = /^todo(logica|tablero|cartas|palabras|arcade)$/.exec(id))) { const ids = cat[m[1]] || []; return [ids.filter(i => T[i] && T[i].partidas > 0).length, ids.length]; }
