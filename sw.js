@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-ab48f70303';
+const VERSION = 'jr-5909123d82';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -1766,6 +1766,7 @@ const EXTRA = [
 './img/matchup/transportes/velero.webp',
 './img/medallas/arcade10k.webp',
 './img/medallas/arcade1k.webp',
+'./img/medallas/arcade25.webp',
 './img/medallas/arcade3.webp',
 './img/medallas/arcade30k.webp',
 './img/medallas/cartas.webp',
@@ -1818,7 +1819,6 @@ const EXTRA = [
 './img/medallas/todos50.webp',
 './img/medallas/todotablero.webp',
 './img/medallas/todoterreno.webp',
-'./img/medallas/triplete.webp',
 './img/medallas/v100.webp',
 './img/medallas/v25.webp',
 './img/medallas/v250.webp',

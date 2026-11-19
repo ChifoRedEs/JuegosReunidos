@@ -25,7 +25,6 @@ const rachaMax = claves => {
 const diasJugados = () => Object.keys(dias()).filter(k => dias()[k] > 0);
 const maxPartidasDia = () => Math.max(0, ...Object.values(dias()));
 const retosDia = () => { const r = leer('retos', {}); return r && typeof r === 'object' ? Object.entries(r).filter(([, l]) => Array.isArray(l) && l.length) : []; };
-const topRetosDia = () => Math.max(0, ...retosDia().map(([, l]) => l.length));
 const equilibrio = (T, cat) => Math.min(...['logica', 'tablero', 'cartas', 'palabras'].map(k => sumCat(T, cat[k], 'victorias')));
 const arcadeAltos = (T, cat) => (cat.arcade || []).filter(id => maxRecord(T, [id]) >= 10000).length;
 const nTiempos = T => Object.values(T).reduce((a, s) => a + Object.keys(s.tiempos || {}).length, 0);
@@ -65,10 +64,10 @@ export function definiciones(cat) {
     ['todos50', '🎖️', 'Completista', 'Termina partidas en los 60 juegos.', T => jugados(T) >= 60],
     ['gana10', '🎭', 'Polivalente', 'Gana al menos una vez en 10 juegos distintos.', T => ganadosDistintos(T) >= 10],
     ['gana25', '🦸', 'Campeón de campeones', 'Gana al menos una vez en 25 juegos distintos.', T => ganadosDistintos(T) >= 25],
-    ['logica25', '💡', 'Mente brillante', 'Gana 25 partidas en juegos de Lógica.', T => sumCat(T, cat.logica, 'victorias') >= 25],
-    ['tablero25', '♟️', 'Gran maestro', 'Gana 25 partidas en juegos de Tablero.', T => sumCat(T, cat.tablero, 'victorias') >= 25],
-    ['cartas25', '♠️', 'Rey de la baraja', 'Gana 25 partidas en juegos de Cartas.', T => sumCat(T, cat.cartas, 'victorias') >= 25],
-    ['palabras25', '📚', 'Erudito', 'Gana 25 partidas en juegos de Palabras.', T => sumCat(T, cat.palabras, 'victorias') >= 25],
+    ['logica25', '💡', 'Rey de la Sabiduría', 'Gana 25 partidas en juegos de Lógica.', T => sumCat(T, cat.logica, 'victorias') >= 25],
+    ['tablero25', '♟️', 'Rey de los Tableros', 'Gana 25 partidas en juegos de Tablero.', T => sumCat(T, cat.tablero, 'victorias') >= 25],
+    ['cartas25', '♠️', 'Rey de la Baraja', 'Gana 25 partidas en juegos de Cartas.', T => sumCat(T, cat.cartas, 'victorias') >= 25],
+    ['palabras25', '📚', 'Rey del Lenguaje', 'Gana 25 partidas en juegos de Palabras.', T => sumCat(T, cat.palabras, 'victorias') >= 25],
     ['arcade30k', '🚁', 'Leyenda arcade', 'Consigue 30.000 puntos en un juego Arcade.', T => maxRecord(T, cat.arcade || []) >= 30000],
     ['todologica', '🧩', 'Lógica completa', 'Termina partidas en todos los juegos de Lógica.', T => todosJugados(T, cat.logica)],
     ['todotablero', '🏰', 'Tablero completo', 'Termina partidas en todos los juegos de Tablero.', T => todosJugados(T, cat.tablero)],
@@ -85,7 +84,7 @@ export function definiciones(cat) {
     ['reto60', '📆', 'Dos meses de retos', 'Completa retos del día en 60 días distintos.', () => diasReto() >= 60],
     ['reto100', '🔟', 'Retador', 'Completa 100 retos del día en total.', () => retos() >= 100],
     ['niveles5', '🪜', 'Todas las dificultades', 'Consigue tu mejor tiempo en 5 variantes distintas de un mismo juego.', T => algun(T, s => Object.keys(s.tiempos || {}).length >= 5)],
-    // — Los 10 últimos —
+    // — Los 10 últimos (más «Rey de los VideoJuegos») —
     ['dias14', '🔥', 'Quincena de hierro', 'Juega 14 días seguidos.', () => rachaMax(diasJugados()) >= 14],
     ['dias100', '🗓️', 'Cien jornadas', 'Juega en 100 días distintos.', () => diasJugados().length >= 100],
     ['maraton', '🏃', 'Maratoniano', 'Termina 25 partidas en un mismo día.', () => maxPartidasDia() >= 25],
@@ -94,7 +93,7 @@ export function definiciones(cat) {
     ['invicto', '🛡️', 'Invicto', 'Gana 15 partidas a un juego sin perder ninguna.', T => mejorInvicto(T) >= 15],
     ['arcade3', '👑', 'Tres coronas', 'Consigue 10.000 puntos en 3 juegos Arcade distintos.', T => arcadeAltos(T, cat) >= 3],
     ['tiempos15', '⏱️', 'Cronometrista', 'Logra tu mejor tiempo en 15 variantes distintas (entre todos los juegos).', T => nTiempos(T) >= 15],
-    ['triplete', '🎴', 'Triplete', 'Completa 3 retos del día en un mismo día.', () => topRetosDia() >= 3],
+    ['arcade25', '🕹️', 'Rey de los VideoJuegos', 'Gana 25 partidas en juegos Arcade.', T => sumCat(T, cat.arcade, 'victorias') >= 25],
     ['semana7', '📅', 'Semana perfecta', 'Completa el reto del día 7 días seguidos.', () => rachaMax(retosDia().map(([k]) => k)) >= 7],
   ];
   return L.map(([id, icono, nombre, desc, cumple]) => ({ id, icono, nombre, desc, cumple }));
@@ -111,7 +110,7 @@ export function progreso(id, T, cat) {
   if (id === 'coleccion') return [jugados(T), 25];
   if (id === 'todos50') return [jugados(T), 60];
   if ((m = /^gana(\d+)$/.exec(id))) return [ganadosDistintos(T), +m[1]];
-  if ((m = /^(logica|tablero|cartas|palabras)25$/.exec(id))) return [sumCat(T, cat[m[1]], 'victorias'), 25];
+  if ((m = /^(logica|tablero|cartas|palabras|arcade)25$/.exec(id))) return [sumCat(T, cat[m[1]], 'victorias'), 25];
   if ((m = /^todo(logica|tablero|cartas|palabras|arcade)$/.exec(id))) { const ids = cat[m[1]] || []; return [ids.filter(i => T[i] && T[i].partidas > 0).length, ids.length]; }
   if ((m = /^arcade(\d+)k$/.exec(id))) return [maxRecord(T, cat.arcade || []), +m[1] * 1000];
   if (id === 'arcade1k') return [maxRecord(T, cat.arcade || []), 1000];
@@ -130,7 +129,6 @@ export function progreso(id, T, cat) {
   if (id === 'invicto') return [mejorInvicto(T), 15];
   if (id === 'arcade3') return [arcadeAltos(T, cat), 3];
   if (id === 'tiempos15') return [nTiempos(T), 15];
-  if (id === 'triplete') return [topRetosDia(), 3];
   if (id === 'semana7') return [rachaMax(retosDia().map(([k]) => k)), 7];
   return null;
 }
