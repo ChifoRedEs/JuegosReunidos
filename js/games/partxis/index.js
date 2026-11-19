@@ -1,4 +1,5 @@
 import { pieMenu } from '../../core/pie.js';
+import { grupoFigura, figuraTintada } from '../../core/figuras.js';
 import { $, esc, rnd } from '../../core/dom.js';
 import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
@@ -60,7 +61,7 @@ const DEFS_ASPECTO = [
   { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
   { ...{ ...grupoFondo('#pzView'), def: 't-n-mesa-juegos-1' }, tt: true }, grupoPersonaje('Personajes (tus fichas)'),
   { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'cielo', opciones: [{ id: 'cielo', nombre: 'Cielo', sw: ['#EAF1FF', '#fff'] }, { id: 'madera', nombre: 'Madera', sw: ['#C98F53', '#FFEFD0'] }, { id: 'oscuro', nombre: 'Noche', sw: ['#0E1430', '#232F63'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#FFD3EA', '#FFF6FB'] }] },
-  { clave: 'fichas', enEstilos: true, etiqueta: 'Forma de la ficha', titulo: 'Forma de las fichas', def: 'canica', opciones: [{ id: 'canica', nombre: '● Canica' }, { id: 'peon', nombre: '♟ Peón' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'diamante', nombre: '◆ Diamante' }] },
+  grupoFigura({ clave: 'fichas', titulo: 'Figura de las fichas', def: 'canica' }),
   ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🎲', lados: ['Amarillo', 'Azul', 'Rojo', 'Verde'], formas: false }),
 ];
 export async function mount(root, a) {
@@ -196,7 +197,7 @@ function listaReglas() {
     <li>Dos fichas del mismo color forman barrera: nadie puede pasar. Con un 6 debes abrirla.</li>
     <li>A meta se entra con el número exacto. Gana quien mete antes sus 4 fichas.</li>
     <li><b>Por parejas</b> (4 jugadores): Amarillo y Rojo contra Azul y Verde. Al compañero no se le come; quien acaba antes sigue tirando y mueve las fichas de su pareja. Gana la pareja que mete sus 8 fichas.</li>
-    <li>Para mover, toca una ficha resaltada <b>o</b> la casilla de destino marcada (si ahí se come una ficha verás 💥).</li>
+    <li>Para mover, toca una ficha resaltada <b>o</b> la casilla de destino marcada (si ahí se come una ficha verás un destello).</li>
     <li>En 🎨 Apariencia eliges tapete, tablero, colores y estilo de las fichas. En la vista 2D, un doble toque en el tablero lo amplía (Todo → Grande → Muy grande → Todo) y con zoom se desplaza solo hacia la acción.</li></ul>`;
 }
 function rJuego() {
@@ -244,7 +245,7 @@ function pintar3D() {
   const idx = {};
   const piezas = list.map(o => {
     const [x, y] = pXY(o.c, o.p, o.i), dos = o.k && grp[o.k] === 2, n = o.k ? (idx[o.k] = (idx[o.k] || 0) + 1) - 1 : 0;
-    return { c: o.c, i: o.i, x: mundo(x) + (dos ? (n ? .33 : -.33) : 0), z: mundo(y), esc: (o.p === 71 ? 3 : o.p === -1 ? 5.1 : dos ? 3.3 : 4.6) / 4.6, mov: mv.has(o.c + o.i), emoji: emo && !esCPU(P, o.c) ? emo : '' };
+    return { c: o.c, i: o.i, x: mundo(x) + (dos ? (n ? .33 : -.33) : 0), z: mundo(y), esc: (o.p === 71 ? 3 : o.p === -1 ? 5.1 : dos ? 3.3 : 4.6) / 4.6, mov: mv.has(o.c + o.i), emoji: emo && !esCPU(P, o.c) ? emo : '', img: figuraTintada(forma(), hexDe(o.c), refrescar) || '' };
   });
   const casas = {}; for (const c of PC) { const cf = P.cfg[c]; casas[c] = { on: !!cf, etq: cf ? (P.names[c] || (cf === 'c' ? 'CPU' : 'Persona')) : '' }; }
   V3.pintar({ piezas, dest, turno: cur, casas, forma: forma() });
@@ -284,18 +285,17 @@ function aplicarFichas() {
   const r = rootEl; if (!r || !asp) return; const e = estilo(asp.valores);
   [['am', e.hex], ['az', e.hex2], ['ro', e.hex3], ['ve', e.hex4]].forEach(([c, h]) => h ? r.style.setProperty('--pz-' + c, h) : r.style.removeProperty('--pz-' + c));
 }
+const hexDe = c => (rootEl && getComputedStyle(rootEl).getPropertyValue('--pz-' + c).trim()) || ({ am: '#F2B600', az: '#2F7BD9', ro: '#E04545', ve: '#2EA35B' })[c];
+let refTimer = 0;
+const refrescar = () => { clearTimeout(refTimer); refTimer = setTimeout(() => { if (!rootEl) return; if (P) pintarJuego(); else { const t = rootEl.querySelector('.pzb'); if (t) t.innerHTML = pBoard(true); } }, 30); };
 function ficha(f, c, x, y, r) {
   r *= ESC_FX();
   const col = `style="fill:var(--pz-${c})"`, st = 'stroke="rgba(0,0,0,.55)" stroke-width=".8" stroke-linejoin="round"';
   const emo = emojiPersonaje(asp);     // «Personajes»: tus fichas (las de los jugadores humanos) llevan el emoji sobre su color
   if (emo && P && !esCPU(P, c)) return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/><text x="${x}" y="${y + r * .04}" font-size="${(r * 1.5).toFixed(2)}" text-anchor="middle" dominant-baseline="central" style="pointer-events:none">${emo}</text>`;
-  if (f === 'estrella') return `<polygon points="${estrellaPts(x, y + .3, r * 1.3, r * .56)}" ${col} ${st}/><circle cx="${x}" cy="${y}" r="${r * .26}" fill="#fff" opacity=".6"/>`;
-  if (f === 'diamante') return `<polygon points="${x},${y - r * 1.18} ${x + r * .98},${y} ${x},${y + r * 1.18} ${x - r * .98},${y}" ${col} ${st}/><polygon points="${x},${y - r * 1.18} ${x + r * .98},${y} ${x},${y}" fill="#fff" opacity=".3"/>`;
-  if (f === 'peon') {
-    const b = `M${x - .38 * r},${y - .1 * r} L${x + .38 * r},${y - .1 * r} C${x + .45 * r},${y + .3 * r} ${x + .85 * r},${y + .55 * r} ${x + .98 * r},${y + .98 * r} L${x - .98 * r},${y + .98 * r} C${x - .85 * r},${y + .55 * r} ${x - .45 * r},${y + .3 * r} ${x - .38 * r},${y - .1 * r} Z`;
-    return `<path d="${b}" ${col} ${st}/><circle cx="${x}" cy="${y - .62 * r}" r="${r * .52}" ${col} ${st}/><circle cx="${x - r * .16}" cy="${y - .78 * r}" r="${r * .15}" fill="#fff" opacity=".65"/>`;
-  }
-  return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/><circle cx="${x - r * .32}" cy="${y - r * .34}" r="${r * .3}" fill="#fff" opacity=".6"/>`;
+  const url = figuraTintada(f, hexDe(c), refrescar);
+  if (url) { const w = r * 2.5; return `<ellipse cx="${x}" cy="${y + r * .95}" rx="${r * .8}" ry="${r * .22}" fill="#000" opacity=".22"/><image href="${url}" x="${(x - w / 2).toFixed(2)}" y="${(y - w * .62).toFixed(2)}" width="${w.toFixed(2)}" height="${w.toFixed(2)}" preserveAspectRatio="xMidYMid meet" style="pointer-events:none"/>`; }
+  return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/>`;      // mientras se tiñe la figura
 }
 function pBoard(preview) {
   const cur = P && P.phase !== 'over' ? actual(P) : null, human = !!P && P.phase === 'move' && !esCPU(P, cur) && !P.anim, f = forma();
@@ -306,15 +306,15 @@ function pBoard(preview) {
     const etiqueta = on ? ((P ? P.names[c] : nombres[c]) || (cf === 'c' ? 'CPU' : 'Persona')) : '';
     s += `<g opacity="${on ? 1 : .3}"><rect x="${hx + 4}" y="${hy + 4}" width="72" height="72" rx="14" style="fill:var(--pz-${c});fill-opacity:.12"/>
       ${cur === c ? `<rect class="turn" x="${hx + 4}" y="${hy + 4}" width="72" height="72" rx="14" fill="none" stroke-width="2.4" style="stroke:var(--pz-${c})"/>` : ''}
-      <circle cx="${hx + 40}" cy="${hy + 40}" r="19.5" style="fill:var(--pz-cell);stroke:var(--pz-${c})" stroke-width="1.6"/>
+      <circle cx="${hx + 40}" cy="${hy + 40}" r="21" style="fill:none;stroke:var(--pz-${c})" stroke-width="1.6"/><image href="img/partxis/nido.webp" x="${hx + 20}" y="${hy + 20}" width="40" height="40" preserveAspectRatio="xMidYMid meet" style="pointer-events:none"/>
       <text class="pzt" x="${hx + 40}" y="${hy + 70}" text-anchor="middle" font-size="6.5" font-weight="800">${esc(etiqueta)}</text></g>`;
   }
   // recorrido: casillas grandes, redondeadas y llamativas
   for (let n = 1; n <= 68; n++) {
     const [r, c] = PTRACK[n], st = PC.find(k => PSTART[k] === n), x = c * 10, y = r * 10;
     s += `<rect x="${x + .6}" y="${y + .6}" width="8.8" height="8.8" rx="2.4" stroke-width=".7" style="stroke:var(--pz-line);fill:${st ? `var(--pz-${st})` : 'var(--pz-cell)'}"/>`;
-    if (PSAFE.has(n) && !st) s += `<polygon points="${estrellaPts(x + 5, y + 5.2, 3.4, 1.5)}" style="fill:var(--pz-star)"/>`;
-    if (st) s += `<polygon points="${estrellaPts(x + 5, y + 5.2, 3, 1.3)}" fill="#fff" opacity=".85"/>`;
+    if (PSAFE.has(n) && !st) s += `<image href="img/partxis/seguro.webp" x="${x + 1.2}" y="${y + 1.2}" width="7.6" height="7.6" style="pointer-events:none"/>`;
+    if (st) s += `<image href="img/partxis/salida.webp" x="${x + 1}" y="${y + 1}" width="8" height="8" style="pointer-events:none"/>`;
   }
   for (const c of PC) for (let k = 1; k <= 7; k++) { const [r, cc] = PCORR(c, k); s += `<rect x="${cc * 10 + .6}" y="${r * 10 + .6}" width="8.8" height="8.8" rx="2.4" stroke-width=".7" style="stroke:var(--pz-line);fill:var(--pz-${c});fill-opacity:${(.32 + k * .08).toFixed(2)}"/>`; }
   for (const c of PC) s += `<polygon points="${PTRI[c]}" stroke-width=".8" stroke-linejoin="round" style="stroke:var(--pz-cell);fill:var(--pz-${c})"/>`;
@@ -328,7 +328,7 @@ function pBoard(preview) {
       if (seen.has(key)) continue; seen.add(key);
       const [x, y] = pXY(m.c, m.to, m.i);
       s += `<g data-dest="${m.to}" style="cursor:pointer"><circle class="dst" cx="${x}" cy="${y}" r="6.3" style="stroke:var(--pz-${m.c});fill:var(--pz-${m.c});fill-opacity:.18"/><g opacity=".5">${ficha(f, m.c, x, y, m.to === 71 ? 3 : 4.2)}</g>
-        ${m.cap ? `<text x="${x + 5}" y="${y - 3}" font-size="6.5">💥</text>` : ''}<circle cx="${x}" cy="${y}" r="8" fill="transparent"/></g>`;
+        ${m.cap ? `<image href="img/partxis/captura.webp" x="${x + 1.5}" y="${y - 9}" width="8" height="8" style="pointer-events:none"/>` : ''}<circle cx="${x}" cy="${y}" r="8" fill="transparent"/></g>`;
     }
   }
   // fichas: dos en la misma casilla se dibujan una al lado de la otra

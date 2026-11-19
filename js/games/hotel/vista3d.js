@@ -146,7 +146,15 @@ export async function crearHotel3D(cont) {
     for (const g of coches) if (g) g.scale.setScalar(.92 * e.esc);
     E.marcar();
   };
-  function crearCoche(color) {
+  const cargadorF = new T.TextureLoader();
+  function crearCoche(color, img) {
+    if (img) {                                                            // figura (imagen IA teñida) sobre una peana del color del jugador
+      const g = new T.Group(), cm = new T.MeshStandardMaterial({ color, roughness: .5, metalness: .1, map: mapaF }); g.userData.cm = cm; g.userData.img = img;
+      const peana = new T.Mesh(new T.CylinderGeometry(.2, .24, .07, 20), cm); peana.position.y = .1; g.add(peana);
+      const tx = cargadorF.load(img, () => E.marcar()); tx.colorSpace = T.SRGBColorSpace;
+      const sp = new T.Sprite(new T.SpriteMaterial({ map: tx, transparent: true, depthWrite: false })); sp.scale.set(.9, .9, 1); sp.position.y = .58; g.add(sp);
+      g.scale.setScalar(.92 * estF.esc); S3.add(g); return g;
+    }
     const g = new T.Group(), cm = new T.MeshStandardMaterial({ color, roughness: .3, metalness: .2, map: mapaF }); g.userData.cm = cm;
     g.add(caja(.56, .16, .3, cm, 0, .17, 0)); g.add(caja(.28, .15, .26, mat('#DDEEFF', { roughness: .15 }), -.04, .32, 0)); g.add(caja(.1, .06, .22, cm, -.04, .41, 0));
     for (const [x, z] of [[-.18, -.16], [.18, -.16], [-.18, .16], [.18, .16]]) { const w = new T.Mesh(new T.CylinderGeometry(.07, .07, .06, 10), mat('#222')); w.rotation.x = Math.PI / 2; w.position.set(x, .08, z); g.add(w); }
@@ -194,7 +202,8 @@ export async function crearHotel3D(cont) {
   };
   V.pintar = S => {
     S.jug.forEach((p, j) => {
-      if (!coches[j]) { coches[j] = crearCoche(p.color); colocar(j, coches[j], p.pos); }
+      if (coches[j] && !coches[j].userData.anim && (coches[j].userData.img || '') !== (p.img || '')) { S3.remove(coches[j]); coches[j] = null; }
+      if (!coches[j]) { coches[j] = crearCoche(p.color, p.img); colocar(j, coches[j], p.pos); }
       const g = coches[j]; g.userData.cm.color.set(p.color); g.visible = p.vivo; if (!g.userData.anim) colocar(j, g, p.pos);
     });
     for (const id of IDS_HOTEL) {

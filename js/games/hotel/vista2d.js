@@ -63,7 +63,8 @@ export function crearHotel2D(cont) {
   let escF = 1; V.fichas = e => { escF = e.esc; };                       // 🚗 Apariencia: tamaño de los coches (el color llega en p.color)
   V.pintar = S => {
     S.jug.forEach((p, j) => {
-      if (!coches[j]) { const g = el('g'); g.append(el('circle', { r: 11, fill: p.color, stroke: '#fff', 'stroke-width': 2.5 }), im(COCHE_IMG[p.coche] || 'c-berlina', -13, -13, 26)); capaCoche.append(g); coches[j] = g; }
+      if (!coches[j]) { const g = el('g'); g.append(el('circle', { r: 11, fill: p.color, stroke: '#fff', 'stroke-width': 2.5 }), p.img ? el('image', { href: p.img, x: -13, y: -13, width: 26, height: 26 }) : im(COCHE_IMG[p.coche] || 'c-berlina', -13, -13, 26)); capaCoche.append(g); coches[j] = g; g.dataset.k = p.img || ''; }
+      if (coches[j].dataset.k !== (p.img || '')) { const g = coches[j]; g.lastChild.remove(); g.append(p.img ? el('image', { href: p.img, x: -13, y: -13, width: 26, height: 26 }) : im(COCHE_IMG[p.coche] || 'c-berlina', -13, -13, 26)); g.dataset.k = p.img || ''; }
       const g = coches[j]; g.firstChild.setAttribute('fill', p.color); g.firstChild.setAttribute('r', 11 * escF); { const w = 26 * escF, l = g.lastChild; l.setAttribute('x', -w / 2); l.setAttribute('y', -w / 2); l.setAttribute('width', w); l.setAttribute('height', w); } g.style.display = p.vivo ? '' : 'none'; if (!g.dataset.anim) { const [x, y] = posCoche(j, p.pos); ponCoche(j, x, y); }
     });
     for (const id of IDS_HOTEL) {

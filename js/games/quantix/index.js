@@ -18,7 +18,8 @@ export const resumen = d => M.resumen(d.s);
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; efectos = []; activo = null; capas = null;
-  asp = api.aspecto([grupoEscenario('', 'Imagen oculta'), grupoPersonaje('Jefe'),
+  asp = api.aspecto([grupoEscenario('', 'Imagen oculta'), { clave: 'jefe', titulo: 'Aspecto del jefe', icono: '👾', ventana: true, forma: 'figura', def: 'variado', opciones: [{ id: 'variado', nombre: 'Variados', img: 'img/quantix/fantasma.webp' }, { id: 'bomba', nombre: 'Bomba', img: 'img/quantix/bomba.webp' }, { id: 'calabaza', nombre: 'Calabaza', img: 'img/quantix/calabaza.webp' }, { id: 'chispa', nombre: 'Chispa', img: 'img/quantix/chispa.webp' }, { id: 'craneo', nombre: 'Cráneo', img: 'img/quantix/craneo.webp' }, { id: 'dron', nombre: 'Dron', img: 'img/quantix/dron.webp' }, { id: 'erizo', nombre: 'Erizo', img: 'img/quantix/erizo.webp' }, { id: 'escorpion', nombre: 'Escorpión', img: 'img/quantix/escorpion.webp' }, { id: 'fantasma', nombre: 'Fantasma', img: 'img/quantix/fantasma.webp' }, { id: 'limo', nombre: 'Limo', img: 'img/quantix/limo.webp' }, { id: 'medusa', nombre: 'Medusa', img: 'img/quantix/medusa.webp' }, { id: 'peludo', nombre: 'Peludo', img: 'img/quantix/peludo.webp' }, { id: 'robot', nombre: 'Robot', img: 'img/quantix/robot.webp' }] },
+    grupoPersonaje('Jefe'),
     { clave: 'est', titulo: 'Color del trazo', def: 'neon', opciones: Object.entries(ESTILOS).map(([id, e]) => ({ id, nombre: e.n, sw: e.sw })) },
     { clave: 'panel', titulo: 'Panel sin descubrir', def: 'oscuro', opciones: [{ id: 'oscuro', nombre: 'Oscuro', sw: ['#0B1030', '#1B2358'] }, { id: 'cristal', nombre: 'Cristal', sw: ['#5B6AA8', '#A9B6F0'] }, { id: 'borroso', nombre: 'Pista (se intuye la imagen)', sw: ['#2A3270', '#8A96D8'] }] }], () => { sucio = true; if (S) dibujar(); });
   await api.css(new URL('./quantix.css', import.meta.url));
@@ -229,20 +230,20 @@ function dibujar() {
   }
   // jefes
   const emo = emojiPersonaje(asp);
-  for (const b of S.jefes) jefe(b, ahora, emo);
+  S.jefes.forEach((b, k) => jefe(b, ahora, emo, k));
   // aviso: pulsa junto a una zona descubierta
   if (aviso && ahora - aviso < 900 && S.fase === 'jugar') { ctx.globalAlpha = 1 - (ahora - aviso) / 900; ctx.fillStyle = 'rgba(10,15,40,.8)'; ctx.fillRect(40, M.H - 62, M.W - 80, 32); ctx.fillStyle = '#fff'; ctx.font = '700 13px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Empieza junto a una zona descubierta', M.W / 2, M.H - 41); ctx.globalAlpha = 1; }
   if (S.inv > 0 && S.fase === 'jugar') { ctx.fillStyle = `rgba(255,40,60,${S.inv / .6 * .25})`; ctx.fillRect(0, 0, M.W, M.H); }
 }
-function jefe(b, t, emo) {
+const IMG_JEFE = ['bomba', 'calabaza', 'chispa', 'craneo', 'dron', 'erizo', 'escorpion', 'fantasma', 'limo', 'medusa', 'peludo', 'robot'], cacheJefe = {};
+function imgJefe(id) { let i = cacheJefe[id]; if (!i) { i = cacheJefe[id] = new Image(); i.src = `img/quantix/${id}.webp`; } return i.complete && i.naturalWidth ? i : null; }
+function jefe(b, t, emo, k) {
   const c = M.CELDA, x = b.x * c, y = b.y * c, col = COLJ[b.t], rr = 10 + Math.sin(t / 160 + b.x) * 1.2;
   if (emo) { ctx.font = `${Math.round(c * 2.6)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.fillText(emo, x, y + 1); ctx.shadowBlur = 0; return; }
   const g = ctx.createRadialGradient(x, y, 1, x, y, rr * 2.2); g.addColorStop(0, rgba(col, .55)); g.addColorStop(1, rgba(col, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, rr * 2.2, 0, 6.283); ctx.fill();
-  ctx.save(); ctx.translate(x, y); ctx.rotate(t / 400 * (b.t === 'rebote' ? 1 : -1));
-  ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.shadowColor = col; ctx.shadowBlur = 10;
-  ctx.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; ctx.moveTo(Math.cos(a) * 5, Math.sin(a) * 5); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } ctx.stroke();
-  ctx.beginPath(); ctx.arc(0, 0, rr * .75, 0, 6.283); ctx.stroke(); ctx.restore(); ctx.shadowBlur = 0;
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 6.283); ctx.fill();
+  const sel = asp && asp.valores.jefe || 'variado', id = sel === 'variado' ? IMG_JEFE[(S.nivel + k) % IMG_JEFE.length] : sel, im = imgJefe(id);
+  if (im) { const w = c * 3.4; ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(t / 260 + b.x) * .18); ctx.drawImage(im, -w / 2, -w / 2, w, w); ctx.restore(); }
+  else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, rr * .6, 0, 6.283); ctx.fill(); }
 }
 function pintarHud() {
   if (!S || !$('#qxPts')) return;

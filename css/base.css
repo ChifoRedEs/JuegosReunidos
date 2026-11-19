@@ -444,3 +444,9 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 .ficha.clara b{text-shadow:none}
 .ficha.clara small{color:rgba(29,36,51,.9)}
 .ficha.clara .ico{filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}
+
+/* rejilla de figuras de ficha (Apariencia): miniaturas cuadradas, 4 por fila */
+.ap-rej.ap-figura{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-figura .ap-ficha img{aspect-ratio:1/1;height:auto;object-fit:contain;background:var(--card);box-shadow:none}
+.ap-figura .ap-ficha small{font-size:9.5px}
+.figp{display:inline-block;width:1.3em;height:1.3em;vertical-align:middle;background:center/contain no-repeat;font-style:normal;flex:none}

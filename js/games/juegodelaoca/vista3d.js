@@ -44,11 +44,14 @@ export async function crearOca3D(cont, o) {
     const vistas = new Set();
     for (const p of S.fichas) {
       vistas.add(p.j); let g = mapa.get(p.j);
-      if (g && (g.userData.emoji !== (p.emoji || '') || g.userData.color !== p.color)) { piezas.remove(g); mapa.delete(p.j); g = null; }
+      if (g && (g.userData.emoji !== (p.emoji || p.img || '') || g.userData.color !== p.color)) { piezas.remove(g); mapa.delete(p.j); g = null; }
       const tx = p.c - 3.5 + (p.dx || 0), tz = p.f - 3.5 + (p.dz || 0);
       if (!g) {
         g = new T.Group();
-        if (p.emoji) {                                                       // solo el avatar elegido, sobre una peana fina del color del jugador
+        if (p.img && !p.emoji) {
+          const peana = new T.Mesh(new T.CylinderGeometry(.3, .34, .06, 28), new T.MeshStandardMaterial({ color: p.color, roughness: .35 })); peana.position.y = .03; peana.castShadow = true; g.add(peana);
+          const sp = new T.Sprite(new T.SpriteMaterial({ map: new T.TextureLoader().load(p.img, () => E.marcar()), transparent: true, depthWrite: false })); sp.scale.set(1.05, 1.05, 1.05); sp.position.y = .58; g.add(sp);
+        } else if (p.emoji) {                                                       // solo el avatar elegido, sobre una peana fina del color del jugador
           const peana = new T.Mesh(new T.CylinderGeometry(.3, .34, .06, 28), new T.MeshStandardMaterial({ color: p.color, roughness: .35 })); peana.position.y = .03; peana.castShadow = true; g.add(peana);
           const sp = new T.Sprite(new T.SpriteMaterial({ map: emojiTextura(p.emoji, 128), transparent: true, depthWrite: false })); sp.scale.set(.9, .9, .9); sp.position.y = .55; g.add(sp);
         } else {
@@ -56,7 +59,7 @@ export async function crearOca3D(cont, o) {
           const cabeza = new T.Mesh(new T.SphereGeometry(.2, 20, 14), cu.material); cabeza.position.y = .72; cabeza.castShadow = true; g.add(cabeza);
         }
         g.scale.setScalar(estF.esc); if (mapaF) g.traverse(o => { if (o.material && o.material.isMeshStandardMaterial) o.material.map = mapaF; });
-        g.position.set(tx, Y, tz); g.userData = { emoji: p.emoji || '', color: p.color }; piezas.add(g); mapa.set(p.j, g);
+        g.position.set(tx, Y, tz); g.userData = { emoji: p.emoji || p.img || '', color: p.color }; piezas.add(g); mapa.set(p.j, g);
       }
       Object.assign(g.userData, { tx, tz, turno: !!p.turno, mueve: !!p.mueve });
     }

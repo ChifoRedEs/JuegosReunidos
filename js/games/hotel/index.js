@@ -3,6 +3,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
+import { grupoFigura, figuraTintada, observarFiguras } from '../../core/figuras.js';
 import { grupoFondo } from '../../core/aspectos.js';
 import { HOTELES, IDS_HOTEL, nEdif, tarifa, COLORES_JUGADOR, COCHES, COCHE_IMG, IMG, DINERO_INICIAL, SALARIO, MAX_ENTRADAS, CASILLAS_DE, NOMBRE_CASILLA, INFO_TIPO, EXTRA_LEYENDA, TIPO, LADOS } from './datos.js';
 import * as M from './motor.js';
@@ -18,6 +19,9 @@ let enPausa = false;
 const pausa = async ms => { if (ms) await esperar(ms); while (enPausa && vivo) await esperar(120); };   // «Pausa / Salir» congela los turnos de la CPU y las animaciones
 const eur = n => M.fmt(n);
 const ic = n => `<img class="hti" src="${IMG(n)}" alt="" draggable="false">`, coche = c => ic(COCHE_IMG[c] || 'c-berlina');
+let obsFig = null;
+const figId = () => (asp && asp.valores.figura) || 'coche';
+const pz = c => `<i class="figp" data-c="${c}"></i>`;
 const estrellas = h => { const e = S.hot[h].etapa; return e ? '★'.repeat(Math.min(5, e)) + (S.hot[h].inst ? ic('piscina') : '') : ''; };
 
 /* ---------- validación / resumen ---------- */
@@ -34,13 +38,14 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; bloqueado = false; V = null; sel = null; plan = {}; forzar2d = false; modo3d = false; ses++;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
   if (!vivo) return;
-  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...{ ...grupoFondo('#htVista'), def: 't-n-hotel-dia' }, tt: true }, { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#8CCB6A', '#8A5A3B'] }, { id: 'arena', nombre: 'Arena', sw: ['#EBD6A0', '#A6783A'] }, { id: 'nieve', nombre: 'Nieve', sw: ['#E3EEF8', '#6B7F99'] }, { id: 'rosa', nombre: 'Primavera', sw: ['#F4C6DA', '#9A4F6D'] }, { id: 'noche', nombre: 'Noche', sw: ['#3A4A7A', '#232B50'] }] }, ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
-    () => { if (D3) D3.estilo(asp.valores); if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
+  asp = api.aspecto([...grupoDado(), grupoFigura({ clave: 'figura', titulo: 'Figura de las fichas (coches)', def: 'coche' }), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...{ ...grupoFondo('#htVista'), def: 't-n-hotel-dia' }, tt: true }, { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'jardin', opciones: [{ id: 'jardin', nombre: 'Jardín', sw: ['#8CCB6A', '#8A5A3B'] }, { id: 'arena', nombre: 'Arena', sw: ['#EBD6A0', '#A6783A'] }, { id: 'nieve', nombre: 'Nieve', sw: ['#E3EEF8', '#6B7F99'] }, { id: 'rosa', nombre: 'Primavera', sw: ['#F4C6DA', '#9A4F6D'] }, { id: 'noche', nombre: 'Noche', sw: ['#3A4A7A', '#232B50'] }] }, ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🚗', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
+    () => { if (D3) D3.estilo(asp.valores); if (obsFig) obsFig.repintar(); if (!S) return; if (modo3d !== quiere3D()) { armar(); } else if (V) V.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./hotel.css', import.meta.url));
   const c0 = api.pref('cfg', null);
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', nivel: [1, 2, 3].includes(c0.nivel) ? c0.nivel : 2, jug: c0.jug.map(([n, t], i) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
   const g = api.cargar(); S = g && M.validar(g) ? g : null;
+  if (obsFig) obsFig.parar(); obsFig = observarFiguras(root, figId);
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
   onKey = e => { if (e.code === 'Space' && S && !bloqueado && S.fase === 'tirar' && !S.jug[S.turno].cpu && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); humano({ t: 'tirar' }); } };
   document.addEventListener('keydown', onKey);
@@ -53,6 +58,7 @@ export async function mount(r, a) {
   if (S && S.fase !== 'fin') { armar(); pintar(); ciclo(); } else setup();
 }
 export function unmount() {
+  if (obsFig) { obsFig.parar(); obsFig = null; }
   vivo = false; enPausa = false; ses++; quitarDado(); cerrarVista(); document.removeEventListener('keydown', onKey);
   if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); }
   document.querySelectorAll('.htmodal').forEach(m => m.remove());
@@ -66,7 +72,7 @@ function setup() {
   S = null; quitarDado(); cerrarVista(); sel = null; plan = {};
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra los terrenos junto al camino, pide <b>licencias de obras</b> y levanta tus hoteles fase a fase. Abre <b>entradas</b> al pasar por el Ayuntamiento: cada vez que un rival cae en una, te paga las noches. Gana el último jugador que no se arruine${cfg.limite ? ` (o quien tenga más patrimonio tras ${cfg.limite} rondas)` : ''}.</p>
-    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="htfichab" aria-hidden="true">${coche(COCHES[i])}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="htfichab" aria-hidden="true">${pz(cj(COLORES_JUGADOR[i]))}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [40, '40 rondas'], [80, '80 rondas']].map(([v, l]) => `<button class="btn ${cfg.limite === v ? 'on' : ''}" data-limite="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Nivel de la CPU</span><div class="seg">${[1, 2, 3].map(k => `<button class="btn ${cfg.nivel === k ? 'on' : ''}" data-nivel="${k}">${NIVELES[k]}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
@@ -127,18 +133,18 @@ const txtFase = {
 };
 // 🚗 Coches: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
 const cj = c => { const e = estilo(asp.valores), k = COLORES_JUGADOR.indexOf(c); return [e.hex, e.hex2, e.hex3, e.hex4][k] || c; };
-const estadoV = () => ({ ...S, jug: S.jug.map(p => ({ ...p, color: cj(p.color) })) });
+const estadoV = () => ({ ...S, jug: S.jug.map(p => ({ ...p, color: cj(p.color), img: figuraTintada(figId(), cj(p.color), () => { if (V && S) pintarV(); }) || '' })) });
 const pintarV = () => { V.fichas(estilo(asp.valores)); V.pintar(estadoV()); };
 function pintar() {
   if (!S || !$('#htJug')) return;
   const j = M.actor(S), tj = S.turno;
   if ((S.fase === 'ayto' || S.fase === 'entLibre') && !(sel && sel.h) && !S.jug[j].cpu) { const hs = [...new Set(M.legales(S).entradas.map(o => o.h))]; if (hs.length === 1) sel = { h: hs[0] }; }
-  $('#htJug').innerHTML = S.jug.map((p, i) => `<div class="htj ${i === tj && S.fase !== 'fin' ? 'turno' : ''} ${p.vivo ? '' : 'fuera'} ${i === S.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="htji">${coche(p.coche)}</span><b>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</b><span class="htdin">${eur(p.dinero)}</span>
+  $('#htJug').innerHTML = S.jug.map((p, i) => `<div class="htj ${i === tj && S.fase !== 'fin' ? 'turno' : ''} ${p.vivo ? '' : 'fuera'} ${i === S.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="htji">${pz(cj(p.color))}</span><b>${esc(p.nombre)}${p.cpu ? ' 🤖' : ''}</b><span class="htdin">${eur(p.dinero)}</span>
     <small>${p.vivo ? M.titulos(S, i).map(h => `${HOTELES[h].nombre} ${estrellas(h)}`).join(' · ') || 'Sin hoteles' : 'Eliminado'}</small>
     <span class="htchips">${M.titulos(S, i).map(h => `<i style="background:${HOTELES[h].color}" title="${HOTELES[h].nombre}"></i>`).join('')}</span></div>`).join('');
   const p = S.jug[tj];
   $('#htTurno').innerHTML = S.fase === 'fin' ? `🏆 <b>${esc(S.jug[S.ganador].nombre)}</b> gana la partida<br><small>${esc(S.motivo)}</small>`
-    : `<span style="color:${cj(p.color)}">${coche(p.coche)} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
+    : `<span style="color:${cj(p.color)}">${pz(cj(p.color))} <b>${esc(p.nombre)}</b></span> · ${txtFase[S.fase]}${S.fase === 'subasta' ? ` · puja ${esc(S.jug[j].nombre)}` : ''}<br><small>Ronda ${S.ronda}${S.limite ? '/' + S.limite : ''}${dadoVis ? ` · 🎲 ${dadoVis}` : ''}</small><br><button class="btn htcas" data-ac="leyenda" aria-label="Ver la leyenda de casillas"><i style="background:${INFO_TIPO[TIPO[p.pos]].color}"></i>📍 ${INFO_TIPO[TIPO[p.pos]].nombre} · 📖 leyenda</button>`;
   $('#htAcc').innerHTML = accionesHTML(j);
   if (D3) { D3.color(cj(p.color)); D3.activar(S.fase === 'tirar' && !S.jug[j].cpu && !bloqueado, `Toca el dado para tirar · ${p.nombre}`); }
   const L = S.log.slice(-60).reverse(); $('#htLog').innerHTML = L.map(t => `<li>${esc(t)}</li>`).join(''); const m = $('#htMsg'); if (m && S.log.length) m.textContent = S.log[S.log.length - 1];

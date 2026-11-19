@@ -2,6 +2,7 @@ import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import * as O from './motor.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
+import { grupoFigura, figuraTintada, fondoFigura } from '../../core/figuras.js';
 import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
 
 let animJ = -1;
@@ -29,7 +30,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; anim = false; vis = {}; dadosVis = null; msgEvento = ''; forzar2d = false; modo3d = false;
   try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
-  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...{ ...grupoFondo('#ocTab'), def: 't-n-mesa-juegos-1' }, tt: true }, grupoPersonaje('Personajes (tu ficha)'), ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🪿', lados: ['Rojo', 'Azul', 'Verde', 'Amarillo'], formas: false }), { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (D3) D3.estilo(asp.valores); if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
+  asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...{ ...grupoFondo('#ocTab'), def: 't-n-mesa-juegos-1' }, tt: true }, grupoPersonaje('Personajes (tu ficha)'), grupoFigura({ clave: 'figura', def: 'peon' }), ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🪿', lados: ['Rojo', 'Azul', 'Verde', 'Amarillo'], formas: false }), { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'clasico', opciones: [{ id: 'clasico', nombre: 'Clásico', sw: ['#FFF3D6', '#7CC36B'] }, { id: 'alegre', nombre: 'Alegre', sw: ['#FFE3F1', '#8B5CF6'] }, { id: 'noche', nombre: 'Noche', sw: ['#2A3460', '#F2B600'] }] }], () => { if (D3) D3.estilo(asp.valores); if (!S) return; if (modo3d !== quiere3D()) armar(); else if (V3) V3.recolor(); pintar(); });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
   await api.css(new URL('./juegodelaoca.css', import.meta.url));
   const c0 = api.pref('cfg', null);
@@ -93,10 +94,10 @@ function pintar3D() {
   if (!V3 || !S) return;
   V3.fichas(estilo(asp.valores));
   const porCasilla = {}; S.jug.forEach((_, j) => { const p = posDe(j); (porCasilla[p] = porCasilla[p] || []).push(j); });
-  const emo = emojiPersonaje(asp);
+  const emo = emojiPersonaje(asp), fig = asp.valores.figura || 'peon';
   V3.pintar({ fichas: S.jug.map((J, j) => {
     const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
-    return { j, color: colF(J.color), f, c, dx: m > 1 ? (k % 2 ? .22 : -.22) : 0, dz: m > 2 ? (k < 2 ? -.2 : .2) : 0, emoji: emo && !J.cpu ? emo : '',
+    return { j, color: colF(J.color), f, c, dx: m > 1 ? (k % 2 ? .22 : -.22) : 0, dz: m > 2 ? (k < 2 ? -.2 : .2) : 0, emoji: emo && !J.cpu ? emo : '', img: figuraTintada(fig, colF(J.color), colocarFichas) || '',
       turno: j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim), mueve: vis[j] != null };
   }) });
 }
@@ -119,7 +120,7 @@ function colocarFichas() {
     const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
     const dx = m > 1 ? (k % 2 ? .22 : -.22) : 0, dy = m > 2 ? (k < 2 ? -.2 : .2) : m === 2 ? 0 : 0;
     const f0 = el.querySelector(`[data-f="${j}"]`); f0.style.setProperty('--c', colF(J.color));
-    const emo = emojiPersonaje(asp), pj = !!emo && !J.cpu; f0.textContent = pj ? emo : ''; f0.classList.toggle('pj', pj);      // «Personajes»: tu ficha lleva el emoji
+    const emo = emojiPersonaje(asp), pj = !!emo && !J.cpu; f0.textContent = pj ? emo : ''; f0.classList.toggle('pj', pj); if (!pj) fondoFigura(f0, asp.valores.figura || 'peon', colF(J.color), colocarFichas); else { f0.classList.remove('fig'); f0.style.backgroundImage = ''; }      // «Personajes»: tu ficha lleva el emoji
     f0.style.left = `${(c + .5 + dx) * 12.5}%`; f0.style.top = `${(f + .58 + dy) * 12.5}%`;
     f0.classList.toggle('turno', j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim)); f0.classList.toggle('mueve', vis[j] != null);
   });

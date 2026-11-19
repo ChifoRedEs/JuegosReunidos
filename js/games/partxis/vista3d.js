@@ -105,12 +105,13 @@ export async function crearParchis3D(cont, o = {}) {
   const mToque = new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   const gPeana = new T.CylinderGeometry(.36, .4, .06, 28).translate(0, .03, 0);   // con avatar solo se ve una peana fina del color
   function crearFicha(p) {
-    const g = new T.Group(), cuerpo = new T.Mesh(p.emoji ? gPeana : geoFicha(forma), mFicha[p.c]); cuerpo.castShadow = true; g.add(cuerpo);
-    if (forma === 'canica' && !p.emoji) { const br = new T.Mesh(new T.SphereGeometry(.09, 10, 8), new T.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .65 })); br.position.set(-.13, .54, .16); g.add(br); }
+    const g = new T.Group(), avatar = p.emoji || p.img, cuerpo = new T.Mesh(avatar ? gPeana : geoFicha(forma), mFicha[p.c]); cuerpo.castShadow = true; g.add(cuerpo);
+    if (false) { const br = new T.Mesh(new T.SphereGeometry(.09, 10, 8), new T.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .65 })); br.position.set(-.13, .54, .16); g.add(br); }
     const aro = new T.Mesh(gAroMov, new T.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .95, side: T.DoubleSide, depthWrite: false })); aro.rotation.x = -Math.PI / 2; aro.position.y = .02; aro.visible = false; aro.name = 'aro'; g.add(aro);
     const tq = new T.Mesh(gToque, mToque); tq.rotation.x = -Math.PI / 2; tq.position.y = .05; tq.name = 'toque'; g.add(tq);
     if (p.emoji) { const sp = new T.Sprite(new T.SpriteMaterial({ map: emojiTextura(p.emoji, 96), transparent: true, depthWrite: false })); sp.scale.set(.95, .95, .95); sp.position.y = .56; sp.name = 'emoji'; g.add(sp); }
-    g.userData = { pc: [p.c, p.i], emoji: p.emoji || '', mov: false };
+    if (p.img && !p.emoji) { const sp = new T.Sprite(new T.SpriteMaterial({ map: new T.TextureLoader().load(p.img), transparent: true, depthWrite: false })); sp.scale.set(1.15, 1.15, 1.15); sp.position.y = .62; sp.name = 'emoji'; g.add(sp); }
+    g.userData = { pc: [p.c, p.i], emoji: p.emoji || p.img || '', mov: false };
     return g;
   }
   let fichas = new Map();                                          // 'c,i' -> grupo
@@ -120,7 +121,7 @@ export async function crearParchis3D(cont, o = {}) {
     for (const p of S.piezas) {
       const k = p.c + ',' + p.i; vistas.add(k);
       let g = fichas.get(k);
-      if (g && g.userData.emoji !== (p.emoji || '')) { const [x, z] = [g.position.x, g.position.z]; piezasG.remove(g); g = null; fichas.delete(k); p._x = x; p._z = z; }
+      if (g && g.userData.emoji !== (p.emoji || p.img || '')) { const [x, z] = [g.position.x, g.position.z]; piezasG.remove(g); g = null; fichas.delete(k); p._x = x; p._z = z; }
       if (!g) { g = crearFicha(p); g.position.set(p._x ?? p.x, Y0, p._z ?? p.z); piezasG.add(g); fichas.set(k, g); }
       Object.assign(g.userData, { tx: p.x, tz: p.z, ts0: p.esc || 1, ts: (p.esc || 1) * escF, mov: !!p.mov });
       const aro = g.getObjectByName('aro'); aro.visible = !!p.mov; aro.material.color.set(p.mov ? '#FFFFFF' : '#000');

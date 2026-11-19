@@ -41,3 +41,6 @@
 .oclog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .oclog li:first-child{color:var(--ink);font-weight:800}
 [data-ftex]:not([data-ftex="original"]) .ocf{background-color:var(--c)}
+/* figura de ficha (imagen teñida) */
+.ocf.fig{background-color:transparent;background-size:contain;background-position:center;background-repeat:no-repeat;border:0;box-shadow:none;width:calc(min(100vw,460px) / 8 * .62);height:calc(min(100vw,460px) / 8 * .62);filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+[data-ftex]:not([data-ftex="original"]) .ocf.fig{background-color:transparent}

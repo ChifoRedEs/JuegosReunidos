@@ -3,6 +3,7 @@ import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { grupoFigura, figuraTintada, fondoFigura, observarFiguras } from '../../core/figuras.js';
 import { FICHAS as PERSONAJES, opcionesPersonajes } from '../../core/personajes.js';
 import { GRUPOS, CASILLAS, NUBE, RED, SALARIO, FIANZA, OFICINAS, SEDES, COLORES_JUGADOR, FICHAS } from './datos.js';
 import { crearDado3D, grupoDado } from '../../core/dado3d.js';
@@ -23,7 +24,10 @@ let vista = null, mod3d = null, botones3d = null, hay3d = false, tok3 = 0, forza
 const TIPO3 = { empresa: 'destino', nube: 'aero', red: 'serv', noticias: 'suerte', tendencias: 'imprevisto' };
 // 🧑 Fichas: color de cada jugador (por su color de partida), tamaño y textura (js/core/fichas.js)
 const cj = c => { const e = estilo(asp.valores), k = COLORES_JUGADOR.indexOf(c); return [e.hex, e.hex2, e.hex3, e.hex4][k] || c; };
-const estado3D = () => ({ jug: G.jug.map(p => ({ ...p, color: cj(p.color) })), c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
+let obsFig = null;
+const figId = () => asp.valores.figura || 'peon';
+const pz = p => p.pj ? esc(p.ficha) : `<i class="figp" data-c="${cj(p.color)}"></i>`;
+const estado3D = () => ({ jug: G.jug.map(p => ({ ...p, color: cj(p.color), img: p.pj ? '' : (figuraTintada(figId(), cj(p.color), () => { if (vista && G) vista.actualizar(estado3D()); }) || '') })), c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
 const quiere3D = () => hay3d && !forzar2d && asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (vista) { vista.destruir(); vista = null; } }
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0;
@@ -45,7 +49,9 @@ export async function mount(r, a) {
   api = a; root = r; vivo = true; jugando = false; pendiente = null; vista = null; forzar2d = false; hay3d = false;
   try { const b = await import('../../core/escena3d.js'); if (b.hayWebGL()) { mod3d = await import('../../core/anillo3d.js'); botones3d = b.botonesCamara; hay3d = true; } } catch (e) { console.error(e); }
   if (!vivo) return;
+  if (obsFig) obsFig.parar(); obsFig = observarFiguras(root, () => (asp && asp.valores.figura) || 'peon');
   asp = api.aspecto([...grupoDado(), { clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...{ ...grupoFondo('#mtTab'), def: 't-n-ciudad-dia' }, tt: true }, { ...grupoTablero(), tt: true },
+    grupoFigura({ clave: 'figura', titulo: 'Figura de las fichas', def: 'peon' }),
     { clave: 'ficha', titulo: 'Tu personaje (jugador 1)', icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de la configuración', sec: 'Por defecto' }, ...opcionesPersonajes()] },
     { clave: 'estilo', etiqueta: 'Vista 3D · estilo de los edificios', titulo: 'Estilo de los edificios (vista 3D)', icono: '🏢', def: 'rascacielos', opciones: Object.entries(mod3d ? mod3d.ESTILOS : { rascacielos: { nombre: '🌃 Rascacielos' } }).map(([id, e]) => ({ id, nombre: e.nombre })) },
     ...gruposFichas({ pocos: true, titulo: 'Fichas', tituloEstilos: 'Estilos de Fichas', icono: '🎩', lados: ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'], formas: false })],
@@ -53,7 +59,7 @@ export async function mount(r, a) {
     if (D3) D3.estilo(asp.valores);
     if (G && root.querySelector('#mtJug')) {
       if (modo3d !== quiere3D()) { armar(); pintar(); return; }
-      aplicarPersonaje(); if (vista) { vista.estiloHotel(asp.valores.estilo || 'rascacielos'); vista.tema(); } pintar();
+      aplicarPersonaje(); tokensFig(); if (obsFig) obsFig.repintar(); if (vista) { vista.estiloHotel(asp.valores.estilo || 'rascacielos'); vista.tema(); } pintar();
     }
   });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
@@ -76,6 +82,7 @@ export async function mount(r, a) {
   else setup();
 }
 export function unmount() {
+  if (obsFig) { obsFig.parar(); obsFig = null; }
   vivo = false; enPausa = false; jugando = false; sesion++;
   if (pendiente) { pendiente(ABORTO); pendiente = null; }
   document.removeEventListener('keydown', onKey);
@@ -93,7 +100,7 @@ function setup() {
   G = null; jugando = false; quitarDado(); cerrar3D();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra calles, completa temas, abre casas y cobra alquiler a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
-    ${cfg.jug.map(([nom, t, f], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><button class="mtfichab" data-ficha="${i}" aria-label="Cambiar ficha del jugador ${i + 1}">${FICHAS[f]}</button><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${cfg.jug.map(([nom, t, f], i) => `<div class="jugfila" style="--c:${cj(COLORES_JUGADOR[i])}"><span class="mtfichab" aria-hidden="true"><i class="figp" data-c="${cj(COLORES_JUGADOR[i])}"></i></span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Dinero</span><div class="seg">${[1200, 1600, 2000].map(v => `<button class="btn ${cfg.dinero === v ? 'on' : ''}" data-dinero="${v}">${v}M</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la quiebra'], [20, '20 rondas'], [40, '40 rondas']].map(([v, l]) => `<button class="btn ${cfg.rondas === v ? 'on' : ''}" data-rondas="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
@@ -111,15 +118,16 @@ function nuevaSetup() {
 const personajeElegido = () => (PERSONAJES[asp.valores.ficha] || {}).e || null;
 function aplicarPersonaje() {
   const i = G.jug.findIndex(p => !p.bot); if (i < 0) return;
-  const orig = cfg.jug.filter(j => j[1] !== 'n')[i], e = personajeElegido() || (orig ? FICHAS[orig[2]] : null);
-  if (!e || G.jug[i].ficha === e) return;
-  G.jug[i].ficha = e; const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (t) t.textContent = e; guardar();
+  const e = personajeElegido(), p = G.jug[i];
+  if (!e) { if (p.pj) { p.pj = false; guardar(); } return; }
+  if (p.pj && p.ficha === e) return;
+  p.ficha = e; p.pj = true; const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (t) { t.textContent = e; t.classList.remove('fig'); t.style.backgroundImage = ''; } guardar();
 }
 function empezar() {
   const jugadores = cfg.jug.map(([nombre, t, f], i) => ({ nombre: nombre.trim() || `Jugador ${i + 1}`, ficha: FICHAS[f], color: COLORES_JUGADOR[i], bot: t === 'c', t })).filter(j => j.t !== 'n');
   if (jugadores.length < 2) return;
   const mio = personajeElegido(), h = jugadores.find(j => !j.bot);
-  if (mio && h) { h.ficha = mio; jugadores.forEach(j => { if (j !== h && j.ficha === mio) j.ficha = FICHAS.find(f => !jugadores.some(q => q.ficha === f)) || j.ficha; }); }
+  if (mio && h) { h.ficha = mio; h.pj = true; jugadores.forEach(j => { if (j !== h && j.ficha === mio) j.ficha = FICHAS.find(f => !jugadores.some(q => q.ficha === f)) || j.ficha; }); }
   api.setPref('cfg', cfg);
   sesion++; G = new Partida(jugadores, crearGanchos(sesion), { bote: cfg.bote, subasta: cfg.subasta, dinero: cfg.dinero, rondas: cfg.rondas }); reg = false;
   armar(); pintar(); log(`¡Empieza la partida! Cada jugador recibe ${cfg.dinero}M.`); guardar();
@@ -176,12 +184,17 @@ async function iniciar3D(t) {
     vista = v; v.construir(estado3D()); botones3d(host, v); const c = $('#mtCarga'); if (c) c.remove(); pintar();
   } catch (e) { console.error(e); if (t === tok3 && vivo && G) { forzar2d = true; armar(); pintar(); } }
 }
+function tokensFig() {
+  if (!G) return;
+  G.jug.forEach((p, i) => { const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (!t) return; if (p.pj) { t.textContent = p.ficha; t.classList.remove('fig'); t.style.backgroundImage = ''; } else { t.textContent = ''; fondoFigura(t, figId(), cj(p.color), tokensFig); } });
+}
 function colocar(i) {
   if (modo3d) return;
   const p = G.jug[i], cel = root.querySelector(`.mtc[data-c="${p.pos}"] .mttk`); if (!cel) return;
   let t = root.querySelector(`.mtficha[data-j="${i}"]`);
-  if (!t) { t = document.createElement('span'); t.className = 'mtficha fx'; t.dataset.j = i; t.textContent = p.ficha; }
+  if (!t) { t = document.createElement('span'); t.className = 'mtficha fx'; t.dataset.j = i; }
   t.style.setProperty('--c', cj(p.color));
+  if (p.pj) { t.textContent = p.ficha; t.classList.remove('fig'); t.style.backgroundImage = ''; } else { t.textContent = ''; fondoFigura(t, figId(), cj(p.color), () => { if (G) tokensFig(); }); }
   cel.append(t); t.classList.remove('salta'); void t.offsetWidth; t.classList.add('salta');
 }
 function pintar() {
@@ -196,12 +209,12 @@ function pintar() {
   const act = G.terminada ? -1 : G.turno;
   $('#mtJug').innerHTML = G.jug.map((p, i) => {
     const mias = G.propias(i);
-    return `<div class="mtj ${i === act ? 'turno' : ''} ${p.fuera ? 'fuera' : ''} ${i === G.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="mtji">${esc(p.ficha)}</span><b>${esc(p.nombre)}</b><span class="mtdin">${p.fuera ? 'Quiebra' : p.dinero + 'M'}</span>
+    return `<div class="mtj ${i === act ? 'turno' : ''} ${p.fuera ? 'fuera' : ''} ${i === G.ganador ? 'gana' : ''}" style="--c:${cj(p.color)}" data-j="${i}"><span class="mtji">${pz(p)}</span><b>${esc(p.nombre)}</b><span class="mtdin">${p.fuera ? 'Quiebra' : p.dinero + 'M'}</span>
       <small>${p.fuera ? '' : `Patrimonio ${G.patrimonio(p)}M${p.bot ? ' · CPU' : ''}${p.espera ? ' · 🕵️' : ''}${p.pases.length ? ' · 🎫' + (p.pases.length > 1 ? '×2' : '') : ''}`}</small>
       <span class="mtchips">${mias.map(s => `<i class="${s.hip ? 'h' : ''}" style="background:${s.g ? GRUPOS[s.g].color : 'var(--mut)'}" title="${esc(s.nombre)}"></i>`).join('')}</span></div>`;
   }).join('');
   const p = G.p(), humano = !p.bot && !p.fuera && !G.terminada, libre = humano && !jugando;
-  $('#mtTurno').innerHTML = G.terminada ? `🏆 Gana <b>${esc(G.jug[G.ganador].nombre)}</b>` : `Turno de <b style="color:${cj(p.color)}">${esc(p.ficha)} ${esc(p.nombre)}</b>${p.espera ? '<br><small>retenido en la Auditoría</small>' : ''}`;
+  $('#mtTurno').innerHTML = G.terminada ? `🏆 Gana <b>${esc(G.jug[G.ganador].nombre)}</b>` : `Turno de <b style="color:${cj(p.color)}">${pz(p)} ${esc(p.nombre)}</b>${p.espera ? '<br><small>retenido en la Auditoría</small>' : ''}`;
   $('#mtBote').textContent = `${G.reglas.bote ? `Bote: ${G.bote}M · ` : ''}Ronda ${G.ronda}${G.reglas.rondas ? ` de ${G.reglas.rondas}` : ''}`;
   if (D3) { D3.color(cj(p.color)); D3.activar(libre && !G.terminada, `Toca los dados para tirar · ${p.nombre}`); }
   $('#mtGes').disabled = !libre; $('#mtTrato').disabled = !libre || G.jug.filter(q => !q.fuera).length < 2;
@@ -345,7 +358,7 @@ async function intercambioDesdeBoton() {
     const cont = document.createElement('div'); let b = otros[0];
     const libres = j => G.propias(G.idx(j)).filter(s => !G.grupo(s).some(x => x.of));
     const dibujar = () => {
-      cont.innerHTML = `<div class="bar"><span class="lbl">Con</span><div class="seg">${otros.map(q => `<button type="button" class="btn ${q === b ? 'on' : ''}" data-con="${G.idx(q)}">${esc(q.ficha)} ${esc(q.nombre)}</button>`).join('')}</div></div>
+      cont.innerHTML = `<div class="bar"><span class="lbl">Con</span><div class="seg">${otros.map(q => `<button type="button" class="btn ${q === b ? 'on' : ''}" data-con="${G.idx(q)}">${pz(q)} ${esc(q.nombre)}</button>`).join('')}</div></div>
         <div class="mttrato">${[[a, 'Tú das', 'da'], [b, `Pides a ${esc(b.nombre)}`, 'pide']].map(([j, t, k]) => `<div><b>${t}</b>${libres(j).map(s => `<label class="mtop"><input type="checkbox" data-${k}="${s.id}"><i style="background:${s.g ? GRUPOS[s.g].color : 'var(--mut)'}"></i>${esc(s.nombre)}${s.hip ? ' <small>(hip.)</small>' : ''}</label>`).join('') || '<p class="note">Sin calles que ofrecer.</p>'}
           <label class="mtdinero">Dinero <input class="pedir" type="number" inputmode="numeric" min="0" max="${j.dinero}" step="10" value="0" data-m="${k}"></label><small class="note">Tiene ${j.dinero}M</small></div>`).join('')}</div>`;
     };
@@ -365,7 +378,6 @@ function alEscribir(e) { const i = e.target.dataset.name; if (i != null) { cfg.j
 function clic(e) {
   const b = e.target.closest('button,[data-op]'); if (!b) return; const d = b.dataset;
   if (d.tipo) { const [i, t] = d.tipo.split(','); cfg.jug[+i][1] = t; api.setPref('cfg', cfg); return setup(); }
-  if (d.ficha) { const i = +d.ficha, usadas = cfg.jug.map(j => j[2]); let f = cfg.jug[i][2]; do f = (f + 1) % FICHAS.length; while (usadas.includes(f) && f !== cfg.jug[i][2]); cfg.jug[i][2] = f; api.setPref('cfg', cfg); return setup(); }
   if (d.dinero) { cfg.dinero = +d.dinero; api.setPref('cfg', cfg); return setup(); }
   if (d.rondas) { cfg.rondas = +d.rondas; api.setPref('cfg', cfg); return setup(); }
   if (d.vel) { cfg.vel = d.vel; api.setPref('cfg', cfg); return G ? pintar() : setup(); }

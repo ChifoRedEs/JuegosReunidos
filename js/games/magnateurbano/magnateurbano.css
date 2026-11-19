@@ -100,3 +100,6 @@
 .juego-magnateurbano .mtbanda i .mi{width:100%;height:100%}
 .juego-magnateurbano .mtsede .mi{width:100%;height:100%}
 .juego-magnateurbano .mi.mig{display:block;width:56px;height:56px;margin:0 auto 8px}
+.juego-magnateurbano .mtficha.fig{background-color:#fff;background-position:center;background-size:80%;background-repeat:no-repeat;border-color:var(--c);color:transparent}
+.juego-magnateurbano .mtfichab .figp{width:30px;height:30px}
+.juego-magnateurbano .mtji .figp{width:1.5em;height:1.5em}

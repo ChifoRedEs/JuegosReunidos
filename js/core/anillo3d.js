@@ -229,13 +229,15 @@ export async function crearVista(cont, opciones = {}) {
     marcar();
   };
   const texEmoji = (e) => { const c = lienzo(128, 128), x = c.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(e, 64, 70); return textura(c); };
+  const cargador = new T.TextureLoader(), texImg = u => cargador.load(u, () => marcar());
+  const texPieza = p => p.img ? texImg(p.img) : texEmoji(p.ficha), clavePieza = p => p.img || p.ficha;
   const geoDisco = new T.CylinderGeometry(.17, .2, .07, 20), geoPie = new T.CylinderGeometry(.045, .07, .3, 8).translate(0, .15, 0);
   function crearFicha(p, i) {
     const g = new T.Group();
     const disco = new T.Mesh(geoDisco, new T.MeshLambertMaterial({ color: p.color })); disco.position.y = .035; disco.castShadow = true; g.add(disco);
-    const sp = new T.Sprite(new T.SpriteMaterial({ map: texEmoji(p.ficha), transparent: true, depthWrite: false })); sp.scale.set(.62, .62, 1); sp.position.y = .4; g.add(sp);
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: texPieza(p), transparent: true, depthWrite: false })); sp.scale.set(p.img ? .85 : .62, p.img ? .85 : .62, 1); sp.position.y = p.img ? .5 : .4; g.add(sp);
     g.scale.setScalar(estF.esc); if (mapaF) disco.material.map = mapaF;
-    escena.add(g); fichas[i] = { g, sp, disco, pos: p.pos, x: 0, z: 0, ficha: p.ficha };
+    escena.add(g); fichas[i] = { g, sp, disco, pos: p.pos, x: 0, z: 0, ficha: clavePieza(p) };
   }
   // posición de una ficha dentro de su casilla (varias fichas en la misma casilla se reparten)
   function destinoFicha(i, pos, G) {
@@ -344,7 +346,7 @@ export async function crearVista(cont, opciones = {}) {
     G.jug.forEach((p, i) => {
       if (!fichas[i]) return; const f = fichas[i];
       f.g.visible = !p.fuera; if (f.disco.material.color.getStyle() !== p.color && !f.disco.material.color.equals(new T.Color(p.color))) f.disco.material.color.set(p.color);
-      if (f.ficha !== p.ficha) { f.ficha = p.ficha; f.sp.material.map.dispose(); f.sp.material.map = texEmoji(p.ficha); f.sp.material.needsUpdate = true; }
+      if (f.ficha !== clavePieza(p)) { f.ficha = clavePieza(p); f.sp.material.map.dispose(); f.sp.material.map = texPieza(p); f.sp.material.needsUpdate = true; f.sp.scale.set(p.img ? .85 : .62, p.img ? .85 : .62, 1); f.sp.position.y = p.img ? .5 : .4; }
       if (forzar || (f.pos !== p.pos && !f.anim)) { const d = destinoFicha(i, p.pos, G); f.g.position.set(d.x, .08, d.z); f.pos = p.pos; }
     });
     // si varias fichas comparten casilla, repártelas
