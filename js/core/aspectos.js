@@ -28,8 +28,8 @@ const mezcla = (a, b, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(a.slice
 export function coloresTablero(id) {
   const p = PALETAS_DN.find(x => x.id === id) || PALETAS_DN[0], [acc, bg] = p.sw;
   return p.modo === 'oscuro'
-    ? { id: p.id, acc, cel: mezcla(bg, acc, .2), luz: mezcla(bg, acc, .36), dado: mezcla(bg, acc, .42), muro: acc, flecha: acc }
-    : { id: p.id, acc, cel: mezcla(bg, '#ffffff', .55), luz: mezcla(bg, '#fff3b0', .7), dado: mezcla(bg, acc, .3), muro: acc, flecha: acc };
+    ? { id: p.id, acc, cel: mezcla(bg, acc, .2), luz: mezcla(bg, acc, .36), dado: mezcla(bg, acc, .42), sel: mezcla(bg, acc, .5), muro: acc, flecha: acc }
+    : { id: p.id, acc, cel: mezcla(bg, '#ffffff', .55), luz: mezcla(bg, '#fff3b0', .7), dado: mezcla(bg, acc, .12), sel: mezcla(acc, '#ffffff', .62), muro: acc, flecha: acc };
 }
 // ¿La app se está viendo en modo Nocturno? (ajuste Claro/Nocturno, o el del sistema si está en Auto)
 export const modoOscuro = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : !!(typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches); };

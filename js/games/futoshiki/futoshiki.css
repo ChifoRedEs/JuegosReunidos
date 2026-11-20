@@ -29,4 +29,25 @@
 .juego-futoshiki[data-numeros="color"] .fc[data-d="7"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="7"]{color:var(--c7)}
 .juego-futoshiki[data-numeros="color"] .fc[data-d="8"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="8"]{color:var(--c8)}
 .juego-futoshiki[data-numeros="color"] .fc[data-d="9"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="9"]{color:var(--c9)}
-.juego-futoshiki[data-numeros="color"] .fc.s .fv,.juego-futoshiki[data-numeros="color"] .fc.x .fv,.juego-futoshiki[data-numeros="color"] .fc.ok .fv{color:#17214A}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="1"] .fv{color:color-mix(in srgb,var(--c1) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="1"] .fv{color:var(--c1)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="2"] .fv{color:color-mix(in srgb,var(--c2) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="2"] .fv{color:var(--c2)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="3"] .fv{color:color-mix(in srgb,var(--c3) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="3"] .fv{color:var(--c3)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="4"] .fv{color:color-mix(in srgb,var(--c4) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="4"] .fv{color:var(--c4)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="5"] .fv{color:color-mix(in srgb,var(--c5) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="5"] .fv{color:var(--c5)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="6"] .fv{color:color-mix(in srgb,var(--c6) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="6"] .fv{color:var(--c6)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="7"] .fv{color:color-mix(in srgb,var(--c7) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="7"] .fv{color:var(--c7)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="8"] .fv{color:color-mix(in srgb,var(--c8) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="8"] .fv{color:var(--c8)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="9"] .fv{color:color-mix(in srgb,var(--c9) 62%,#000)}
+.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="9"] .fv{color:var(--c9)}
+/* Casilla seleccionada: número siempre legible sobre su fondo */
+.juego-futoshiki .fc.s .fv,.juego-futoshiki[data-numeros="color"] .fc.s .fv{color:#0F1A44}
+.juego-futoshiki[data-tablero^="neon"] .fc.s .fv,.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc.s .fv{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.juego-futoshiki .fc.x .fv,.juego-futoshiki[data-numeros="color"] .fc.x .fv{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
