@@ -34,11 +34,14 @@ export const grupoFondo = sel => ({ clave: 'tapete', titulo: 'Tapete', icono: '�
 export const grupoPantalla = sel => ({ clave: 'pantalla', titulo: 'Fondo de Pantalla', icono: '🏞️', ventana: true, forma: 'tapete', def: 'ninguno', sel,
   opciones: [{ id: 'ninguno', nombre: 'Sin fondo', icono: '🚫', nada: true }, AZAR, ...BARAJAS.fondos.map(t => ({ id: t.id, nombre: t.nombre, img: urlTapete(t) }))] });
 // «Personajes»: tu personaje (los de Encajados) sustituye a la ficha, bola o cabeza del jugador. Valor 'auto' = el diseño de siempre.
-export const grupoPersonaje = (titulo = 'Personajes') => ({ clave: 'pj', titulo, icono: '🧑', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de siempre', sec: 'Por defecto' }, ...opcionesPersonajes()] });
+export const grupoPersonaje = (titulo = 'Personajes', clave = 'pj') => ({ clave, titulo, icono: '🧑', ventana: true, forma: 'figura', def: 'auto', opciones: [{ id: 'auto', nombre: 'El de siempre', icono: '↺', sec: 'Por defecto' }, ...opcionesPersonajes()] });
 // Emoji del personaje elegido (o null)
 import { FICHAS as _PJ } from './personajes.js';
-export const emojiDeValores = v => (_PJ[v && v.pj] || {}).e || null;
-export const emojiPersonaje = asp => (_PJ[asp && asp.valores && asp.valores.pj] || {}).e || null;
+export const emojiDeValores = () => null;
+export const emojiPersonaje = () => null;                                 // (antiguo: los personajes ya son imágenes)
+// Imagen del personaje elegido (o null): ruta img/pj/… o img/objetos/…
+export const imgDeValores = (v, clave = 'pj') => (_PJ[v && v[clave]] || {}).img || null;
+export const imgPersonaje = (asp, clave = 'pj') => imgDeValores(asp && asp.valores, clave);
 // ¿Hay un tapete elegido? → id 't-…' o null
 export const tapeteElegido = asp => { const V = (asp && asp.valores) || {}; for (const v of [V.pantalla, V.tapete]) if (v && v.startsWith('t-')) return v; return null; };   // el fondo de pantalla pasa por delante del tapete
 
@@ -109,3 +112,6 @@ export function ocultarClasicas(defs, juego) {
   for (const d of defs) if (d.sub) d.sub = d.sub.filter(x => !x.fijo || x === d);
   return defs;
 }
+// Imagen de personaje para canvas (cacheada): devuelve la <img> cuando ya cargó, o null
+const _cachePJ = {};
+export function imgCanvas(url) { if (!url) return null; let i = _cachePJ[url]; if (!i) { i = _cachePJ[url] = new Image(); i.src = url; } return i.complete && i.naturalWidth ? i : null; }

@@ -5,7 +5,7 @@ import { crearDado3D, grupoDado } from '../../core/dado3d.js';
 import { PC, PNAME, PSTART, PSAFE, PHOUSE, PTRACK, PTRI, PCORR, PIPS, pXY, pKey } from './tablero.js';
 import { nombre, actual, esCPU, nuevaPartida, legales, tirar, mover, siguiente, mejorJugada, fichasDe, equipo, nombreEquipo, COMPANERO } from './reglas.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
-import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+import { grupoFondo, grupoPersonaje, imgPersonaje } from '../../core/aspectos.js';
 
 const VEL = { rapida: .5, normal: 1, lenta: 1.7 };
 let P = null, api = null, asp = null, rootEl = null, modo = 'setup', timer = null, ivDado = null, ivAnim = null, rodando = false, ptsMov = [], ultFoco = '', D3 = null, tokD = 0;
@@ -233,7 +233,7 @@ function tocarDest(to) { if (!humanoMueve()) return; const m = P.moves.find(m =>
 function pintar3D() {
   if (!V3 || !P) return;
   V3.fichas(estilo(asp.valores));
-  const cur = P.phase !== 'over' ? actual(P) : null, human = !!cur && humanoMueve(), emo = emojiPersonaje(asp);
+  const cur = P.phase !== 'over' ? actual(P) : null, human = !!cur && humanoMueve(), emo = imgPersonaje(asp);
   ptsMov = [];
   const mv = new Set(human ? P.moves.map(m => m.c + m.i) : []), dest = [], vistos = new Set();
   if (human) for (const m of P.moves) {
@@ -291,8 +291,8 @@ const refrescar = () => { clearTimeout(refTimer); refTimer = setTimeout(() => { 
 function ficha(f, c, x, y, r) {
   r *= ESC_FX();
   const col = `style="fill:var(--pz-${c})"`, st = 'stroke="rgba(0,0,0,.55)" stroke-width=".8" stroke-linejoin="round"';
-  const emo = emojiPersonaje(asp);     // «Personajes»: tus fichas (las de los jugadores humanos) llevan el emoji sobre su color
-  if (emo && P && !esCPU(P, c)) return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/><text x="${x}" y="${y + r * .04}" font-size="${(r * 1.5).toFixed(2)}" text-anchor="middle" dominant-baseline="central" style="pointer-events:none">${emo}</text>`;
+  const emo = imgPersonaje(asp);     // «Personajes»: tus fichas (las de los jugadores humanos) llevan tu personaje sobre su color
+  if (emo && P && !esCPU(P, c)) return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/><image href="${emo}" x="${(x - r * 1.05).toFixed(2)}" y="${(y - r * 1.05).toFixed(2)}" width="${(r * 2.1).toFixed(2)}" height="${(r * 2.1).toFixed(2)}" style="pointer-events:none"/>`;
   const url = figuraTintada(f, hexDe(c), refrescar);
   if (url) { const w = r * 2.5; return `<ellipse cx="${x}" cy="${y + r * .95}" rx="${r * .8}" ry="${r * .22}" fill="#000" opacity=".22"/><image href="${url}" x="${(x - w / 2).toFixed(2)}" y="${(y - w * .62).toFixed(2)}" width="${w.toFixed(2)}" height="${w.toFixed(2)}" preserveAspectRatio="xMidYMid meet" style="pointer-events:none"/>`; }
   return `<circle cx="${x}" cy="${y}" r="${r}" ${col} ${st}/>`;      // mientras se tiñe la figura

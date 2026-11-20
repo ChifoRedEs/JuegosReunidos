@@ -330,7 +330,7 @@ function crearApi(j, ent, mod, root) {
     },
     aspecto(defs, alCambiar) {
       // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
-      defs = defs.filter(g => g.clave !== 'pj' && !/tex$/.test(g.clave));   // Personajes y Texturas ya no forman parte de la Apariencia
+      defs = defs.filter(g => !/tex$/.test(g.clave));   // Las Texturas ya no forman parte de la Apariencia (los Personajes sí: son imágenes)
       defs = filtrarTapetes(defs, id);                                                  // cada juego solo ofrece los tapetes de su estilo (+ «Clásicos»)
       defs = defs.filter(g => g.opciones.some(o => !o.azar && !o.nada) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
       // Grupos propios «Forma de las fichas» (enEstilos) se integran en el desplegable «Estilos de Fichas» si el juego lo tiene.
@@ -419,8 +419,12 @@ function crearApi(j, ent, mod, root) {
           if (g.sub) return cuerpoSub(g);
           const imgs = g.opciones.some(o => o.img) && g.forma;
           if (imgs) {
-            const rej = lista => el('div', { class: 'ap-rej ap-' + g.forma }, ...lista.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
+            const rej0 = lista => el('div', { class: 'ap-rej ap-' + g.forma }, ...lista.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
               o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || (o.nada ? '🚫' : '🎲')), el('small', {}, o.nombre))));
+            // Con secciones (o.sec) la rejilla lleva un título por sección (Personajes: Gente, Oficios, Fantasía…)
+            const rej = lista => { if (!lista.some(o => o.sec)) return rej0(lista); const cs = el('div', { class: 'ap-secs' }); let sec = null, tr = [];
+              const vuelca = () => { if (tr.length) cs.append(...(sec ? [el('small', { class: 'ap-sec' }, sec)] : []), rej0(tr)); tr = []; };
+              for (const o of lista) { if (o.sec !== sec) { vuelca(); sec = o.sec; } tr.push(o); } vuelca(); return cs; };
             const cl = g.opciones.filter(o => o.clasico), pr = g.opciones.filter(o => !o.clasico);
             if (!cl.length) return rej(g.opciones);
             // «Clásicos»: desplegable al final de la lista (se abre solo si el tapete elegido es uno de ellos)

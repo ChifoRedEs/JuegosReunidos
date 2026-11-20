@@ -3,7 +3,7 @@ import { $, esc, esperar } from '../../core/dom.js';
 import * as O from './motor.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { grupoFigura, figuraTintada, fondoFigura } from '../../core/figuras.js';
-import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+import { grupoFondo, grupoPersonaje, imgPersonaje } from '../../core/aspectos.js';
 
 let animJ = -1;
 // Vista 3D (Three.js): opcional, con vuelta automática al tablero HTML si no hay WebGL
@@ -63,7 +63,7 @@ function armar() {
   quitarDado(); cerrar3D(); modo3d = quiere3D();
   root.innerHTML = `<div class="ocjug" id="ocJug"></div>
     ${modo3d ? '<div class="e3d" id="ocTab"></div>' : `<div class="octab" id="ocTab">${O.ESPIRAL.map(([f, c], n) => {
-      const k = O.CASILLAS[n]; return `<div class="occ ${n === 0 ? 'salida' : k ? k.tipo : ''} ${n % 2 ? 'imp' : ''}" style="grid-row:${f + 1};grid-column:${c + 1}" title="${n === 0 ? 'Salida' : k ? `${n} · ${k.nombre}` : n}"><span class="num">${n === 0 ? '' : n}</span>${n === 0 ? '<span class="ico">🚩</span>' : k ? `<span class="ico">${k.ico}</span>` : ''}</div>`;
+      const k = O.CASILLAS[n]; return `<div class="occ ${n === 0 ? 'salida' : k ? k.tipo : ''} ${n % 2 ? 'imp' : ''}" style="grid-row:${f + 1};grid-column:${c + 1}" title="${n === 0 ? 'Salida' : k ? `${n} · ${k.nombre}` : n}"><span class="num">${n === 0 ? '' : n}</span>${n === 0 ? `<span class="ico">${imgOca('salida')}</span>` : k ? `<span class="ico">${imgOca(k.tipo)}</span>` : ''}</div>`;
     }).join('')}<div class="ocfichas" id="ocFichas"></div></div>`}
     <div class="ocmsg" id="ocMsg" role="status" aria-live="polite"></div>
     <div class="dadozona" id="ocDado"></div>
@@ -94,7 +94,7 @@ function pintar3D() {
   if (!V3 || !S) return;
   V3.fichas(estilo(asp.valores));
   const porCasilla = {}; S.jug.forEach((_, j) => { const p = posDe(j); (porCasilla[p] = porCasilla[p] || []).push(j); });
-  const emo = emojiPersonaje(asp), fig = asp.valores.figura || 'peon';
+  const emo = imgPersonaje(asp), fig = asp.valores.figura || 'peon';
   V3.pintar({ fichas: S.jug.map((J, j) => {
     const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
     return { j, color: colF(J.color), f, c, dx: m > 1 ? (k % 2 ? .22 : -.22) : 0, dz: m > 2 ? (k < 2 ? -.2 : .2) : 0, emoji: emo && !J.cpu ? emo : '', img: figuraTintada(fig, colF(J.color), colocarFichas) || '',
@@ -120,7 +120,7 @@ function colocarFichas() {
     const p = posDe(j), [f, c] = O.ESPIRAL[p], grupo = porCasilla[p], k = grupo.indexOf(j), m = grupo.length;
     const dx = m > 1 ? (k % 2 ? .22 : -.22) : 0, dy = m > 2 ? (k < 2 ? -.2 : .2) : m === 2 ? 0 : 0;
     const f0 = el.querySelector(`[data-f="${j}"]`); f0.style.setProperty('--c', colF(J.color));
-    const emo = emojiPersonaje(asp), pj = !!emo && !J.cpu; f0.textContent = pj ? emo : ''; f0.classList.toggle('pj', pj); if (!pj) fondoFigura(f0, asp.valores.figura || 'peon', colF(J.color), colocarFichas); else { f0.classList.remove('fig'); f0.style.backgroundImage = ''; }      // «Personajes»: tu ficha lleva el emoji
+    const emo = imgPersonaje(asp), pj = !!emo && !J.cpu; f0.textContent = ''; f0.classList.toggle('pj', pj); if (!pj) fondoFigura(f0, asp.valores.figura || 'peon', colF(J.color), colocarFichas); else { f0.classList.add('fig'); f0.style.backgroundImage = `url(${emo})`; }      // «Personajes»: tu ficha lleva el emoji
     f0.style.left = `${(c + .5 + dx) * 12.5}%`; f0.style.top = `${(f + .58 + dy) * 12.5}%`;
     f0.classList.toggle('turno', j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim)); f0.classList.toggle('mueve', vis[j] != null);
   });
@@ -167,7 +167,9 @@ async function tirar() {
   if (r.otra) msgEvento = `${msgEvento ? msgEvento + '<br>' : ''}<b>¡${esc(J.nombre)} ${J.nombre === 'Tú' ? 'vuelves' : 'vuelve'} a tirar!</b>`;
   pintar(); guardar(); bucle();
 }
-const CASILLA_ICO = e => ({ oca: '🦢', puente: '🌉', dados: '🎲', laberinto: '🌀', muerte: '💀', posada: '🏨', carcel: '⛓️', pozo: '🕳️', rebote: '↩️' }[e.tipo] || '');
+const CASILLA_ICO = e => imgOca(e.tipo, 'ocri');
+// Casillas especiales: ilustraciones IA (img/oca)
+function imgOca(tipo, cl = 'ocimg') { const f = O.IMG_OCA[tipo]; return f ? `<img class="${cl}" src="img/oca/${f}.webp" alt="" draggable="false">` : ''; }
 function bucle() {
   clearTimeout(timer); if (!S || anim) return;
   if (S.fase === 'fin') return cierre();
@@ -195,11 +197,11 @@ function clic(e) {
 }
 function reglas() {
   api.modal('Juego de la Oca', `<ul><li>Por turnos, cada jugador tira el dado y avanza su ficha. Gana quien llegue <b>exactamente</b> a la casilla 63; si te pasas, rebotas hacia atrás lo que sobre.</li>
-    <li>🦢 <b>Oca</b> (5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54 y 59): «de oca a oca y tiro porque me toca». Saltas a la siguiente oca y vuelves a tirar.</li>
-    <li>🌉 <b>Puente</b> (6 y 12): «de puente a puente y tiro porque me lleva la corriente».</li>
-    <li>🎲 <b>Dados</b> (26 y 53): «de dado a dado y tiro porque me ha tocado».</li>
-    <li>🏨 <b>Posada</b> (19): pierdes 1 turno. ⛓️ <b>Cárcel</b> (56): pierdes 2 turnos.</li>
-    <li>🕳️ <b>Pozo</b> (31): no sales hasta que otro jugador caiga y te rescate (o 2 turnos, según la opción elegida).</li>
-    <li>🌀 <b>Laberinto</b> (42): vuelves a la 30. 💀 <b>Muerte</b> (58): vuelves a la casilla 1.</li>
+    <li>${imgOca('oca','ocri')} <b>Oca</b> (5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54 y 59): «de oca a oca y tiro porque me toca». Saltas a la siguiente oca y vuelves a tirar.</li>
+    <li>${imgOca('puente','ocri')} <b>Puente</b> (6 y 12): «de puente a puente y tiro porque me lleva la corriente».</li>
+    <li>${imgOca('dados','ocri')} <b>Dados</b> (26 y 53): «de dado a dado y tiro porque me ha tocado».</li>
+    <li>${imgOca('posada','ocri')} <b>Posada</b> (19): pierdes 1 turno. ${imgOca('carcel','ocri')} <b>Cárcel</b> (56): pierdes 2 turnos.</li>
+    <li>${imgOca('pozo','ocri')} <b>Pozo</b> (31): no sales hasta que otro jugador caiga y te rescate (o 2 turnos, según la opción elegida).</li>
+    <li>${imgOca('laberinto','ocri')} <b>Laberinto</b> (42): vuelves a la 30. ${imgOca('muerte','ocri')} <b>Muerte</b> (58): vuelves a la casilla 1.</li>
     <li>Con 2 dados: en la primera tirada, 6 y 3 te llevan a la 26 y 5 y 4 a la 53.</li></ul>`);
 }

@@ -2,7 +2,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $ } from '../../core/dom.js';
 import * as A from './motor.js';
-import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, imgPersonaje, imgCanvas } from '../../core/aspectos.js';
 
 let S = null, api = null, asp = null, root = null, raf = 0, tPrev = 0, reg = false, cv = null, ctx = null, dpr = 1, esc = 1;
 let onKey = null, onKeyUp = null, onVis = null, onRes = null, dedos = new Map(), obj = [null, null], teclas = {}, rastro = [], cartel = null, ultGolpe = 0, hudAnt = '';
@@ -179,8 +179,8 @@ function dibujar() {
     const id = j === 0 ? v.mazo : v.mazo2, nombre = COLM[id] ? id : (j === 0 ? 'rojo' : 'azul'), im = imgDe('mazo-' + nombre), r = A.R_MAZO * 1.14;
     ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.arc(m.x + 4, m.y + 7, A.R_MAZO, 0, Math.PI * 2); ctx.fill();
     if (ok(im)) ctx.drawImage(im, m.x - r, m.y - r, r * 2, r * 2); else { ctx.fillStyle = COLM[nombre]; ctx.beginPath(); ctx.arc(m.x, m.y, A.R_MAZO, 0, Math.PI * 2); ctx.fill(); }
-    const emo = j === 0 ? emojiPersonaje(asp) : null;      // «Personajes»: tu mazo lleva tu personaje
-    if (emo) { ctx.font = `${Math.round(A.R_MAZO * 1.2)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, m.x, m.y - A.R_MAZO * .1); }
+    const pji = j === 0 ? imgCanvas(imgPersonaje(asp)) : null;      // «Personajes»: tu mazo lleva tu personaje
+    if (pji) { const q = A.R_MAZO * 1.5; ctx.drawImage(pji, m.x - q, m.y - q, q * 2, q * 2); }
   });
   if (cartel) {
     ctx.globalAlpha = Math.min(1, cartel.t * 2); ctx.fillStyle = cartel.color; ctx.font = "800 64px 'Baloo 2', system-ui, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';

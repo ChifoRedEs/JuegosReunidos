@@ -1,7 +1,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as L from './motor.js';
-import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, imgPersonaje, imgCanvas, tapeteElegido } from '../../core/aspectos.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 import { gruposFichas, estilo, spriteFicha, variantes } from '../../core/fichas.js';
 import { tintar } from '../../core/tinte.js';
@@ -301,8 +301,8 @@ function dibujarResto(k, ahora) {
   // bolas
   for (const b of S.bolas) {                                    // halo con un círculo translúcido (shadowBlur es muy caro en móvil)
     ctx.fillStyle = S.efectos.fuego ? 'rgba(255,159,28,.28)' : 'rgba(159,208,255,.28)'; ctx.beginPath(); ctx.arc(b.x, b.y, L.RADIO * 1.9, 0, Math.PI * 2); ctx.fill();
-    const emo = emojiPersonaje(asp);      // «Personajes»: la bola es tu personaje
-    if (emo) { ctx.font = `${Math.round(L.RADIO * 3)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, b.x, b.y + L.RADIO * .1); continue; }
+    const pji = imgCanvas(imgPersonaje(asp));      // «Personajes»: la bola es tu personaje
+    if (pji) { const q = L.RADIO * 1.9; ctx.drawImage(pji, b.x - q, b.y - q, q * 2, q * 2); continue; }
     const bo = ilustrado() ? im('bola') : null;
     if (bo) { ctx.drawImage(bo, b.x - L.RADIO * 1.2, b.y - L.RADIO * 1.2, L.RADIO * 2.4, L.RADIO * 2.4); continue; }
     ctx.fillStyle = S.efectos.fuego ? '#FFB347' : '#FFFFFF'; ctx.beginPath(); ctx.arc(b.x, b.y, L.RADIO, 0, Math.PI * 2); ctx.fill();

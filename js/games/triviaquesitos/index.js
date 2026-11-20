@@ -1,10 +1,11 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
-import { grupoTablero, grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+import { grupoTablero, grupoFondo, grupoPersonaje, imgPersonaje } from '../../core/aspectos.js';
 import { grupoFigura, figuraTintada } from '../../core/figuras.js';
 import * as T from './motor.js';
 
 const FORMAS = ['circulo', 'estrella', 'diamante', 'cuadrado'];
+const QI = { geo: 'azul', his: 'amarillo', cie: 'verde', art: 'ocre', esp: 'rosa', dep: 'naranja', mit: 'morado', gas: 'rojo' };      // quesito ilustrado de cada categoría
 let S = null, api = null, asp = null, root = null, timer = null, rodando = false, cfg = { nCat: 6, modo: 'opciones', nivel: 'medio', banco: 'mix', jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'c']] }, reg = false;
 
 /* ---------- validación / resumen ---------- */
@@ -66,7 +67,7 @@ function ficha(forma, x, y, col, ini, activa, emo = null) {
   if (url) { const w = activa ? 27 : 23; return `<ellipse cx="${x}" cy="${y + w * .34}" rx="${w * .34}" ry="${w * .1}" fill="#000" opacity=".25"/>${activa ? `<circle cx="${x}" cy="${y}" r="${w * .62}" fill="none" stroke="${col}" stroke-width="2" opacity=".7"/>` : ''}<image href="${url}" x="${(x - w / 2).toFixed(1)}" y="${(y - w * .6).toFixed(1)}" width="${w}" height="${w}" preserveAspectRatio="xMidYMid meet" style="pointer-events:none"/>`; }
   const R = activa ? 9.5 : 8, cl = activa ? 'tok act' : 'tok';
   const f = forma === 'estrella' ? `<polygon class="${cl}" points="${estrella(x, y, R + 2)}" fill="${col}" stroke-linejoin="round"/>` : forma === 'diamante' ? `<polygon class="${cl}" points="${x},${y - R - 1.5} ${x + R + 1},${y} ${x},${y + R + 1.5} ${x - R - 1},${y}" fill="${col}" stroke-linejoin="round"/>` : forma === 'cuadrado' ? `<rect class="${cl}" x="${x - R + .5}" y="${y - R + .5}" width="${(R - .5) * 2}" height="${(R - .5) * 2}" rx="3" fill="${col}"/>` : `<circle class="${cl}" cx="${x}" cy="${y}" r="${R}" fill="${col}"/>`;
-  if (emo) return f + `<text class="toc" x="${x}" y="${y + 1}" style="font-size:${activa ? 15 : 13}px" text-anchor="middle" dominant-baseline="central">${emo}</text>`;      // «Personajes»: tu ficha lleva tu personaje
+  if (emo) { const w = activa ? 24 : 21; return f + `<image href="${emo}" x="${(x - w / 2).toFixed(1)}" y="${(y - w / 2).toFixed(1)}" width="${w}" height="${w}" style="pointer-events:none"/>`; }      // «Personajes»: tu ficha lleva tu personaje
   return f + `<text class="toc" x="${x}" y="${y + 3}">${esc(ini)}</text>`;
 }
 function tablero() {
@@ -86,7 +87,7 @@ function tablero() {
   h += `<text class="hn" x="${CX}" y="${CY - 3}">${esc(yo.nombre)}</text><text class="hs" x="${CX}" y="${CY + 11}">${yo.centro ? `final ${yo.final.length}/${S.nCat}` : `${yo.q.filter(Boolean).length}/${S.nCat} quesitos`}</text>`;
   // fichas
   const porCasilla = {}; S.jug.forEach((p, j) => { (porCasilla[p.pos] = porCasilla[p.pos] || []).push(j); });
-  S.jug.forEach((p, j) => { const grupo = porCasilla[p.pos], k = grupo.indexOf(j), a = a0(p.pos) + da / 2, r = (RO + RI) / 2 + (grupo.length > 1 ? (k - (grupo.length - 1) / 2) * 13 : 0), [x, y] = P(r, a); h += ficha(asp.valores.ficha, x, y, T.COLORES_J[j], p.nombre.trim()[0] ? p.nombre.trim()[0].toUpperCase() : '?', j === S.turno && S.fase !== 'fin', p.cpu ? null : emojiPersonaje(asp)); });
+  S.jug.forEach((p, j) => { const grupo = porCasilla[p.pos], k = grupo.indexOf(j), a = a0(p.pos) + da / 2, r = (RO + RI) / 2 + (grupo.length > 1 ? (k - (grupo.length - 1) / 2) * 13 : 0), [x, y] = P(r, a); h += ficha(asp.valores.ficha, x, y, T.COLORES_J[j], p.nombre.trim()[0] ? p.nombre.trim()[0].toUpperCase() : '?', j === S.turno && S.fase !== 'fin', p.cpu ? null : imgPersonaje(asp)); });
   if (humano) S.destinos.forEach((d, k) => { h += `<path class="dest" data-dir="${k ? 'a' : 'h'}" d="${sector(RI, RO, a0(d), a0(d) + da)}"><title>${k ? 'Antihorario' : 'Horario'}</title></path>`; });
   $('#tvB').innerHTML = h;
 }
@@ -127,7 +128,7 @@ function panel() {
 
 function progresoFinal(yo, cats, q, resuelta) {
   return `<div class="tvfin" aria-label="Progreso de la ronda final">${cats.map((c, k) => { const hecha = yo.final.includes(k) || (resuelta && q.acierto && k === q.cat), actual = k === q.cat && !hecha, fallada = resuelta && !q.acierto && k === q.cat;
-    return `<b class="${hecha ? 'on' : ''}${actual && !fallada ? ' act' : ''}${fallada ? ' mal' : ''}" style="--qc:${c.color}" title="${c.nombre}">${hecha ? '✓' : fallada ? '✕' : c.icono}</b>`; }).join('')}</div>`;
+    return `<b class="${hecha ? 'on' : ''}${actual && !fallada ? ' act' : ''}${fallada ? ' mal' : ''}" style="--qc:${c.color}" title="${c.nombre}">${hecha ? (QI[c.id] ? `<img class="qq" src="img/trivia/q-${QI[c.id]}.webp" alt="✓">` : '✓') : fallada ? '✕' : c.icono}</b>`; }).join('')}</div>`;
 }
 
 /* ---------- flujo ---------- */

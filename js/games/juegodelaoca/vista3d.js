@@ -2,6 +2,7 @@
 //   const V = await crearOca3D(contenedor, { espiral, casillas })   (espiral[n] = [fila, col]; casillas[n] = { tipo, ico, nombre })
 //   V.pintar({ fichas: [{ j, color, f, c, dx, dz, emoji, turno, mueve }] }) · V.recolor() (lee las variables --o-* del contenedor) · V.camara(modo) · V.destruir()
 import { lienzoTextura } from '../../core/fichas.js';
+import { IMG_OCA } from './motor.js';
 import { T, crearEscena, lienzo, textura, emojiTextura, EMOJI_FUENTE } from '../../core/escena3d.js';
 
 const PERFIL = [[0, 0], [.38, 0], [.4, .05], [.32, .13], [.22, .28], [.13, .46], [.21, .5], [.19, .56], [.1, .6], [0, .6]];
@@ -17,12 +18,17 @@ export async function crearOca3D(cont, o) {
     const [f, c] = ESP[k], lado = new T.MeshStandardMaterial({ roughness: .6 }), cara = new T.MeshStandardMaterial({ roughness: .5 });
     const m = new T.Mesh(gT, [lado, lado, cara, lado, lado, lado]); m.position.set(c - 3.5, Y - .08, f - 3.5); m.receiveShadow = true; E.escena.add(m); tiles.push({ m, lado, cara, k });
   }
+  const cacheIm = {}, imgCasilla = tipo => {            // ilustraciones IA de las casillas (img/oca); al cargar se repinta el tablero
+    const f = IMG_OCA[tipo]; if (!f) return null; let i = cacheIm[f];
+    if (!i) { i = cacheIm[f] = new Image(); i.onload = () => { if (V.recolor) V.recolor(); }; i.src = `img/oca/${f}.webp`; }
+    return i.complete && i.naturalWidth ? i : null;
+  };
   function dibujar(t, cs) {
     const k = t.k, cas = CAS[k], tipo = k === 0 ? 'salida' : cas ? cas.tipo : '', c = lienzo(160, 160), x = c.getContext('2d');
     const fondo = tipo === 'oca' ? cs.oca : tipo === 'fin' ? cs.fin : tipo === 'salida' ? '#EEF3FF' : cas ? cs.esp : (k % 2 ? cs.c2 : cs.c1);
     x.fillStyle = fondo; x.fillRect(0, 0, 160, 160); x.strokeStyle = cs.bd; x.lineWidth = 8; x.strokeRect(4, 4, 152, 152);
     x.fillStyle = cs.ink; x.textBaseline = 'top'; x.textAlign = 'left'; x.font = '800 34px Nunito, sans-serif'; if (k) x.fillText(String(k), 12, 8);
-    const ico = k === 0 ? '🚩' : cas ? cas.ico : ''; if (ico) { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `70px ${EMOJI_FUENTE}`; x.fillText(ico, 80, 94); }
+    const im = imgCasilla(k === 0 ? 'salida' : cas ? cas.tipo : ''); if (im) x.drawImage(im, 28, 36, 104, 104);
     if (t.cara.map) t.cara.map.dispose(); t.cara.map = textura(c, 4); t.cara.color.set('#ffffff'); t.cara.needsUpdate = true; t.lado.color.set(cs.bd);
   }
   V.recolor = () => {

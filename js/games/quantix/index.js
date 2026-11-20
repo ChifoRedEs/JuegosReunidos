@@ -1,7 +1,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
-import { grupoEscenario, grupoPersonaje, emojiPersonaje, ESCENARIOS_WORMS } from '../../core/aspectos.js';
+import { grupoEscenario, ESCENARIOS_WORMS } from '../../core/aspectos.js';
 import { imagenTapete } from '../../core/cartas.js';
 
 let S = null, api = null, asp = null, root = null, cv = null, ctx = null, dpr = 1, k = 1, raf = 0, acc = 0, tPrev = 0, reg = false;
@@ -19,7 +19,6 @@ export const resumen = d => M.resumen(d.s);
 export async function mount(r, a) {
   api = a; root = r; efectos = []; activo = null; capas = null;
   asp = api.aspecto([grupoEscenario('', 'Imagen oculta'), { clave: 'jefe', titulo: 'Aspecto del jefe', icono: '👾', ventana: true, forma: 'figura', def: 'variado', opciones: [{ id: 'variado', nombre: 'Variados', img: 'img/quantix/fantasma.webp' }, { id: 'bomba', nombre: 'Bomba', img: 'img/quantix/bomba.webp' }, { id: 'calabaza', nombre: 'Calabaza', img: 'img/quantix/calabaza.webp' }, { id: 'chispa', nombre: 'Chispa', img: 'img/quantix/chispa.webp' }, { id: 'craneo', nombre: 'Cráneo', img: 'img/quantix/craneo.webp' }, { id: 'dron', nombre: 'Dron', img: 'img/quantix/dron.webp' }, { id: 'erizo', nombre: 'Erizo', img: 'img/quantix/erizo.webp' }, { id: 'escorpion', nombre: 'Escorpión', img: 'img/quantix/escorpion.webp' }, { id: 'fantasma', nombre: 'Fantasma', img: 'img/quantix/fantasma.webp' }, { id: 'limo', nombre: 'Limo', img: 'img/quantix/limo.webp' }, { id: 'medusa', nombre: 'Medusa', img: 'img/quantix/medusa.webp' }, { id: 'peludo', nombre: 'Peludo', img: 'img/quantix/peludo.webp' }, { id: 'robot', nombre: 'Robot', img: 'img/quantix/robot.webp' }] },
-    grupoPersonaje('Jefe'),
     { clave: 'est', titulo: 'Color del trazo', def: 'neon', opciones: Object.entries(ESTILOS).map(([id, e]) => ({ id, nombre: e.n, sw: e.sw })) },
     { clave: 'panel', titulo: 'Panel sin descubrir', def: 'oscuro', opciones: [{ id: 'oscuro', nombre: 'Oscuro', sw: ['#0B1030', '#1B2358'] }, { id: 'cristal', nombre: 'Cristal', sw: ['#5B6AA8', '#A9B6F0'] }, { id: 'borroso', nombre: 'Pista (se intuye la imagen)', sw: ['#2A3270', '#8A96D8'] }] }], () => { sucio = true; if (S) dibujar(); });
   await api.css(new URL('./quantix.css', import.meta.url));
@@ -229,8 +228,7 @@ function dibujar() {
     ctx.shadowColor = E.c; ctx.shadowBlur = 12; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.strokeRect(x, y, w, h); ctx.shadowBlur = 0;
   }
   // jefes
-  const emo = emojiPersonaje(asp);
-  S.jefes.forEach((b, k) => jefe(b, ahora, emo, k));
+  S.jefes.forEach((b, k) => jefe(b, ahora, null, k));
   // aviso: pulsa junto a una zona descubierta
   if (aviso && ahora - aviso < 900 && S.fase === 'jugar') { ctx.globalAlpha = 1 - (ahora - aviso) / 900; ctx.fillStyle = 'rgba(10,15,40,.8)'; ctx.fillRect(40, M.H - 62, M.W - 80, 32); ctx.fillStyle = '#fff'; ctx.font = '700 13px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Empieza junto a una zona descubierta', M.W / 2, M.H - 41); ctx.globalAlpha = 1; }
   if (S.inv > 0 && S.fase === 'jugar') { ctx.fillStyle = `rgba(255,40,60,${S.inv / .6 * .25})`; ctx.fillRect(0, 0, M.W, M.H); }

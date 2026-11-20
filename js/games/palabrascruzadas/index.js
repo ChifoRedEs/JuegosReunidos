@@ -3,6 +3,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { grupoFondo } from '../../core/aspectos.js';
+import { variablesTintadas } from '../../core/tinte.js';
 import { anotarPartida, htmlPartidas } from '../../core/historial.js';
 import * as M from './motor.js';
 
@@ -135,6 +136,7 @@ const usado = k => temp.some(t => t.k === k);
 
 /* ---------- pintar ---------- */
 function pintar() {
+  imgsTablero();
   if (!S || !root || !$('#scTab')) return;
   const turnoMio = jugadorHumano();
   // marcador
@@ -426,4 +428,12 @@ function reglas() {
     <li><b>Cambiar</b> fichas o <b>pasar</b> gasta el turno. Solo se puede cambiar si quedan al menos 7 fichas en la bolsa. 💡 <b>Pista</b> pone en el tablero la jugada que más puntos da (luego puedes jugarla o recogerla).</li>
     <li><b>Final</b>: cuando la bolsa está vacía y alguien gasta todas sus fichas (o si todos pasan varias vueltas seguidas). Cada uno resta lo que le queda en el atril y quien cierra suma lo de los demás.</li>
     <li>Diccionario: unas 590.000 palabras (con plurales y verbos conjugados) del diccionario español de LibreOffice. En 🎨 Apariencia cambias el fondo, el tablero, las fichas y los rótulos de las casillas.</li></ul>`);
+}
+
+// Casillas ilustradas (img/palabras): se tiñen con los colores del tablero elegido (--sc-cel, --sc-T, --sc-D, --sc-t, --sc-d)
+function imgsTablero() {
+  const m = root && root.querySelector('.scmesa'); if (!m) return;
+  const cs = getComputedStyle(m), h = v => { const x = cs.getPropertyValue(v).trim(); return /^#[0-9a-f]{6}$/i.test(x) ? x : '#EFE6CF'; };
+  const L = [['--si-cel', 'celda', '--sc-cel'], ['--si-T', 'tw', '--sc-T'], ['--si-D', 'dw', '--sc-D'], ['--si-t', 'tl', '--sc-t'], ['--si-d', 'dl', '--sc-d']].map(([v, f, c]) => [v, `img/palabras/${f}.webp`, h(c)]);
+  variablesTintadas(m, L, L.map(x => x[2]).join('|'));
 }

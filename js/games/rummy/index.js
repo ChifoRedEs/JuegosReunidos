@@ -4,6 +4,7 @@ import { hacerOrdenable, ordenarMano } from '../../core/arrastrar.js';
 import * as R from './motor.js';
 import { gruposFichas, estilo, oscuro, claro, luz } from '../../core/fichas.js';
 import { grupoMesa } from '../../core/aspectos.js';
+import { variablesTintadas } from '../../core/tinte.js';
 
 let S = null, api = null, asp = null, root = null, timer = null, reg = false, arr = null;
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
@@ -34,6 +35,7 @@ export async function mount(r, a) {
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     { ...grupoMesa(), tt: true },
     { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'verde', opciones: [{ id: 'verde', nombre: 'Verde', sw: ['#12A05C', '#0A6B3C'] }, { id: 'azul', nombre: 'Azul', sw: ['#2F6BFF', '#17409E'] }, { id: 'burdeos', nombre: 'Burdeos', sw: ['#B5304A', '#6E1328'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#7A5BC7', '#47308A'] }, { id: 'madera', nombre: 'Madera', sw: ['#B57A43', '#6E4524'] }, { id: 'noche', nombre: 'Noche', sw: ['#3A4678', '#1A2150'] }] },
+    { clave: 'rmdis', titulo: 'Diseño de las fichas', icono: '🀫', ventana: true, forma: 'figura', def: 'marco', opciones: [['marco', 'Marco'], ['bisel', 'Biselada'], ['piedra', 'Piedra']].map(([id, nombre]) => ({ id, nombre, img: `img/rummy/f-${id}.webp` })) },
     ...gruposFichas({ pocos: true, titulo: 'Fichas', icono: '🀫', nombresColor: ['Color de Fichas'], formas: false, tamano: ['pequeno', 'normal'] }),
   ], () => { aplicarFichas(); if (S && $('#rmMesa')) { if (modo3d !== quiere3D()) { armar(); pintar(); } else { if (V3) V3.recolor(); pintar(); } } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url));
@@ -116,6 +118,7 @@ const cambiado = () => W && W.mano.length !== S.jug[0].fichas.length;
 const fichaHTML = (id, extra = '') => `<button type="button" class="rmf fx ${R.esComodin(id) ? 'jk' : 'c' + R.color(id)} ${extra}" data-id="${id}" aria-label="${R.esComodin(id) ? 'Comodín' : `${R.numero(id)} ${R.COLORES[R.color(id)]}`}">${R.esComodin(id) ? '★' : R.numero(id)}</button>`;
 const ordenAtril = m => ordenarMano(m, ord, { palo: x => (R.esComodin(x) ? 9 : R.color(x)), num: x => (R.esComodin(x) ? 99 : R.numero(x)) });
 function pintar() {
+  { const m = $('#rmMesa'), d = asp && asp.valores.rmdis, k = ['marco', 'bisel', 'piedra'].includes(d) ? d : 'marco', e = estilo(asp ? asp.valores : {}); if (m) variablesTintadas(m.closest('.juego-rummy') || m, [['--rm-img', `img/rummy/f-${k}.webp`, e.hex || '#FFF8E7']], k + (e.hex || '')); }
   if (!S || !$('#rmMesa')) return;
   const miTurno = S.fase === 'jugar' && S.turno === 0 && W, mesa = W ? W.mesa : S.mesa, mano = W ? W.mano : S.jug[0].fichas, yo = S.jug[0];
   const sel = W ? W.sel : new Set();

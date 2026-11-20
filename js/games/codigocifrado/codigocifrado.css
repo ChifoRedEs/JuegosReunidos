@@ -5,9 +5,6 @@
 .juego-codigocifrado[data-marco="azul"]{--mm-marco:#3B6FD8;--mm-marco2:#1E3F8F;--mm-hueco:#142750}
 .juego-codigocifrado[data-marco="verde"]{--mm-marco:#3E8E5A;--mm-marco2:#1F5A38;--mm-hueco:#12331F}
 .juego-codigocifrado[data-marco="rosa"]{--mm-marco:#D9488C;--mm-marco2:#8F2459;--mm-hueco:#4A1431}
-.juego-codigocifrado[data-paleta="pastel"]{--m0:#FF9AA2;--m1:#9CC4FF;--m2:#A8E6A1;--m3:#FFE9A0;--m4:#D4B5F2;--m5:#FFC49B;--m6:#9BE3E8;--m7:#F7B6D8}
-.juego-codigocifrado[data-paleta="joya"]{--m0:#B3123F;--m1:#1B4FB3;--m2:#0F8A52;--m3:#C98A00;--m4:#6C2BB8;--m5:#C25A0E;--m6:#0B7E8C;--m7:#B01E78}
-.juego-codigocifrado[data-paleta="retro"]{--m0:#C8553D;--m1:#3D7EA6;--m2:#6B9A4A;--m3:#E0B341;--m4:#7A5C8E;--m5:#D9822B;--m6:#4AA39A;--m7:#C77D9F}
 .mmcab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:4px 2px;font-size:14px}
 .mmcab b{font:800 16px var(--f-titulo)}.mmcab span{color:var(--mut);font-weight:800;font-variant-numeric:tabular-nums}
 .mmmsg{text-align:center;font-size:14px;min-height:22px;margin:6px 4px}
@@ -26,10 +23,6 @@
 .mmb.sel{outline:3px solid var(--yel);outline-offset:2px}
 .mmb.pop{animation:mmpop .25s ease-out}
 @keyframes mmpop{from{transform:scale(.6)}to{transform:scale(1)}}
-.juego-codigocifrado[data-estilo="plano"] .mmb[data-c]:not(.vacio){background:var(--c);box-shadow:none}
-.juego-codigocifrado[data-estilo="cristal"] .mmb[data-c]:not(.vacio){background:radial-gradient(circle at 30% 26%,rgba(255,255,255,.9) 0 10%,transparent 30%),linear-gradient(160deg,rgba(255,255,255,.45),color-mix(in srgb,var(--c) 70%,transparent) 50%,color-mix(in srgb,var(--c) 92%,transparent));border:2px solid rgba(255,255,255,.7);box-sizing:border-box}
-.juego-codigocifrado[data-estilo="simbolos"] .mmb[data-c]:not(.vacio){background:var(--c);box-shadow:0 2px 4px rgba(0,0,0,.4);text-shadow:0 1px 3px rgba(0,0,0,.55)}
-.juego-codigocifrado[data-estilo="simbolos"] .mmb[data-c]:not(.vacio)::after{content:attr(data-s)}
 .mmfb{display:grid;grid-template-columns:repeat(var(--fc),calc(var(--b) * .3));gap:calc(var(--b) * .09);margin-left:auto;padding-right:calc(var(--b) * .1)}
 .mmk{width:calc(var(--b) * .3);height:calc(var(--b) * .3);border-radius:50%;background:var(--mm-hueco);box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
 .mmk.n{background:radial-gradient(circle at 35% 30%,#555,#0c0d12 70%);box-shadow:0 1px 2px rgba(0,0,0,.5)}
@@ -54,3 +47,14 @@
 .mmasa span{width:40px;height:5px;border-radius:99px;background:var(--line)}
 .mmasa small{font-size:11px;font-weight:800;color:var(--mut)}
 .mmpanel .mmbar{margin:0}
+/* Bolas y clavijas: ilustraciones IA (img/codigo). a1–a8 colores · b1–b8 símbolos */
+.juego-codigocifrado{--bi0:url(../../../img/codigo/a1.webp);--bi1:url(../../../img/codigo/a2.webp);--bi2:url(../../../img/codigo/a3.webp);--bi3:url(../../../img/codigo/a4.webp);--bi4:url(../../../img/codigo/a5.webp);--bi5:url(../../../img/codigo/a6.webp);--bi6:url(../../../img/codigo/a7.webp);--bi7:url(../../../img/codigo/a8.webp);--pn:url(../../../img/codigo/negra.webp);--pb:url(../../../img/codigo/blanca.webp);--ph:url(../../../img/codigo/hueco.webp);--pse:url(../../../img/codigo/secreto.webp)}
+.juego-codigocifrado[data-bolas="b"]{--bi0:url(../../../img/codigo/b1.webp);--bi1:url(../../../img/codigo/b2.webp);--bi2:url(../../../img/codigo/b3.webp);--bi3:url(../../../img/codigo/b4.webp);--bi4:url(../../../img/codigo/b5.webp);--bi5:url(../../../img/codigo/b6.webp);--bi6:url(../../../img/codigo/b7.webp);--bi7:url(../../../img/codigo/b8.webp);}
+.mmb[data-c="0"]:not(.vacio){--bi:var(--bi0)}.mmb[data-c="1"]:not(.vacio){--bi:var(--bi1)}.mmb[data-c="2"]:not(.vacio){--bi:var(--bi2)}.mmb[data-c="3"]:not(.vacio){--bi:var(--bi3)}.mmb[data-c="4"]:not(.vacio){--bi:var(--bi4)}.mmb[data-c="5"]:not(.vacio){--bi:var(--bi5)}.mmb[data-c="6"]:not(.vacio){--bi:var(--bi6)}.mmb[data-c="7"]:not(.vacio){--bi:var(--bi7)}
+.mmb[data-c]:not(.vacio){background:var(--bi) center/contain no-repeat;box-shadow:none;border-radius:0;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
+.mmb[data-c]:not(.vacio)::after{content:none}
+.mmb.vacio{background:var(--ph) center/contain no-repeat;box-shadow:none;border-radius:0}
+.mmk{background:var(--ph) center/contain no-repeat;box-shadow:none;border-radius:0}
+.mmk.n{background:var(--pn) center/contain no-repeat;box-shadow:none}
+.mmk.b{background:var(--pb) center/contain no-repeat;box-shadow:none}
+.mmsec .mmtapa{background:var(--pse) center/100% 100% no-repeat,#1b1f33}

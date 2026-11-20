@@ -11,13 +11,6 @@ const MARCOS = {
   madera: { nombre: 'Madera', sw: ['#8A5A2B', '#2B1D12'] }, nogal: { nombre: 'Nogal oscuro', sw: ['#5B3A29', '#1E1410'] }, pizarra: { nombre: 'Pizarra', sw: ['#5B6577', '#1D222C'] },
   azul: { nombre: 'Azul', sw: ['#3B6FD8', '#142750'] }, verde: { nombre: 'Verde', sw: ['#3E8E5A', '#12331F'] }, rosa: { nombre: 'Rosa', sw: ['#D9488C', '#4A1431'] },
 };
-const PALETAS = {
-  vivo: { nombre: 'Vivos', sw: ['#E53935', '#1E88E5', '#43A047', '#FDD835'] }, pastel: { nombre: 'Pastel', sw: ['#FF9AA2', '#9CC4FF', '#A8E6A1', '#FFE9A0'] },
-  joya: { nombre: 'Joyas', sw: ['#B3123F', '#1B4FB3', '#0F8A52', '#C98A00'] }, retro: { nombre: 'Retro', sw: ['#C8553D', '#3D7EA6', '#6B9A4A', '#E0B341'] },
-};
-const ESTILOS = {
-  bola: { nombre: 'Bolas brillantes', sw: ['#ffffff', '#E53935'] }, plano: { nombre: 'Planas', sw: ['#E53935', '#E53935'] }, cristal: { nombre: 'Cristal', sw: ['#ffe0e0', '#E53935'] }, simbolos: { nombre: 'Con símbolos (daltonismo)', sw: ['#E53935', '#8a1c1a'] },
-};
 let S = null, api = null, asp = null, root = null, crono = null, serie = 0, sel = -1, onKey = null, V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0, tIA = 0, pop = -1;
 let panel = null, posPanel = null, arrP = null, onRes = null;
 let cfg = { modo: 'adivinar', preset: 'clasico', ...M.PRESETS.clasico };
@@ -43,8 +36,7 @@ export async function mount(r, a) {
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     { ...grupoFondo('#mmTab'), def: 't-n-escritorio-codigo' },
     { clave: 'marco', titulo: 'Tablero', icono: '🪵', def: 'madera', opciones: Object.entries(MARCOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    { clave: 'paleta', titulo: 'Colores de las bolas', icono: '🎨', def: 'vivo', opciones: Object.entries(PALETAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    { clave: 'estilo', titulo: 'Estilo de las bolas', icono: '🔴', def: 'bola', opciones: Object.entries(ESTILOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+    { clave: 'bolas', titulo: 'Bolas y clavijas', icono: '🔴', ventana: true, forma: 'figura', def: 'a', opciones: [{ id: 'a', nombre: 'Bolas de colores', img: 'img/codigo/a1.webp' }, { id: 'b', nombre: 'Bolas con símbolos', img: 'img/codigo/b1.webp' }] },
   ], () => { if (S && $('#mmTab')) { if (modo3d !== quiere3D()) armar(); else if (V3) { V3.recolor(); pintar(); } else pintar(); } });
   await api.css(new URL('./codigocifrado.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0) && (c0.modo === 'adivinar' || c0.modo === 'codigo')) cfg = { modo: c0.modo, preset: typeof c0.preset === 'string' ? c0.preset : 'personal', pos: c0.pos, col: c0.col, rep: c0.rep, max: c0.max };
@@ -266,5 +258,5 @@ function reglas() {
     <li>Niveles: <b>Fácil</b> (4 bolas, 5 colores, sin repetir), <b>Clásico</b> (4 bolas, 6 colores), <b>Súper</b> (5 bolas, 8 colores), <b>Experto</b> (6 bolas, 8 colores) o <b>A tu gusto</b>.</li>
     <li><b>🔒 Tú pones el código</b>: escondes tú uno y la máquina intenta descifrarlo (sin estadísticas). Si no lo consigue en los intentos disponibles, ganas tú.</li>
     <li>💡 <b>Pista</b>: te dice cuántas combinaciones siguen siendo posibles y rellena una que encaja con todo lo que sabes. Teclado: 1–8 colores, ← → posición, Retroceso borra, Intro comprueba.</li>
-    <li>Con 🎨 Apariencia cambias tablero, colores, estilo de las bolas (hay uno con símbolos para daltonismo), fondo y vista 2D/3D.</li></ul>`);
+    <li>Con 🎨 Apariencia cambias tablero, colores, estilo de las bolas (hay un juego con símbolos para daltonismo), fondo y vista 2D/3D.</li></ul>`);
 }

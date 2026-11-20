@@ -1,11 +1,12 @@
 import { crearDuelo } from '../../core/duelo.js';
 import { VARIANTES, estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML } from './reglas.js';
-import { grupoFondo, grupoPersonaje, emojiDeValores } from '../../core/aspectos.js';
+import { grupoFondo, grupoPersonaje, imgDeValores } from '../../core/aspectos.js';
 import { gruposFichas, estilo } from '../../core/fichas.js';
 import { gruposColor, variablesTintadas, hexDe, matDe, MATERIALES } from '../../core/tinte.js';
 
 let tab = null, cols = [], discos = [], holes = [], prevN = -1, vAct = null;
 
+const TABLEROS = { azul: '#2457A6', morado: '#6B3FD4', verde: '#0B9A6B', negro: '#262B4A', coral: '#F0572D' };
 function montar(cont, ctx, v) {
   const V = VARIANTES[v]; vAct = v; prevN = -1;
   let h = `<div class="c4w t1" style="--cols:${V.cols}" role="group" aria-label="Tablero de Cuatro en Línea, ${V.cols} columnas">`;
@@ -27,13 +28,14 @@ function montar(cont, ctx, v) {
 }
 function pintar(e, ctx, v) {
   if (!tab || v !== vAct) return;
-  const V = VARIANTES[v], linea = new Set(e.fin ? e.fin.linea : []), emo = emojiDeValores(ctx.valores()), est = estilo(ctx.valores());
+  const V = VARIANTES[v], linea = new Set(e.fin ? e.fin.linea : []), emo = imgDeValores(ctx.valores()), est = estilo(ctx.valores());
   const raiz = tab.closest('.juego-cuatroenlinea') || tab;      // 🎨 Fichas: color de cada jugador (variables --r / --y), tamaño y textura (css/fichas.css)
   est.hex ? raiz.style.setProperty('--r', est.hex) : raiz.style.removeProperty('--r'); est.hex2 ? raiz.style.setProperty('--y', est.hex2) : raiz.style.removeProperty('--y');
   raiz.style.setProperty('--fx-esc', est.esc);
-  { const va = ctx.valores(), m = matDe(va.c4mat), a = va.c4color || 'coral', b = va.c4color2 || 'mostaza', u = `img/fichas/n/${m}-disco.webp`;
+  { const va = ctx.valores(), m = matDe(va.c4mat), a = va.c4color || 'coral', b = va.c4color2 || 'mostaza', u = va.c4disco === 'anillo' || va.c4disco === 'estrella' ? `img/c4/f-${va.c4disco}.webp` : `img/fichas/n/${m}-disco.webp`;
     raiz.style.setProperty('--r', hexDe(a)); raiz.style.setProperty('--y', hexDe(b));
-    variablesTintadas(raiz, [['--c4-1', u, hexDe(a)], ['--c4-2', u, hexDe(b)]], [m, a, b].join('|')); }      // «Personajes»: tus fichas llevan tu personaje
+    variablesTintadas(raiz, [['--c4-1', u, hexDe(a)], ['--c4-2', u, hexDe(b)]], [m, a, b, va.c4disco].join('|'));
+    variablesTintadas(raiz, [['--c4-cell', 'img/c4/celda.webp', TABLEROS[va.tablero] || TABLEROS.azul]], 'cell' + (va.tablero || 'azul')); }      // «Personajes»: tus fichas llevan tu personaje
   if (prevN < 0) prevN = e.n;
   for (let i = 0; i < V.cols * V.filas; i++) {
     const val = e.b[i], d = discos[i], hl = holes[i], r = i / V.cols | 0, c = i % V.cols;
@@ -41,7 +43,7 @@ function pintar(e, ctx, v) {
     if (d.dataset.k !== key) {
       const prev = +d.dataset.val || 0, cae = val && prev !== val && i === e.ult && e.n === prevN + 1;
       const conserva = val && prev === val && d.classList.contains('cae');
-      d.textContent = pj ? emo : '';
+      d.innerHTML = pj ? `<img class="pji" src="${emo}" alt="">` : '';
       d.className = 'd fx' + (val ? ' p' + val : '') + (pj ? ' pj' : '') + (i === e.ult ? ' ult' : '') + (cae || conserva ? ' cae' : '');
       if (cae) d.style.setProperty('--f', r);
       d.dataset.k = key; d.dataset.val = val;
@@ -68,6 +70,7 @@ const duelo = crearDuelo({
     { clave: 'tablero', tt: true, titulo: 'Color del tablero', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2457A6'] }, { id: 'morado', nombre: 'Morado', sw: ['#6B3FD4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0B9A6B'] }, { id: 'coral', nombre: 'Coral', sw: ['#F0572D'] }, { id: 'negro', nombre: 'Noche', sw: ['#262B4A'] }] },
     ...gruposColor({ clave: 'c4', lados: ['Primer jugador', 'Segundo jugador'], defs: ['coral', 'mostaza'], titulo: 'Color de las fichas' }),
     { clave: 'c4mat', titulo: 'Material de las fichas', def: 'liso', opciones: MATERIALES },
+    { clave: 'c4disco', titulo: 'Diseño de las fichas', icono: '🔴', ventana: true, forma: 'figura', def: 'lisa', opciones: [{ id: 'lisa', nombre: 'Lisa (según material)', img: 'img/c4/f-lisa.webp' }, { id: 'anillo', nombre: 'Anillos', img: 'img/c4/f-anillo.webp' }, { id: 'estrella', nombre: 'Estrella', img: 'img/c4/f-estrella.webp' }] },
   ],
   estadoInicial, jugadas, aplicar, validarEstado, ia, reglasHTML, vista: { montar, pintar },
 });

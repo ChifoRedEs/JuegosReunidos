@@ -45,3 +45,11 @@
 .juego-damas:not([data-fichas]) .pc.b.rey{background-image:var(--dm-br,url(../../../img/fichas/n/liso-corona.webp))}
 .juego-damas:not([data-fichas]) .pc.rey:not(.pj){font-size:0}
 .juego-damas:not([data-fichas])[data-ftex] .pc.w,.juego-damas:not([data-fichas])[data-ftex] .pc.b{background-color:transparent}
+.pc .pji{width:118%;height:118%;max-width:none;object-fit:contain;flex:none;pointer-events:none}
+/* 3.92: texturas de casillas (img/casillas) */
+.juego-damas[data-casilla="cuero"] .ck .sq{background:url(../../../img/casillas/cuero-c.webp) center/cover}.juego-damas[data-casilla="cuero"] .ck .sq.d{background:url(../../../img/casillas/cuero-o.webp) center/cover}
+.juego-damas[data-casilla="madera"] .ck .sq{background:url(../../../img/casillas/madera-c.webp) center/cover}.juego-damas[data-casilla="madera"] .ck .sq.d{background:url(../../../img/casillas/madera-o.webp) center/cover}
+.juego-damas[data-casilla="marmol"] .ck .sq{background:url(../../../img/casillas/marmol-c.webp) center/cover}.juego-damas[data-casilla="marmol"] .ck .sq.d{background:url(../../../img/casillas/marmol-o.webp) center/cover}
+.juego-damas[data-casilla="piedra"] .ck .sq{background:url(../../../img/casillas/piedra-c.webp) center/cover}.juego-damas[data-casilla="piedra"] .ck .sq.d{background:url(../../../img/casillas/piedra-o.webp) center/cover}
+.juego-damas[data-casilla="terrazo"] .ck .sq{background:url(../../../img/casillas/terrazo-c.webp) center/cover}.juego-damas[data-casilla="terrazo"] .ck .sq.d{background:url(../../../img/casillas/terrazo-o.webp) center/cover}
+.juego-damas[data-casilla="veta"] .ck .sq{background:url(../../../img/casillas/veta-c.webp) center/cover}.juego-damas[data-casilla="veta"] .ck .sq.d{background:url(../../../img/casillas/veta-o.webp) center/cover}

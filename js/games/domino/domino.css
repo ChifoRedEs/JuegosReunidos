@@ -8,7 +8,7 @@
 .dmpts small,.dmj small{display:block;font-weight:800;color:var(--mut);font-size:12px}.dmpts b{font:800 22px var(--f-titulo)}
 .dmjug{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:4px 0}
 .dmj{display:flex;flex-direction:column;align-items:center;gap:3px}.dmj>span{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:150px}.dmj b{font-size:12px;color:var(--mut)}.dmj u{font-size:10px;text-decoration:none;color:var(--mut)}
-.dmb{display:block;width:9px;height:16px;border-radius:3px;background:var(--dm-c);border:1px solid rgba(0,0,0,.4);box-shadow:0 1px 1px rgba(0,0,0,.3)}
+.dmb{display:block;width:9px;height:16px;background:var(--dm-iv) center/100% 100% no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
 .dmmsg{text-align:center;font-size:14px;min-height:22px;margin:6px 4px}
 /* mesa */
 .dmmesa{--ts:20px;position:relative;margin:6px auto;padding:10px 8px 8px;border-radius:18px;background-color:var(--dm-mesa,#1F6B46);background-image:radial-gradient(ellipse at 50% 35%,rgba(255,255,255,.14),transparent 65%);box-shadow:inset 0 0 0 4px rgba(0,0,0,.25),0 3px 10px rgba(0,0,0,.25);container-type:inline-size}
@@ -25,7 +25,8 @@
 .dmbar{justify-content:center}
 /* ficha */
 .dmt{--s:var(--ts);--dr:calc(var(--s)*.28);display:inline-flex;box-sizing:border-box;align-items:stretch;width:calc(var(--s)*2 + 4px);height:calc(var(--s) + 2px);padding:1px;border-radius:var(--dr);flex:none;
-  background-color:var(--dm-c);border:1px solid rgba(0,0,0,.4);box-shadow:0 2px 3px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.35);position:relative;overflow:hidden}
+  background:var(--dm-ih) center/100% 100% no-repeat,var(--dm-c);border:0;box-shadow:none;border-radius:0;position:relative;overflow:visible;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.dmt.v,.dmrow .dmt.d{background-image:var(--dm-iv)}
 .dmt.v{flex-direction:column;width:calc(var(--s) + 2px);height:calc(var(--s)*2 + 4px)}
 .dmrow .dmt.d{flex-direction:column;width:calc(var(--s)*.9 + 2px);height:calc(var(--s)*1.8 + 4px)}
 .dmrow.rev .dmt:not(.d){flex-direction:row-reverse}
@@ -41,23 +42,8 @@
 .juego-domino[data-puntos="color"] .dmh[data-n="1"]{--pc:#2F6BFF}.juego-domino[data-puntos="color"] .dmh[data-n="2"]{--pc:#17A673}.juego-domino[data-puntos="color"] .dmh[data-n="3"]{--pc:#E5484D}
 .juego-domino[data-puntos="color"] .dmh[data-n="4"]{--pc:#E08A00}.juego-domino[data-puntos="color"] .dmh[data-n="5"]{--pc:#7A5BC7}.juego-domino[data-puntos="color"] .dmh[data-n="6"]{--pc:#0A95A8}
 .juego-domino[data-puntos="color"] .dmh[data-n="7"]{--pc:#E5622B}.juego-domino[data-puntos="color"] .dmh[data-n="8"]{--pc:#D6479B}.juego-domino[data-puntos="color"] .dmh[data-n="9"]{--pc:#5B6472}
-/* texturas */
-.dmt,.dmb{background-image:linear-gradient(160deg,rgba(255,255,255,.35),transparent 45%,rgba(0,0,0,.18))}
-.juego-domino[data-textura="liso"] .dmt,.juego-domino[data-textura="liso"] .dmb{background-image:none}
-.juego-domino[data-textura="brillante"] .dmt,.juego-domino[data-textura="brillante"] .dmb{background-image:linear-gradient(180deg,rgba(255,255,255,.6) 0,rgba(255,255,255,0) 48%),linear-gradient(0deg,rgba(0,0,0,.28),transparent 45%)}
-.juego-domino[data-textura="marmol"] .dmt,.juego-domino[data-textura="marmol"] .dmb{background-image:repeating-linear-gradient(115deg,transparent 0 11px,rgba(255,255,255,.35) 12px 13px,transparent 14px 27px),repeating-linear-gradient(62deg,transparent 0 17px,rgba(0,0,0,.2) 18px 19px,transparent 20px 39px),radial-gradient(circle at 30% 20%,rgba(255,255,255,.4),transparent 60%)}
-.juego-domino[data-textura="madera"] .dmt,.juego-domino[data-textura="madera"] .dmb{background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 2px,transparent 2px 6px,rgba(255,255,255,.12) 6px 7px,transparent 7px 12px),linear-gradient(180deg,rgba(255,255,255,.2),transparent 50%,rgba(0,0,0,.15))}
-.juego-domino[data-textura="granito"] .dmt,.juego-domino[data-textura="granito"] .dmb{background-image:radial-gradient(rgba(0,0,0,.4) 1px,transparent 1.6px),radial-gradient(rgba(255,255,255,.55) 1px,transparent 1.6px);background-size:5px 5px,7px 7px;background-position:0 0,2px 3px}
-.juego-domino[data-textura="carbono"] .dmt,.juego-domino[data-textura="carbono"] .dmb{background-image:linear-gradient(45deg,rgba(0,0,0,.38) 25%,transparent 25% 75%,rgba(0,0,0,.38) 75%),linear-gradient(45deg,rgba(0,0,0,.38) 25%,transparent 25% 75%,rgba(0,0,0,.38) 75%),linear-gradient(160deg,rgba(255,255,255,.2),transparent 55%);background-size:6px 6px,6px 6px,100% 100%;background-position:0 0,3px 3px,0 0}
-.juego-domino[data-textura="metal"] .dmt,.juego-domino[data-textura="metal"] .dmb{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.28) 0 1px,rgba(0,0,0,.12) 1px 2px),linear-gradient(115deg,transparent 28%,rgba(255,255,255,.6) 46%,transparent 62%)}
-.juego-domino[data-textura="cristal"] .dmt,.juego-domino[data-textura="cristal"] .dmb{background-image:linear-gradient(135deg,rgba(255,255,255,.7),rgba(255,255,255,.08) 42%,rgba(255,255,255,.4) 72%,rgba(255,255,255,.06));background-color:color-mix(in srgb,var(--dm-c) 72%,transparent);border-color:rgba(255,255,255,.6);backdrop-filter:blur(2px)}
-/* formas */
-.juego-domino[data-forma="cuadrada"] .dmt{--dr:2px}
-.juego-domino[data-forma="pildora"] .dmt{--dr:calc(var(--s)*.5)}.juego-domino[data-forma="pildora"] .dmh{padding:16%}
-.juego-domino[data-forma="marcada"] .dmt{border:2px solid rgba(0,0,0,.55);box-shadow:0 2px 3px rgba(0,0,0,.4),inset 0 0 0 2px rgba(255,255,255,.45)}
-.juego-domino[data-forma="biselada"] .dmt{border-radius:0;border:0;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),inset 0 0 0 3px rgba(0,0,0,.35);clip-path:polygon(0 14%,7% 0,93% 0,100% 14%,100% 86%,93% 100%,7% 100%,0 86%)}
-.juego-domino[data-forma="biselada"] .dmt.v,.juego-domino[data-forma="biselada"] .dmrow .dmt.d{clip-path:polygon(14% 0,86% 0,100% 7%,100% 93%,86% 100%,14% 100%,0 93%,0 7%)}
-.dmt.mini{--dr:3px}.juego-domino .dmt.mini{clip-path:none;border-radius:3px}
+/* fichas ilustradas (img/domino): la imagen tintada la prepara index.js (--dm-ih horizontal, --dm-iv vertical) */
+.dmt.mini{--dr:3px}
 /* estados en la cadena */
 .dmt.ext{outline:2px solid rgba(255,214,102,.65);outline-offset:1px}
 .dmt.obj{outline:3px solid #7CFFB2;cursor:pointer;animation:dmobj .9s ease-in-out infinite}

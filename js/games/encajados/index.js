@@ -5,6 +5,7 @@ import { enSegundoPlano } from '../../core/ia/remoto.js';
 import * as K from './motor.js';
 import { NIVELES } from './niveles.js';
 import { FICHAS, opcionesPersonajes } from '../../core/personajes.js';
+const PROPIOS = [['j', 'Explorador'], ['p1', 'Personaje 1'], ['p2', 'Personaje 2'], ['p3', 'Personaje 3'], ['p4', 'Personaje 4'], ['p5', 'Personaje 5'], ['p6', 'Personaje 6']];
 import { grupoFondo } from '../../core/aspectos.js';
 import { gruposFichas, estilo, aplicarVars, oscuro } from '../../core/fichas.js';
 
@@ -23,8 +24,13 @@ const CAJAS = {
   regalo: { nombre: 'Regalos', sw: ['#9B5DE5', '#FFD23F'] }, carton: { nombre: 'Cartón', sw: ['#D9B27C', '#A8834F'] },
 };
 // Personajes por secciones (js/core/personajes.js). Los de «Animales» y «Vehículos» se giran según hacia dónde caminan.
-const GIRAN = new Set(['Animales', 'Vehículos']);
-const ficha = () => FICHAS[asp.valores.ficha] || FICHAS.ofi0;
+const GIRAN = new Set(['Animales (cuerpo entero)', 'Vehículos']);
+const SUF = { izquierda: 'izq', derecha: 'der', arriba: 'arriba', abajo: 'abajo' };
+let dirV = 'abajo';
+const propio = () => PROPIOS.some(([id]) => id === asp.valores.ficha);
+const ficha = () => propio() ? { sec: 'propios' } : (FICHAS[asp.valores.ficha] || { img: 'img/encajados/j-abajo.webp', sec: 'propios' });
+// Los «propios» tienen sprite por dirección; el resto es una sola imagen que se vuelca al mirar a la derecha
+const urlJug = () => propio() ? `img/encajados/${asp.valores.ficha}-${SUF[dirV] || 'abajo'}.webp` : (FICHAS[asp.valores.ficha] || { img: 'img/encajados/j-abajo.webp' }).img;
 let S = null, L = null, api = null, asp = null, root = null, cfg = { modo: 'campana', tam: 'mediano' };
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
@@ -56,7 +62,7 @@ export async function mount(r, a) {
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#skTab'), def: 't-n-almacen' }, { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     ...gruposFichas({ titulo: 'Cajas', icono: '📦', color: false }),
-    { clave: 'ficha', titulo: 'Personaje', def: 'ofi0', opciones: opcionesPersonajes() }],
+    { clave: 'ficha', titulo: 'Personaje', icono: '🧑', ventana: true, forma: 'figura', def: 'j', opciones: [...PROPIOS.map(([id, nombre]) => ({ id, nombre, sec: 'Del almacén', img: `img/encajados/${id}-abajo.webp` })), ...opcionesPersonajes()] }],
   () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./encajados.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && MODOS[c0.modo] && K.TAMANOS[c0.tam]) cfg = { ...c0 };
@@ -122,7 +128,7 @@ async function iniciar3D() {
     const b3 = await import('../../core/escena3d.js'), { crearEncajados3D } = await import('./vista3d.js'); if (t !== tok3 || !root) return;
     const v = await crearEncajados3D(host, L, { cajas: asp.valores.cajas }); if (t !== tok3 || !root) { v.destruir(); return; }
     b3.botonesCamara(host, v.E); const g = host.querySelector('[data-cam="girar"]'); if (g) g.remove();       // girar cambiaría el sentido de los gestos
-    v.alDeslizar = d => paso(d); v.alCasilla = i => irA(i); V3 = v; delete host.dataset.iniciando; v.recolor({ cajas: asp.valores.cajas, est: estilo(asp.valores) }); pintar(); V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: ficha().e, volteo: false, nuevo: true });
+    v.alDeslizar = d => paso(d); v.alCasilla = i => irA(i); V3 = v; delete host.dataset.iniciando; v.recolor({ cajas: asp.valores.cajas, est: estilo(asp.valores) }); pintar(); V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: urlJug(), volteo: false, nuevo: true });
   } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); } }
 }
 
@@ -163,16 +169,16 @@ function construir() {
   tab.style.setProperty('--w', L.w); tab.style.setProperty('--h', L.h);
   let html = '';
   for (let i = 0; i < L.w * L.h; i++) html += `<div class="skc ${L.muro[i] ? 'muro' : L.fuera[i] ? 'fuera' : 'suelo'}${L.meta[i] ? ' meta' : ''}" data-c="${i}"></div>`;
-  html += L.cajas.map((_, k) => `<div class="skcaja fxb" data-k="${k}"></div>`).join('') + `<div class="skjug"><span>${ficha().e}</span></div>`;
+  html += L.cajas.map((_, k) => `<div class="skcaja fxb" data-k="${k}"></div>`).join('') + `<div class="skjug"><span><img src="${urlJug()}" alt=""></span></div>`;
   tab.innerHTML = html;
 }
 const pos = i => `--x:${i % L.w};--y:${(i / L.w) | 0}`;
 function pintar() {
   if (!S || !$('#skTab')) return;
-  if (modo3d) { if (V3) V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: ficha().e, volteo: mira === 'derecha' && GIRAN.has(ficha().sec) }); }
+  if (modo3d) { if (V3) V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: urlJug(), volteo: mira === 'derecha' && GIRAN.has(ficha().sec) }); }
   else S.cajas.forEach((c, k) => { const el = $(`#skTab [data-k="${k}"]`); el.setAttribute('style', pos(c)); el.classList.toggle('en', !!L.meta[c]); });
   const j = modo3d ? null : $('#skTab .skjug'); if (j) { j.setAttribute('style', pos(S.jugador));
-  j.classList.toggle('derecha', mira === 'derecha' && GIRAN.has(ficha().sec)); }   // los emojis de animales y vehículos miran a la izquierda
+  j.classList.toggle('derecha', mira === 'derecha' && GIRAN.has(ficha().sec)); const im = j.querySelector('img'); if (im && im.getAttribute('src') !== urlJug()) im.src = urlJug(); }   // los emojis de animales y vehículos miran a la izquierda
   const enMeta = S.cajas.filter(c => L.meta[c]).length, M = S.modo === 'campana' ? mejores()[S.nivel] : null;
   $('#skTit').textContent = titulo(S);
   $('#skCont').innerHTML = `📦 ${enMeta}/${S.cajas.length} · 👣 ${S.movs} · 🫸 ${S.empujes}${M ? ` · récord ${M[0]}` : ''}`;
@@ -193,7 +199,7 @@ function paso(dir, auto = false) {
   if (!S || S.done || (andando && !auto)) return false;
   const r = K.mover(L, S.cajas, S.jugador, dir); if (!r) { if (!auto) api.sonido('error'); return false; }
   S.hist.push([S.cajas, S.jugador, S.movs, S.empujes]); if (S.hist.length > MAX_HIST) S.hist.shift();
-  if (dir === 'izquierda' || dir === 'derecha') mira = dir;
+  dirV = dir; if (dir === 'izquierda' || dir === 'derecha') mira = dir;
   S.cajas = r.cajas; S.jugador = r.jugador; S.movs++;
   if (r.empuje >= 0) { S.empujes++; api.sonido(L.meta[r.cajas[r.empuje]] ? 'ok' : 'click'); api.vibrar(10); }
   if (K.resuelto(L, S.cajas)) ganar();

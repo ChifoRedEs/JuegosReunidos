@@ -2,7 +2,7 @@ import { $ } from '../../core/dom.js';
 import { REGLAS, tableroInicial, jugadas, aplicar, contar, clavePos, esRey, dueno, fichasIniciales } from './reglas.js';
 import { elegirPorRegla } from './ia.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
-import { grupoFondo, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+import { grupoFondo, grupoPersonaje, imgPersonaje } from '../../core/aspectos.js';
 import { gruposFichas, estilo, claro, oscuro, luz } from '../../core/fichas.js';
 import { gruposColor, variablesTintadas, hexDe, matDe, MATERIALES } from '../../core/tinte.js';
 // Vista 3D (Three.js, opcional en 🎨 Apariencia): solo dibuja; los toques vuelven a `tocar`
@@ -58,6 +58,7 @@ export async function mount(root, a) {
   api = a; rootEl = root; pensando = false; anim = null;
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#dmTab'), tt: true },
     { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'madera', opciones: [{ id: 'madera', nombre: 'Madera', sw: ['#8A5A34', '#F3DDB6'] }, { id: 'esmeralda', nombre: 'Esmeralda', sw: ['#1F9D68', '#E7F6E2'] }, { id: 'hielo', nombre: 'Hielo', sw: ['#4F8DF0', '#EAF4FF'] }, { id: 'caramelo', nombre: 'Caramelo', sw: ['#E0409B', '#FFE9F4'] }, { id: 'noche', nombre: 'Noche', sw: ['#141A3D', '#39447A'] }] },
+    { clave: 'casilla', tt: true, titulo: 'Textura de las casillas', icono: '🪵', ventana: true, forma: 'tapete', def: 'color', opciones: [{ id: 'color', nombre: 'Solo color', icono: '🎨' }, ...[['cuero', 'Cuero'], ['madera', 'Madera'], ['marmol', 'Mármol'], ['piedra', 'Piedra'], ['terrazo', 'Terrazo'], ['veta', 'Veta']].map(([id, nombre]) => ({ id, nombre, img: `img/casillas/${id}-c.webp` }))] },
     ...gruposColor({ clave: 'dm', lados: ['Blancas', 'Rojas'], defs: ['marfil', 'coral'], titulo: 'Color de las fichas' }),
     { clave: 'dmmat', titulo: 'Material de las fichas', def: 'liso', opciones: MATERIALES },
   ], () => { for (const k of sq.keys()) sq[k].dataset.k = ''; if (rootEl && (!m3 !== ((asp.valores.vista || '2d') !== '3d') || (m3 && forma3 !== ((asp.valores.fichas || 'ilustrada') === 'ilustrada' ? 'disco' : asp.valores.fichas)))) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } pintar(); });
@@ -228,7 +229,7 @@ function pintar() {
   const ult = new Set(C.ultimo ? C.ultimo.path.map(pos) : []);
   const rutaS = new Set(C.ruta ? C.ruta.map(pos) : []), sig = new Set();
   if (C.ruta) candidatas().forEach(m => { const n = m.path[C.ruta.length]; if (n) sig.add(pos(n)); });
-  const n = R().n, emo = emojiPersonaje(asp);      // «Personajes»: tus fichas (las de abajo) llevan tu personaje
+  const n = R().n, emo = imgPersonaje(asp);      // «Personajes»: tus fichas (las de abajo) llevan tu personaje
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
     const p = C.b[r][c], k = pos([r, c]), s = sq[r * n + c];
     const fl = (ult.has(k) ? 'l' : '') + (C.ruta && igual(C.ruta[0], [r, c]) ? 's' : rutaS.has(k) ? 'r' : '') + (sig.has(k) ? 't' : '');
@@ -236,7 +237,7 @@ function pintar() {
     if (s.dataset.k === key) continue;
     s.dataset.k = key;
     s.className = 'sq' + ((r + c) % 2 ? ' d' : '') + [...fl].map(x => ' ' + x).join('');
-    s.innerHTML = p ? `<div class="pc fx ${dueno(p)}${pj ? ' pj' : ''}${esRey(p) ? ' rey' : ''}">${pj ? `${emo}${esRey(p) ? '<b class="cr">♛\uFE0E</b>' : ''}` : esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
+    s.innerHTML = p ? `<div class="pc fx ${dueno(p)}${pj ? ' pj' : ''}${esRey(p) ? ' rey' : ''}">${pj ? `<img class="pji" src="${emo}" alt="">${esRey(p) ? '<b class="cr">♛\uFE0E</b>' : ''}` : esRey(p) ? '♛\uFE0E' : ''}</div>` : '';
     if ((r + c) % 2) s.setAttribute('aria-label', `Fila ${r + 1}, columna ${c + 1}, ${p ? (dueno(p) === 'w' ? 'ficha blanca' : 'ficha roja') + (esRey(p) ? ' dama' : '') : 'vacía'}`);
   }
   if (anim) {

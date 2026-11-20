@@ -51,3 +51,9 @@
 .juego-cuatroenlinea:not([data-forma]) .d.p2{background-image:var(--c4-2,url(../../../img/fichas/n/liso-disco.webp))}
 .juego-cuatroenlinea:not([data-forma]) .ch.c41{background:var(--c4-1,url(../../../img/fichas/n/liso-disco.webp)) center/contain no-repeat;box-shadow:none}
 .juego-cuatroenlinea:not([data-forma]) .ch.c42{background:var(--c4-2,url(../../../img/fichas/n/liso-disco.webp)) center/contain no-repeat;box-shadow:none}
+.d .pji{width:90%;height:90%;object-fit:contain;pointer-events:none;display:block;margin:5%}
+
+/* 3.92: casillas ilustradas (img/c4/celda.webp teñida con el color del tablero); la ficha se ve sobre el hueco */
+.hole{background:var(--c4-cell) center/100% 100% no-repeat}
+.hole::after{content:none!important}
+.d{inset:6%;z-index:2}

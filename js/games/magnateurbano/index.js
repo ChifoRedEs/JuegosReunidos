@@ -26,8 +26,9 @@ const TIPO3 = { empresa: 'destino', nube: 'aero', red: 'serv', noticias: 'suerte
 const cj = c => { const e = estilo(asp.valores), k = COLORES_JUGADOR.indexOf(c); return [e.hex, e.hex2, e.hex3, e.hex4][k] || c; };
 let obsFig = null;
 const figId = () => asp.valores.figura || 'peon';
-const pz = p => p.pj ? esc(p.ficha) : `<i class="figp" data-c="${cj(p.color)}"></i>`;
-const estado3D = () => ({ jug: G.jug.map(p => ({ ...p, color: cj(p.color), img: p.pj ? '' : (figuraTintada(figId(), cj(p.color), () => { if (vista && G) vista.actualizar(estado3D()); }) || '') })), c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
+const esImg = f => /^img\//.test(f || '');
+const pz = p => p.pj ? (esImg(p.ficha) ? `<img class="pji" src="${esc(p.ficha)}" alt="">` : esc(p.ficha)) : `<i class="figp" data-c="${cj(p.color)}"></i>`;
+const estado3D = () => ({ jug: G.jug.map(p => ({ ...p, color: cj(p.color), img: p.pj ? (esImg(p.ficha) ? p.ficha : '') : (figuraTintada(figId(), cj(p.color), () => { if (vista && G) vista.actualizar(estado3D()); }) || '') })), c: G.c.map(s => ({ ...s, tipo: TIPO3[s.tipo] || s.tipo, nivel: s.of, ico: s.ico || (s.tipo === 'nube' ? '☁️' : undefined) })) });
 const quiere3D = () => hay3d && !forzar2d && asp && (asp.valores.vista || '2d') === '3d';
 function cerrar3D() { tok3++; if (vista) { vista.destruir(); vista = null; } }
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0;
@@ -115,13 +116,14 @@ function nuevaSetup() {
   api.borrar(); setup();
 }
 // «Tu personaje»: sustituye la ficha del primer jugador humano; si otro jugador tenía la misma, éste pasa a una libre.
-const personajeElegido = () => (PERSONAJES[asp.valores.ficha] || {}).e || null;
+const personajeElegido = () => (PERSONAJES[asp.valores.ficha] || {}).img || null;
+const ponPj = (t, f) => { if (esImg(f)) { t.textContent = ''; t.classList.add('fig'); t.style.backgroundImage = `url(${f})`; } else { t.textContent = f; t.classList.remove('fig'); t.style.backgroundImage = ''; } };
 function aplicarPersonaje() {
   const i = G.jug.findIndex(p => !p.bot); if (i < 0) return;
   const e = personajeElegido(), p = G.jug[i];
   if (!e) { if (p.pj) { p.pj = false; guardar(); } return; }
   if (p.pj && p.ficha === e) return;
-  p.ficha = e; p.pj = true; const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (t) { t.textContent = e; t.classList.remove('fig'); t.style.backgroundImage = ''; } guardar();
+  p.ficha = e; p.pj = true; const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (t) ponPj(t, e); guardar();
 }
 function empezar() {
   const jugadores = cfg.jug.map(([nombre, t, f], i) => ({ nombre: nombre.trim() || `Jugador ${i + 1}`, ficha: FICHAS[f], color: COLORES_JUGADOR[i], bot: t === 'c', t })).filter(j => j.t !== 'n');
@@ -186,7 +188,7 @@ async function iniciar3D(t) {
 }
 function tokensFig() {
   if (!G) return;
-  G.jug.forEach((p, i) => { const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (!t) return; if (p.pj) { t.textContent = p.ficha; t.classList.remove('fig'); t.style.backgroundImage = ''; } else { t.textContent = ''; fondoFigura(t, figId(), cj(p.color), tokensFig); } });
+  G.jug.forEach((p, i) => { const t = root.querySelector(`.mtficha[data-j="${i}"]`); if (!t) return; if (p.pj) ponPj(t, p.ficha); else { t.textContent = ''; fondoFigura(t, figId(), cj(p.color), tokensFig); } });
 }
 function colocar(i) {
   if (modo3d) return;
@@ -194,7 +196,7 @@ function colocar(i) {
   let t = root.querySelector(`.mtficha[data-j="${i}"]`);
   if (!t) { t = document.createElement('span'); t.className = 'mtficha fx'; t.dataset.j = i; }
   t.style.setProperty('--c', cj(p.color));
-  if (p.pj) { t.textContent = p.ficha; t.classList.remove('fig'); t.style.backgroundImage = ''; } else { t.textContent = ''; fondoFigura(t, figId(), cj(p.color), () => { if (G) tokensFig(); }); }
+  if (p.pj) ponPj(t, p.ficha); else { t.textContent = ''; fondoFigura(t, figId(), cj(p.color), () => { if (G) tokensFig(); }); }
   cel.append(t); t.classList.remove('salta'); void t.offsetWidth; t.classList.add('salta');
 }
 function pintar() {

@@ -103,3 +103,10 @@
 .axpo .pzi{--pz-h:54px;margin:0 auto}
 .axcap .pzi{--pz-h:22px;display:inline-block;margin-right:-4px;filter:none}
 .axtab .sq.mia:active .pzi{transform:scale(1.08)}
+/* 3.92: texturas de casillas (img/casillas) */
+.juego-ajedrez[data-casilla="cuero"] .axtab .sq.cla{background:url(../../../img/casillas/cuero-c.webp) center/cover}.juego-ajedrez[data-casilla="cuero"] .axtab .sq.osc{background:url(../../../img/casillas/cuero-o.webp) center/cover}
+.juego-ajedrez[data-casilla="madera"] .axtab .sq.cla{background:url(../../../img/casillas/madera-c.webp) center/cover}.juego-ajedrez[data-casilla="madera"] .axtab .sq.osc{background:url(../../../img/casillas/madera-o.webp) center/cover}
+.juego-ajedrez[data-casilla="marmol"] .axtab .sq.cla{background:url(../../../img/casillas/marmol-c.webp) center/cover}.juego-ajedrez[data-casilla="marmol"] .axtab .sq.osc{background:url(../../../img/casillas/marmol-o.webp) center/cover}
+.juego-ajedrez[data-casilla="piedra"] .axtab .sq.cla{background:url(../../../img/casillas/piedra-c.webp) center/cover}.juego-ajedrez[data-casilla="piedra"] .axtab .sq.osc{background:url(../../../img/casillas/piedra-o.webp) center/cover}
+.juego-ajedrez[data-casilla="terrazo"] .axtab .sq.cla{background:url(../../../img/casillas/terrazo-c.webp) center/cover}.juego-ajedrez[data-casilla="terrazo"] .axtab .sq.osc{background:url(../../../img/casillas/terrazo-o.webp) center/cover}
+.juego-ajedrez[data-casilla="veta"] .axtab .sq.cla{background:url(../../../img/casillas/veta-c.webp) center/cover}.juego-ajedrez[data-casilla="veta"] .axtab .sq.osc{background:url(../../../img/casillas/veta-o.webp) center/cover}

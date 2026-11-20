@@ -1,7 +1,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
-import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, imgPersonaje, imgCanvas } from '../../core/aspectos.js';
 
 let S = null, Mu = null, api = null, asp = null, root = null, cv = null, ctx = null, dpr = 1, k = 1, raf = 0, acc = 0, tPrev = 0, reg = false;
 let onKey = null, onKeyUp = null, onUp = null, onVis = null, onRes = null, hold = false, efectos = [], hudAnt = '', recordAct = 0, nuevoRecord = false, podioPos = -1, eraJugando = false;
@@ -266,15 +266,17 @@ function meta(x) {
   ctx.font = '800 16px system-ui,sans-serif'; ctx.fillStyle = '#FFF'; ctx.strokeStyle = '#111'; ctx.lineWidth = 3; ctx.textAlign = 'center'; ctx.strokeText('META', x + 14, 20); ctx.fillText('META', x + 14, 20);
 }
 function personaje(t) {
-  const hv = asp.valores.heroe, him = !emojiPersonaje(asp) && hv !== 'clasico' ? imgVA(hv || 'pajaro') : null;
+  const pji = imgCanvas(imgPersonaje(asp));
+  if (pji) { const y = S.y + (S.fase === 'listo' ? Math.sin(t / 250) * 5 : 0), ang = Math.max(-.6, Math.min(.9, S.vy / 360)); ctx.save(); ctx.translate(M.PX, y); ctx.rotate(S.fase === 'fin' ? Math.min(1.4, ang + .5) : ang); ctx.drawImage(pji, -24, -24, 48, 48); ctx.restore(); return; }
+  const hv = asp.valores.heroe, him = hv !== 'clasico' ? imgVA(hv || 'pajaro') : null;
   if (him) {
     const y = S.y + (S.fase === 'listo' ? Math.sin(t / 250) * 5 : 0), ang = Math.max(-.6, Math.min(.9, S.vy / 360)), w = hv === 'globo' ? 36 : 46, h = w * him.naturalHeight / him.naturalWidth;
     ctx.save(); ctx.translate(M.PX, y); ctx.rotate(S.fase === 'fin' ? Math.min(1.4, ang + .5) : (hv === 'globo' ? ang * .4 : ang)); ctx.drawImage(him, -w / 2, -h / 2, w, h); ctx.restore(); return;
   }
-  const emo = emojiPersonaje(asp) || '🐦', y = S.y + (S.fase === 'listo' ? Math.sin(t / 250) * 5 : 0);
+  const emo = '🐦', y = S.y + (S.fase === 'listo' ? Math.sin(t / 250) * 5 : 0);
   ctx.save(); ctx.translate(M.PX, y);
   const ang = Math.max(-.6, Math.min(.9, S.vy / 360)); ctx.rotate(S.fase === 'fin' ? Math.min(1.4, ang + .5) : ang);
-  if (!emojiPersonaje(asp)) ctx.scale(-1, 1);                           // el pájaro de siempre mira hacia la derecha
+  ctx.scale(-1, 1);                           // el pájaro de siempre mira hacia la derecha
   ctx.font = "32px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, 0, 2);
   ctx.restore();
 }

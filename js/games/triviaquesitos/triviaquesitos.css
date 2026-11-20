@@ -45,3 +45,4 @@
 .tvfin b.act{opacity:1;box-shadow:0 0 0 3px color-mix(in srgb,var(--qc) 35%,transparent);animation:tvp 1s ease-in-out infinite}
 .tvfin b.mal{background:var(--red);border-color:var(--red);opacity:1}
 .tvfin0{background:var(--card);border:2px dashed var(--yel);border-radius:14px;padding:10px 12px;font-size:14px;text-align:center;margin:6px 0}
+.qq{width:1.5em;height:1.5em;object-fit:contain;vertical-align:middle;margin:-.25em}

@@ -10,7 +10,9 @@ export const EMOJI_FUENTE = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Em
 export function hayWebGL() {
   try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch { return false; }
 }
-export const emojiTextura = (e, tam = 128) => { const c = lienzo(tam, tam), x = c.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `${tam * .72}px ${EMOJI_FUENTE}`; x.fillText(e, tam / 2, tam * .55); return textura(c); };
+// emojiTextura(e): emoji o, si empieza por img/, una ilustración (personajes). La imagen se pinta al cargar y avisa a las escenas para repintar.
+export const emojiTextura = (e, tam = 128) => { const c = lienzo(tam, tam), x = c.getContext('2d');
+  if (/^img\//.test(e)) { const t = textura(c), im = new Image(); im.onload = () => { x.drawImage(im, 0, 0, tam, tam); t.needsUpdate = true; window.dispatchEvent(new Event('escena3d-marcar')); }; im.src = e; return t; } x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `${tam * .72}px ${EMOJI_FUENTE}`; x.fillText(e, tam / 2, tam * .55); return textura(c); };
 
 /* opciones: { fov, az, pol, dist, distMin, distMax, polMin, polMax, radio (para encuadrar), objetivo:[x,y,z], orbita (true), sombras (true),
    sol:{pos:[x,y,z], int}, hemi:{int}, sueloY, sombraOpacidad, antialias } */
@@ -38,6 +40,7 @@ export function crearEscena(cont, o = {}) {
   Object.assign(C, { objAz: C.az, objPol: C.pol, objDist: C.dist, objTx: C.tx, objTz: C.tz });
   let sucio = true, vivo = true, raf = 0, w = 0, h = 0;
   const marcar = () => { sucio = true; };
+  window.addEventListener('escena3d-marcar', marcar);
   const distMin = o.distMin || 5, distMax = o.distMax || 40, polMin = o.polMin == null ? .15 : o.polMin, polMax = o.polMax == null ? 1.4 : o.polMax;
   const encuadre = () => (o.radio ? Math.min(distMax, Math.max(distMin, o.radio / (Math.tan(cam.fov * Math.PI / 360) * Math.min(1, cam.aspect)) + (o.margen == null ? 2 : o.margen))) : (o.dist || 14));
   function colocarCam() {
@@ -114,7 +117,7 @@ export function crearEscena(cont, o = {}) {
   E.renderer = renderer; E.escena = escena; E.cam = cam; E.C = C; E.canvas = cv; E.sol = sol; E.marcar = marcar; E.tween = tween; E.redimensionar = redimensionar;
   E.destruir = () => {
     vivo = false; cancelAnimationFrame(raf); ro.disconnect(); for (const t of tweens) { clearTimeout(t.guarda); t.res(); } tweens.clear();
-    cv.removeEventListener('pointerdown', bajar); cv.removeEventListener('pointermove', mover); cv.removeEventListener('pointerup', soltar); cv.removeEventListener('pointercancel', soltar); cv.removeEventListener('wheel', rueda);
+    window.removeEventListener('escena3d-marcar', marcar); cv.removeEventListener('pointerdown', bajar); cv.removeEventListener('pointermove', mover); cv.removeEventListener('pointerup', soltar); cv.removeEventListener('pointercancel', soltar); cv.removeEventListener('wheel', rueda);
     escena.traverse(x => { if (x.geometry) x.geometry.dispose(); const ms = x.material ? (Array.isArray(x.material) ? x.material : [x.material]) : []; for (const m of ms) { if (m.map) m.map.dispose(); m.dispose(); } });
     renderer.dispose(); try { renderer.forceContextLoss(); } catch { /* nada */ } cv.remove();
   };

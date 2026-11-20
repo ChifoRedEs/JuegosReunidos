@@ -68,3 +68,4 @@
 .juego-encajados .sk3.cajas-carton{--caja:#D9B27C;--caja2:#A8834F}
 .juego-encajados .sk3.cajas-regalo{--caja:#9B5DE5;--caja2:#FFD23F}
 .juego-encajados .e3d.sk3{width:min(calc(100vw - 28px),560px);touch-action:none}
+.juego-encajados .skjug img{width:112%;height:112%;max-width:none;object-fit:contain;display:block}

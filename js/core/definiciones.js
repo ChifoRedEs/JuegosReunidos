@@ -262,7 +262,7 @@ export const BLOQUES = [
     ["CINE • BANDA SONORA", "Música ambiental no justificada por fuentes visibles de la escena creada para provocar emociones en el público sin que los personajes de la ficción la perciban.", "Música extradiegética (o Incidental)"],
     ["TEATRO MUSICAL", "Composición musical orquestal instrumental interpretada al inicio de un musical o de una ópera antes del alzamiento formal del telón.", "Obertura"],
   ] },
-  { id: "dep", nombre: "Deportes y pasatiempos", color: "#FF8A1A", icono: "🏅", fichas: [
+  { id: "dep", nombre: "Deportes y pasatiempos", color: "#FF8A1A", icono: "⚽", fichas: [
     ["AJEDREZ", "Movimiento defensivo y estratégico conjunto en el cual el rey y una de las torres se desplazan simultáneamente en un único turno.", "Enroque"],
     ["TENIS", "Saque directo en el que la pelota bota reglamentariamente dentro del cuadro correspondiente sin que el receptor llegue a tocarla con su raqueta.", "Ace (o Saque directo)"],
     ["ATLETISMO DE FONDO", "Prueba atlética de resistencia en ruta que recorre una distancia oficial reglamentaria fijada exactamente en 42,195 kilómetros.", "Maratón"],

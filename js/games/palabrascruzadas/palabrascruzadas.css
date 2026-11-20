@@ -88,3 +88,9 @@
 .schist summary{font-weight:800;cursor:pointer}
 .schist ol{margin:6px 0 2px;padding-left:22px;max-height:220px;overflow:auto;font-size:14px}
 .schist li{margin:2px 0}
+
+/* 3.92: casillas del tablero ilustradas */
+.scmesa .scc:not(.f){background:var(--si-cel) center/100% 100% no-repeat,var(--sc-cel)}
+.scmesa .scc.p-T:not(.f){background:var(--si-T) center/100% 100% no-repeat,var(--sc-T)}.scmesa .scc.p-D:not(.f){background:var(--si-D) center/100% 100% no-repeat,var(--sc-D)}
+.scmesa .scc.p-t:not(.f){background:var(--si-t) center/100% 100% no-repeat,var(--sc-t)}.scmesa .scc.p-d:not(.f){background:var(--si-d) center/100% 100% no-repeat,var(--sc-d)}
+.scmesa .scc.cur:not(.f),.scmesa .scc.sobre:not(.f){filter:brightness(1.15) saturate(1.25)}

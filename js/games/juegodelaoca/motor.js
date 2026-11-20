@@ -101,3 +101,6 @@ export const ESPIRAL = (() => {
   }
   return out;                                              // out[casilla] = [fila, columna]
 })();
+
+// Imagen de cada tipo de casilla (img/oca/<archivo>.webp)
+export const IMG_OCA = { oca: 'oca', puente: 'puente', posada: 'posada', pozo: 'pozo', laberinto: 'laberinto', carcel: 'carcel', dados: 'dados', muerte: 'muerte', fin: 'jardin', salida: 'salida', rebote: 'salto' };

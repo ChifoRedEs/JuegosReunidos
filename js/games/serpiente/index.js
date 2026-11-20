@@ -1,7 +1,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import * as M from './motor.js';
-import { grupoFondo, grupoPantalla, grupoPersonaje, emojiPersonaje, tapeteElegido } from '../../core/aspectos.js';
+import { grupoFondo, grupoPantalla, grupoPersonaje, imgPersonaje, imgCanvas, tapeteElegido } from '../../core/aspectos.js';
 import { gruposColor, hexDe, tintarTodas } from '../../core/tinte.js';
 import { imagenTapete, pintarTapete } from '../../core/cartas.js';
 
@@ -132,7 +132,7 @@ function finPartida(ev) {
   cancelAnimationFrame(raf); raf = 0;
   efecto = { tipo: 'muerte', t: performance.now() };
   const v = M.variante(S), antes = api.record(v);
-  if (!reg) { reg = true; api.registrar({ res: ev === 'lleno' || S.comidas >= 15 ? 'victoria' : 'derrota', variante: v, puntos: S.puntos });   // ganas si llenas el tablero o comes 15 manzanas }
+  if (!reg) { reg = true; api.registrar({ res: ev === 'lleno' || S.comidas >= 15 ? 'victoria' : 'derrota', variante: v, puntos: S.puntos }); }   // ganas si llenas el tablero o comes 15 manzanas
   nuevoRecord = S.puntos > antes && S.puntos > 0;
   if (ev === 'lleno') { api.sonido('ganar'); api.vibrar([60, 40, 60, 40, 120]); } else { api.sonido('perder'); api.vibrar([80, 40, 120]); }
   guardar(); pintarHud();
@@ -184,8 +184,8 @@ function dibujar() {
   ctx.shadowBlur = 0;
   // ojos
   const cab = S.serp[0], hx = cab % n * c + c / 2, hy = Math.floor(cab / n) * c + c / 2, d = S.dir, px = [0, 1, 0, -1][d], py = [-1, 0, 1, 0][d];
-  const emo = emojiPersonaje(asp);      // «Personajes»: tu personaje es la cabeza de la serpiente
-  if (emo) { ctx.font = `${Math.round(c * .95)}px system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(emo, hx, hy + c * .04); }
+  const pji = imgCanvas(imgPersonaje(asp));      // «Personajes»: tu personaje es la cabeza de la serpiente
+  if (pji) { const q = c * .95; ctx.drawImage(pji, hx - q, hy - q, q * 2, q * 2); }
   else if (!spr) for (const s of [-1, 1]) {
     const ex = hx + px * c * .12 + (-py) * s * c * .2, ey = hy + py * c * .12 + px * s * c * .2;
     ctx.fillStyle = T.ojo; ctx.beginPath(); ctx.arc(ex, ey, c * .14, 0, Math.PI * 2); ctx.fill();
@@ -312,5 +312,4 @@ function reglas() {
     <li><b>Controles</b>: desliza el dedo sobre el tablero en la dirección que quieras (puedes encadenar giros sin levantarlo), usa la cruceta o las flechas / WASD. Espacio o ⏸️ para pausar.</li>
     <li>La serpiente acelera a medida que come. Tus mejores puntuaciones se guardan en 📊 Estadísticas.</li>
     <li>Si sales de la app, la partida se pausa y se guarda para continuarla luego.</li></ul>`);
-}
 }

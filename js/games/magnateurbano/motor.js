@@ -95,7 +95,7 @@ export class Partida {
   }
   p() { return this.jug[this.turno]; }
   idx(p) { return this.jug.indexOf(p); }
-  n(p) { return `<b style="color:${p.color}">${esc(p.ficha)} ${esc(p.nombre)}</b>`; }
+  n(p) { return `<b style="color:${p.color}">${/^img\//.test(p.ficha) ? '' : esc(p.ficha) + ' '}${esc(p.nombre)}</b>`; }
   log(m, c) { this.h.log(m, c); }
   propias(i) { return this.c.filter(s => s.dueno === i); }
   grupo(s) { return s.tipo === 'empresa' ? this.c.filter(x => x.g === s.g) : [s]; }
@@ -297,7 +297,7 @@ export function validar(d) {
   const reglas = { bote: !!r.bote, subasta: !!r.subasta, dinero: ent(r.dinero, 500, 5000) ? r.dinero : REGLAS.dinero, rondas: ent(r.rondas, 0, 500) ? r.rondas : 0 };
   const jug = d.jug.map(p => p && typeof p === 'object' && typeof p.nombre === 'string' && typeof p.ficha === 'string' && /^#[0-9a-f]{6}$/i.test(p.color)
     && ent(p.dinero, 0, 1e7) && ent(p.pos, 0, 39) && ent(p.intentos, 0, 3) && Array.isArray(p.pases) && p.pases.length <= 2 && p.pases.every(m => Object.hasOwn(MAZOS, m))
-    ? { nombre: p.nombre.slice(0, 14), ficha: p.ficha.slice(0, 16), color: p.color, bot: !!p.bot, dinero: p.dinero, pos: p.pos, espera: !!p.espera, intentos: p.intentos, pases: p.pases.slice(), fuera: !!p.fuera } : null);
+    ? { nombre: p.nombre.slice(0, 14), ficha: p.ficha.slice(0, 40), color: p.color, bot: !!p.bot, dinero: p.dinero, pos: p.pos, espera: !!p.espera, intentos: p.intentos, pases: p.pases.slice(), fuera: !!p.fuera } : null);
   if (jug.includes(null) || !Array.isArray(d.c) || d.c.length !== 40) return null;
   const c = d.c.map((x, i) => {
     if (!Array.isArray(x) || x.length !== 3) return null;
