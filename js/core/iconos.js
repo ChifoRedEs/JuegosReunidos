@@ -112,6 +112,14 @@ const MAPA = {
   'an-tigre': '🐯',
   'an-jirafa': '🦒',
   'an-aguila': '🦅',
+  'rl-rueda': '🎡',
+  'bg-billete': '🎫🎟',
+  'bg-trebol': '🍀☘',
+  'ic-celebra': '🎉🎊',
+  'rl-hucha': '🐖',
+  'ic-micro2': '🎙',
+  'cu-mano': '✋🖐',
+  'cu-puno': '✊',
   aviso: '⚠️⚠', llama: '🔥', rayo: '⚡', ojo: '👁️👁', bombilla: '💡', medalla: '🏅'
 };
 const NOM = {}; let re = '';

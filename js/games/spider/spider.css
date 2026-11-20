@@ -17,3 +17,7 @@
 .spdrag{position:fixed;z-index:80;pointer-events:none;width:var(--kw);filter:drop-shadow(0 8px 10px rgba(0,0,0,.45))}
 .spdrag .carta{position:absolute;left:0;top:calc(var(--kw) * var(--y,0));--cw:var(--kw)}
 .spwin{text-align:center;color:#fff;font:800 22px 'Baloo 2',system-ui,sans-serif;margin:30px 0}
+
+/* 3.92: huecos ilustrados (img/solitario) */
+.sppile,.spcol .vacia{border:0;background:url(../../../img/solitario/vacio.webp) center/100% 100% no-repeat}
+.sppile.pst,.spcol.pst .vacia{box-shadow:none;background-image:url(../../../img/solitario/seleccion.webp)}

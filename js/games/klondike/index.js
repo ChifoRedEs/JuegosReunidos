@@ -6,6 +6,8 @@ import * as K from './motor.js';
 
 const cartaHTML = (id, o) => de(S).html(id, o);                   // baraja francesa o española según la partida
 const DY_ABAJO = .2, DY_ARRIBA = .38;
+const HUECO_PALO = { '♠': 'pica', '♥': 'corazon', '♦': 'diamante', '♣': 'trebol' };
+const huecoPalo = sy => { const k = HUECO_PALO[String(sy).replace(/\uFE0F|\uFE0E/g, '')]; return k ? `<img class="kph" src="img/solitario/${k}.webp" alt="">` : sy; };
 let S = null, hist = [], api = null, asp = null, root = null, crono = null, reg = false, pst = null, pstT = null, drag = null, auto = null;
 let worker = null, jobId = 0, estadoAn = 'calc', pendiente = false, estadoAntes = null, ac = { b: 0, m: 0 }, feedback = '', tAn = null, sinWorker = false;
 let popAn = null, tAuto = null;
@@ -220,7 +222,7 @@ function pintar() {
   if (S.extra) h += '<div></div>';
   for (let p = 0; p < 4; p++) {
     const f = S.fund[p], top = f[f.length - 1];
-    h += `<div class="kpile ${pst && pst.a && pst.a.t === 'fund' && K.cartaDe(S, pst.o) !== undefined && de(S).palo(K.cartaDe(S, pst.o)) === p ? 'pst' : ''}" data-drop="fund" data-p="${p}">${top === undefined ? de(S).simbolo(p) : etiqueta(cartaHTML(top, { clase: ocu && ocu.o.t === 'fund' && ocu.o.p === p ? 'ocu' : '', estilo: '--x:0;--y:0' }), `data-t="fund" data-p="${p}"`)}</div>`;
+    h += `<div class="kpile ${pst && pst.a && pst.a.t === 'fund' && K.cartaDe(S, pst.o) !== undefined && de(S).palo(K.cartaDe(S, pst.o)) === p ? 'pst' : ''}" data-drop="fund" data-p="${p}">${top === undefined ? huecoPalo(de(S).simbolo(p)) : etiqueta(cartaHTML(top, { clase: ocu && ocu.o.t === 'fund' && ocu.o.p === p ? 'ocu' : '', estilo: '--x:0;--y:0' }), `data-t="fund" data-p="${p}"`)}</div>`;
   }
   h += '</div><div class="klrow">';
   for (let col = ini; col < 8; col++) {

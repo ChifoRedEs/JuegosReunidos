@@ -144,12 +144,17 @@ function construir() {
   cel = [...gr.children]; $('#spSvg').setAttribute('viewBox', `0 0 ${n} ${n}`);
 }
 const centro = (n, i) => [(i % n) + .5, (i / n | 0) + .5];
-function colorDe(i) { const p = MARCAS[asp.valores.marca] || MARCAS.arcoiris; return p[i % p.length]; }
+const BANDAS = [['amarilla', '#F2D95C'], ['coral', '#E8735F'], ['lila', '#9B8CB5'], ['roja', '#E0583C'], ['turquesa', '#5FB5AA'], ['verde', '#2A8A7C']];      // subrayadores ilustrados (img/sopa)
+function colorDe(i) { return BANDAS[i % BANDAS.length][1]; }
+function banda(x1, y1, x2, y2, i) {
+  const L = Math.hypot(x2 - x1, y2 - y1) + .95, ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI, cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+  return `<image href="img/sopa/m-${BANDAS[i % BANDAS.length][0]}.webp" x="${(cx - L / 2).toFixed(3)}" y="${(cy - .46).toFixed(3)}" width="${L.toFixed(3)}" height=".92" preserveAspectRatio="none" transform="rotate(${ang.toFixed(2)} ${cx} ${cy})" opacity=".5"/>`;
+}
 function dibujar() {
   const n = S.n; let h = '';
   for (const f of S.halladas) {
     const [x1, y1] = centro(n, f.a), [x2, y2] = centro(n, f.b);
-    h += f.r ? `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width=".72" style="stroke:var(--mut)" opacity=".45" stroke-dasharray=".25 .3"/>` : `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width=".78" style="stroke:${colorDe(f.i)}" opacity=".48"/>`;
+    h += f.r ? `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width=".72" style="stroke:var(--mut)" opacity=".45" stroke-dasharray=".25 .3"/>` : banda(x1, y1, x2, y2, f.i);
   }
   if (sel) { const [x1, y1] = centro(n, sel.a), [x2, y2] = centro(n, sel.b); h += `<line class="sel" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width=".78"/>`; }
   if (pistaCel >= 0) { const [x, y] = centro(n, pistaCel); h += `<circle class="hint" cx="${x}" cy="${y}" r=".46"/>`; }

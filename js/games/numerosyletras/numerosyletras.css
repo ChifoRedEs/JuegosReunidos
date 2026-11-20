@@ -49,3 +49,11 @@
 .cyfin p{text-align:center;font:800 20px 'Baloo 2',system-ui,sans-serif;margin:4px 0 8px}
 .cyfila.l9{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px;max-width:440px;margin:0 auto;width:100%}
 .cyfila.l9 .cyf{width:100%;font-size:min(5.6vw,26px)}
+/* 3.92: fichas y operaciones ilustradas (img/numeros) */
+.cyf{background:url(../../../img/numeros/ficha-letra.webp) center/100% 100% no-repeat;color:#17214A;border-radius:0;box-shadow:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.cyf.usada{opacity:.4}
+.cyops .btn{color:transparent;font-size:0;background-color:transparent;border:0;box-shadow:none;background-repeat:no-repeat;background-position:center;background-size:contain;min-height:54px}
+.cyops .btn[data-op="+"]{background-image:url(../../../img/numeros/mas.webp)}.cyops .btn[data-op="-"]{background-image:url(../../../img/numeros/menos.webp)}
+.cyops .btn[data-op="×"]{background-image:url(../../../img/numeros/por.webp)}.cyops .btn[data-op="÷"]{background-image:url(../../../img/numeros/div.webp)}
+.cyops .btn.on{filter:drop-shadow(0 0 6px var(--yel)) brightness(1.1)}
+.cyops .btn:disabled{opacity:.45}

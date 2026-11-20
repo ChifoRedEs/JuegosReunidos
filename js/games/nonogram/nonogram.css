@@ -21,3 +21,7 @@
 .juego-nonogram[data-forma="estrella"] .ng .c.f::after{border-radius:0;inset:4%;box-shadow:none;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
 .juego-nonogram[data-forma="corazon"] .ng .c.f::after{border-radius:0;inset:6%;box-shadow:none;clip-path:polygon(50% 92%,10% 55%,2% 35%,10% 14%,28% 6%,42% 12%,50% 24%,58% 12%,72% 6%,90% 14%,98% 35%,90% 55%)}
 .juego-nonogram .msg:empty{display:none}
+
+/* 3.92: casillas rellenas ilustradas (img/celdas) */
+.juego-nonogram .ng .c.f::after{background:var(--ng-img) center/100% 100% no-repeat;border-radius:0;inset:5%;box-shadow:none}
+.juego-nonogram .ng.ganado .c.f::after{background:var(--ng-img-ok) center/100% 100% no-repeat}

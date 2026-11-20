@@ -45,3 +45,8 @@
 .enlog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .enlog li:first-child{color:var(--ink);font-weight:800}
 .tkk[data-tk="✔"]{max-width:200px;background:var(--ok);color:#fff;border-color:transparent;font-size:16px}
+/* 3.92: cada palabra es un eslabón ilustrado (img/encadenadas) */
+.enw{background:url(../../../img/encadenadas/eslabon.webp) center/100% 100% no-repeat;border:0;padding:12px 22px;color:#17214A;min-width:74px}
+.enw small{color:#56638C}
+.enw.ultima{background-color:transparent;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--e1) 70%,transparent))}
+.enw.enini{opacity:.75}

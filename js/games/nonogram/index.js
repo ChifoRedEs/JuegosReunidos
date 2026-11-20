@@ -2,6 +2,7 @@ import { $, esperar, fmtTiempo, rnd } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { variablesTintadas } from '../../core/tinte.js';
 import { crearFlotante } from '../../core/flotante.js';
 import { SIZES, runs, colsOf, generarAleatorio } from './solver.js';
 
@@ -33,6 +34,7 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
+  variablesTintadas(root, [['--ng-img', 'img/celdas/c-bisel.webp', '#2F6BFF'], ['--ng-img-ok', 'img/celdas/c-bisel.webp', '#0FB56A']], 'ng');
   api = a; rootEl = root;
   asp = api.aspecto([{ ...grupoFondo('.ngwrap'), def: 't-n-papel-cuaderno-1' }, grupoTablero(),
     { clave: 'relleno', titulo: 'Color del relleno', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2F6BFF'] }, { id: 'rosa', nombre: 'Rosa', sw: ['#FF3FA4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0FB56A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#FF7A1A'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#7A4DFF'] }] },
