@@ -1,7 +1,7 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { grupoTableroDN, grupoColoresNumeros } from '../../core/aspectos.js';
 import { TAMANOS, DIFICULTADES, generar, cumple, simbolo } from './generador.js';
 
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], ocupado = false, notasOn = false, onKey = null, info = null, malas = new Set();
@@ -40,7 +40,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
-  asp = api.aspecto([{ ...grupoFondo('#kkTab'), def: 't-n-papel-cuaderno-1' }, grupoTablero(), { clave: 'jaulas', titulo: 'Jaulas', def: 'bordes', opciones: [{ id: 'bordes', nombre: 'Solo bordes' }, { id: 'colores', nombre: 'De colores', sw: ['#FF8FA3', '#FFC857', '#6FD99B', '#6FCFE8', '#B79BFF'] }] }, { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
+  asp = api.aspecto([grupoTableroDN(), { clave: 'jaulas', titulo: 'Jaulas', def: 'bordes', opciones: [{ id: 'bordes', nombre: 'Solo bordes' }, { id: 'colores', nombre: 'De colores', sw: ['#FF8FA3', '#FFC857', '#6FD99B', '#6FCFE8', '#B79BFF'] }] }, grupoColoresNumeros()]);
   await api.css(new URL('./calcudoku.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;
@@ -126,6 +126,7 @@ function pintar() {
     const b = cel[i], v = S.cur[i], x = dup.has(i) || (v && (malas.has(i) || (auto && v !== S.sol[i])));
     const fijo = S.cages[info.jaulaDe[i]].op === '=';
     b.className = b.className.replace(/ (s|p|x|jx|ok|fijo)(?= |$)/g, '') + (i === S.sel ? ' s' : '') + (x ? ' x' : '') + (jmal.has(info.jaulaDe[i]) ? ' jx' : '') + (S.done ? ' ok' : '') + (fijo ? ' fijo' : '');
+    if (b.dataset.d !== String(v || '')) b.dataset.d = v || '';
     const kv = b.querySelector('.kv'); if (kv.textContent !== (v ? String(v) : '')) kv.textContent = v || '';
     const kn = b.querySelector('.kn'), notas = !v && S.notas[i] ? [...Array(n).keys()].map(d => (S.notas[i] & (1 << (d + 1)) ? d + 1 : '')).join(' ') : '';
     if (kn.dataset.k !== notas) { kn.dataset.k = notas; kn.innerHTML = notas ? [...Array(n).keys()].map(d => `<i style="font-style:normal">${S.notas[i] & (1 << (d + 1)) ? d + 1 : ''}</i>`).join('') : ''; }

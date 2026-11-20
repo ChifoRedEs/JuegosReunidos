@@ -1,7 +1,7 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTableroDN } from '../../core/aspectos.js';
+import { grupoTableroDN, grupoColoresNumeros } from '../../core/aspectos.js';
 import { PARES, candidatos, generar } from './generador.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', experto: 'Experto' };
@@ -38,7 +38,7 @@ export function resumen(d) {
 
 /* ---------- ciclo de vida ---------- */
 export async function mount(root, a) {
-  api = a; rootEl = root; asp = api.aspecto([grupoTableroDN(), { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }, { id: 'color', nombre: 'De colores', sw: ['#E5383B', '#F77F00', '#2BA84A', '#2F6BFF', '#7A4DFF'] }] }]);
+  api = a; rootEl = root; asp = api.aspecto([grupoTableroDN(), grupoColoresNumeros()]);
   notasOn = false; ocupado = false; malas = new Set();
   await api.css(new URL('./sudoku.css', import.meta.url));
   const guardado = api.cargar();

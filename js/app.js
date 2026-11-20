@@ -7,7 +7,7 @@ import * as aj from './core/ajustes.js';
 import * as stats from './core/stats.js';
 import * as son from './core/sonido.js';
 import { BARAJAS, urlTapete, buscarFondo, cargarBarajas, precargarSeleccion } from './core/cartas.js';
-import { filtrarTapetes, ocultarClasicas } from './core/aspectos.js';
+import { filtrarTapetes, ocultarClasicas, modoOscuro } from './core/aspectos.js';
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION } from './version.js';
@@ -360,10 +360,23 @@ function crearApi(j, ent, mod, root) {
         if (t) root.style.setProperty('--tapete-url', `url("${urlTapete(t)}")`); else root.style.removeProperty('--tapete-url');
       };
       defs.forEach(g => { elec[g.clave] = !g.fijo && g.opciones.some(o => o.id === gd[g.clave]) ? gd[g.clave] : g.def; });
+      // Grupos con `defModo` (Tablero día/noche): las opciones de día solo valen en modo Claro y las de noche en modo Nocturno. Se recuerda la elegida en cada modo.
+      const modo = () => (modoOscuro() ? 'oscuro' : 'claro'), porModo = defs.filter(g => g.defModo);
+      const aplicarModo = () => porModo.forEach(g => {
+        const m = modo(), k = g.clave + '@' + m, ok = x => { const o = g.opciones.find(q => q.id === x); return !!o && (!o.modo || o.modo === m); };
+        const v = ok(elec[k]) ? elec[k] : ok(gd[k]) ? gd[k] : ok(elec[g.clave]) ? elec[g.clave] : g.defModo[m]; elec[g.clave] = v; elec[k] = v;
+      });
+      aplicarModo();
       resolver(true); poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
       const refrescarVista = () => { if (btnVista) { const es3 = vals.vista === '3d'; btnVista.innerHTML = es3 ? icoF('ver2d', '🔲') + 'Ver en 2D' : icoF('ver3d', '🧊') + 'Ver en 3D'; btnVista.setAttribute('aria-label', es3 ? 'Cambiar a la vista 2D' : 'Cambiar a la vista 3D'); } };
       quitarVista();
+      if (porModo.length) {
+        const cambio = () => { aplicarModo(); porModo.forEach(g => { delete vals[g.clave]; }); resolver(false); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); };
+        const mo = new MutationObserver(cambio), mq = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
+        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); if (mq && mq.addEventListener) mq.addEventListener('change', cambio);
+        desModo = () => { mo.disconnect(); if (mq && mq.removeEventListener) mq.removeEventListener('change', cambio); };
+      }
       if (defs.some(g => g.clave === 'vista')) {
         btnVista = el('button', { type: 'button', class: 'btn vista-flot' }); document.body.append(btnVista); root.classList.add('con-vista'); posVista(); refrescarVista();
         btnVista.addEventListener('click', () => { elec.vista = vals.vista === '3d' ? '2d' : '3d'; delete vals.vista; resolver(false); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); });
@@ -371,7 +384,8 @@ function crearApi(j, ent, mod, root) {
       // 🎨 Apariencia (igual en todos los juegos): una ventana con una sección desplegable por grupo (se abre una a la vez).
       // Cada sección muestra sus opciones como botones, muestras de color, iconos o miniaturas de imagen, según el grupo.
       const abrir = (alCerrarV) => {
-        const boton = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji || g.soloColor ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
+        const boton = (g, o) => { const b = botonBase(g, o); if (o.modo && o.modo !== modo()) { b.disabled = true; b.classList.add('dis'); b.title = o.nombre + (o.modo === 'claro' ? ' (solo en modo Claro)' : ' (solo en modo Nocturno)'); } return b; };
+        const botonBase = (g, o) => el('button', { type: 'button', class: 'btn ap-o' + (o.emoji ? ' ap-e' : '') + (elec[g.clave] === o.id ? ' on' : ''), 'data-g': g.clave, 'data-o': o.id, ...(o.emoji || g.soloColor ? { title: o.nombre, 'aria-label': o.nombre } : {}) },
           ...(o.emoji ? [o.emoji] : [...(o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` })), ...(g.soloColor ? [] : [o.nombre])]));
         const actual = g => g.opciones.find(x => x.id === elec[g.clave]) || g.opciones[0];
         const resumenSec = new Map();
@@ -382,7 +396,7 @@ function crearApi(j, ent, mod, root) {
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
           r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, g.soloColor && o.sw ? '' : o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
         };
-        const elegir = (g, idO) => { elec[g.clave] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); const r = alCambiar && alCambiar({ ...vals }); if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } };
+        const elegir = (g, idO) => { elec[g.clave] = idO; if (g.defModo) elec[g.clave + '@' + modo()] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); const r = alCambiar && alCambiar({ ...vals }); if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } };
         // Sección única de color para varios bandos: leyenda (quién es cada color) + una sola paleta; un color elegido por un bando no puede repetirse en otro.
         const cuerpoMulti = g => {
           const slots = g.multi; let act = 0; const cont = el('div', { class: 'ap-multi' });
@@ -417,6 +431,10 @@ function crearApi(j, ent, mod, root) {
         const cuerpoDe = g => {
           if (g.multi) return cuerpoMulti(g);
           if (g.sub) return cuerpoSub(g);
+          if (g.desplegable) {
+            const sl = el('select', { class: 'desplegable ap-sel', 'aria-label': g.titulo }, ...g.opciones.map(o => el('option', { value: o.id, selected: elec[g.clave] === o.id }, o.nombre)));
+            sl.addEventListener('change', () => elegir(g, sl.value)); return sl;
+          }
           const imgs = g.opciones.some(o => o.img) && g.forma;
           if (imgs) {
             const rej0 = lista => el('div', { class: 'ap-rej ap-' + g.forma }, ...lista.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
@@ -477,7 +495,8 @@ function ruta() {
 }
 // Botón flotante 2D/3D (solo en los juegos con grupo de Apariencia «vista»): cambia de vista al instante desde cualquier punto de la pantalla.
 let btnVista = null;
-const quitarVista = () => { if (btnVista) { btnVista.remove(); btnVista = null; } };
+let desModo = null;
+const quitarVista = () => { if (btnVista) { btnVista.remove(); btnVista = null; } if (desModo) { desModo(); desModo = null; } };
 const posVista = () => { const t = document.querySelector('.top'); if (btnVista && t) btnVista.style.top = Math.round(t.getBoundingClientRect().bottom + 8) + 'px'; };
 window.addEventListener('resize', posVista);
 async function cerrarJuego() {

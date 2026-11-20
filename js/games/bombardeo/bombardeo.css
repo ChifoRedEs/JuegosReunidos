@@ -29,3 +29,6 @@
 .bc{isolation:isolate}
 .bc.r.vac{background:none}
 .bc.r.vac::before{content:"";position:absolute;inset:0;z-index:-1;background:url(../../../img/bombardeo/suelo.webp) center/100% 100% no-repeat;opacity:.5}
+
+/* 3.93.1: «Personalizar» en una sola línea en Configurar partida */
+.cfg-cont .btn[data-k="nivel"][data-v='"personal"']{white-space:nowrap;flex:1 0 auto;min-width:118px}

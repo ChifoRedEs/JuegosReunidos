@@ -12,16 +12,21 @@ export const PALETAS = [
 ];
 // «Colores de Tablero» nuevos (Sudoku, Nonogram, Bombardeo): 4 pares claros para el día y 4 pares neón oscuros para la noche. Los colores están en css/base.css (data-tablero="dia1…neon4").
 export const PALETAS_DN = [
-  { id: 'dia1', nombre: 'Cielo', sw: ['#2F6BFF', '#E4EDFF'], sec: 'Día' },
-  { id: 'dia2', nombre: 'Menta', sw: ['#0FA971', '#D9F7EA'], sec: 'Día' },
-  { id: 'dia3', nombre: 'Coral', sw: ['#F0572D', '#FFE3D6'], sec: 'Día' },
-  { id: 'dia4', nombre: 'Lila', sw: ['#7A4DFF', '#EFE8FF'], sec: 'Día' },
-  { id: 'neon1', nombre: 'Cian neón', sw: ['#00E5FF', '#0B1426'], sec: 'Noche' },
-  { id: 'neon2', nombre: 'Magenta neón', sw: ['#FF2EC4', '#150A1F'], sec: 'Noche' },
-  { id: 'neon3', nombre: 'Lima neón', sw: ['#39FF14', '#0A1A10'], sec: 'Noche' },
-  { id: 'neon4', nombre: 'Naranja neón', sw: ['#FF9100', '#1A0F08'], sec: 'Noche' },
+  { id: 'dia1', nombre: 'Cielo', sw: ['#2F6BFF', '#E4EDFF'], sec: 'Día', modo: 'claro' },
+  { id: 'dia2', nombre: 'Menta', sw: ['#0FA971', '#D9F7EA'], sec: 'Día', modo: 'claro' },
+  { id: 'dia3', nombre: 'Coral', sw: ['#F0572D', '#FFE3D6'], sec: 'Día', modo: 'claro' },
+  { id: 'dia4', nombre: 'Lila', sw: ['#7A4DFF', '#EFE8FF'], sec: 'Día', modo: 'claro' },
+  { id: 'neon1', nombre: 'Cian', sw: ['#00E5FF', '#0B1426'], sec: 'Noche', modo: 'oscuro' },
+  { id: 'neon2', nombre: 'Magenta', sw: ['#FF2EC4', '#150A1F'], sec: 'Noche', modo: 'oscuro' },
+  { id: 'neon3', nombre: 'Lima', sw: ['#39FF14', '#0A1A10'], sec: 'Noche', modo: 'oscuro' },
+  { id: 'neon4', nombre: 'Naranja', sw: ['#FF9100', '#1A0F08'], sec: 'Noche', modo: 'oscuro' },
 ];
-export const grupoTableroDN = (titulo = 'Colores de Tablero') => ({ clave: 'tablero', titulo, def: 'dia1', opciones: PALETAS_DN });
+// Los colores de día solo se pueden usar con la app en modo Claro y los de noche solo en modo Nocturno (def = el de cada modo al cambiar)
+export const grupoTableroDN = (titulo = 'Tablero') => ({ clave: 'tablero', titulo, def: 'dia1', defModo: { claro: 'dia1', oscuro: 'neon1' }, opciones: PALETAS_DN });
+// ¿La app se está viendo en modo Nocturno? (ajuste Claro/Nocturno, o el del sistema si está en Auto)
+export const modoOscuro = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : !!(typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches); };
+// «Colores» de los números (Sudoku, Calcudoku): un color distinto para cada cifra
+export const grupoColoresNumeros = () => ({ clave: 'numeros', titulo: 'Colores', def: 'normal', opciones: [{ id: 'normal', nombre: 'Un solo color' }, { id: 'color', nombre: 'Colores', sw: ['#E5383B', '#F77F00', '#2BA84A', '#2F6BFF', '#7A4DFF'] }] });
 export const grupoTablero = (titulo = 'Colores del tablero') => ({ clave: 'tablero', titulo, def: 'pasaporte', opciones: PALETAS });
 
 // Grupos comunes de los juegos de cartas
@@ -106,7 +111,7 @@ export function filtrarTapetes(defs, juego) {
 // Cada entrada es el principio del título del grupo (sin icono).
 const COLOR_FICHAS = ['Color de Fichas', 'Color de las fichas', 'Colores de las fichas', 'Estilos de Fichas', 'Estilo de las fichas', 'Material de las fichas', 'Forma de las fichas'];
 export const OCULTAS = {
-  sudoku: ['Números'], nonogram: ['Color del relleno', 'Forma de las casillas'], damas: ['Color de las fichas', 'Material de las fichas'], domino: COLOR_FICHAS, tresenraya: COLOR_FICHAS,
+  sudoku: [], nonogram: ['Forma de las casillas'], damas: ['Color de las fichas', 'Material de las fichas'], domino: COLOR_FICHAS, tresenraya: COLOR_FICHAS,
   cuatroenlinea: ['Color de las fichas', 'Material de las fichas'], sopaletras: ['Subrayado', 'Letras'], bombardeo: [], crucigramas: ['Letras'],
   calcudoku: ['Jaulas', 'Números'], akari: ['Casillas', 'Color de las casillas'], futoshiki: ['Casillas', 'Color de las casillas', 'Números'], crucisumas: ['Casillas de las sumas', 'Números'],
   encajados: ['Cajas'], deslizadas: ['Colores de las fichas', 'Estilo de las fichas'], codigocifrado: ['Colores de las bolas', 'Estilo de las bolas'],

@@ -583,3 +583,4 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 /* 3.93: títulos de sección dentro de listas de opciones (Día / Noche) y desplegables de Configurar partida */
 .seg .ap-sec{flex:0 0 100%;display:block;font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
 .cfg-g select.desplegable{width:100%;min-height:44px;font:inherit;font-size:16px;font-weight:700;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+.ap-sel{width:100%;min-height:44px;font:inherit;font-size:16px;font-weight:700;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
