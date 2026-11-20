@@ -1,10 +1,12 @@
-.ak{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));grid-template-rows:repeat(var(--n),minmax(0,1fr));width:min(100%,440px);aspect-ratio:1;margin:10px auto;gap:0;touch-action:manipulation;border:2px solid var(--tb-strong);border-radius:6px;overflow:hidden;background:var(--tb-line)}
-.ac{position:relative;display:block;padding:0;border:0;min-width:0;min-height:0;cursor:pointer;background:var(--tb-cell);box-shadow:inset 0 0 0 .5px var(--tb-line);font-family:'Baloo 2',system-ui,sans-serif;border-radius:0}
-.ac.l{background:color-mix(in srgb,var(--tb-hi) 30%,var(--tb-cell))}
-.ac.b{background:url(../../../img/akari/crema-icono.webp) center/74% no-repeat,color-mix(in srgb,var(--tb-hi) 30%,var(--tb-cell))}
-.ac.c{background:url(../../../img/akari/crema-icono.webp) center/74% no-repeat,rgba(255,71,87,.45)}
-.ac.k::before{content:"✕";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(min(88vw,420px) / var(--n) * .5);color:var(--tb-acc);opacity:.85;pointer-events:none}
-.ac.m,.ac.mn{background:var(--tb-wall);cursor:default}
+.ak{--tb-wallink:#fff;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));grid-template-rows:repeat(var(--n),minmax(0,1fr));width:min(100%,440px);aspect-ratio:1;margin:10px auto;gap:0;touch-action:manipulation}
+.ac{position:relative;display:block;padding:0;border:0;min-width:0;min-height:0;cursor:pointer;background:var(--ak-celda) center/100% 100% no-repeat;font-family:'Baloo 2',system-ui,sans-serif}
+
+.ac.l{background-image:var(--ak-luz)}
+.ac.b{background-image:var(--ak-bombilla)}
+.ac.c{background-image:var(--ak-mala)}
+.ac.k{background-image:var(--ak-marca)}
+.ac.m{background-image:var(--ak-muro);cursor:default}
+.ac.mn{background-image:var(--ak-muron);cursor:default}
 .ac.s::after{content:"";position:absolute;inset:8%;border-radius:22%;box-shadow:0 0 0 3px var(--tb-acc);pointer-events:none}
 .ac.w{outline:3px solid #FF4757;outline-offset:-3px;z-index:1}
 .ac .an{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(min(88vw,420px) / var(--n) * .5);color:var(--tb-wallink);pointer-events:none}

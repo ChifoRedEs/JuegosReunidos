@@ -23,6 +23,14 @@ export const PALETAS_DN = [
 ];
 // Los colores de día solo se pueden usar con la app en modo Claro y los de noche solo en modo Nocturno (def = el de cada modo al cambiar)
 export const grupoTableroDN = (titulo = 'Tablero') => ({ clave: 'tablero', titulo, def: 'dia1', defModo: { claro: 'dia1', oscuro: 'neon1' }, opciones: PALETAS_DN });
+// Colores derivados de la paleta de Tablero para teñir las casillas de imagen (Akari, Futoshiki): cel, luz, dado, muro, acc
+const mezcla = (a, b, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - t) + parseInt(b.slice(i, i + 2), 16) * t).toString(16).padStart(2, '0')).join('');
+export function coloresTablero(id) {
+  const p = PALETAS_DN.find(x => x.id === id) || PALETAS_DN[0], [acc, bg] = p.sw;
+  return p.modo === 'oscuro'
+    ? { id: p.id, acc, cel: mezcla(bg, acc, .2), luz: mezcla(bg, acc, .36), dado: mezcla(bg, acc, .42), muro: acc, flecha: acc }
+    : { id: p.id, acc, cel: mezcla(bg, '#ffffff', .55), luz: mezcla(bg, '#fff3b0', .7), dado: mezcla(bg, acc, .3), muro: acc, flecha: acc };
+}
 // ¿La app se está viendo en modo Nocturno? (ajuste Claro/Nocturno, o el del sistema si está en Auto)
 export const modoOscuro = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : !!(typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches); };
 // «Colores» de los números (Sudoku, Calcudoku): un color distinto para cada cifra

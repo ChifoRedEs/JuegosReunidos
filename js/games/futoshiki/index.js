@@ -1,7 +1,8 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTableroDN, grupoColoresNumeros } from '../../core/aspectos.js';
+import { grupoTableroDN, grupoColoresNumeros, coloresTablero } from '../../core/aspectos.js';
+import { variablesTintadas } from '../../core/tinte.js';
 import { TAMANOS, DIFICULTADES, generar, evaluar } from './motor.js';
 
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], fl = {}, ocupado = false, notasOn = false, onKey = null, malas = new Set();
@@ -31,7 +32,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
-  asp = api.aspecto([grupoTableroDN(), grupoColoresNumeros()], () => { if (S) pintar(); });
+  asp = api.aspecto([grupoTableroDN(), grupoColoresNumeros()], () => { pintarImagenes(); if (S) pintar(); });
   await api.css(new URL('./futoshiki.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;
@@ -65,9 +66,9 @@ export function unmount() {
 function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.detener(); $('#fuCrono').textContent = fmtTiempo(S.t); }
 
 /* ---------- imágenes (variables CSS con el color elegido) ---------- */
-function pintarImagenes() {      // las flechas de desigualdad son imágenes; las casillas se dibujan con los colores del Tablero
-  const juego = root && root.closest('.juego-futoshiki'); if (!juego) return;
-  FLECHAS.forEach((p, k) => juego.style.setProperty('--f' + k, `url("${IMG}crema-${p}.webp")`));
+function pintarImagenes() {      // casillas y flechas: imágenes grises teñidas con los colores del Tablero
+  const t = coloresTablero(asp && asp.valores.tablero), L = (n, h) => ['--f-' + n, IMG + 'liso-' + n + '.webp', h];
+  variablesTintadas(root, [L('celda', t.cel), L('dado', t.dado), L('sel', t.acc), L('mala', t.cel), ...FLECHAS.map((f, k) => ['--f' + k, IMG + 'liso-' + f + '.webp', t.flecha])], 'fu' + t.id);
 }
 
 /* ---------- partida ---------- */

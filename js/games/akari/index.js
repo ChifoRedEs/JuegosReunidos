@@ -1,7 +1,8 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTableroDN, grupoColoresNumeros } from '../../core/aspectos.js';
+import { grupoTableroDN, grupoColoresNumeros, coloresTablero } from '../../core/aspectos.js';
+import { variablesTintadas } from '../../core/tinte.js';
 import { TAMANOS, DIFICULTADES, generar, evaluar, vecinos } from './motor.js';
 
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], ocupado = false, onKey = null, malas = new Set(), ev = null;
@@ -29,7 +30,11 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; malas = new Set();
-  asp = api.aspecto([grupoTableroDN(), grupoColoresNumeros()], () => { if (S) pintar(); });
+  const IMG = new URL('../../../img/akari/', import.meta.url).href;
+  const tintar = () => { const t = coloresTablero(asp && asp.valores.tablero), L = (n, h) => ['--ak-' + n, IMG + 'liso-' + n + '.webp', h];
+    variablesTintadas(root, [L('celda', t.cel), L('luz', t.luz), L('muro', t.muro), L('muron', t.muro), L('bombilla', t.luz), L('mala', t.cel), L('marca', t.cel)], 'ak' + t.id); };
+  asp = api.aspecto([grupoTableroDN(), grupoColoresNumeros()], () => { tintar(); if (S) pintar(); });
+  tintar();
   await api.css(new URL('./akari.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;
