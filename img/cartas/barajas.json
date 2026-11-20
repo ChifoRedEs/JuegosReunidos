@@ -194,6 +194,16 @@
    "archivo": "tapetes/azul-oscuro.webp"
   },
   {
+   "id": "t-n-campo-bombardeo",
+   "nombre": "Campo de Minas",
+   "archivo": "tapetes/n-campo-bombardeo.webp"
+  },
+  {
+   "id": "t-n-campo-bombardeo-noche",
+   "nombre": "Campo de Minas Noche",
+   "archivo": "tapetes/n-campo-bombardeo-noche.webp"
+  },
+  {
    "id": "t-ladrillos",
    "nombre": "Ladrillos",
    "archivo": "tapetes/ladrillos.webp"
@@ -247,16 +257,6 @@
    "id": "t-n-billar-verde",
    "nombre": "N billar verde",
    "archivo": "tapetes/n-billar-verde.webp"
-  },
-  {
-   "id": "t-n-campo-bombardeo",
-   "nombre": "N campo bombardeo",
-   "archivo": "tapetes/n-campo-bombardeo.webp"
-  },
-  {
-   "id": "t-n-campo-bombardeo-noche",
-   "nombre": "N campo bombardeo noche",
-   "archivo": "tapetes/n-campo-bombardeo-noche.webp"
   },
   {
    "id": "t-n-casino-amarillo",

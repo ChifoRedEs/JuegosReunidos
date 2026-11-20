@@ -40,7 +40,7 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; modo = 'abrir'; pst = null; press = null; pulsando = false;
   const gF = { ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo' }; gF.opciones = gF.opciones.filter(o => !o.azar);   // sin «Aleatoria»
-  asp = api.aspecto([gF, grupoTableroDN()],
+  asp = api.aspecto([gF, { ...grupoTableroDN(), ocultarSi: { clave: 'tapete', empieza: 't-' } }],
     () => { cel.forEach(b => { b.dataset.k = ''; }); pintar(); });
   await api.css(new URL('./bombardeo.css', import.meta.url));
   const g = api.cargar();

@@ -453,18 +453,23 @@ function crearApi(j, ent, mod, root) {
           for (const o of g.opciones) { if (o.sec && o.sec !== sec) { sec = o.sec; out.push(el('small', { class: 'ap-sec' }, sec)); } out.push(boton(g, o)); }
           return el('div', { class: g.opciones.some(o => o.emoji) ? 'ap-emojis' : 'seg' }, out);
         };
+        const detOculto = [];
         const secciones = defs.filter(g => !g.oculto).map(g => {
           const det = el('details', { class: 'ap-det' }), sum = el('summary', { class: 'ap-link' }); resumenSec.set(g.clave, sum); pintarResumen(g);
           const cuerpo = cuerpoDe(g); cuerpo.classList.add('ap-cuerpo');
           if (!g.multi && !g.sub) cuerpo.addEventListener('click', e => {
             const b = e.target.closest('.ap-o, .ap-ficha'); if (!b) return;
             const idO = b.dataset.o; if (idO == null) return;
-            elegir(g, idO); cuerpo.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === elec[g.clave]));
+            elegir(g, idO); cuerpo.querySelectorAll('.ap-o,.ap-ficha').forEach(x => x.classList.toggle('on', x.dataset.o === elec[g.clave])); ajustarOcultas();
           });
+          if (g.ocultarSi) detOculto.push([g, det]);
           det.append(sum, cuerpo);
           det.addEventListener('toggle', () => { if (det.open) secciones_.forEach(d => { if (d !== det) d.open = false; }); });
           return det;
         });
+        // `ocultarSi: { clave, empieza }`: la sección se oculta mientras el valor de ese otro grupo empiece así (p. ej. «Tablero» no se usa con un Tapete de imagen)
+        const ajustarOcultas = () => detOculto.forEach(([g, d]) => { d.hidden = String(vals[g.ocultarSi.clave] || '').startsWith(g.ocultarSi.empieza); if (d.hidden) d.open = false; });
+        ajustarOcultas();
         const secciones_ = secciones; if (secciones.length === 1) secciones[0].open = true;
         const wrap = el('div', { class: 'ap-acordeon' }, ...secciones);
         let cerrar;
