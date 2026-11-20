@@ -584,3 +584,8 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 .seg .ap-sec{flex:0 0 100%;display:block;font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
 .cfg-g select.desplegable{width:100%;min-height:44px;font:inherit;font-size:16px;font-weight:700;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
 .ap-sel{width:100%;min-height:44px;font:inherit;font-size:16px;font-weight:700;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+
+/* 3.95: Estándar de rejillas (Sudoku, Calcudoku, Akari, Futoshiki, CruciSumas): colores por cifra y paredes/números oscuros según el Tablero (día / noche) */
+.juego{--c1:#E5383B;--c2:#F77F00;--c3:#C9A400;--c4:#2BA84A;--c5:#0FA3B1;--c6:#2F6BFF;--c7:#7A4DFF;--c8:#D6336C;--c9:#6C757D;--cn1:#FF6B6B;--cn2:#FFA040;--cn3:#FFD43B;--cn4:#4ADE80;--cn5:#22D3EE;--cn6:#6DA8FF;--cn7:#B794FF;--cn8:#FF6FB5;--cn9:#B0B8C4;--tb-wall:var(--tb-ink);--tb-wallink:#fff}
+.juego[data-tablero^="neon"]{--c1:var(--cn1);--c2:var(--cn2);--c3:var(--cn3);--c4:var(--cn4);--c5:var(--cn5);--c6:var(--cn6);--c7:var(--cn7);--c8:var(--cn8);--c9:var(--cn9)}
+:root:root:root .juego[data-tablero^="neon"]{--tb-wall:color-mix(in srgb,var(--tb-acc) 26%,#05070d);--tb-wallink:var(--tb-acc)}

@@ -2,14 +2,16 @@
 .juego-futoshiki[data-numeros="clasico"]{--fu-font:Georgia,'Times New Roman',serif}
 .fu{display:grid;width:min(100%,440px);aspect-ratio:1;margin:10px auto;gap:0;touch-action:manipulation}
 .fu>i{display:block;min-width:0;min-height:0}
-.fc{position:relative;display:block;padding:0;border:0;min-width:0;min-height:0;cursor:pointer;background:var(--f4) center/100% 100% no-repeat;color:#6A4B00;font-family:var(--fu-font)}
-.fc.fijo{background-image:var(--f5);color:#1F2A5A;cursor:default}
-.fc.s{background-image:var(--f6)}
-.fc.fijo.s{background-image:var(--f6)}
-.fc.x{background-image:var(--f7);color:#7A0F0F}
+/* Casillas con los colores del Tablero (como Sudoku) */
+.fu{border:2px solid var(--tb-strong);border-radius:6px;background:var(--tb-line)}
+.fc{position:relative;display:block;padding:0;border:0;min-width:0;min-height:0;cursor:pointer;background:var(--tb-cell);box-shadow:inset 0 0 0 .5px var(--tb-line);color:var(--tb-ink);font-family:var(--fu-font);border-radius:0}
+.fu>i{background-color:var(--tb-cell);box-shadow:inset 0 0 0 .5px var(--tb-line)}
+.fc.fijo{background:var(--tb-soft);color:var(--tb-strong);cursor:default}
+.fc.s,.fc.fijo.s{background:var(--tb-hi);color:#17214A}
+.fc.x{background:var(--bad);color:var(--red)}
 .fc .fv{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:calc(min(88vw,420px) / (var(--n) * 1.42) * .56);font-weight:800}
-.fc .fn{position:absolute;inset:16% 12% 12% 12%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;font:800 max(8px,calc(min(88vw,420px) / (var(--n) * 1.42) * .2))/1.15 Nunito,sans-serif;color:#6B5B2A;text-align:center;pointer-events:none}
-.fc.ok .fv{color:#176B3A}
+.fc .fn{position:absolute;inset:16% 12% 12% 12%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;font:800 max(8px,calc(min(88vw,420px) / (var(--n) * 1.42) * .2))/1.15 Nunito,sans-serif;color:var(--mut);text-align:center;pointer-events:none}
+.fc.ok .fv{color:var(--ok)}
 .fa{display:block;background:center/contain no-repeat;pointer-events:none;align-self:center;justify-self:center;width:100%;height:78%}
 .fa[data-d="i"]{background-image:var(--f0)}.fa[data-d="d"]{background-image:var(--f1)}
 .fa[data-d="a"]{background-image:var(--f2);height:100%;width:78%}.fa[data-d="b"]{background-image:var(--f3);height:100%;width:78%}
@@ -20,3 +22,13 @@
 .kpad button:disabled{opacity:.5}
 .kpad .acc{font:800 12.5px/1.15 Nunito,sans-serif;color:var(--ink);padding:8px 1px;white-space:nowrap}
 .kpad .acc.on{background:linear-gradient(135deg,var(--purple,#7A4DFF),var(--blue,#3A7BD5));color:#fff;border-color:transparent}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="1"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="1"]{color:var(--c1)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="2"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="2"]{color:var(--c2)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="3"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="3"]{color:var(--c3)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="4"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="4"]{color:var(--c4)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="5"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="5"]{color:var(--c5)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="6"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="6"]{color:var(--c6)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="7"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="7"]{color:var(--c7)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="8"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="8"]{color:var(--c8)}
+.juego-futoshiki[data-numeros="color"] .fc[data-d="9"] .fv,.juego-futoshiki[data-numeros="color"] .kpad button[data-v="9"]{color:var(--c9)}
+.juego-futoshiki[data-numeros="color"] .fc.s .fv,.juego-futoshiki[data-numeros="color"] .fc.x .fv,.juego-futoshiki[data-numeros="color"] .fc.ok .fv{color:#17214A}

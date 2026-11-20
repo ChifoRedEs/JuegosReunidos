@@ -3,7 +3,7 @@
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { grupoTableroDN, grupoColoresNumeros } from '../../core/aspectos.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { TAMANOS, DIFICULTADES, tiras, combinaciones, cifras, generarTrabajo } from './generador.js';
 
@@ -43,8 +43,8 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
-  asp = api.aspecto([{ ...grupoFondo('#kaTab'), def: 't-n-papel-cuaderno-1' }, grupoTablero(), { clave: 'negras', titulo: 'Casillas de las sumas', def: 'oscuras', opciones: [{ id: 'oscuras', nombre: 'Oscuras', sw: ['#1B2340'] }, { id: 'tablero', nombre: 'Color del tablero', sw: ['#6A3DF0'] }, { id: 'claras', nombre: 'Claras', sw: ['#D7DCEB'] }] },
-    { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }]);
+  asp = api.aspecto([grupoTableroDN(), { clave: 'negras', titulo: 'Casillas de las sumas', def: 'oscuras', opciones: [{ id: 'oscuras', nombre: 'Oscuras', sw: ['#1B2340'] }, { id: 'tablero', nombre: 'Color del tablero', sw: ['#6A3DF0'] }, { id: 'claras', nombre: 'Claras', sw: ['#D7DCEB'] }] },
+    grupoColoresNumeros()]);
   await api.css(new URL('./crucisumas.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: primeraBlanca(g) } : null;
@@ -150,6 +150,7 @@ function pintar() {
   for (let i = 0; i < N; i++) {
     if (S.negra[i]) continue;
     const b = cel[i], v = S.cur[i], x = dup.has(i) || (v && (malas.has(i) || (auto && v !== S.sol[i]))), enSel = runsDe[i].some(k => selRuns.has(k));
+    if (b.dataset.d !== String(v || '')) b.dataset.d = v || '';
     b.className = 'kb' + (i === S.sel ? ' s' : enSel ? ' p' : '') + (x ? ' x' : '') + (runsDe[i].some(k => tmal.has(k)) ? ' jx' : '') + (hecho ? ' ok' : '');
     const kv = b.querySelector('.kv'); if (kv.textContent !== (v ? String(v) : '')) kv.textContent = v || '';
     const kn = b.querySelector('.knt'), notas = !v && S.notas[i] ? cifras(S.notas[i]).join(' ') : '';

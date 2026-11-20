@@ -1,13 +1,10 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoFondo } from '../../core/aspectos.js';
-import { gruposColor, variablesTintadas, hexDe } from '../../core/tinte.js';
+import { grupoTableroDN, grupoColoresNumeros } from '../../core/aspectos.js';
 import { TAMANOS, DIFICULTADES, generar, evaluar, vecinos } from './motor.js';
 
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], ocupado = false, onKey = null, malas = new Set(), ev = null;
-const IMG = new URL('../../../img/akari/', import.meta.url).href, PIEZAS = ['celda', 'luz', 'muro', 'muron', 'bombilla', 'marca', 'mala'];
-const MATS = [{ id: 'crema', nombre: 'Crema y azul' }, { id: 'liso', nombre: 'Lisas' }, { id: 'madera', nombre: 'Madera' }, { id: 'piedra', nombre: 'Piedra' }];
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -32,8 +29,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; malas = new Set();
-  asp = api.aspecto([{ ...grupoFondo('#akTab'), def: 't-n-papel-cuaderno-1' }, { clave: 'akmat', titulo: 'Casillas', icono: '💡', def: 'crema', opciones: MATS.map(m => ({ id: m.id, nombre: m.nombre })) },
-    ...gruposColor({ clave: 'ak', lados: ['Casillas'], defs: ['marfil'], titulo: 'Color de las casillas' })], () => { pintarImagenes(); if (S) pintar(); });
+  asp = api.aspecto([grupoTableroDN(), grupoColoresNumeros()], () => { if (S) pintar(); });
   await api.css(new URL('./akari.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;
@@ -66,14 +62,6 @@ export function unmount() {
 function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.detener(); $('#akCrono').textContent = fmtTiempo(S.t); }
 
 /* ---------- imágenes (variables CSS, con el color elegido) ---------- */
-function pintarImagenes() {
-  const juego = root && root.closest('.juego-akari'); if (!juego || !asp) return;
-  const m = MATS.some(x => x.id === asp.valores.akmat) ? asp.valores.akmat : 'crema', col = asp.valores.akcolor || 'marfil';
-  juego.dataset.akm = m;
-  if (m === 'crema') { PIEZAS.forEach((p, k) => juego.style.setProperty('--a' + k, `url("${IMG}crema-${p}.webp")`)); delete juego.dataset.tsig; return; }
-  PIEZAS.forEach((p, k) => juego.style.setProperty('--a' + k, `url("${IMG}${m}-${p}.webp")`));                   // mientras se tiñen, las originales
-  variablesTintadas(juego, PIEZAS.map((p, k) => ['--a' + k, `${IMG}${m}-${p}.webp`, hexDe(col)]), `${m}|${col}`);
-}
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S && !S.done && S.cur.some(Boolean);
@@ -102,10 +90,9 @@ const push = () => hist.push(S.cur.slice());
 function construir() {
   const n = S.n, g = $('#akTab'); g.style.setProperty('--n', n);
   g.innerHTML = Array.from({ length: n * n }, (_, i) => S.muro[i]
-    ? `<div class="ac ${S.num[i] >= 0 ? 'mn' : 'm'}" data-i="${i}">${S.num[i] >= 0 ? `<span class="an">${S.num[i]}</span>` : ''}</div>`
+    ? `<div class="ac ${S.num[i] >= 0 ? 'mn' : 'm'}" data-i="${i}" data-d="${S.num[i]}">${S.num[i] >= 0 ? `<span class="an">${S.num[i]}</span>` : ''}</div>`
     : `<button type="button" class="ac" data-i="${i}"></button>`).join('');
   cel = [...g.children];
-  pintarImagenes();
 }
 function pintar() {
   if (!S) return;

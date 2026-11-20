@@ -1,13 +1,11 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoFondo } from '../../core/aspectos.js';
-import { gruposColor, variablesTintadas, hexDe } from '../../core/tinte.js';
+import { grupoTableroDN, grupoColoresNumeros } from '../../core/aspectos.js';
 import { TAMANOS, DIFICULTADES, generar, evaluar } from './motor.js';
 
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, cel = [], fl = {}, ocupado = false, notasOn = false, onKey = null, malas = new Set();
-const IMG = new URL('../../../img/futoshiki/', import.meta.url).href, PIEZAS = ['flechai', 'flechad', 'flechaa', 'flechab', 'celda', 'dado', 'sel', 'mala'];
-const MATS = [{ id: 'crema', nombre: 'Crema y dorado' }, { id: 'liso', nombre: 'Lisas' }, { id: 'madera', nombre: 'Madera' }, { id: 'piedra', nombre: 'Piedra' }];
+const IMG = new URL('../../../img/futoshiki/', import.meta.url).href, FLECHAS = ['flechai', 'flechad', 'flechaa', 'flechab'];
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -33,8 +31,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; notasOn = false; ocupado = false; malas = new Set();
-  asp = api.aspecto([{ ...grupoFondo('#fuTab'), def: 't-n-papel-cuaderno-1' }, { clave: 'fumat', titulo: 'Casillas', icono: '🔢', def: 'crema', opciones: MATS.map(m => ({ id: m.id, nombre: m.nombre })) },
-    ...gruposColor({ clave: 'fu', lados: ['Casillas'], defs: ['marfil'], titulo: 'Color de las casillas' }), { clave: 'numeros', titulo: 'Números', def: 'redondo', opciones: [{ id: 'redondo', nombre: 'Redondos' }, { id: 'clasico', nombre: 'Clásicos' }] }], () => { pintarImagenes(); if (S) pintar(); });
+  asp = api.aspecto([grupoTableroDN(), grupoColoresNumeros()], () => { if (S) pintar(); });
   await api.css(new URL('./futoshiki.css', import.meta.url));
   const g = api.cargar();
   S = g ? { ...g, sel: 0 } : null;
@@ -68,12 +65,9 @@ export function unmount() {
 function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.detener(); $('#fuCrono').textContent = fmtTiempo(S.t); }
 
 /* ---------- imágenes (variables CSS con el color elegido) ---------- */
-function pintarImagenes() {
-  const juego = root && root.closest('.juego-futoshiki'); if (!juego || !asp) return;
-  const m = MATS.some(x => x.id === asp.valores.fumat) ? asp.valores.fumat : 'crema', col = asp.valores.fucolor || 'marfil';
-  PIEZAS.forEach((p, k) => juego.style.setProperty('--f' + k, `url("${IMG}${m === 'crema' ? 'crema' : m}-${p}.webp")`));
-  if (m === 'crema') { delete juego.dataset.tsig; return; }
-  variablesTintadas(juego, PIEZAS.map((p, k) => ['--f' + k, `${IMG}${m}-${p}.webp`, hexDe(col)]), `${m}|${col}`);
+function pintarImagenes() {      // las flechas de desigualdad son imágenes; las casillas se dibujan con los colores del Tablero
+  const juego = root && root.closest('.juego-futoshiki'); if (!juego) return;
+  FLECHAS.forEach((p, k) => juego.style.setProperty('--f' + k, `url("${IMG}crema-${p}.webp")`));
 }
 
 /* ---------- partida ---------- */
@@ -127,6 +121,7 @@ function pintar() {
     const b = cel[i], v = S.cur[i], fijo = !!S.dado[i], x = ev.dup.has(i) || malas.has(i) || (auto && v && v !== S.sol[i]);
     const k = 'fc' + (fijo ? ' fijo' : '') + (i === S.sel ? ' s' : '') + (x ? ' x' : '') + (S.done ? ' ok' : '');
     if (b.className !== k) b.className = k;
+    if (b.dataset.d !== String(v || '')) b.dataset.d = v || '';
     const fv = b.firstChild; if (fv.textContent !== (v ? String(v) : '')) fv.textContent = v || '';
     const fn = b.lastChild, notas = !v && S.notas[i] ? [...Array(n).keys()].map(d => (S.notas[i] & (1 << (d + 1)) ? d + 1 : '')).join(' ') : '';
     if (fn.dataset.k !== notas) { fn.dataset.k = notas; fn.innerHTML = notas ? [...Array(n).keys()].map(d => `<i>${S.notas[i] & (1 << (d + 1)) ? d + 1 : ''}</i>`).join('') : ''; }

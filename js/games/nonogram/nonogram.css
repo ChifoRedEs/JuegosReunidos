@@ -25,3 +25,5 @@
 /* 3.92: casillas rellenas ilustradas (img/celdas) */
 .juego-nonogram .ng .c.f::after{background:var(--ng-img) center/100% 100% no-repeat;border-radius:0;inset:5%;box-shadow:none}
 .juego-nonogram .ng.ganado .c.f::after{background:var(--ng-img-ok) center/100% 100% no-repeat}
+
+.ng .c.mal{box-shadow:inset 0 0 0 3px #FF4757;background-image:none;background:rgba(255,71,87,.35)!important}
