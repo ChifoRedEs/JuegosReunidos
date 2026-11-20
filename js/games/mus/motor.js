@@ -7,7 +7,7 @@
 import { shuffle } from '../../core/dom.js';
 
 export const NIVEL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
-export const METAS = [30, 40], JUEGOS = [1, 2], REYES = [8, 4];
+export const METAS = [30, 40], JUEGOS = [1, 2, 3], REYES = [8, 4];
 export const LANCES = ['Grande', 'Chica', 'Pares', 'Juego'];
 export const pareja = s => s % 2;
 const pos = id => id % 10;
@@ -59,6 +59,7 @@ export function repartir(S) {
   S.fase = 'mus'; S.turno = S.mano; S.musDichos = 0; S.descSel = [null, null, null, null];
   S.lance = 0; S.punto = false; S.decl = { pares: [false, false, false, false], juego: [false, false, false, false] };
   S.apuestas = [null, null, null, null]; S.B = null; S.cobros = []; S.recuento = null;
+  limpiarSenas(S);
   log(S, `Mano ${S.nMano}: es mano ${NOMBRES[S.mano].toLowerCase()}.`);
 }
 
@@ -83,6 +84,7 @@ export function elegirDescarte(S, s, cs) {
     S.descartes.push(...tiradas);
     log(S, `Descartes: ${orden(S).map(k => `${NOMBRES[k]} ${S.descSel[k].length}`).join(', ')}.`);
     S.fase = 'mus'; S.turno = S.mano; S.musDichos = 0; S.descSel = [null, null, null, null];
+    limpiarSenas(S);                                  // con cartas nuevas, las señas anteriores ya no valen
   }
   return true;
 }
@@ -222,7 +224,7 @@ export function cpuMus(S) {
   const s = S.turno, h = S.manos[s], r = S.reyes;
   if (S.nivel === 'facil') return Math.random() < .55;
   const p = pares(h, r), j = suma(h, r), reyes = h.filter(c => fuerza(c, r) === 9).length;
-  const buena = p.tipo >= 2 || j === 31 || (j === 32 && p.tipo >= 1) || (p.tipo === 1 && p.clave[0] >= 7 && reyes >= 2) || (reyes >= 3);
+  const amigo = S.sena && S.sena[(s + 2) % 4], buena = ['solomillo', 'cerdos', 'treinta1', 'duples'].includes(amigo) || p.tipo >= 2 || j === 31 || (j === 32 && p.tipo >= 1) || (p.tipo === 1 && p.clave[0] >= 7 && reyes >= 2) || (reyes >= 3);
   return !buena && Math.random() < (S.nivel === 'dificil' ? .92 : .8);
 }
 export function cpuDescarte(S, s) {
@@ -234,7 +236,8 @@ export function cpuDescarte(S, s) {
 }
 export function cpuHablar(S) {                // → { tipo, n }
   const s = quienHabla(S), B = S.B, L = S.lance, nv = S.nivel;
-  const p = nv === 'facil' ? Math.min(1, Math.max(0, probGanar(S, s, L, 40) + (Math.random() - .5) * .5)) : probGanar(S, s, L, nv === 'dificil' ? 140 : 80);
+  let p = nv === 'facil' ? Math.min(1, Math.max(0, probGanar(S, s, L, 40) + (Math.random() - .5) * .5)) : probGanar(S, s, L, nv === 'dificil' ? 140 : 80);
+  p = Math.min(1, Math.max(0, p + ajusteSena(S, s, L)));
   const cerca = S.pts[1 - pareja(s)] >= S.meta - 6;               // si los rivales están a punto de ganar, se arriesga más
   if (B.responde < 0) {
     if (p > .93 && (nv === 'dificil' || cerca) && Math.random() < .5) return { tipo: 'ordago' };
@@ -269,7 +272,65 @@ export function validar(d) {
   let recuento = null;
   if (d.recuento && Array.isArray(d.recuento.lineas)) recuento = { lineas: d.recuento.lineas.filter(linea).map(x => ({ L: x.L, equipo: x.equipo, puntos: x.puntos, texto: x.texto.slice(0, 80) })), ordago: !!d.recuento.ordago, corte: !!d.recuento.corte, ...(ent(d.recuento.finJuego, 0, 1) ? { finJuego: d.recuento.finJuego } : {}) };
   if ((d.fase === 'recuento' || d.fase === 'fin') && !recuento) return null;
-  return { nivel: d.nivel, meta: d.meta, juegosMeta: d.juegosMeta, reyes: d.reyes, pts: d.pts.slice(), juegos: d.juegos.slice(), mano: d.mano, nMano: d.nMano, manos: d.manos.map(h => h.slice()), mazo: d.mazo.slice(), descartes: d.descartes.slice(),
+  const sena = Array.isArray(d.sena) && d.sena.length === 4 ? d.sena.map(x => (SENA_IDS.includes(x) ? x : null)) : [null, null, null, null];
+  const pi = d.pillada && typeof d.pillada === 'object' ? d.pillada : {}, pillada = { 0: SENA_IDS.includes(pi[0]) ? pi[0] : null, 2: SENA_IDS.includes(pi[2]) ? pi[2] : null };
+  return { sena, pillada, senaUsada: typeof d.senaUsada === 'string' ? d.senaUsada.slice(0, 4) : '', cpuSenado: !!d.cpuSenado, nivel: d.nivel, meta: d.meta, juegosMeta: d.juegosMeta, reyes: d.reyes, pts: d.pts.slice(), juegos: d.juegos.slice(), mano: d.mano, nMano: d.nMano, manos: d.manos.map(h => h.slice()), mazo: d.mazo.slice(), descartes: d.descartes.slice(),
     fase: d.fase, turno: d.turno, musDichos: d.musDichos, descSel, lance: d.lance, punto: !!d.punto, decl: { pares: bools(d.decl && d.decl.pares), juego: bools(d.decl && d.decl.juego) }, apuestas, B, cobros, recuento,
     ganador: ent(d.ganador, -1, 1) ? d.ganador : -1, log: Array.isArray(d.log) ? d.log.filter(x => typeof x === 'string').slice(0, 8).map(x => x.slice(0, 160)) : [] };
+}
+
+/* ---------- Señas (3.94) ---------- */
+// Seis señas con la cara de cada gesto. El compañero las recibe en secreto; los rivales CPU solo pillan algunas, y tú puedes pillar las suyas.
+export const SENAS = [
+  { id: 'nada', img: 'g-asombro', corto: 'Nada', texto: 'No tengo nada' },
+  { id: 'treinta1', img: 'g-guino', corto: '31', texto: 'Tengo 31' },
+  { id: 'pitos', img: 'g-lengua', corto: '3 pitos', texto: 'Tengo 3 pitos (ases o doses)' },
+  { id: 'cerdos', img: 'g-pensando', corto: '3 cerdos', texto: 'Tengo 3 cerdos (reyes)' },
+  { id: 'solomillo', img: 'g-sonrisa', corto: 'Solomillo', texto: 'Tengo solomillo (3 reyes y 1 pito)' },
+  { id: 'duples', img: 'g-sorpresa', corto: 'Duples', texto: 'Tengo duples (dos parejas)' },
+];
+export const SENA_IDS = SENAS.map(x => x.id);
+export const PILLAR_CPU = .15;     // probabilidad de que los rivales CPU pillen una seña tuya (o de tu compañero)
+export const PILLAR_YO = .25;      // probabilidad de que tú pilles una seña de los rivales
+const PRIORIDAD = ['solomillo', 'cerdos', 'duples', 'pitos', 'treinta1', 'nada'];
+export function senasVerdaderas(h, r) {
+  const pit = h.filter(c => pos(c) <= 1).length, rey = h.filter(c => fuerza(c, r) === 9).length, sm = suma(h, r), pt = pares(h, r).tipo, v = [];
+  if (rey === 3 && pit === 1) v.push('solomillo');
+  if (rey >= 3) v.push('cerdos');
+  if (pt === 3) v.push('duples');
+  if (pit >= 3) v.push('pitos');
+  if (sm === 31) v.push('treinta1');
+  if (pt === 0 && sm < 31) v.push('nada');
+  return PRIORIDAD.filter(x => v.includes(x));
+}
+export function limpiarSenas(S) { S.sena = [null, null, null, null]; S.pillada = { 0: null, 2: null }; S.senaUsada = ''; S.cpuSenado = false; }
+export const claveSena = S => (S.fase === 'mus' ? 'm' : 'l' + S.lance);
+export const puedeSenar = S => (S.fase === 'mus' || S.fase === 'lance') && S.senaUsada !== claveSena(S);
+// Tú haces una seña a tu compañero (puede ser verdadera o un farol). Devuelve false si no se puede.
+export function enviarSena(S, id, rnd = Math.random) {
+  if (!SENA_IDS.includes(id) || !puedeSenar(S)) return false;
+  S.senaUsada = claveSena(S); S.sena[0] = id;
+  if (rnd() < PILLAR_CPU) S.pillada[0] = id;
+  return true;
+}
+// Las CPU hacen sus señas (una vez por reparto de cartas). Devuelve los eventos que tú ves: { de, id, visible }
+export function cpuSenas(S, rnd = Math.random) {
+  if (S.cpuSenado) return [];
+  S.cpuSenado = true; const ev = [], prob = S.nivel === 'facil' ? .4 : .65;
+  for (const s of [2, 1, 3]) {
+    const v = senasVerdaderas(S.manos[s], S.reyes); if (!v.length || rnd() > prob) continue;
+    S.sena[s] = v[0];
+    if (s === 2) { ev.push({ de: 2, id: v[0], visible: true }); if (rnd() < PILLAR_CPU) S.pillada[2] = v[0]; }
+    else ev.push({ de: s, id: v[0], visible: rnd() < PILLAR_YO });
+  }
+  return ev;
+}
+// Cuánto cambia la confianza (probabilidad de ganar) de una CPU con lo que sabe por señas: [grande, chica, pares, juego]
+const BONO = { nada: [-.08, -.04, -.1, -.1], treinta1: [.05, 0, 0, .25], pitos: [-.05, .25, .15, 0], cerdos: [.25, -.05, .2, .1], solomillo: [.25, -.05, .2, .15], duples: [.05, 0, .2, 0] };
+export function ajusteSena(S, s, L) {
+  if (!S.sena) return 0;
+  const b = id => (id && BONO[id] ? BONO[id][L] || 0 : 0), k = S.nivel === 'facil' ? .5 : 1;
+  let a = b(S.sena[(s + 2) % 4]);                                       // lo que sabe de su compañero
+  if (pareja(s) === 1) a -= .6 * (b(S.pillada[0]) + b(S.pillada[2]));   // lo que ha pillado de tu pareja (si es fuerte, se achican)
+  return Math.max(-.3, Math.min(.3, a * k));
 }

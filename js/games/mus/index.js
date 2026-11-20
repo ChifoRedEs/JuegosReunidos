@@ -10,7 +10,8 @@ let S = null, api = null, asp = null, root = null, timer = null, reg = false, se
 let hm = historialVacio();                                   // tabla de puntos mano a mano (se guarda con la partida)
 let cfg = { nivel: 'medio', meta: 40, juegos: 1, reyes: 8 }, marcador = { g: 0, p: 0 };
 const NOM = M.NOMBRES, MODOS = ['libre', 'palo', 'numero'];
-let ord = { modo: 'libre', ids: [] }, arr = null;
+let ord = { modo: 'libre', ids: [] }, arr = null, panelSenas = false, senaTimers = [];
+const IMG_MUS = n => `img/mus/${n}.webp`;
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -41,11 +42,11 @@ export async function mount(r, a) {
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
-    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(M.NIVEL) }, { clave: 'meta', titulo: 'Tantos', opciones: M.METAS.map(x => [x, `A ${x}`]) }, { clave: 'juegos', titulo: 'Partida', opciones: [[1, 'Un juego'], [2, 'Mejor de 3']] }, { clave: 'reyes', titulo: 'Reyes', opciones: [[8, '8 reyes'], [4, '4 reyes']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
+    config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'nivel', titulo: 'Nivel CPU', opciones: Object.entries(M.NIVEL) }, { clave: 'meta', titulo: 'Tantos', opciones: M.METAS.map(x => [x, `A ${x}`]) }, { clave: 'juegos', titulo: 'Partida', opciones: [[1, 'Un juego'], [2, 'Mejor de 3'], [3, 'Mejor de 5']] }, { clave: 'reyes', titulo: 'Reyes', opciones: [[8, '8 reyes'], [4, '4 reyes']] }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '📜 Historial de la partida', accion: verHistorial }, { texto: '🗂️ Partidas anteriores', accion: () => api.modal('🗂️ Partidas anteriores', htmlPartidas(api)) }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S) { armar(); pintar(); bucle(); } else setup();
 }
-export function unmount() { if (arr) { arr.destruir(); arr = null; } clearTimeout(timer); if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
+export function unmount() { if (arr) { arr.destruir(); arr = null; } clearTimeout(timer); senaTimers.forEach(clearTimeout); senaTimers = []; panelSenas = false; if (root) { root.removeEventListener('click', clic); root.removeEventListener('keydown', tecla); } S = null; asp = null; }
 function guardar() { if (!S) return; const d = { s: S, marcador, reg, ord, hm }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
 
 /* ---------- pantallas ---------- */
@@ -55,7 +56,7 @@ function setup() {
   root.innerHTML = `<p class="note">Mus por parejas con baraja española: tú y tu compañero (enfrente) contra dos rivales. Se juegan cuatro lances —<b>Grande, Chica, Pares y Juego</b> (o Punto)— con envites, «quiero», «no quiero» y órdagos.</p>
     <div class="bar"><span class="lbl">Nivel CPU</span>${seg('nivel', Object.entries(M.NIVEL))}</div>
     <div class="bar"><span class="lbl">Tantos</span>${seg('meta', M.METAS.map(v => [v, `A ${v}`]))}</div>
-    <div class="bar"><span class="lbl">Partida</span>${seg('juegos', [[1, 'Un juego'], [2, 'Mejor de 3']])}</div>
+    <div class="bar"><span class="lbl">Partida</span>${seg('juegos', [[1, 'Un juego'], [2, 'Mejor de 3'], [3, 'Mejor de 5']])}</div>
     <div class="bar"><span class="lbl">Reyes</span>${seg('reyes', [[8, '8 reyes'], [4, '4 reyes']])}</div>
     <p class="note">${cfg.reyes === 8 ? 'Con 8 reyes, los treses valen como reyes y los doses como ases.' : 'Con 4 reyes, cada carta vale lo que es.'} Marcador: ${marcador.g} ganadas · ${marcador.p} perdidas.</p>
     ${pieMenu({})}`;
@@ -70,8 +71,10 @@ function armar() {
       <div class="msmano" id="msMano"></div>
       <div class="ordbar" id="msOrd"><span>Ordenar:</span><button type="button" data-ord="palo">Palo</button><button type="button" data-ord="numero">Número</button><em>✋ o arrástralas</em></div>
       <div class="msinfo" id="msInfo"></div>
+      <div class="msicos" id="msSena" aria-hidden="true"></div>
     </div>
     <div class="bar msacc" id="msAcc"></div>
+    <div class="mssenas" id="msSenas"></div>
     <div id="msRec"></div>
     <ul class="mslog" id="msLog"></ul>
     <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
@@ -103,7 +106,8 @@ function pintar() {
   if (manoVista !== S.nMano) { manoVista = S.nMano; dichos = {}; selDesc = new Set(); }
   if (S.fase === 'lance' && lanceVisto !== S.lance) { lanceVisto = S.lance; dichos = {}; }
   const r = S.reyes, habla = M.quienHabla(S), ver = S.fase === 'recuento' || S.fase === 'fin';
-  $('#msTop').innerHTML = `<span class="eq e0">Vosotros <b>${S.pts[0]}</b></span><span class="meta">a ${S.meta}${S.juegosMeta > 1 ? ` · juegos ${S.juegos[0]}–${S.juegos[1]}` : ''}</span><span class="eq e1">Ellos <b>${S.pts[1]}</b></span>`;
+  const vaca = eq => (S.juegos[eq] > 0 ? `<img class="vaca" src="${IMG_MUS('piedra' + Math.min(3, S.juegos[eq]))}" alt="${S.juegos[eq]} ${S.juegos[eq] === 1 ? 'vaca' : 'vacas'}" title="${S.juegos[eq]} ${S.juegos[eq] === 1 ? 'vaca' : 'vacas'}">` : '');
+  $('#msTop').innerHTML = `<span class="eq e0">Vosotros <b>${S.pts[0]}</b>${vaca(0)}</span><span class="meta">a ${S.meta}${S.juegosMeta > 1 ? ` · vacas ${S.juegos[0]}–${S.juegos[1]}` : ''}</span><span class="eq e1">Ellos <b>${S.pts[1]}</b>${vaca(1)}</span>`;
   for (const s of [1, 2, 3]) {
     const decl = S.fase === 'lance' || ver ? [S.lance >= 2 || ver ? (S.decl.pares[s] ? 'Pares' : '') : '', S.lance >= 3 || ver ? (S.decl.juego[s] ? 'Juego' : '') : ''].filter(Boolean) : [];
     $('#msS' + s).className = `msseat ${s === 2 ? 'arriba' : 'lado'} p${s % 2} ${habla === s ? 'turno' : ''} ${s === S.mano ? 'esmano' : ''}`;
@@ -131,8 +135,24 @@ function pintar() {
   if (!(arr && arr.activo())) $('#msMano').innerHTML = mia.map(c => `<div class="msc ${selDesc.has(c) ? 'sel' : ''}" data-c="${c}" ${desc ? 'role="button" tabindex="0"' : ''} aria-label="${nombreEs(c)}${selDesc.has(c) ? ', para descartar' : ''}">${cartaEsHTML(c)}</div>`).join('');
   const sm = M.suma(S.manos[0], r);
   $('#msInfo').textContent = `Tu mano: ${M.nombrePares(S.manos[0], r)} · ${sm >= 31 ? `juego de ${sm}` : `${sm} al punto`}`;
-  pintarAcciones(habla); pintarMensaje(habla); pintarRecuento();
+  pintarAcciones(habla); pintarSenas(); pintarMensaje(habla); pintarRecuento();
   $('#msLog').innerHTML = S.log.map(l => `<li>${esc(l)}</li>`).join('');
+}
+// 🤫 Señas: elige una seña y la recibe en secreto tu compañero. Los rivales CPU solo pillan algunas (≈15 %).
+function pintarSenas() {
+  const el = $('#msSenas'); if (!el) return;
+  if (!S || !(S.fase === 'mus' || S.fase === 'lance')) { el.innerHTML = ''; el.hidden = true; panelSenas = false; return; }
+  el.hidden = false;
+  const puede = M.puedeSenar(S);
+  let h = `<button class="btn ${panelSenas ? 'on' : ''}" data-ac="senas" aria-expanded="${panelSenas}">🤫 Hacer una seña</button>`;
+  if (panelSenas) h += `<div class="senagrid" role="group" aria-label="Señas para tu compañero">${M.SENAS.map(x => `<button type="button" class="sena-b" data-sena="${x.id}" ${puede ? '' : 'disabled'} title="${esc(x.texto)}"><img src="${IMG_MUS(x.img)}" alt=""><b>${esc(x.corto)}</b><small>${esc(x.texto)}</small></button>`).join('')}</div>${puede ? '' : '<p class="note">Ya has hecho una seña en este momento: espera al siguiente lance.</p>'}`;
+  if (el.dataset.k !== h) { el.dataset.k = h; el.innerHTML = h; }
+}
+// El icono de la seña aparece muy brevemente en el asiento (2 = compañero, 1 y 3 = rivales)
+function mostrarSena(seat, id, mia) {
+  const c = $('#msSena'), x = M.SENAS.find(q => q.id === id); if (!c || !x) return;
+  const e = document.createElement('div'); e.className = `senaico s${seat}${mia ? ' mia' : ''}`; e.innerHTML = `<img src="${IMG_MUS(x.img)}" alt="">`;
+  c.append(e); senaTimers.push(setTimeout(() => e.remove(), 1500));
 }
 function pintarMensaje(habla) {
   const m = $('#msMsg'); let t = '';
@@ -185,6 +205,10 @@ function bucle() {
   clearTimeout(timer); if (!S) return;
   if (S.fase === 'fin') return cierre();
   if (S.fase === 'recuento') return;
+  if ((S.fase === 'mus' || S.fase === 'lance') && !S.cpuSenado) {
+    M.cpuSenas(S).forEach((e, i) => { if (e.visible) senaTimers.push(setTimeout(() => mostrarSena(e.de, e.id), 450 + i * 800)); });
+    guardar();
+  }
   if (S.fase === 'descarte') {
     for (const s of [1, 2, 3]) if (!S.descSel[s]) M.elegirDescarte(S, s, M.cpuDescarte(S, s));
     pintar(); guardar(); return;
@@ -220,7 +244,9 @@ function clic(e) {
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) { cfg[d.cfg] = d.cfg === 'nivel' ? d.v : +d.v; return setup(); }
   if (d.ord) { ord = { modo: ord.modo === d.ord ? 'libre' : d.ord, ids: ord.modo === d.ord ? ordenarMano(S ? S.manos[0] : [], ord, { palo: c => c / 10 | 0, num: c => -M.fuerza(c, S ? S.reyes : 8) }) : [] }; api.setPref('orden', ord.modo); api.sonido('click'); if (S) { pintar(); guardar(); } return; }
+  if (d.sena) { if (S && M.enviarSena(S, d.sena)) { mostrarSena(2, d.sena, true); api.sonido('click'); panelSenas = false; pintar(); guardar(); } return; }
   const a = d.ac;
+  if (a === 'senas') { panelSenas = !panelSenas; pintar(); return; }
   if (a === 'start') empezar(); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
   else if (a === 'setup') { api.borrar(); setup(); }
   else if (!S) return;
@@ -242,5 +268,7 @@ function reglas() {
     <li><b>Órdago</b>: si lo quieren, se enseñan las cartas y quien gane ese lance gana el juego entero.</li>
     <li>Con <b>8 reyes</b>, los treses cuentan como reyes y los doses como ases. Gana el juego la pareja que llegue antes a ${S ? S.meta : cfg.meta} tantos (los tantos se cuentan en orden: grande, chica, pares y juego).</li>
     <li><b>Ordenar tus cartas</b>: «Palo» o «Número» (de mayor a menor) las ordenan; vuelve a pulsar para dejarlas como estén. También puedes <b>arrastrar</b> cualquier carta para colocarla donde quieras.</li>
+    <li><b>Señas 🤫</b>: pulsa «Hacer una seña» (en la fase de mus o durante los lances) y elige una: 😮 <b>No tengo nada</b>, 😉 <b>Tengo 31</b>, 😛 <b>3 pitos</b> (ases o doses), 😬 <b>3 cerdos</b> (reyes), 😊 <b>Solomillo</b> (3 reyes y 1 pito) o 😲 <b>Duples</b> (dos parejas). Tu compañero la recibe en secreto y el icono aparece un instante en su sitio. Puedes hacer una seña por fase o lance, y también puedes mentir. Los rivales CPU solo pillan una de cada ~7 señas tuyas y, si la pillan, la usarán. Tu compañero y los rivales también se hacen señas: tú pillarás alguna de las suyas (el icono aparece un instante en su asiento).</li>
+    <li><b>Vacas</b>: con «Mejor de 3» o «Mejor de 5» la partida se juega a varias vacas (un juego a 30 o 40 tantos es una vaca). Las bolitas junto al marcador indican cuántas lleva cada pareja.</li>
     <li>En tu pareja decides tú cuando os envidan. Tu compañero (CPU) habla por su cuenta cuando le toca.</li></ul>`);
 }

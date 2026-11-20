@@ -60,3 +60,25 @@
 .mslog{list-style:none;padding:0;margin:8px 0;font-size:13px;color:var(--mut)}
 .mslog li:first-child{color:var(--ink);font-weight:800}
 .msc{touch-action:none}
+
+/* 3.94: vacas (bolitas), señas */
+.mstop .vaca{height:22px;width:auto;vertical-align:-6px;margin-left:6px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.msm{position:relative}
+.msicos{position:absolute;inset:0;pointer-events:none;z-index:5}
+.senaico{position:absolute;width:56px;height:56px;animation:senapop 1.5s ease-out forwards;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))}
+.senaico img{width:100%;height:100%;object-fit:contain;display:block}
+.senaico.s2{top:34px;left:50%;margin-left:-28px}
+.senaico.s1{right:8px;top:36%}
+.senaico.s3{left:8px;top:36%}
+.senaico.mia{outline:3px solid rgba(255,255,255,.7);border-radius:50%}
+@keyframes senapop{0%{transform:scale(.4);opacity:0}15%{transform:scale(1.12);opacity:1}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.mssenas{margin:6px 0;text-align:center}
+.mssenas[hidden]{display:none}
+.senagrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.sena-b{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;min-width:0}
+.sena-b img{width:48px;height:48px;object-fit:contain}
+.sena-b b{font-size:13px;font-weight:800}
+.sena-b small{font-size:10.5px;color:var(--mut);line-height:1.15;font-weight:700}
+.sena-b:disabled{opacity:.4}
+.sena-b:active:not(:disabled){transform:translateY(2px)}
+@media (prefers-reduced-motion:reduce){.senaico{animation:none;opacity:1}}
