@@ -1,5 +1,11 @@
 // Utilidades y resolvedor lógico de Nonogramas (sin DOM: se puede probar con Node).
-export const SIZES = [5, 10, 15, 20];
+export const SIZES = [5, 10, 15];
+// Máximo de números por fila/columna según la dificultad (así el panel tiene siempre el mismo tamaño)
+export const MAXPISTAS = { facil: 3, medio: 4, dificil: 5 };
+export const maxPistas = (n, diff) => Math.min(MAXPISTAS[diff] ?? 4, Math.ceil(n / 2));
+// Panel fijo por tamaño: nº de números que reserva el panel (el de la dificultad más alta)
+export const PANEL = { 5: 3, 10: 5, 15: 5 };
+export const pistasMax = (rc, cc) => Math.max(...rc.map(r => r.length), ...cc.map(c => c.length));
 export const DENS = { facil: 0.66, medio: 0.57, dificil: 0.48 };      // menos casillas rellenas = pistas menos evidentes
 export const runs = l => { const r = []; let k = 0; l.forEach(v => { if (v === 1) k++; else if (k) { r.push(k); k = 0; } }); if (k) r.push(k); return r.length ? r : [0]; };
 export const colsOf = (g, n) => [...Array(n).keys()].map(j => g.map(r => r[j]));
@@ -42,13 +48,35 @@ export function solveGrid(rc, cc, n) {
 }
 // Genera un panel aleatorio resoluble por lógica. Cede el hilo entre intentos para no congelar la interfaz.
 export async function generarAleatorio(n, diff) {
-  const d = DENS[diff] ?? DENS.medio, t0 = performance.now(), cands = []; let last = null;
-  for (let a = 0; a < 300 && cands.length < 5 && performance.now() - t0 < 900; a++) {
-    const sol = Array.from({ length: n }, () => Array.from({ length: n }, () => Math.random() < d ? 1 : 0));
-    const rc = sol.map(runs), cc = colsOf(sol, n).map(runs); last = { sol, rc, cc };
+  const d = DENS[diff] ?? DENS.medio, lim = maxPistas(n, diff), t0 = performance.now(), cands = []; let last = null;
+  for (let a = 0; a < 400 && cands.length < 5 && performance.now() - t0 < 1500; a++) {
+    const sol = limitar(Array.from({ length: n }, () => Array.from({ length: n }, () => Math.random() < d ? 1 : 0)), n, lim);
+    const rc = sol.map(runs), cc = colsOf(sol, n).map(runs);
+    if (pistasMax(rc, cc) > lim) continue;
+    last = { sol, rc, cc };
     const r = solveGrid(rc, cc, n); if (r.ok) cands.push({ sol, rc, cc, passes: r.passes });
     await new Promise(res => setTimeout(res, 0));
   }
   if (cands.length) { cands.sort((a, b) => a.passes - b.passes); return diff === 'facil' ? cands[0] : diff === 'dificil' ? cands[cands.length - 1] : cands[cands.length >> 1]; }
-  return last;
+  return last || limitar(Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i + j) % 2 ? 0 : 1)), n, lim, true);
+}
+// Rellena el hueco más pequeño de las líneas que tienen demasiados grupos hasta que ninguna pase del límite (solo añade casillas: termina siempre)
+export function limitar(g, n, lim) {
+  const cols = j => g.map(r => r[j]);
+  const arregla = (get, set) => {
+    for (let k = 0; k < n; k++) {
+      let l = get(k);
+      while (runs(l).filter(x => x > 0).length > lim && l.includes(1)) {
+        let best = null, i = 0;
+        while (i < n) { if (l[i] === 0 && i > 0 && l[i - 1] === 1) { let j = i; while (j < n && l[j] === 0) j++; if (j < n && (!best || j - i < best[1] - best[0])) best = [i, j]; i = j; } else i++; }
+        if (!best) break; for (let x = best[0]; x < best[1]; x++) l[x] = 1; set(k, l);
+      }
+    }
+  };
+  for (let it = 0; it < 12; it++) {
+    arregla(i => g[i], (i, l) => { g[i] = l; });
+    arregla(j => cols(j), (j, l) => { l.forEach((v, i) => { g[i][j] = v; }); });
+    if (g.every(r => runs(r).length <= lim) && colsOf(g, n).every(c => runs(c).length <= lim)) break;
+  }
+  return g;
 }

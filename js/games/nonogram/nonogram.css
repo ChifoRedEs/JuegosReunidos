@@ -1,6 +1,6 @@
-.ngwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 10px 0 4px}
-.ng{display:grid;grid-template-columns:auto repeat(var(--n),var(--cs));margin:10px auto;width:max-content;font-size:var(--fs);font-weight:800;user-select:none;-webkit-user-select:none;color:var(--tb-ink)}
-.ng .cc{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:3px;line-height:1.15}
+.ngwrap{container-type:inline-size;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0}
+.ng{--cs:calc((min(100cqw,560px) - var(--cw)) / var(--n));display:grid;grid-template-columns:var(--cw) repeat(var(--n),var(--cs));grid-template-rows:var(--ch) repeat(var(--n),var(--cs));margin:8px auto;width:min(100cqw,560px);font-size:var(--fs);font-weight:800;user-select:none;-webkit-user-select:none;color:var(--tb-ink)}
+.ng .cc{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:3px;line-height:1.15;overflow:hidden}
 .ng .rc{display:flex;gap:4px;justify-content:flex-end;align-items:center;padding-right:6px;white-space:nowrap}
 .ng .cc.ok span,.ng .rc.ok span{color:var(--ok);text-decoration:line-through;opacity:.6}
 .ng .cc.act,.ng .rc.act{background:var(--tb-soft);border-radius:6px}

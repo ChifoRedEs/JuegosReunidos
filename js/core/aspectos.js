@@ -10,6 +10,18 @@ export const PALETAS = [
   { id: 'atardecer', nombre: 'Atardecer', sw: ['#F0572D', '#FFE3D6'] },
   { id: 'noche', nombre: 'Noche', sw: ['#5CE1FF', '#1A2350'] },
 ];
+// «Colores de Tablero» nuevos (Sudoku, Nonogram, Bombardeo): 4 pares claros para el día y 4 pares neón oscuros para la noche. Los colores están en css/base.css (data-tablero="dia1…neon4").
+export const PALETAS_DN = [
+  { id: 'dia1', nombre: 'Cielo', sw: ['#2F6BFF', '#E4EDFF'], sec: 'Día' },
+  { id: 'dia2', nombre: 'Menta', sw: ['#0FA971', '#D9F7EA'], sec: 'Día' },
+  { id: 'dia3', nombre: 'Coral', sw: ['#F0572D', '#FFE3D6'], sec: 'Día' },
+  { id: 'dia4', nombre: 'Lila', sw: ['#7A4DFF', '#EFE8FF'], sec: 'Día' },
+  { id: 'neon1', nombre: 'Cian neón', sw: ['#00E5FF', '#0B1426'], sec: 'Noche' },
+  { id: 'neon2', nombre: 'Magenta neón', sw: ['#FF2EC4', '#150A1F'], sec: 'Noche' },
+  { id: 'neon3', nombre: 'Lima neón', sw: ['#39FF14', '#0A1A10'], sec: 'Noche' },
+  { id: 'neon4', nombre: 'Naranja neón', sw: ['#FF9100', '#1A0F08'], sec: 'Noche' },
+];
+export const grupoTableroDN = (titulo = 'Colores de Tablero') => ({ clave: 'tablero', titulo, def: 'dia1', opciones: PALETAS_DN });
 export const grupoTablero = (titulo = 'Colores del tablero') => ({ clave: 'tablero', titulo, def: 'pasaporte', opciones: PALETAS });
 
 // Grupos comunes de los juegos de cartas

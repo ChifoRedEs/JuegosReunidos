@@ -569,3 +569,17 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 .emo[data-i="ic-micro2"]{--ico:url(../img/ico/micro.webp)}
 .emo[data-i="cu-mano"]{--ico:url(../img/cartasui/mar-mano.webp)}
 .emo[data-i="cu-puno"]{--ico:url(../img/cartasui/mar-puno.webp)}
+
+/* 3.93: colores de tablero Día / Noche (neón) */
+:root:root:root .juego[data-tablero="dia1"]{--tb-line:#9DB8F5;--tb-cell:#fff;--tb-alt:#E4EDFF;--tb-acc:#2F6BFF;--tb-ink:#17214A;--tb-soft:#D6E4FF;--tb-hi:#FFC21A;--tb-strong:#1E4FD8}
+:root:root:root .juego[data-tablero="dia2"]{--tb-line:#7ED6B2;--tb-cell:#F6FFFA;--tb-alt:#D9F7EA;--tb-acc:#0FA971;--tb-ink:#063B2B;--tb-soft:#C4F1DC;--tb-hi:#FFB400;--tb-strong:#07795A}
+:root:root:root .juego[data-tablero="dia3"]{--tb-line:#FFB195;--tb-cell:#FFF9F5;--tb-alt:#FFE3D6;--tb-acc:#F0572D;--tb-ink:#4A1A0C;--tb-soft:#FFD3BF;--tb-hi:#7A4DFF;--tb-strong:#C93B14}
+:root:root:root .juego[data-tablero="dia4"]{--tb-line:#C5B3F2;--tb-cell:#FFFFFF;--tb-alt:#EFE8FF;--tb-acc:#7A4DFF;--tb-ink:#2A1B5C;--tb-soft:#E2D6FF;--tb-hi:#FF9F1C;--tb-strong:#5A32D0}
+:root:root:root .juego[data-tablero="neon1"]{--tb-line:#1F6A86;--tb-cell:#0B1426;--tb-alt:#101E38;--tb-acc:#00E5FF;--tb-ink:#E6FBFF;--tb-soft:#12304F;--tb-hi:#FF2E93;--tb-strong:#00E5FF}
+:root:root:root .juego[data-tablero="neon2"]{--tb-line:#6A2D8A;--tb-cell:#150A1F;--tb-alt:#1F0F30;--tb-acc:#FF2EC4;--tb-ink:#FFE8F8;--tb-soft:#3A1250;--tb-hi:#00F0FF;--tb-strong:#FF2EC4}
+:root:root:root .juego[data-tablero="neon3"]{--tb-line:#2A7A3F;--tb-cell:#0A1A10;--tb-alt:#102416;--tb-acc:#39FF14;--tb-ink:#EBFFE6;--tb-soft:#14391F;--tb-hi:#FFEA00;--tb-strong:#39FF14}
+:root:root:root .juego[data-tablero="neon4"]{--tb-line:#8A5220;--tb-cell:#1A0F08;--tb-alt:#26150A;--tb-acc:#FF9100;--tb-ink:#FFF1E0;--tb-soft:#4A2A10;--tb-hi:#00E5FF;--tb-strong:#FFB000}
+
+/* 3.93: títulos de sección dentro de listas de opciones (Día / Noche) y desplegables de Configurar partida */
+.seg .ap-sec{flex:0 0 100%;display:block;font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+.cfg-g select.desplegable{width:100%;min-height:44px;font:inherit;font-size:16px;font-weight:700;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}

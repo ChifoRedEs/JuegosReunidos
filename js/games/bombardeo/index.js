@@ -1,10 +1,10 @@
 import { crearFlotante } from '../../core/flotante.js';
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { grupoTableroDN, grupoFondo } from '../../core/aspectos.js';
 import { NIVELES, LIMITES, maxMinas, medidas, nuevo, abrir, acorde, bandera, pista as pistaMotor, banderas, crearCache, crearMinasLogicas } from './motor.js';
 
-const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'Personalizado' };
+const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'Personalizar' };
 const RETO = 'medio';
 const IMG = n => `<img class="em" src="img/bombardeo/${n}.webp" alt="" draggable="false">`;
 const carita = (fin, pulsando) => IMG(fin === 'gana' ? 'ok' : fin === 'pierde' ? 'bombatriste' : 'radar');
@@ -39,7 +39,8 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; modo = 'abrir'; pst = null; press = null; pulsando = false;
-  asp = api.aspecto([{ ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo' }, grupoTablero()],
+  const gF = { ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo' }; gF.opciones = gF.opciones.filter(o => !o.azar);   // sin «Aleatoria»
+  asp = api.aspecto([gF, grupoTableroDN()],
     () => { cel.forEach(b => { b.dataset.k = ''; }); pintar(); });
   await api.css(new URL('./bombardeo.css', import.meta.url));
   const g = api.cargar();
@@ -61,7 +62,7 @@ ${api.barraHtml()}`;
   api.barra({ nueva: () => nueva(S.nivel),
     salir: () => { location.hash = '#/cat/logica'; },
     crono: () => crono,
-    config: { valores: () => { const dd = S.nivel === 'personal' ? { w: S.w, h: S.h, m: S.m } : dims(); const m = medidas('personal', dd); return { nivel: S.nivel, sa: !!api.pref('sa', true), w: m.w, h: m.h, dens: [10, 15, 20, 25, 30].reduce((a, p) => Math.abs(p - 100 * m.m / (m.w * m.h)) < Math.abs(a - 100 * m.m / (m.w * m.h)) ? p : a, 15) }; }, grupos: v => [{ clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(LVL).map(([k, l]) => [k, `${l}${NIVELES[k] ? ` ${NIVELES[k].w}×${NIVELES[k].h}` : ''}`]) }, { clave: 'w', titulo: 'Ancho', visible: v.nivel === 'personal', opciones: [5, 8, 10, 12, 14, 16, 18, 20].map(x => [x, String(x)]) }, { clave: 'h', titulo: 'Alto', visible: v.nivel === 'personal', opciones: [5, 8, 10, 12, 16, 20, 24].map(x => [x, String(x)]) }, { clave: 'dens', titulo: 'Minas', visible: v.nivel === 'personal', opciones: [[10, 'Pocas'], [15, 'Normal'], [20, 'Muchas'], [25, 'Muchísimas'], [30, 'Máximo']] }, { clave: 'sa', titulo: 'Tableros', opciones: [[true, '🧠 Sin adivinar'], [false, '🎲 Clásicos']] }], aplicar: v => { api.setPref('sa', v.sa); if (v.nivel === 'personal') api.setPref('dims', medidas('personal', { w: v.w, h: v.h, m: Math.max(1, Math.min(maxMinas(v.w, v.h), Math.round(v.w * v.h * v.dens / 100))) })); nueva(v.nivel, true); } } });
+    config: { valores: () => { const dd = S.nivel === 'personal' ? { w: S.w, h: S.h, m: S.m } : dims(); const m = medidas('personal', dd); return { nivel: S.nivel, sa: !!api.pref('sa', true), w: m.w, h: m.h, dens: [10, 15, 20, 25, 30].reduce((a, p) => Math.abs(p - 100 * m.m / (m.w * m.h)) < Math.abs(a - 100 * m.m / (m.w * m.h)) ? p : a, 15) }; }, grupos: v => [{ clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(LVL).map(([k, l]) => [k, `${l}${NIVELES[k] ? ` ${NIVELES[k].w}×${NIVELES[k].h}` : ''}`]) }, { clave: 'w', titulo: 'Ancho', desplegable: true, visible: v.nivel === 'personal', opciones: [5, 8, 10, 12, 14, 16, 18, 20].map(x => [x, String(x)]) }, { clave: 'h', titulo: 'Alto', desplegable: true, visible: v.nivel === 'personal', opciones: [5, 8, 10, 12, 16, 20, 24].map(x => [x, String(x)]) }, { clave: 'dens', titulo: 'Minas', desplegable: true, visible: v.nivel === 'personal', opciones: [[10, 'Pocas'], [15, 'Normal'], [20, 'Muchas'], [25, 'Muchísimas'], [30, 'Máximo']] }, { clave: 'sa', titulo: 'Tableros', opciones: [[true, '🧠 Sin adivinar'], [false, '🎲 Clásicos']] }], aplicar: v => { api.setPref('sa', v.sa); if (v.nivel === 'personal') api.setPref('dims', medidas('personal', { w: v.w, h: v.h, m: Math.max(1, Math.min(maxMinas(v.w, v.h), Math.round(v.w * v.h * v.dens / 100))) })); nueva(v.nivel, true); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.nivel) }, { texto: '📅 Reto del día', accion: () => nueva(RETO, false, true) }, { texto: '💡 Pista', accion: pista }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { S.t = crono.s; pintarTiempo(); if (crono.s % 15 === 0) guardar(); } });
   construir(); arrancar(); pintar();
@@ -142,6 +143,7 @@ function pintar() {
       else { cls += ' h'; html = IMG('bandera'); lab = 'bandera'; }
     } else if (fin === 'pierde' && esM) { cls += ' r'; html = IMG('bomba'); lab = 'mina'; }
     else cls += ' h';
+    if (v === 1 && !esM && !num) cls += ' vac';
     if (pst && pst.i === i) cls += ' pst' + (pst.tipo === 'mina' ? ' mina' : '');
     const key = cls + '|' + html; const b = cel[i];
     if (b.dataset.k !== key) { b.dataset.k = key; b.className = cls; b.innerHTML = html; b.setAttribute('aria-label', `Fila ${(i / S.w | 0) + 1}, columna ${i % S.w + 1}, ${lab}`); }
@@ -207,7 +209,7 @@ function reglas() {
   api.modal('Bombardeo', `<ul><li>Abre todas las casillas que no tienen mina. Cada número indica cuántas minas hay en las 8 casillas de alrededor.</li>
     <li>Tu <b>primer toque nunca es una mina</b>.</li>
     <li>Con <b>🧠 Sin adivinar</b> (por defecto) cada tablero se puede despejar entero por lógica desde tu primer toque; con <b>🎲 Clásicos</b> a veces toca arriesgar.</li>
-    <li><b>Personalizado</b>: elige ancho, alto y número de minas. <b>Reto del día</b>: el mismo campo para todo el mundo, con un solo intento.</li>
+    <li><b>Personalizar</b>: elige ancho, alto y número de minas. <b>Reto del día</b>: el mismo campo para todo el mundo, con un solo intento.</li>
     <li><b>Toca</b> para abrir y <b>mantén pulsado</b> para poner o quitar una bandera (o cambia el modo «Al tocar»).</li>
     <li>Toca un número que ya tiene sus banderas puestas para abrir de golpe el resto de casillas de su alrededor.</li>
     <li>💡 <b>Pista</b>: deduce una casilla segura o una mina con lo que ya ves (con pistas no cuenta el récord de tiempo).</li>

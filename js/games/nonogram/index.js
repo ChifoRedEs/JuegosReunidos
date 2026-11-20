@@ -1,14 +1,14 @@
 import { $, esperar, fmtTiempo, rnd } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTablero, grupoFondo } from '../../core/aspectos.js';
+import { grupoTableroDN } from '../../core/aspectos.js';
 import { variablesTintadas } from '../../core/tinte.js';
 import { crearFlotante } from '../../core/flotante.js';
-import { SIZES, runs, colsOf, generarAleatorio } from './solver.js';
+import { SIZES, PANEL, pistasMax, runs, colsOf, generarAleatorio } from './solver.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 const MAX_DESHACER = 40, RETO = { n: 10, diff: 'medio' };
-const NCELL = { 5: 52, 10: 34, 15: 26, 20: 20 }, NFONT = { 5: 14, 10: 12, 15: 11, 20: 10 };
+const NFONT = { 5: 17, 10: 13, 15: 11 };
 let asp = null, N = null, api = null, hist = null, crono = null, modo = 'f', tipo = 'azar', banco = null, ocupado = false, rootEl = null;
 let cel = [], rcEl = [], ccEl = [], drag = null, activo = null, flot = null;
 const vacia = n => Array.from({ length: n }, () => Array(n).fill(0));
@@ -36,7 +36,7 @@ export function resumen(d) {
 export async function mount(root, a) {
   variablesTintadas(root, [['--ng-img', 'img/celdas/c-bisel.webp', '#2F6BFF'], ['--ng-img-ok', 'img/celdas/c-bisel.webp', '#0FB56A']], 'ng');
   api = a; rootEl = root;
-  asp = api.aspecto([{ ...grupoFondo('.ngwrap'), def: 't-n-papel-cuaderno-1' }, grupoTablero(),
+  asp = api.aspecto([grupoTableroDN(),
     { clave: 'relleno', titulo: 'Color del relleno', def: 'azul', opciones: [{ id: 'azul', nombre: 'Azul', sw: ['#2F6BFF'] }, { id: 'rosa', nombre: 'Rosa', sw: ['#FF3FA4'] }, { id: 'verde', nombre: 'Verde', sw: ['#0FB56A'] }, { id: 'naranja', nombre: 'Naranja', sw: ['#FF7A1A'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#7A4DFF'] }] },
     { clave: 'forma', titulo: 'Forma de las casillas rellenas', def: 'redondeado', opciones: [{ id: 'redondeado', nombre: '▢ Redondeada' }, { id: 'cuadrado', nombre: '■ Cuadrada' }, { id: 'circulo', nombre: '● Círculo' }, { id: 'estrella', nombre: '★ Estrella' }, { id: 'corazon', nombre: '♥ Corazón' }] }]);
   modo = 'f'; ocupado = false; drag = null;
@@ -94,7 +94,7 @@ async function nuevo(n, diff, forzar = false, nuevoTipo = tipo, reto = false) {
   await esperar(20);
   let p = null, nombre = '';
   if (nuevoTipo === 'dibujo') {
-    const b = await cargarBanco(), lista = b[n] || [];
+    const b = await cargarBanco(), lista = (b[n] || []).filter(x => { const f = x.filas.map(r => [...r].map(c => c === '#' ? 1 : 0)); return pistasMax(f.map(runs), colsOf(f, n).map(runs)) <= PANEL[n]; });
     if (lista.length) {
       const otros = lista.filter(x => !N || x.nombre !== N.nombre), d = (otros.length ? otros : lista)[rnd((otros.length ? otros : lista).length)];
       const sol = d.filas.map(f => [...f].map(c => c === '#' ? 1 : 0)); p = { sol, rc: sol.map(runs), cc: colsOf(sol, n).map(runs) }; nombre = d.nombre;
@@ -134,9 +134,11 @@ function guardar() {
 /* ---------- pintado: la cuadrícula se construye una vez por panel y luego se parchea ---------- */
 function construir() {
   const n = N.n, fs = NFONT[n];
-  const clueW = Math.max(...N.rc.map(r => r.reduce((s, x) => s + String(x).length * fs * .62 + 4, 0))) + 8;
+  // Panel de tamaño fijo por tamaño de tablero: reserva sitio para el máximo de números (3 en 5×5, 5 en 10×10 y 15×15); si una partida guardada trae más, se amplía
+  const need = Math.max(PANEL[n], pistasMax(N.rc, N.cc)), digs = Math.max(...N.rc.map(r => r.reduce((s, x) => s + String(x).length, 0)), need);
+  const cw = Math.round(digs * fs * .62 + (need - 1) * 4 + 12), ch = Math.round(need * fs * 1.15 + 6);
   const tab = $('#ngTab');
-  tab.style.cssText = `--n:${n};--fs:${fs}px;--cs:max(14px,min(calc((min(100vw,520px) - 42px - ${Math.round(clueW)}px) / ${n}),${NCELL[n]}px))`;
+  tab.style.cssText = `--n:${n};--fs:${fs}px;--cw:${cw}px;--ch:${ch}px`;
   let h = '<div></div>' + N.cc.map(c => `<div class="cc">${c.map(x => `<span>${x}</span>`).join('')}</div>`).join('');
   for (let i = 0; i < n; i++) {
     h += `<div class="rc">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>`;
@@ -229,9 +231,9 @@ function clic(e) {
 function reglas() {
   api.modal('Nonogram', `<ul>
     <li>Los números de cada fila y columna indican cuántas casillas rellenas seguidas hay y en qué orden.</li>
-    <li>Entre dos grupos hay al menos una casilla vacía.</li>
+    <li>Entre dos grupos hay al menos una casilla vacía. Cada línea tiene como máximo 3 números en Fácil, 4 en Medio y 5 en Difícil.</li>
     <li><b>Toca</b> una casilla: la primera vez se rellena, la segunda se marca con ✕ y la tercera se limpia. <b>Arrastra</b> el dedo por una fila o columna para pintar de golpe.</li>
     <li>El <b>menú flotante</b> (se mueve con el asa «Mover») tiene <b>Rellenar</b> y <b>Marcar X</b> (qué pinta el arrastre; en Marcar X el toque alterna ✕), <b>Deshacer</b> y <b>Pista</b> (corrige una casilla; con pistas no cuenta el récord de tiempo).</li>
     <li>Las pistas se <b>tachan</b> cuando esa línea ya está bien.</li>
-    <li>Los paneles aleatorios se resuelven siempre por lógica; el modo <b>Dibujo</b> usa imágenes hechas a mano en todos los tamaños (de 5×5 a 20×20).</li><li><b>Reto del día</b>: un panel 10×10 igual para todo el mundo. El historial de deshacer se guarda con la partida.</li></ul>`);
+    <li>Los paneles aleatorios se resuelven siempre por lógica; el modo <b>Dibujo</b> usa imágenes hechas a mano en todos los tamaños (5×5, 10×10 y 15×15).</li><li><b>Reto del día</b>: un panel 10×10 igual para todo el mundo. El historial de deshacer se guarda con la partida.</li></ul>`);
 }
