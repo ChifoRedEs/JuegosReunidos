@@ -30,7 +30,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; sel = 0; vertical = false; pista = -1; efecto = null; forzar2d = false;
-  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  hay3d = false;   // sin vista 3D
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#flCuerpo'), tt: true }, 
     { clave: 'mar', tt: true, etiqueta: 'Mar', titulo: 'Mar', def: 'dia', opciones: [{ id: 'dia', nombre: 'Día en calma', sw: ['#2E918C'] }, { id: 'olas', nombre: 'Día con olas', sw: ['#4AA39A'] }, { id: 'noche', nombre: 'Noche en calma', sw: ['#1C2640'] }, { id: 'noche2', nombre: 'Noche con olas', sw: ['#223156'] }] },
   ], () => { aplicarFichas(); if (!S) return; if (quiere3D() && !V3) iniciar3D(); else if (V3 && !quiere3D()) cerrar3D(); else if (V3) V3.recolor(); pintar(); });

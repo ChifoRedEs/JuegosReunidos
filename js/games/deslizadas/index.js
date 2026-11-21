@@ -34,7 +34,7 @@ export function resumen(d) { return { texto: `${K.MODOS[d.modo]} ${d.tam.replace
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; forzar2d = false; modo3d = false; sel = -1; pistaMov = null; nuevo = true;
-  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  hay3d = false;   // sin vista 3D
   asp = api.aspecto([
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     { ...grupoFondo('#klTab'), def: 't-n-mesa-juegos-3' },

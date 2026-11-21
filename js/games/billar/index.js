@@ -43,7 +43,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; anim = null; pensando = false; arrastre = null; forzar2d = false; modo3d = false;
-  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  hay3d = false;   // sin vista 3D
   await cargarBarajas();
   asp = api.aspecto([
     { clave: 'vista', titulo: 'Vista de la mesa', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },

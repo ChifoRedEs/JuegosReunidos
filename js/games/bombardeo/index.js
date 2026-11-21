@@ -1,4 +1,3 @@
-import { crearFlotante } from '../../core/flotante.js';
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTableroDN, grupoFondo } from '../../core/aspectos.js';
@@ -8,7 +7,7 @@ const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'P
 const RETO = 'medio';
 const IMG = n => `<img class="em" src="img/bombardeo/${n}.webp" alt="" draggable="false">`;
 const carita = (fin, pulsando) => IMG(fin === 'gana' ? 'ok' : fin === 'pierde' ? 'bombatriste' : 'radar');
-let flot = null, S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false;
+let S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false;
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -51,9 +50,8 @@ export async function mount(r, a) {
     <div class="bmtop"><div class="bmc" id="bmMinas" aria-label="Minas restantes">000</div><button class="bmf" id="bmCara" data-ac="nueva" aria-label="Nueva partida">${IMG('radar')}</button><div class="bmc t" id="bmT" aria-label="Tiempo">000</div></div>
     <div class="bm" id="bmTab" role="group" aria-label="Campo de minas"></div>
     <div class="msg" id="bmMsg" role="status" aria-live="polite"></div>
-${api.barraHtml()}`;
-  flot = crearFlotante(api, { ancla: $('#bmTab'), raiz: root, botones: [{ id: 'abrir', texto: '👆 Abrir' }, { id: 'bandera', texto: '🚩 Bandera' }, { id: 'pista', texto: '💡 Pista' }],
-    alClic: id => { if (id === 'pista') pista(); else { modo = id; pintar(); } } });
+    <div class="pad pad3" id="bmAcc"><button type="button" class="acc" data-ac="abrir" aria-pressed="false">👆 Abrir</button><button type="button" class="acc" data-ac="bandera" aria-pressed="false">🚩 Bandera</button><button type="button" class="acc" data-ac="pista">💡 Pista</button></div>${api.barraHtml()}`;
+  $('#bmAcc').addEventListener('click', e => { const b = e.target.closest('[data-ac]'); if (!b) return; e.stopPropagation(); if (b.disabled) return; const id = b.dataset.ac; if (id === 'pista') pista(); else { modo = id; pintar(); } });
   root.addEventListener('click', clic);
   const tab = $('#bmTab');
   tab.addEventListener('pointerdown', pDown); tab.addEventListener('pointerup', pUp); tab.addEventListener('pointercancel', pCancel); tab.addEventListener('pointerleave', pCancel);
@@ -70,7 +68,7 @@ ${api.barraHtml()}`;
 export function unmount() {
   if (S && crono) { S.t = crono.s; guardar(); }
   if (crono) crono.detener();
-  clearTimeout(pstT); clearTimeout(press && press.lp); if (flot) { flot.destruir(); flot = null; }
+  clearTimeout(pstT); clearTimeout(press && press.lp);
   if (root) root.removeEventListener('click', clic);
   S = null; crono = null; cel = []; asp = null; press = null;
 }
@@ -153,7 +151,7 @@ function pintar() {
   $('#bmMinas').textContent = pad3(S.m - banderas(S));
   pintarTiempo();
   $('#bmCara').innerHTML = carita(fin, pulsando);
-  if (flot) { flot.marcar('abrir', modo === 'abrir'); flot.marcar('bandera', modo === 'bandera'); flot.activar('pista', !fin); }
+  { const pad = $('#bmAcc'); for (const k of ['abrir', 'bandera']) { const b = pad.querySelector(`[data-ac="${k}"]`); b.classList.toggle('on', modo === k); b.setAttribute('aria-pressed', String(modo === k)); } pad.querySelector('[data-ac="pista"]').disabled = !!fin; }
   const m = $('#bmMsg'); m.className = 'msg' + (fin === 'gana' ? ' win' : fin === 'pierde' ? ' err' : '');
   m.textContent = fin === 'gana' ? `¡Despejado en ${fmtTiempo(S.t)}!` : fin === 'pierde' ? '¡Boom! Toca la carita para jugar otra vez.' : pst ? (pst.tipo === 'mina' ? 'Pista: aquí hay una mina.' : 'Pista: esta casilla es segura.') : modo === 'abrir' ? 'Toca para abrir · mantén pulsado para poner bandera.' : 'Toca para poner bandera · mantén pulsado para abrir.';
 }

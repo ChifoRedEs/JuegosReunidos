@@ -39,7 +39,7 @@ const emblema = (id, w = 46) => `<img class="emb" src="img/sellos/${id}.webp" al
 // Los botones que empiezan por un emoji conocido (💡 Pista, ↶ Deshacer, 🏆 Podio…) se muestran con su icono ilustrado, en todos los juegos.
 // Icono ilustrado con respaldo: mientras el archivo no esté en ICONOS_LISTOS se muestra el emoji (sin pedir una imagen que no existe).
 // Al añadir img/iconos/<nombre>.webp basta con incluir el nombre aquí.
-const ICONOS_LISTOS = new Set(['configurar', 'pausa', 'diario', 'ajustes', 'ver3d', 'ver2d']);
+const ICONOS_LISTOS = new Set(['configurar', 'pausa', 'diario', 'ajustes']);
 const icoF = (n, emoji, w = 22, c = 'ic') => ICONOS_LISTOS.has(n) ? `<img class="${c}" src="img/iconos/${n}.webp" alt="" width="${w}" height="${w}" data-fb="${emoji}">` : emoji;
 document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG' && t.dataset.fb) t.replaceWith(document.createTextNode(t.dataset.fb)); }, true);
 const ICONOS_BTN = { '💡': 'pista', '↶': 'deshacer', '↩️': 'deshacer', '↩': 'deshacer', '🏆': 'podio', '🎨': 'apariencia', '📖': 'reglas', '📤': 'compartir' };
@@ -341,11 +341,11 @@ function crearApi(j, ent, mod, root) {
     },
     aspecto(defs, alCambiar) {
       // `elec` = lo elegido y guardado (puede ser «azar»); `vals` = lo que se aplica de verdad (data-<clave> y asp.valores).
+      defs = defs.filter(g => g.clave !== 'vista');   // la vista 3D ya no existe: todos los juegos se ven en 2D
       defs = defs.filter(g => !/tex$/.test(g.clave));   // Las Texturas ya no forman parte de la Apariencia (los Personajes sí: son imágenes)
       defs = filtrarTapetes(defs, id);                                                  // cada juego solo ofrece los tapetes de su estilo (+ «Clásicos»)
       defs = defs.filter(g => g.opciones.some(o => !o.azar && !o.nada) || !g.opciones.some(o => o.azar));   // sin imágenes que sortear, el grupo se oculta
       // Grupos propios «Forma de las fichas» (enEstilos) se integran en el desplegable «Estilos de Fichas» si el juego lo tiene.
-      defs.forEach(g => { if (g.clave === 'vista') g.oculto = true; });                // 2D/3D: ya está el botón flotante de la esquina superior izquierda
       // `junto: clave` = este grupo se une, como subgrupo, al desplegable de otro grupo (p. ej. los edificios 2D y 3D de Magnate).
       defs.filter(g => g.junto).forEach(g => { const d = defs.find(x => x.clave === g.junto); if (d) { d.sub = d.sub || [d]; d.sub.push(g); g.oculto = true; } });
       // «Tapete y Tablero»: el tapete (imagen de fondo) y el color del tablero (grupos marcados con `tt`) comparten un único desplegable.
@@ -380,17 +380,12 @@ function crearApi(j, ent, mod, root) {
       aplicarModo();
       resolver(true); poner();
       const guardar = () => aj.setPref(id, 'aspecto', { ...elec });
-      const refrescarVista = () => { if (btnVista) { const es3 = vals.vista === '3d'; btnVista.innerHTML = es3 ? icoF('ver2d', '🔲') + 'Ver en 2D' : icoF('ver3d', '🧊') + 'Ver en 3D'; btnVista.setAttribute('aria-label', es3 ? 'Cambiar a la vista 2D' : 'Cambiar a la vista 3D'); } };
       quitarVista();
       if (porModo.length) {
         const cambio = () => { aplicarModo(); porModo.forEach(g => { delete vals[g.clave]; }); resolver(false); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); };
         const mo = new MutationObserver(cambio), mq = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
         mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); if (mq && mq.addEventListener) mq.addEventListener('change', cambio);
         desModo = () => { mo.disconnect(); if (mq && mq.removeEventListener) mq.removeEventListener('change', cambio); };
-      }
-      if (defs.some(g => g.clave === 'vista')) {
-        btnVista = el('button', { type: 'button', class: 'btn vista-flot' }); document.body.append(btnVista); root.classList.add('con-vista'); posVista(); refrescarVista();
-        btnVista.addEventListener('click', () => { elec.vista = vals.vista === '3d' ? '2d' : '3d'; delete vals.vista; resolver(false); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); });
       }
       // 🎨 Apariencia (igual en todos los juegos): una ventana con una sección desplegable por grupo (se abre una a la vez).
       // Cada sección muestra sus opciones como botones, muestras de color, iconos o miniaturas de imagen, según el grupo.
@@ -407,7 +402,7 @@ function crearApi(j, ent, mod, root) {
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
           r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, g.soloColor && o.sw ? '' : o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
         };
-        const elegir = (g, idO) => { elec[g.clave] = idO; if (g.defModo) elec[g.clave + '@' + modo()] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); Promise.resolve(alCambiar && alCambiar({ ...vals })).then(r => { if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } }); };
+        const elegir = (g, idO) => { elec[g.clave] = idO; if (g.defModo) elec[g.clave + '@' + modo()] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); pintarResumen(g); Promise.resolve(alCambiar && alCambiar({ ...vals })).then(r => { if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } }); };
         // Sección única de color para varios bandos: leyenda (quién es cada color) + una sola paleta; un color elegido por un bando no puede repetirse en otro.
         const cuerpoMulti = g => {
           const slots = g.multi; let act = 0; const cont = el('div', { class: 'ap-multi' });
@@ -484,7 +479,7 @@ function crearApi(j, ent, mod, root) {
         const secciones_ = secciones; if (secciones.length === 1) secciones[0].open = true;
         const wrap = el('div', { class: 'ap-acordeon' }, ...secciones);
         let cerrar;
-        const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { elec[g.clave] = g.def; delete vals[g.clave]; }); resolver(true); poner(); guardar(); refrescarVista(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
+        const rest = el('button', { class: 'btn', onclick: () => { defs.forEach(g => { elec[g.clave] = g.def; delete vals[g.clave]; }); resolver(true); poner(); guardar(); if (alCambiar) alCambiar({ ...vals }); cerrar(); } }, 'Restablecer');
         const ok = el('button', { class: 'btn on', onclick: () => cerrar() }, 'Listo');
         cerrar = hoja([el('h2', {}, '🎨 Apariencia'), wrap, el('div', { class: 'bar', style: 'margin-top:14px' }, rest, ok)], typeof alCerrarV === 'function' ? alCerrarV : null);
       };
@@ -509,12 +504,8 @@ function ruta() {
   if (a === 'cat' && (b === 'favoritos' || Object.keys(CATEGORIAS).includes(b))) return { v: 'inicio', cat: b };
   return { v: a === 'stats' || a === 'ajustes' ? a : 'inicio', cat: null };
 }
-// Botón flotante 2D/3D (solo en los juegos con grupo de Apariencia «vista»): cambia de vista al instante desde cualquier punto de la pantalla.
-let btnVista = null;
 let desModo = null;
-const quitarVista = () => { if (btnVista) { btnVista.remove(); btnVista = null; } if (desModo) { desModo(); desModo = null; } };
-const posVista = () => { const t = document.querySelector('.top'); if (btnVista && t) btnVista.style.top = Math.round(t.getBoundingClientRect().bottom + 8) + 'px'; };
-window.addEventListener('resize', posVista);
+const quitarVista = () => { if (desModo) { desModo(); desModo = null; } };
 async function cerrarJuego() {
   quitarVista();
   if (!actual) return;

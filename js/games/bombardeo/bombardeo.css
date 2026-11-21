@@ -32,3 +32,10 @@
 
 /* 3.93.1: «Personalizar» en una sola línea en Configurar partida */
 .cfg-cont .btn[data-k="nivel"][data-v='"personal"']{white-space:nowrap;flex:1 0 auto;min-width:118px}
+.pad{display:grid;gap:7px;width:min(100%,440px);margin:7px auto}
+.pad button{position:relative;padding:8px 2px;font-size:13.5px;line-height:1.15;white-space:nowrap;font-weight:800;font-family:Nunito,sans-serif;background:var(--card);border:2px solid var(--tb-line,var(--borde));border-radius:14px;min-height:46px;color:var(--ink);box-shadow:0 3px 0 var(--tb-line,var(--borde))}
+.pad button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--tb-line,var(--borde))}
+.pad button:disabled{opacity:.3}
+.pad .acc.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
+.pad4{grid-template-columns:repeat(4,1fr)}.pad3{grid-template-columns:repeat(3,1fr)}
+.pad .acc{text-align:center;justify-content:center}

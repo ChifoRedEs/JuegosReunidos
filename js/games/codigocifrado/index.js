@@ -31,7 +31,7 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; forzar2d = false; modo3d = false; sel = -1; pop = -1; serie++;
-  try { hay3d = (await import('../../core/escena3d.js')).hayWebGL(); } catch { hay3d = false; }
+  hay3d = false;   // sin vista 3D
   asp = api.aspecto([
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
     { ...grupoFondo('#mmTab'), def: 't-n-escritorio-codigo' },
@@ -258,5 +258,5 @@ function reglas() {
     <li>Niveles: <b>Fácil</b> (4 bolas, 5 colores, sin repetir), <b>Clásico</b> (4 bolas, 6 colores), <b>Súper</b> (5 bolas, 8 colores), <b>Experto</b> (6 bolas, 8 colores) o <b>A tu gusto</b>.</li>
     <li><b>🔒 Tú pones el código</b>: escondes tú uno y la máquina intenta descifrarlo (sin estadísticas). Si no lo consigue en los intentos disponibles, ganas tú.</li>
     <li>💡 <b>Pista</b>: te dice cuántas combinaciones siguen siendo posibles y rellena una que encaja con todo lo que sabes. Teclado: 1–8 colores, ← → posición, Retroceso borra, Intro comprueba.</li>
-    <li>Con 🎨 Apariencia cambias tablero, colores, estilo de las bolas (hay un juego con símbolos para daltonismo), fondo y vista 2D/3D.</li></ul>`);
+    <li>Con 🎨 Apariencia cambias tablero, colores, estilo de las bolas (hay un juego con símbolos para daltonismo) y fondo.</li></ul>`);
 }

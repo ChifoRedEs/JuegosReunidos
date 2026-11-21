@@ -3,7 +3,6 @@ import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTableroDN } from '../../core/aspectos.js';
 import { variablesTintadas } from '../../core/tinte.js';
-import { crearFlotante } from '../../core/flotante.js';
 import { SIZES, PANEL, pistasMax, runs, colsOf, generarAleatorio } from './solver.js';
 
 const COLORES = [['azul', 'Azul', '#2F6BFF'], ['rojo', 'Rojo', '#E5383B'], ['naranja', 'Naranja', '#FF7A1A'], ['amarillo', 'Amarillo', '#F2B600'], ['verde', 'Verde', '#0FB56A'], ['turquesa', 'Turquesa', '#0FA3B1'], ['violeta', 'Violeta', '#7A4DFF'], ['rosa', 'Rosa', '#FF3FA4'], ['marron', 'Marrón', '#8B5A2B'], ['grafito', 'Grafito', '#4A5568']];
@@ -11,7 +10,7 @@ const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 const MAX_DESHACER = 40, RETO = { n: 10, diff: 'medio' };
 const NFONT = { 5: 17, 10: 13, 15: 11 };
 let malas = new Set(), asp = null, N = null, api = null, hist = null, crono = null, modo = 'f', tipo = 'azar', banco = null, ocupado = false, rootEl = null;
-let cel = [], rcEl = [], ccEl = [], drag = null, activo = null, flot = null;
+let cel = [], rcEl = [], ccEl = [], drag = null, activo = null;
 const vacia = n => Array.from({ length: n }, () => Array(n).fill(0));
 const copia = g => g.map(r => r.slice());
 
@@ -50,9 +49,10 @@ export async function mount(root, a) {
   root.innerHTML = `<div id="ngReto"></div>
     <div class="info"><span class="mut">Toca: rellenar → ✕ → limpiar · arrastra para pintar una línea</span><span id="ngCrono">0:00</span></div>
     <div class="ngwrap"><div class="ng" id="ngTab"></div></div>
-    <div class="msg" id="ngMsg" role="status" aria-live="polite"></div>${api.barraHtml()}`;
-  flot = crearFlotante(api, { ancla: root.querySelector('.ngwrap'), raiz: root, botones: [{ id: 'm', texto: '■ Rellenar' }, { id: 'undo', texto: '↶ Deshacer' }, { id: 'pista', texto: '💡 Pista' }, { id: 'comprobar', texto: '✔ Comprobar' }],
-    alClic: id => { if (id === 'm') { modo = modo === 'f' ? 'x' : 'f'; pintar(); } else if (id === 'undo') deshacer(); else if (id === 'pista') pista(); else if (id === 'comprobar') comprobar(); } });
+    <div class="msg" id="ngMsg" role="status" aria-live="polite"></div>
+    <div class="pad pad4" id="ngAcc"><button type="button" class="acc" data-ac="m" aria-pressed="false">⬛ Rellenar</button><button type="button" class="acc" data-ac="undo">↶ Deshacer</button><button type="button" class="acc" data-ac="pista">💡 Pista</button><button type="button" class="acc" data-ac="comprobar">✔ Comprobar</button></div>${api.barraHtml()}`;
+  $('#ngAcc').addEventListener('click', e => { const b = e.target.closest('[data-ac]'); if (!b) return; e.stopPropagation(); if (b.disabled) return; const id = b.dataset.ac;
+    if (id === 'm') { modo = modo === 'f' ? 'x' : 'f'; pintar(); } else if (id === 'undo') deshacer(); else if (id === 'pista') pista(); else if (id === 'comprobar') comprobar(); });
   root.addEventListener('click', clic);
   root.addEventListener('pointerdown', pDown); root.addEventListener('pointermove', pMove);
   root.addEventListener('pointerup', pUp); root.addEventListener('pointercancel', pUp);
@@ -74,7 +74,6 @@ export function unmount() {
   if (N && crono) { N.t = crono.s; guardar(); }
   if (crono) crono.detener();
   if (rootEl) { rootEl.removeEventListener('click', clic); rootEl.removeEventListener('pointerdown', pDown); rootEl.removeEventListener('pointermove', pMove); rootEl.removeEventListener('pointerup', pUp); rootEl.removeEventListener('pointercancel', pUp); }
-  if (flot) { flot.destruir(); flot = null; }
   malas = new Set(); N = null; crono = null; cel = []; rcEl = []; ccEl = []; drag = null;
 }
 function arrancar() { crono.s = N.t; if (!N.done) crono.iniciar(); else crono.detener(); $('#ngCrono').textContent = fmtTiempo(N.t); }
@@ -170,7 +169,8 @@ function pintar() {
   }
   $('#ngTab').classList.toggle('ganado', N.done);
   pintarReto();
-  if (flot) { const bm = flot.panel.querySelector('[data-fl="m"]'); if (bm) bm.textContent = modo === 'f' ? '■ Rellenar' : '✕ Marcar'; flot.marcar('m', modo === 'x'); flot.activar('undo', !N.done); flot.activar('pista', !N.done); flot.activar('comprobar', !N.done); }
+  { const pad = $('#ngAcc'), bm = pad.querySelector('[data-ac="m"]'); bm.textContent = modo === 'f' ? '⬛ Rellenar' : '❌ Marcar'; bm.classList.toggle('on', modo === 'x'); bm.setAttribute('aria-pressed', String(modo === 'x'));
+    ['undo', 'pista', 'comprobar'].forEach(k => { pad.querySelector(`[data-ac="${k}"]`).disabled = !!N.done; }); }
   const m = $('#ngMsg'); m.className = 'msg' + (N.done ? ' win' : '');
   m.textContent = N.done ? `¡Completado en ${fmtTiempo(N.t)}!${N.nombre ? ` Era: ${N.nombre}.` : ''}` : '';
   $('#ngCrono').textContent = fmtTiempo(N.t);
@@ -242,7 +242,7 @@ function reglas() {
     <li>Los números de cada fila y columna indican cuántas casillas rellenas seguidas hay y en qué orden.</li>
     <li>Entre dos grupos hay al menos una casilla vacía. Cada línea tiene como máximo 3 números en Fácil, 4 en Medio y 5 en Difícil.</li>
     <li><b>Toca</b> una casilla: la primera vez se rellena, la segunda se marca con ✕ y la tercera se limpia. <b>Arrastra</b> el dedo por una fila o columna para pintar de golpe.</li>
-    <li>El <b>menú flotante</b> (se mueve con el asa «Mover») tiene un botón <b>Rellenar / Marcar</b> (cada pulsación cambia lo que pinta el arrastre: rellenar o ✕), <b>Deshacer</b>, <b>Pista</b> y <b>Comprobar</b> (marca en rojo lo incorrecto) (corrige una casilla; con pistas no cuenta el récord de tiempo).</li>
+    <li>Bajo el panel hay un menú con un botón <b>Rellenar / Marcar</b> (cada pulsación cambia lo que pinta el arrastre: rellenar o ✕), <b>Deshacer</b>, <b>Pista</b> y <b>Comprobar</b> (marca en rojo lo incorrecto) (corrige una casilla; con pistas no cuenta el récord de tiempo).</li>
     <li>Las pistas se <b>tachan</b> cuando esa línea ya está bien.</li>
     <li>Los paneles aleatorios se resuelven siempre por lógica; el modo <b>Dibujo</b> usa imágenes hechas a mano en todos los tamaños (5×5, 10×10 y 15×15).</li><li><b>Reto del día</b>: un panel 10×10 igual para todo el mundo. El historial de deshacer se guarda con la partida.</li></ul>`);
 }

@@ -66,7 +66,7 @@ const DEFS_ASPECTO = [
 ];
 export async function mount(root, a) {
   api = a; rootEl = root; rodando = false; ultFoco = ''; forzar2d = false; modo3d = false;
-  try { const b3 = await import('../../core/escena3d.js'); hay3d = b3.hayWebGL(); } catch { hay3d = false; }
+  hay3d = false;   // sin vista 3D
   asp = api.aspecto(DEFS_ASPECTO, () => {
     if (D3) D3.estilo(asp.valores);
     aplicarFichas();
