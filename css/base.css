@@ -590,6 +590,14 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 .juego[data-tablero^="neon"]{--c1:var(--cn1);--c2:var(--cn2);--c3:var(--cn3);--c4:var(--cn4);--c5:var(--cn5);--c6:var(--cn6);--c7:var(--cn7);--c8:var(--cn8);--c9:var(--cn9)}
 :root:root:root .juego[data-tablero^="neon"]{--tb-wall:color-mix(in srgb,var(--tb-acc) 26%,#05070d);--tb-wallink:var(--tb-acc)}
 
-/* Color del número sobre la casilla seleccionada (--tb-hi): oscuro, salvo en Coral (día 3) donde el selector es violeta */
-.juego{--tb-hiink:#17214A}
-:root:root:root .juego[data-tablero="dia3"]{--tb-hiink:#fff}
+/* Selector de casilla (Sudoku, Calcudoku, Futoshiki, CruciSumas, Akari, Crucigramas): el color COMPLEMENTARIO del Tablero elegido.
+   --tb-sel = color del selector · --tb-selink = color del número encima (claro u oscuro según contraste) */
+.juego{--tb-sel:var(--tb-hi);--tb-selink:#17214A}
+:root:root:root .juego[data-tablero="dia1"]{--tb-sel:#FF9F1C;--tb-selink:#17214A}   /* Cielo (azul) → naranja */
+:root:root:root .juego[data-tablero="dia2"]{--tb-sel:#E5383B;--tb-selink:#fff}      /* Menta (verde) → rojo */
+:root:root:root .juego[data-tablero="dia3"]{--tb-sel:#1FA8D6;--tb-selink:#fff}      /* Coral (rojo anaranjado) → azul turquesa */
+:root:root:root .juego[data-tablero="dia4"]{--tb-sel:#FFD21A;--tb-selink:#17214A}   /* Lila (violeta) → amarillo */
+:root:root:root .juego[data-tablero="neon1"]{--tb-sel:#FF3B3B;--tb-selink:#fff}     /* Cian → rojo */
+:root:root:root .juego[data-tablero="neon2"]{--tb-sel:#7CFF3A;--tb-selink:#0B1426}  /* Magenta → verde lima */
+:root:root:root .juego[data-tablero="neon3"]{--tb-sel:#FF2E7A;--tb-selink:#fff}     /* Lima (verde) → rojo rosado */
+:root:root:root .juego[data-tablero="neon4"]{--tb-sel:#3D8BFF;--tb-selink:#fff}     /* Naranja → azul */

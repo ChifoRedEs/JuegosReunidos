@@ -133,8 +133,8 @@ button.ficha{display:flex}
 .flotante.mov .flasa{cursor:grabbing}
 .flasa span{width:40px;height:5px;border-radius:99px;background:var(--line)}
 .flasa small{font-size:11px;font-weight:800;color:var(--mut)}
-.flbtns{display:grid;grid-template-columns:repeat(var(--nb),1fr);gap:6px}
-.flbtns .btn{padding:8px 2px;font-size:13.5px;line-height:1.15;min-height:44px;white-space:nowrap;touch-action:manipulation}
+.flbtns{display:grid;grid-template-columns:repeat(var(--nb),minmax(0,1fr));gap:6px}
+.flbtns .btn{padding:8px 1px;font-size:clamp(10.5px,3vw,13.5px);line-height:1.15;min-height:44px;white-space:nowrap;touch-action:manipulation}
 .flbtns .btn.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent}
 .flbtns .btn:disabled{opacity:.4}
 .flhueco{width:100%}
@@ -177,3 +177,4 @@ button.ficha{display:flex}
 .dado3d .d2[data-forma=cuadrado] i{border-radius:2px}
 .dado3d .d2[data-forma=rombo] i{border-radius:0;transform:rotate(45deg) scale(.85)}
 .dado3d .d2[data-forma=estrella] i{border-radius:0;clip-path:polygon(50% 0,62% 36%,100% 38%,70% 60%,80% 100%,50% 76%,20% 100%,30% 60%,0 38%,38% 36%)}
+.flbtns .btn img,.flbtns .btn svg{width:1.15em;height:1.15em;flex:none}

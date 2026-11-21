@@ -7,7 +7,7 @@
 .ac.k{background-image:var(--ak-marca)}
 .ac.m{background-image:var(--ak-muro);cursor:default}
 .ac.mn{background-image:var(--ak-muron);cursor:default}
-.ac.s::after{content:"";position:absolute;inset:8%;border-radius:22%;box-shadow:0 0 0 3px var(--tb-hi),inset 0 0 0 99px color-mix(in srgb,var(--tb-hi) 35%,transparent);pointer-events:none}
+.ac.s::after{content:"";position:absolute;inset:8%;border-radius:22%;box-shadow:0 0 0 3px var(--tb-sel),inset 0 0 0 99px color-mix(in srgb,var(--tb-sel) 35%,transparent);pointer-events:none}
 .ac.w{outline:3px solid #FF4757;outline-offset:-3px;z-index:1}
 .ac .an{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(min(88vw,420px) / var(--n) * .5);color:var(--tb-wallink);pointer-events:none}
 .ac.mn.ok .an{color:#9BE7A8}
