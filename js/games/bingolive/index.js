@@ -211,8 +211,8 @@ function finPartida(bingo) {
   hud(); botones(); parar();
   if (bingo) api.aviso('🏆 ¡Bingo! Fin de la partida.'); else api.aviso('Ya han salido las 90 bolas.');
 }
-function nuevaPartida() {
-  if (S.n > 0 && !S.bingo && S.n < 90 && !api.confirmar('¿Empezar una partida nueva? Se pierden las bolas sacadas.')) return;
+async function nuevaPartida() {
+  if (S.n > 0 && !S.bingo && S.n < 90 && !await api.confirmar('¿Empezar una partida nueva? Se pierden las bolas sacadas.')) return;
   parar(); S = nueva(); guardar(); ocupado = false;
   if (V) V.reiniciar(); hud(); botones(); programar();
 }

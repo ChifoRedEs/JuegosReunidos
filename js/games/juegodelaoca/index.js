@@ -37,7 +37,7 @@ export async function mount(r, a) {
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4 && [1, 2].includes(c0.dados)) cfg = { ...cfg, ...c0, jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; empezar(); },
     salir: () => { clearTimeout(timer); anim = false; api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
@@ -101,7 +101,7 @@ function pintar3D() {
       turno: j === (anim ? animJ : S.turno) && (S.fase === 'tirar' || anim), mueve: vis[j] != null };
   }) });
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; quitarDado(); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); anim = false; quitarDado(); api.borrar(); setup(); }
 function empezar() {
   const jugadores = cfg.jug.map(([nombre, t], k) => ({ nombre: nombre.trim() || O.NOMBRES_COLOR[k], cpu: t === 'c', color: k, t })).filter(j => j.t !== 'n');
   if (jugadores.length < 2) return;

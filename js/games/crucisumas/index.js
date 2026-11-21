@@ -89,7 +89,7 @@ const hayProgreso = () => S && !completo(S) && S.cur.some(Boolean);
 async function nueva(n, dif, forzar = false, cerrar = false, reto = false) {
   if (ocupado) return;
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(completo(S) ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un panel nuevo? Perderás el actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar un panel nuevo? Perderás el actual.')) return;
   ocupado = true; const tok = ++serie; if (crono) crono.detener();
   $('#kaMsg').className = 'msg'; $('#kaMsg').textContent = '🧮 Generando un panel con solución única…';
   const semilla = reto ? `${api.reto.fecha()}:kakuro` : null;

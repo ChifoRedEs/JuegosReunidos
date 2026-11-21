@@ -208,14 +208,14 @@ function finDeMano(restaurada) {
 function siguienteMano() { M.siguienteMano(S); $('#dmFin').innerHTML = ''; sel = null; pista = null; anim = true; medir(); pintar(); guardar(); siguiente(); }
 
 /* ---------- entrada ---------- */
-function clic(e) {
+async function clic(e) {
   const x = e.target.closest('.dmx'); if (x) return tocarFicha(+x.dataset.i);
   const ext = e.target.closest('.ext.obj'); if (ext) return elegirLado(ext.dataset.end);
   const l = e.target.closest('[data-lado]'); if (l) return elegirLado(l.dataset.lado);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) { cfg[d.cfg] = num[d.cfg] ? +d.v : d.v; if (d.cfg === 'modo' && d.v === 'parejas') cfg.n = 4; cfg = M.normalizar(cfg); api.setPref('cfg', cfg); return setup(); }
   const a = d.ac;
-  if (a === 'jugar') { if (S && S.ganador === null && S.cadena.length > 2 && !api.confirmar('¿Empezar una partida nueva y abandonar la actual?')) return; jugar(); }
+  if (a === 'jugar') { if (S && S.ganador === null && S.cadena.length > 2 && !await api.confirmar('¿Empezar una partida nueva y abandonar la actual?')) return; jugar(); }
   else if (a === 'volver') armar(); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
   else if (a === 'robar') { if (turnoHumano() && M.puedeRobar(S, 0) && !pausado) ejecutar(0, { t: 'robar' }); }
   else if (a === 'pista') darPista(); else if (a === 'sigmano') siguienteMano();

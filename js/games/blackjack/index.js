@@ -54,7 +54,7 @@ function pintarCuenta() {
   el.innerHTML = `<div class="bjc"><span>Cuenta<b>${f(rc)}</b></span><span>Cuenta real<b>${f(t)}</b></span><span>Barajas por salir<b>${f(Math.round(mazos * 10) / 10)}</b></span></div><p class="note">${lectura}</p>`;
 }
 function alternarConsejo() { consejoOn = !consejoOn; api.setPref('consejo', consejoOn); pintar(); }
-function reiniciar(sinPreguntar) { if (sinPreguntar !== true && !api.confirmar('¿Volver a 1000 fichas y barajar de nuevo?')) return; S = BJ.nuevoEstado(); regRonda = 0; prev = { banca: 0, manos: [] }; pintar(); guardar(); }
+async function reiniciar(sinPreguntar) { if (sinPreguntar !== true && !await api.confirmar('¿Volver a 1000 fichas y barajar de nuevo?')) return; S = BJ.nuevoEstado(); regRonda = 0; prev = { banca: 0, manos: [] }; pintar(); guardar(); }
 
 /* ---------- pintado ---------- */
 const totTxt = c => { const { t, suave } = BJ.total(c); return suave && t <= 21 ? `${t - 10}/${t}` : String(t); };

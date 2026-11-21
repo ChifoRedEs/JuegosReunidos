@@ -191,12 +191,12 @@ function tecla(e) {
   const d = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -S.cols, ArrowDown: S.cols }[e.key]; if (!d) return;
   e.preventDefault(); const j = i + d; if (j >= 0 && j < cs.length) cs[j].focus();
 }
-function clic(e) {
+async function clic(e) {
   const c = e.target.closest('.mrc'); if (c) return tocar(+c.dataset.i);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) { cfg[d.cfg] = d.v; api.setPref('cfg', cfg); return setup(); }
   const a = d.ac;
-  if (a === 'jugar') { if (S && !S.done && S.movs && !api.confirmar('¿Empezar una partida nueva y abandonar la actual?')) return; jugar(); }
+  if (a === 'jugar') { if (S && !S.done && S.movs && !await api.confirmar('¿Empezar una partida nueva y abandonar la actual?')) return; jugar(); }
   else if (a === 'volver') armar();
   else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'vistazo') vistazo();
 }

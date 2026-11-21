@@ -36,7 +36,7 @@ function verEstad() {
     <tr><td>Mejor mano enseñada</td><td>${esc(E.mejorTxt || '–')}</td></tr></table>
     <div class="bar"><button class="btn danger" data-borrarest>Borrar estadísticas</button></div>` : '<p>Juega unas manos y aquí verás tus estadísticas.</p>');
   const b = m && m.cuerpo.querySelector('[data-borrarest]');
-  if (b) b.addEventListener('click', () => { if (api.confirmar('¿Borrar tus estadísticas de Póker cubierto?')) { api.setPref('estad', {}); m.cerrar(); api.aviso('Estadísticas borradas'); } });
+  if (b) b.addEventListener('click', async () => { if (await api.confirmar('¿Borrar tus estadísticas de Póker cubierto?')) { api.setPref('estad', {}); m.cerrar(); api.aviso('Estadísticas borradas'); } });
 }
 
 /* ---------- validación / resumen ---------- */
@@ -60,7 +60,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null);
   if (c0 && c0.bots >= 1 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel, modo: c0.modo === 'libre' ? 'libre' : 'torneo', ante: P.ANTE_LIBRE[c0.ante] ? c0.ante : 'baja', apertura: P.APERTURA[c0.apertura] ? c0.apertura : 'libre' };
   root.addEventListener('click', clic); root.addEventListener('input', alMover);
-  api.barra({ nueva: () => { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !await api.confirmar('¿Abandonar el torneo actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); if (S && S.modo === 'libre' && S.fase !== 'terminado') levantarse(true); else api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'terminado') bucle(); },
@@ -93,12 +93,12 @@ function armar() {
     <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="rank">Ranking</button></div>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
 }
-function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
-function levantarse(forzar) {
+async function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !await api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
+async function levantarse(forzar) {
   if (!S || S.modo !== 'libre') return;
-  if (!forzar && S.turno >= 0 && !api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
+  if (!forzar && S.turno >= 0 && !await api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
   const n = P.neto(S);
-  if (!forzar && !api.confirmar(`¿Levantarte de la mesa? Balance: ${n >= 0 ? '+' : ''}${n} fichas.`)) return;
+  if (!forzar && !await api.confirmar(`¿Levantarte de la mesa? Balance: ${n >= 0 ? '+' : ''}${n} fichas.`)) return;
   clearTimeout(timer);
   if (S.mano > 0 && !S.reg) { S.reg = true; api.registrar({ res: n > 0 ? 'victoria' : n < 0 ? 'derrota' : 'tablas', variante: `Partida libre · ${NIVEL[S.nivel]}` }); }
   S.fase = 'terminado'; S.turno = -1; guardar();

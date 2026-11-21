@@ -337,14 +337,14 @@ function teclaAbajo(e) {
   else if (k === 'p' || k === 'P' || k === 'Escape') { if (S.fase === 'jugar' || S.fase === 'listo') pausar(); else tocar(); }
 }
 function teclaArriba(e) { if (e.key === 'ArrowLeft' || e.key === 'a') teclas.izq = false; if (e.key === 'ArrowRight' || e.key === 'd') teclas.der = false; }
-function clic(e) {
+async function clic(e) {
   const b = e.target.closest('button,[data-ac]'); if (!b) return; const d = b.dataset;
   if (d.cfg) { cfg[d.cfg] = d.cfg === 'nivel' ? +d.v : d.v; api.setPref('cfg', cfg); return setup(); }
   if (d.pin != null && ed) { ed.pincel = d.pin; return pintarEditor(); }
   const a = d.ac;
   if (a === 'editar') return editar(+d.i);
   if (a === 'jugarmio') { const n = misNiveles()[+d.i]; if (n) jugarPropio(n); return; }
-  if (a === 'borrarmio') { const mis = misNiveles(); if (mis[+d.i] && api.confirmar(`¿Borrar «${mis[+d.i].nombre}»?`)) { mis.splice(+d.i, 1); api.setPref('misNiveles', mis); setup(); } return; }
+  if (a === 'borrarmio') { const mis = misNiveles(); if (mis[+d.i] && await api.confirmar(`¿Borrar «${mis[+d.i].nombre}»?`)) { mis.splice(+d.i, 1); api.setPref('misNiveles', mis); setup(); } return; }
   if (ed) {
     if (a === 'espejo') { ed.espejo = !ed.espejo; return pintarEditor(); }
     if (a === 'vaciar') { ed.filas = ed.filas.map(f => f.map(() => '.')); return pintarEditor(); }

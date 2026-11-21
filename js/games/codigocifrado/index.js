@@ -233,7 +233,7 @@ function tecla(e) {
   else if (e.key === 'Enter') { e.preventDefault(); comprobar(); }
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); const d = e.key === 'ArrowLeft' ? -1 : 1; sel = ((sel < 0 ? (d > 0 ? -1 : 0) : sel) + d + S.pos) % S.pos; pintar(); }
 }
-function clic(e) {
+async function clic(e) {
   const sl = e.target.closest('[data-slot]'); if (sl) return tocarSlot(+sl.dataset.slot);
   const pc = e.target.closest('[data-col]'); if (pc) return poner(+pc.dataset.col);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
@@ -245,11 +245,11 @@ function clic(e) {
     return setup();
   }
   const a = d.ac;
-  if (a === 'jugar') { if (S && !S.done && (S.jug.length || S.sec) && !api.confirmar('¿Empezar una partida nueva y abandonar la actual?')) return; jugar(); }
+  if (a === 'jugar') { if (S && !S.done && (S.jug.length || S.sec) && !await api.confirmar('¿Empezar una partida nueva y abandonar la actual?')) return; jugar(); }
   else if (a === 'volver') armar();
   else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
   else if (a === 'comprobar') comprobar(); else if (a === 'borrar') borrar(); else if (a === 'pista') pedirPista();
-  else if (a === 'nueva') { if (S && !S.done && S.jug.length && !api.confirmar('¿Abandonar esta partida?')) return; parar(); setup(); }
+  else if (a === 'nueva') { if (S && !S.done && S.jug.length && !await api.confirmar('¿Abandonar esta partida?')) return; parar(); setup(); }
 }
 function reglas() {
   api.modal('Código Cifrado', `<ul><li>Hay un <b>código secreto</b> de 3 a 6 bolas de colores. En <b>🔍 Tú adivinas</b> lo esconde la máquina y tienes un número limitado de intentos para descubrirlo.</li>

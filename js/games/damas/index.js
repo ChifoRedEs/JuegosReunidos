@@ -90,7 +90,7 @@ export async function mount(root, a) {
     { texto: 'Nueva partida', accion: () => nueva(C.regla, C.nivel) },
     { texto: 'Deshacer jugada', accion: deshacer },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() },
-    { texto: 'Reiniciar marcador', accion: () => { if (!api.confirmar('¿Poner el marcador a cero?')) return; marc = { w: 0, b: 0, t: 0 }; api.setPref('marc', marc); pintar(); }, peligro: true },
+    { texto: 'Reiniciar marcador', accion: async () => { if (!await api.confirmar('¿Poner el marcador a cero?')) return; marc = { w: 0, b: 0, t: 0 }; api.setPref('marc', marc); pintar(); }, peligro: true },
     { texto: 'Reglamento', accion: reglamento },
   ]);
   if (g) { C = { ...g, ruta: null }; construirTablero(); C.jug = jugadas(C.b, C.turn, R()); if (!C.over) comprobarFin(); }
@@ -113,8 +113,8 @@ export function unmount() {
 
 /* ---------- partida ---------- */
 const hayProgreso = () => C && !C.over && C.hist.length > 0;
-function nueva(regla, nivel, forzar = false) {
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+async function nueva(regla, nivel, forzar = false) {
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   clearTimeout(timer); pensando = false; anim = null; turnoIA++;
   C = { b: tableroInicial(REGLAS[regla]), turn: 'w', regla, nivel, over: false, res: null, ultimo: null, sp: 0, reps: {}, hist: [], ruta: null, reg: false };
   construirTablero(); if (m3 && tn3 !== R().n) { cerrar3D(); const h = $('#dm3d'); if (h) { h.innerHTML = ''; h.hidden = true; } const tb = $('#dmTab'); if (tb) tb.hidden = false; activar3D(); } C.reps[clavePos(C.b, 'w')] = 1; C.jug = jugadas(C.b, 'w', R());

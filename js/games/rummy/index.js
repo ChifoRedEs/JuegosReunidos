@@ -45,7 +45,7 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; } else S = null;
   root.addEventListener('click', clic);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
@@ -103,7 +103,7 @@ async function iniciar3D() {
     V3 = v; v.recolor(); if (S) pintar();
   } catch (e) { console.error(e); if (t === tok3 && root && S) { forzar2d = true; armar(); pintar(); } }
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   api.setPref('cfg', cfg);
   const jugadores = [{ nombre: 'Tú', cpu: false }, ...Array.from({ length: cfg.rivales }, (_, k) => ({ nombre: cfg.rivales === 1 ? 'CPU' : `CPU ${k + 1}`, cpu: true }))];

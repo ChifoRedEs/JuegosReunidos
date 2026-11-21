@@ -230,9 +230,9 @@ function deshacer() {
   if (!S || S.done || andando || !S.hist.length) return;
   const [c, j, m, e] = S.hist.pop(); S.cajas = c; S.jugador = j; S.movs = m; S.empujes = e; api.sonido('click'); pintar(); guardar();
 }
-function reiniciar() {
+async function reiniciar() {
   if (!S || andando) return;
-  if (S.movs && !S.done && !api.confirmar('¿Volver a empezar el nivel?')) return;
+  if (S.movs && !S.done && !await api.confirmar('¿Volver a empezar el nivel?')) return;
   S.cajas = L.cajas.slice(); S.jugador = L.jugador; S.hist = []; S.movs = 0; S.empujes = 0; S.done = false; S.pistas = 0; pintar(); guardar();
 }
 // Pista: el resolvedor (en un Worker) busca la solución desde la posición actual y hace por ti el siguiente empuje

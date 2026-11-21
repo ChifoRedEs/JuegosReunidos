@@ -38,7 +38,7 @@ export async function mount(r, a) {
   tk = crearTeclado({ filas: FILAS, borrar: true, alPulsar: tecla, titulo: 'Ruleta Millonaria' });
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', teclaPanel);
   onKey = teclado; document.addEventListener('keydown', onKey);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/palabras'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin' && !girando) bucle(); },
@@ -67,7 +67,7 @@ function setup() {
     <p class="note">${n < 1 ? 'Elige al menos un jugador.' : n === 1 ? 'Un solo jugador: juegas para hacer tu mejor marca.' : `${n} jugadores por turnos en este dispositivo.`}</p>`;
 }
 const COL = ['#FF4757', '#2F6BFF', '#12B76A'];
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   const jugadores = cfg.jug.filter(j => j[1] !== 'n').map(([nombre, t]) => ({ nombre: nombre.trim() || 'Jugador', cpu: t === 'c' }));
   if (!jugadores.length) return;

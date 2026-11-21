@@ -85,7 +85,7 @@ export async function mount(root, a) {
   zoomN = ZOOMS.includes(+api.pref('zoom', 1)) ? +api.pref('zoom', 1) : 1;
   root.addEventListener('pointerup', dobleToque);
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('change', alCambiar);
-  api.barra({ nueva: () => { if (P && P.phase !== 'over' && !api.confirmar('¿Abandonar la partida actual?')) return; iniciarPartida(); },
+  api.barra({ nueva: async () => { if (P && P.phase !== 'over' && !await api.confirmar('¿Abandonar la partida actual?')) return; iniciarPartida(); },
     salir: () => { clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false; P = null; api.borrar(); modo = 'setup'; location.hash = '#/cat/tablero'; },
     pausar: () => { clearTimeout(timer); },
     reanudar: () => { if (P && P.phase !== 'over') drive(); },
@@ -167,8 +167,8 @@ function animar(info, fin) {
 }
 
 /* ---------- pantallas ---------- */
-function nuevaSetup() {
-  if (P && P.phase !== 'over' && !api.confirmar('¿Abandonar la partida actual?')) return;
+async function nuevaSetup() {
+  if (P && P.phase !== 'over' && !await api.confirmar('¿Abandonar la partida actual?')) return;
   clearTimeout(timer); clearInterval(ivDado); clearInterval(ivAnim); rodando = false; P = null; api.borrar(); modo = 'setup'; rSetup();
 }
 function rSetup() {

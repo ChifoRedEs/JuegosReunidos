@@ -85,7 +85,7 @@ const hayProgreso = () => S && !S.done && S.cur.some((v, i) => v && !S.given[i])
 async function nuevo(nivel, forzar = false, reto = false) {
   if (ocupado) return;
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un Sudoku nuevo? Perderás la partida actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar un Sudoku nuevo? Perderás la partida actual.')) return;
   ocupado = true; crono.detener();
   $('#sdMsg').textContent = 'Generando tablero…'; $('#sdMsg').className = 'msg';
   await esperar(30);
@@ -97,8 +97,8 @@ async function nuevo(nivel, forzar = false, reto = false) {
   $('#sdCrono').textContent = '0:00';
   pintar(); guardar();
 }
-function reiniciar() {
-  if (!S || S.done || !api.confirmar('¿Borrar todo lo que has escrito en este tablero?')) return;
+async function reiniciar() {
+  if (!S || S.done || !await api.confirmar('¿Borrar todo lo que has escrito en este tablero?')) return;
   push(); S.cur = S.cur.map((v, i) => S.given[i] ? v : 0); S.notas.fill(0); malas = new Set(); pintar(); guardar();
 }
 function guardar() {

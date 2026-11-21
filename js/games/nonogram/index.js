@@ -90,7 +90,7 @@ async function nuevo(n, diff, forzar = false, nuevoTipo = tipo, reto = false) {
   if (ocupado) return;
   if (reto && N && N.reto === api.reto.fecha()) { api.aviso(N.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
   if (reto) nuevoTipo = 'azar';
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un panel nuevo? Perderás el progreso actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar un panel nuevo? Perderás el progreso actual.')) return;
   ocupado = true; if (crono) crono.detener();
   const m = $('#ngMsg'); m.className = 'msg'; m.textContent = 'Generando panel…';
   await esperar(20);
@@ -109,8 +109,8 @@ async function nuevo(n, diff, forzar = false, nuevoTipo = tipo, reto = false) {
   crono = new Cronometro(crono ? crono.alTick : () => {}, 0);
   construir(); arrancar(); pintar(); guardar();
 }
-function borrar() {
-  if (!N || N.done || !hayProgreso() || !api.confirmar('¿Borrar todas las casillas?')) return;
+async function borrar() {
+  if (!N || N.done || !hayProgreso() || !await api.confirmar('¿Borrar todas las casillas?')) return;
   hist.push(copia(N.cur)); N.cur = vacia(N.n); pintar(); guardar();
 }
 function deshacer() {

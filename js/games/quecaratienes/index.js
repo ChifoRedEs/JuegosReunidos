@@ -36,7 +36,7 @@ export async function mount(r, a) {
   if (g) { S = g.s; reg = g.reg; } else S = null;
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   api.barra({
-    nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; empezar(); },
+    nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; empezar(); },
     salir: () => { parar(); api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => { clearTimeout(timer); pensando = false; },
     reanudar: () => bucle(),
@@ -77,7 +77,7 @@ function setup() {
     <p class="note">${cfg.modo === 'dos' ? 'Dos jugadores en este dispositivo: entre turnos aparece una pantalla para pasar el móvil sin ver el tablero del otro. ' : ''}${cfg.conjunto === 'azar' ? 'Cada partida estrena caras nuevas, generadas al azar.' : 'Las 30 caras clásicas del juego (con menos caras se eligen al azar entre ellas).'}</p>
     ${pieMenu({})}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; parar(); api.borrar(); setup(); }
 function empezar() {
   parar(); api.setPref('cfg', cfg);
   S = M.crear(cfg); reg = false; sel = -1; arriesgando = false;

@@ -73,7 +73,7 @@ const hayProgreso = () => S && quedan(S) > 0 && S.hist.length > 0;
 async function nueva(id, forzar = false, cerrar = false, reto = false) {
   if (ocupado) return;
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(quedan(S) ? 'Ya estás jugando el reto de hoy' : 'Ya has completado el reto de hoy'); return; }
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   ocupado = true; if (crono) crono.detener();
   $('#mjMsg').textContent = 'Repartiendo fichas…'; await esperar(30);
   const p = reto ? api.reto.generar(() => generar(id)) : generar(id);

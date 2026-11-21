@@ -59,11 +59,11 @@ function empezar(reto = null) {
   if (reto) S.datos = api.reto.generar(() => [C.letrasAlAzar(Math.random), C.numerosAlAzar(Math.random), C.letrasAlAzar(Math.random), C.numerosAlAzar(Math.random)]);
   prepararRonda(); pintar(); guardar();
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && S.ronda && !api.confirmar('¿Empezar una partida nueva?')) return; empezar(); }
-function reto() {
+async function nuevaSetup() { if (S && S.fase !== 'fin' && S.ronda && !await api.confirmar('¿Empezar una partida nueva?')) return; empezar(); }
+async function reto() {
   if (api.reto.hecho()) { api.aviso('Ya has completado el reto de hoy'); return; }
   if (S && S.reto === api.reto.fecha() && S.fase !== 'fin') return;
-  if (S && S.fase !== 'fin' && S.ronda && !api.confirmar('¿Dejar la partida actual y jugar el reto del día?')) return;
+  if (S && S.fase !== 'fin' && S.ronda && !await api.confirmar('¿Dejar la partida actual y jugar el reto del día?')) return;
   empezar(api.reto.fecha());
 }
 // Ronda nueva: en el reto los datos ya están sorteados; si no, se eligen letras / se sacan números

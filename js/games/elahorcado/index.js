@@ -62,7 +62,7 @@ async function nueva(nivel, tema, forzar = false) {
     if (!asp) return;                                              // se ha salido del juego mientras cargaba
     if (!ok) { api.aviso('No se pudo cargar el diccionario (sin conexión)'); tema = 'mezcla'; }
   }
-  if (!forzar && S && !S.fin && S.usadas.length && !api.confirmar('¿Cambiar de palabra? Perderás la partida actual.')) return;
+  if (!forzar && S && !S.fin && S.usadas.length && !await api.confirmar('¿Cambiar de palabra? Perderás la partida actual.')) return;
   if (!temasDe(nivel).some(t => t.id === tema)) tema = 'mezcla';
   const prev = S ? S.ultimas.slice() : [], marc = S ? S.marcador : { g: 0, p: 0, racha: 0 }, w = elegir(nivel, tema, prev);
   S = { nivel, tema, palabra: w.palabra, pista: w.pista, usadas: '', fallos: 0, pistaVista: NIVELES[nivel].pista === 'visible', letraGratis: false, fin: null, reg: false, ultimas: [...prev, w.palabra].slice(-15), marcador: marc };
@@ -70,7 +70,7 @@ async function nueva(nivel, tema, forzar = false) {
 }
 // Dos jugadores en el mismo móvil: uno escribe la palabra secreta (y una pista opcional) y el otro la adivina
 async function dosJugadores() {
-  if (S && !S.fin && S.usadas.length && !api.confirmar('¿Empezar una partida de 2 jugadores? Perderás la palabra actual.')) return;
+  if (S && !S.fin && S.usadas.length && !await api.confirmar('¿Empezar una partida de 2 jugadores? Perderás la palabra actual.')) return;
   const p = await api.pedirTexto('👥 Palabra secreta', { tipo: 'password', max: 30, nota: 'Jugador 1: escribe la palabra o frase que tendrá que adivinar el otro (que no mire). Solo letras, espacios y guiones.', placeholder: 'Palabra secreta' });
   if (p == null) return;
   const palabra = p.trim().replace(/\s+/g, ' ');

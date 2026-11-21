@@ -24,7 +24,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null); if (c0 && [6, 9].includes(c0.nCat) && ['opciones', 'escribir'].includes(c0.modo) && T.NIVEL[c0.nivel] && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...c0, banco: T.BANCOS[c0.banco] ? c0.banco : 'mix', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'c']) };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('keydown', alTecla);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/palabras'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
@@ -51,7 +51,7 @@ function armar() {
   root.innerHTML = `<div class="tvj" id="tvJ"></div><svg class="tvb" id="tvB" viewBox="0 0 320 320" role="img" aria-label="Tablero circular del Trivia Quesitos"></svg><div class="tvpanel" id="tvP"></div><ul class="tvlog" id="tvL"></ul>
     <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   const jugadores = cfg.jug.map(([nombre, t]) => ({ nombre: nombre.trim() || 'Jugador', cpu: t === 'c', activo: t !== 'n' })).filter(j => j.activo);
   api.setPref('cfg', cfg); S = T.crear({ nCat: cfg.nCat, modo: cfg.modo, nivel: cfg.nivel, banco: cfg.banco, jugadores }); reg = false; armar(); pintar(); guardar(); bucle();

@@ -32,7 +32,7 @@ export async function mount(r, a) {
   tk = crearTeclado({ filas: ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM', '⏩✔'], borrar: true, alPulsar: tecla, titulo: 'El Rosco · escribe tu respuesta' });
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
   onVis = () => { ultimo = performance.now(); }; document.addEventListener('visibilitychange', onVis);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar este rosco?')) return; parar(); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar este rosco?')) return; parar(); empezar(); },
     salir: () => { parar(); api.borrar(); location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['solo', 'Contrarreloj'], ['cpu', 'Duelo contra la CPU']] }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(R.NIVEL) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: R.TIEMPOS.map(t => [t, `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]) }], aplicar: v => { Object.assign(cfg, v); parar(); empezar(); } } });
   api.menu([{ texto: 'Nuevo rosco', accion: nuevaSetup }, { texto: '🏳️ Plantarse', accion: plantarse }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
@@ -66,7 +66,7 @@ function armar() {
     <ul class="rclog" id="rcLog"></ul>
     <div class="bar"><button class="btn" data-ac="plantarse">🏳️ Plantarse</button></div>${api.barraHtml()}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar este rosco?')) return; parar(); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar este rosco?')) return; parar(); api.borrar(); setup(); }
 function empezar() {
   api.setPref('cfg', cfg);
   const vistas = api.pref('vistas', []);
@@ -130,9 +130,9 @@ function pasa() {
   if (!R.pasapalabra(S)) { api.aviso('Es la única letra que te queda: ¡responde!'); return; }
   texto = ''; api.sonido('click'); guardar(); siguienteTurno();
 }
-function plantarse() {
+async function plantarse() {
   if (!S || S.fase !== 'jugar' || !miTurno()) return;
-  if (!api.confirmar('¿Plantarte? Las letras que te quedan se darán por no contestadas.')) return;
+  if (!await api.confirmar('¿Plantarte? Las letras que te quedan se darán por no contestadas.')) return;
   R.plantarse(S); texto = ''; guardar(); if (S.fase === 'fin') { pintar(); return cierre(); } siguienteTurno();
 }
 function tecla(k) {

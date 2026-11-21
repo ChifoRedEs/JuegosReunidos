@@ -26,10 +26,10 @@ let barSel = '';
 function alinearBaraja() {                                              // partida guardada de una baraja distinta a la elegida: manda la partida
   asegurarBaraja(); if (S && familiaDe(asp) !== claveValida(S.baraja)) asp.elegir('barajasol', S.baraja === 'es' ? 'esp-01' : 'azar');
 }
-function alCambiarAsp() {
+async function alCambiarAsp() {
   if (!S || !crono) return;
   if (familiaDe(asp) !== claveValida(S.baraja)) {
-    if (hayProgreso() && !api.confirmar('Cambiar entre baraja francesa y española empieza una partida nueva y perderás la actual. ¿Continuar?')) return { volver: { barajasol: barSel } };
+    if (hayProgreso() && !await api.confirmar('Cambiar entre baraja francesa y española empieza una partida nueva y perderás la actual. ¿Continuar?')) return { volver: { barajasol: barSel } };
     asegurarBaraja(); nueva(S.palos, true);
   }
   barSel = asp.elegida('barajasol');
@@ -71,8 +71,8 @@ function guardar() { if (!S) return; const d = { s: S, hist: hist.slice(-40), t:
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S.mov > 0 && !K.gana(S);
-function nueva(palos, forzar = false) {
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+async function nueva(palos, forzar = false) {
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   asp.sortear(); api.setPref('palos', palos);
   crono.detener(); crono = new Cronometro(crono.alTick, 0);
   S = K.nuevo(palos, familiaDe(asp)); hist = []; reg = false; pst = null; avisoBloq = false;

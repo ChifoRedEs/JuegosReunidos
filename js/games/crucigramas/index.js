@@ -89,7 +89,7 @@ const hayProgreso = () => S && !S.done && S.cur.some(Boolean);
 async function nueva(tema, nivel, forzar = false, reto = false) {
   if (ocupado) return;
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un crucigrama nuevo? Perderás el actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar un crucigrama nuevo? Perderás el actual.')) return;
   if (tema !== 'mezcla' && !Object.hasOwn(BANCOS, tema)) tema = 'animales';
   ocupado = true; if (crono) crono.detener();
   await esperar(20);

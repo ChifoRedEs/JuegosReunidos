@@ -149,7 +149,7 @@ async function importarPGN() {
   if (txt == null || !txt.trim()) return;
   const r = dePGN(txt);
   if (r.error) { api.modal('No se pudo importar', `<p>${esc(r.error)}</p>`); return; }
-  if (eAct && eAct.n && !eAct.fin && !api.confirmar('¿Cambiar la partida actual por la importada?')) return;
+  if (eAct && eAct.n && !eAct.fin && !await api.confirmar('¿Cambiar la partida actual por la importada?')) return;
   rev = null; ctxR.ponerEstado(r.e, { limpiar: true });
   api.aviso(`Partida importada: ${r.e.n} jugadas${r.e.fin ? ' · ' + r.e.fin.motivo : ''}`);
 }

@@ -41,7 +41,7 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   root.addEventListener('click', clic); onKey = teclado; document.addEventListener('keydown', onKey);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
@@ -93,7 +93,7 @@ function adoptar3D(tipo, p, opts) {
   const ph = $('#fl3dph'); if (!ph || !hostEl) return;
   ph.replaceWith(hostEl); V3.recolor(); V3.fichas(estilo(asp.valores)); V3.pintar(datos3D(tipo, p, opts)); V3.E.redimensionar(); V3.E.marcar();
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   api.setPref('cfg', cfg); S = F.crear(cfg); reg = false; sel = 0; vertical = false; pista = -1;
   armar(); pintar(); guardar();

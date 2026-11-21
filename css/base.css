@@ -601,3 +601,4 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 :root:root:root .juego[data-tablero="neon2"]{--tb-sel:#7CFF3A;--tb-selink:#0B1426}  /* Magenta → verde lima */
 :root:root:root .juego[data-tablero="neon3"]{--tb-sel:#FF2E7A;--tb-selink:#fff}     /* Lima (verde) → rojo rosado */
 :root:root:root .juego[data-tablero="neon4"]{--tb-sel:#3D8BFF;--tb-selink:#fff}     /* Naranja → azul */
+.confirma{font:800 18px/1.35 var(--f-titulo);text-align:center;margin:6px 4px 0;text-wrap:balance}

@@ -58,8 +58,8 @@ function iniciar(n, g) {
   if (g) { S.bolaN = g.bolaN; S.pts = g.pts; S.mult = g.mult; S.luces = g.luces.slice(); }
   record = api.record(variante(n)) || 0; $('#pbOver').hidden = true; hudAnt = ''; hud();
 }
-function nueva(forzar, n) {
-  if (!forzar && S && S.fase !== 'fin' && S.pts > 0 && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+async function nueva(forzar, n) {
+  if (!forzar && S && S.fase !== 'fin' && S.pts > 0 && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   iniciar(n || S.bolas, null); guardar(); pausado = false; if (!raf) bucle0();
 }
 function pausar() { pausado = true; cargando = false; carga = 0; if (S) S.carga = 0; M.aleta(S, 0, false); M.aleta(S, 1, false); }

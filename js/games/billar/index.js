@@ -88,7 +88,7 @@ function setup() {
     <div class="bar"><span class="lbl">Ayuda</span>${seg('guia', Object.entries(GUIA))}</div>
     ${pieMenu({})}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; serie++; anim = null; api.borrar(); S = null; setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; serie++; anim = null; api.borrar(); S = null; setup(); }
 function empezar() {
   api.setPref('cfg', cfg); serie++; anim = null;
   S = B.crear({ modo: cfg.modo, nivel: cfg.nivel, jugadores: cfg.rival === 'cpu' ? [{ nombre: 'Tú', cpu: false }, { nombre: 'CPU', cpu: true }] : [{ nombre: 'Jugador 1' }, { nombre: 'Jugador 2' }] });

@@ -72,7 +72,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   onKey = tecla; document.addEventListener('keydown', onKey);
   onVis = () => { if (document.hidden) guardar(); }; document.addEventListener('visibilitychange', onVis);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && S.hist.length && !api.confirmar('¿Abandonar la partida actual?')) return; empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && S.hist.length && !await api.confirmar('¿Abandonar la partida actual?')) return; empezar(); },
     salir: () => { api.borrar(); S = null; serie++; location.hash = '#/cat/palabras'; },
     etiqueta: 'Nueva partida',
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'jug', titulo: 'Jugadores', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'rival', titulo: 'Rivales', opciones: [['cpu', '🤖 CPU'], ['personas', '👥 Personas']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.rival === 'cpu', opciones: Object.entries(M.NIVELES) }], aplicar: v => { Object.assign(cfg, v); empezar(); } } });
@@ -100,7 +100,7 @@ function setup() {
     ${pieMenu({})}
     ${dicOk === false ? '<p class="msg mal">No se ha podido cargar el diccionario. Conéctate a internet una vez para descargarlo (luego funciona sin conexión).</p>' : ''}</div>`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && S.hist.length && !api.confirmar('¿Abandonar la partida actual?')) return; api.borrar(); S = null; setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && S.hist.length && !await api.confirmar('¿Abandonar la partida actual?')) return; api.borrar(); S = null; setup(); }
 function empezar() {
   api.setPref('cfg', cfg); serie++;
   const n = cfg.jug, jugadores = cfg.rival === 'cpu'
@@ -331,7 +331,7 @@ function jugar() {
   api.sonido(ev.bingo ? 'ganar' : 'ok'); if (ev.bingo) api.vibrar([40, 30, 40]);
   trasTurno();
 }
-function pasar() { if (!jugadorHumano() || !api.confirmar('¿Pasar el turno sin jugar?')) return; const j = S.jug[S.turno]; recoger(); M.pasar(S); aviso = `${j.nombre === 'Tú' ? 'Pasas' : j.nombre + ' pasa'}.`; trasTurno(); }
+async function pasar() { if (!jugadorHumano() || !await api.confirmar('¿Pasar el turno sin jugar?')) return; const j = S.jug[S.turno]; recoger(); M.pasar(S); aviso = `${j.nombre === 'Tú' ? 'Pasas' : j.nombre + ' pasa'}.`; trasTurno(); }
 function hacerCambio() {
   if (!cambio || !cambio.size) return;
   const j = S.jug[S.turno], fichas = [...cambio].map(k => j.atril[k]), n = fichas.length;

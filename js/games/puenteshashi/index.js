@@ -107,7 +107,7 @@ const hayProgreso = () => S && !S.done && (S.cur.some(Boolean) || S.marc.some(Bo
 async function nueva(dif, forzar = false, cerrar = false, reto = false) {
   if (ocupado) return;
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar un puzle nuevo? Perderás el actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar un puzle nuevo? Perderás el actual.')) return;
   ocupado = true; if (crono) crono.detener();
   $('#hsMsg').textContent = 'Preparando el archipiélago…'; await esperar(30);
   const p = reto ? api.reto.generar(() => generar(dif)) : generar(dif), n = construir(p.isl).E.length;

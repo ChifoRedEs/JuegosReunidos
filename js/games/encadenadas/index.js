@@ -36,7 +36,7 @@ export async function mount(r, a) {
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   tk = crearTeclado({ filas: ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM', '✔'], borrar: true, alPulsar: tecla, titulo: 'Encadenadas · escribe tu palabra' });
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir); onKey = teclado; document.addEventListener('keydown', onKey);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; parar(); empezar(); },
     salir: () => { parar(); api.borrar(); location.hash = '#/cat/palabras'; },
     config: { valores: () => ({ ...cfg }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', 'Contra la CPU'], ['solo', 'Solo (récord)'], ['grupo', 'En grupo']] }, { clave: 'nivel', titulo: 'Nivel', visible: v.modo === 'cpu', opciones: Object.entries(E.NIVEL) }, { clave: 'n', titulo: 'Jugadores', visible: v.modo === 'grupo', opciones: [[2, '2'], [3, '3'], [4, '4']] }, { clave: 'enlace', titulo: 'Enlazar con', opciones: Object.entries(E.ENLACES) }, { clave: 'tiempo', titulo: 'Tiempo', opciones: E.TIEMPOS.map(t => [t, t ? `${t} s` : 'Sin límite']) }], aplicar: v => { Object.assign(cfg, v); parar(); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
@@ -71,7 +71,7 @@ function armar() {
     <ul class="enlog" id="enLog"></ul>
     <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; parar(); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; parar(); api.borrar(); setup(); }
 function empezar() {
   api.setPref('cfg', cfg);
   S = E.crear({ modo: cfg.modo, nivel: cfg.nivel, enlace: cfg.enlace, tiempo: cfg.tiempo, jugadores: cfg.nombres.slice(0, cfg.n).map(n => ({ nombre: n.trim() || 'Jugador' })), aprendidas: aprendidas() });
@@ -116,9 +116,9 @@ function jugar(confirmada = false) {
   if (confirmada) { const a = aprendidas(); a.push(E.norm(texto)); api.setPref('aprendidas', [...new Set(a)].slice(-500)); }
   api.sonido('ok'); api.vibrar(15); texto = ''; duda = ''; guardar(); empezarTurno();
 }
-function nose() {
+async function nose() {
   if (!humano()) return;
-  if (!api.confirmar('¿No encuentras palabra? Perderás una vida.')) return;
+  if (!await api.confirmar('¿No encuentras palabra? Perderás una vida.')) return;
   E.fallar(S); api.sonido('error'); texto = ''; guardar(); empezarTurno();
 }
 function tecla(k) {

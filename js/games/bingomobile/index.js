@@ -130,8 +130,8 @@ function jugadores() {
 }
 
 /* ---------- partida ---------- */
-function nuevaPartida(forzar) {
-  if (!forzar && G && !G.fin && G.n > 0 && !api.confirmar('¿Empezar una partida nueva? Pierdes la actual (las apuestas no se devuelven).')) return;
+async function nuevaPartida(forzar) {
+  if (!forzar && G && !G.fin && G.n > 0 && !await api.confirmar('¿Empezar una partida nueva? Pierdes la actual (las apuestas no se devuelven).')) return;
   parar(); claim = null;
   G = Par.crear({ cpus: +val('cpus'), cartones: +val('cartones'), apuesta: +val('apuesta'), premios: val('premios') });
   const coste = Par.coste(G);

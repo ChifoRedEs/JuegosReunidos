@@ -41,6 +41,6 @@ export async function mount(r, a) {
 export function unmount() { if (root) root.removeEventListener('click', clic); root = null; }
 
 function clic(e) { if (e.target.id === 'plBtn') { datos.n++; api.sonido('click'); pintar(); guardar(); } }
-function reiniciar() { if (api.confirmar('¿Reiniciar?')) { datos = { n: 0 }; pintar(); guardar(); } }
+async function reiniciar() { if (await api.confirmar('¿Reiniciar?')) { datos = { n: 0 }; pintar(); guardar(); } }
 function guardar() { const r = resumen(datos); api.guardar(datos, r.texto, r.fin); }
 function pintar() { $('#plMsg').textContent = `Llevas ${datos.n}.`; }

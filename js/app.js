@@ -118,6 +118,17 @@ function pedirTexto(titulo, { valor = '', max = 14, nota = '', tipo = 'text', pl
     setTimeout(() => { inp.focus(); inp.select(); }, 60);
   });
 }
+// Confirmación con la hoja modal de la app (sustituye al confirm() del navegador). Devuelve una promesa: true = Aceptar, false = Cancelar / cerrar.
+function confirmar(txt) {
+  return new Promise(res => {
+    let hecho = false, cerrar;
+    const fin = v => { if (hecho) return; hecho = true; cerrar(); res(v); };
+    const ok = el('button', { class: 'btn on', type: 'button', onclick: () => fin(true) }, 'Aceptar');
+    const no = el('button', { class: 'btn', type: 'button', onclick: () => fin(false) }, 'Cancelar');
+    cerrar = hoja([el('p', { class: 'confirma' }, txt), el('div', { class: 'bar', style: 'margin-top:14px;justify-content:center' }, no, ok)], () => fin(false));
+    setTimeout(() => ok.focus(), 60);
+  });
+}
 // Compartir un texto: hoja del sistema si existe; si no, al portapapeles.
 async function compartir(texto) {
   const url = location.href.split('#')[0];
@@ -285,7 +296,7 @@ function crearApi(j, ent, mod, root) {
     record: variante => stats.record(id, variante),
     pref: (k, d) => aj.pref(id, k, d), setPref: (k, v) => aj.setPref(id, k, v),
     sonido: son.play, vibrar: son.vibrar,
-    confirmar: txt => window.confirm(txt),
+    confirmar: txt => confirmar(txt),
     aviso, modal, pedirTexto,
     compartir: texto => compartir(texto),
     titulo: t => { nombreVista = t; },
@@ -396,7 +407,7 @@ function crearApi(j, ent, mod, root) {
           const ico = g.icono ? el('span', { class: 'ap-li' }, g.icono) : o.emoji ? el('span', { class: 'ap-li' }, o.emoji) : o.sw ? el('span', { class: 'ap-lsw' }, ...o.sw.map(c => el('i', { class: 'sw', style: `background:${c}` }))) : el('span', { class: 'ap-li' }, '🎨');
           r.replaceChildren(ico, el('b', {}, g.titulo), el('small', {}, g.soloColor && o.sw ? '' : o.emoji ? o.nombre.replace(o.emoji, '').trim() || o.nombre : o.nombre));
         };
-        const elegir = (g, idO) => { elec[g.clave] = idO; if (g.defModo) elec[g.clave + '@' + modo()] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); const r = alCambiar && alCambiar({ ...vals }); if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } };
+        const elegir = (g, idO) => { elec[g.clave] = idO; if (g.defModo) elec[g.clave + '@' + modo()] = idO; delete vals[g.clave]; resolver(false); poner(); guardar(); refrescarVista(); pintarResumen(g); Promise.resolve(alCambiar && alCambiar({ ...vals })).then(r => { if (r && r.volver) { Object.assign(elec, r.volver); defs.forEach(x => { if (x.clave in r.volver) delete vals[x.clave]; }); resolver(false); poner(); guardar(); pintarResumen(g); } }); };
         // Sección única de color para varios bandos: leyenda (quién es cada color) + una sola paleta; un color elegido por un bando no puede repetirse en otro.
         const cuerpoMulti = g => {
           const slots = g.multi; let act = 0; const cont = el('div', { class: 'ap-multi' });
@@ -771,16 +782,16 @@ function vStats_(catSel = null) {
     const cerrar = hoja([el('h2', {}, `${j.icono} ${j.nombre}`), (() => { const d = el('div', { class: 'cuerpo' }); d.innerHTML = tabla(j); return d; })(), el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn on', onclick: () => cerrar() }, 'Cerrar'))]);
     const h = [...document.querySelectorAll('.modal > .hoja')].pop(); if (h) h.classList.add('hoja-img');
   }));
-  $('#stResetCat').addEventListener('click', () => {
+  $('#stResetCat').addEventListener('click', async () => {
     const nombre = CATEGORIAS[elegida] || 'esta categoría';
-    if (!confirm(`¿Borrar únicamente las estadísticas de ${nombre}? Las demás categorías se conservarán.`)) return;
+    if (!await confirmar(`¿Borrar únicamente las estadísticas de ${nombre}? Las demás categorías se conservarán.`)) return;
     const idsCategoria = new Set(JUEGOS.filter(j => j.categoria === elegida).map(j => j.id));
     const restantes = Object.fromEntries(Object.entries(stats.todas()).filter(([id]) => !idsCategoria.has(id)));
     stats.importar(restantes);
     vStats();
   });
-  $('#stResetAll').addEventListener('click', () => {
-    if (confirm('¿Borrar todas las estadísticas de todas las categorías? Esta acción no se puede deshacer.')) { stats.reiniciar(); vStats(); }
+  $('#stResetAll').addEventListener('click', async () => {
+    if (await confirmar('¿Borrar todas las estadísticas de todas las categorías? Esta acción no se puede deshacer.')) { stats.reiniciar(); vStats(); }
   });
 }
 
@@ -864,8 +875,8 @@ function vAjustes_() {
     setTimeout(estadoSinConexion, 4000);
   });
   $('#gExp').addEventListener('click', exportar);
-  $('#gBor').addEventListener('click', () => {
-    if (!confirm('¿Borrar todas las partidas guardadas en este navegador? (Las estadísticas se conservan.)')) return;
+  $('#gBor').addEventListener('click', async () => {
+    if (!await confirmar('¿Borrar todas las partidas guardadas en este navegador? (Las estadísticas se conservan.)')) return;
     JUEGOS.forEach(j => store.borrarJuego(j.id)); msgAj = { t: 'Partidas borradas.', err: false }; vAjustes();
   });
   $('#gImp').addEventListener('change', e => {

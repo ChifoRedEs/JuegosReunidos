@@ -48,10 +48,10 @@ let barSel = '';
 function alinearBaraja() {                                              // partida guardada de una baraja distinta a la elegida: manda la partida
   asegurarBaraja(); if (S && familiaDe(asp) !== claveValida(S.baraja)) asp.elegir('barajasol', S.baraja === 'es' ? 'esp-01' : 'azar');
 }
-function alCambiarAsp() {
+async function alCambiarAsp() {
   if (!S || !crono) return;
   if (familiaDe(asp) !== claveValida(S.baraja)) {
-    if (hayProgreso() && !api.confirmar('Cambiar entre baraja francesa y española empieza una partida nueva y perderás la actual. ¿Continuar?')) return { volver: { barajasol: barSel } };
+    if (hayProgreso() && !await api.confirmar('Cambiar entre baraja francesa y española empieza una partida nueva y perderás la actual. ¿Continuar?')) return { volver: { barajasol: barSel } };
     asegurarBaraja(); nueva(S.robar, S.extra, true);
   }
   barSel = asp.elegida('barajasol');
@@ -78,7 +78,7 @@ export async function mount(r, a) {
     pausar: () => { if (crono) crono.pausar(); },
     reanudar: () => { if (crono && S && !K.gana(S) && S.mov > 0) crono.iniciar(); },
     config: { valores: () => ({ robar: S.robar, extra: S.extra, gar: api.pref('garantizada', true), vegas: !!S.vegas, autor: autoAuto() }), grupos: v => [{ clave: 'robar', titulo: 'Robar', opciones: [[1, '1 carta'], [3, '3 cartas']] }, { clave: 'extra', titulo: 'Casilla extra', opciones: [[true, 'Con casilla libre'], [false, 'Sin ella']] }, { clave: 'gar', titulo: 'Reparto', opciones: [[true, '✅ Siempre con solución'], [false, '🎲 Al azar']] }, { clave: 'vegas', titulo: 'Puntuación', opciones: [[false, 'Normal'], [true, '💰 Vegas']], nota: v.vegas ? `Vegas: cada partida cuesta tantos $ como cartas tiene la baraja (52 o 40) y cada carta que subes a las bases te da 5 $. Solo puedes pasar el mazo ${K.PASADAS_VEGAS[v.robar] === 1 ? 'una vez' : K.PASADAS_VEGAS[v.robar] + ' veces'}.` : null }, { clave: 'autor', titulo: 'Auto-relleno', opciones: [[true, 'Automático'], [false, 'Solo con botón']], nota: 'Cuando no quedan cartas boca abajo y el resto puede subir solo a las bases, las cartas se colocan solas.' }], aplicar: v => { api.setPref('garantizada', v.gar); api.setPref('autorrelleno', v.autor); nueva(v.robar, v.extra, true, v.vegas); } } });
-  api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.robar, S.extra) }, { texto: '💰 Poner a cero la banca Vegas', accion: () => { if (api.confirmar('¿Poner la banca de Vegas a 0 $?')) { api.setPref('banca', 0); pintar(); } }, peligro: true }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🔍 Analizador', accion: abrirAnalizador }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
+  api.menu([{ texto: 'Nueva partida', accion: () => nueva(S.robar, S.extra) }, { texto: '💰 Poner a cero la banca Vegas', accion: async () => { if (await api.confirmar('¿Poner la banca de Vegas a 0 $?')) { api.setPref('banca', 0); pintar(); } }, peligro: true }, { texto: 'Deshacer', accion: deshacer }, { texto: 'Pista', accion: pista }, { texto: '🔍 Analizador', accion: abrirAnalizador }, { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   crono = new Cronometro(() => { if (S) { $('#klCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } }, g ? g.t : 0);
   if (S.mov > 0 && !K.gana(S)) crono.iniciar();
   pintar(); analizar(); revisarAuto();
@@ -156,7 +156,7 @@ function escAnalizador(e) { if (e.key === 'Escape') cerrarAnalizador(); }
 const hayProgreso = () => S.mov > 0 && !K.gana(S);
 async function nueva(robar, extra, forzar = false, vegas = S ? S.vegas : api.pref('vegas', false)) {
   if (repartiendo) return;
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   asp.sortear();
   cobrarVegas();
   clearInterval(auto); auto = null; clearTimeout(tAuto); crono.detener(); crono = new Cronometro(crono.alTick, 0);

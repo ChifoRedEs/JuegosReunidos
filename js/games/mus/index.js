@@ -38,7 +38,7 @@ export async function mount(r, a) {
   ord = { modo: modoPref, ids: [] }; arr = null;
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; if (g.ord) ord = g.ord; hm = g.hm || historialVacio(); } else { S = null; hm = historialVacio(); }
   root.addEventListener('click', clic); root.addEventListener('keydown', tecla);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
@@ -81,7 +81,7 @@ function armar() {
   if (arr) arr.destruir();
   arr = hacerOrdenable($('#msMano'), { sel: '.msc', alSoltar: ids => { ord = { modo: 'libre', ids }; api.sonido('click'); pintar(); guardar(); } });
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   asp.sortear();
   hm = historialVacio();
@@ -239,7 +239,7 @@ function toggleCarta(c) {
   api.sonido('click'); pintar();
 }
 function tecla(e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.c != null) { e.preventDefault(); toggleCarta(+e.target.dataset.c); } }
-function clic(e) {
+async function clic(e) {
   const k = e.target.closest('[data-c]'); if (k && S) return toggleCarta(+k.dataset.c);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) { cfg[d.cfg] = d.cfg === 'nivel' ? d.v : +d.v; return setup(); }
@@ -253,7 +253,7 @@ function clic(e) {
   else if (a === 'mus' || a === 'nomus') { if (M.decirMus(S, 0, a === 'mus')) { decir(0, a === 'mus' ? 'Mus' : 'No hay mus'); api.sonido('click'); pintar(); guardar(); bucle(); } }
   else if (a === 'descartar') { if (M.elegirDescarte(S, 0, [...selDesc])) { selDesc = new Set(); api.sonido('mover'); pintar(); guardar(); bucle(); } }
   else if (['paso', 'envido', 'ordago', 'quiero', 'noquiero'].includes(a)) {
-    if (a === 'ordago' && !api.confirmar('¿Echar un órdago? Si lo quieren, este lance decide el juego entero.')) return;
+    if (a === 'ordago' && !await api.confirmar('¿Echar un órdago? Si lo quieren, este lance decide el juego entero.')) return;
     if (accion(0, a, +d.n || 2)) { pintar(); guardar(); bucle(); }
   }
   else if (a === 'siguiente') { if (M.siguienteMano(S)) { api.sonido('click'); pintar(); guardar(); bucle(); } }

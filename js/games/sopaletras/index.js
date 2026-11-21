@@ -103,7 +103,7 @@ const hayProgreso = () => S && !completa(S) && !S.rendido && S.halladas.length >
 async function nueva(tema, nivel, forzar = false, reto = false) {
   if (ocupado) return;
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.done ? 'Ya has completado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una sopa nueva? Perderás la actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar una sopa nueva? Perderás la actual.')) return;
   if (!esTema(tema)) tema = 'animales';
   ocupado = true; if (crono) crono.detener();
   await esperar(20);
@@ -123,8 +123,8 @@ async function nueva(tema, nivel, forzar = false, reto = false) {
   
 }
 function guardar() { if (!S) return; const d = { tema: S.tema, nivel: S.nivel, n: S.n, grid: S.grid, palabras: S.palabras, halladas: S.halladas, t: S.t, pistas: S.pistas, rendido: S.rendido , reto: S.reto || null }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
-function rendirse() {
-  if (!S || completa(S) || S.rendido || !api.confirmar('¿Mostrar todas las palabras? La partida no contará en estadísticas.')) return;
+async function rendirse() {
+  if (!S || completa(S) || S.rendido || !await api.confirmar('¿Mostrar todas las palabras? La partida no contará en estadísticas.')) return;
   S.palabras.forEach((w, i) => { if (!S.halladas.some(h => h.i === i)) S.halladas.push({ i, a: w.f, b: w.f + (w.p.length - 1) * (w.d[0] * S.n + w.d[1]), r: 1 }); });
   S.rendido = true; crono.detener(); pintar(); guardar();
 }

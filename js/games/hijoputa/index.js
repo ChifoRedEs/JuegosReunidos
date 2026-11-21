@@ -57,7 +57,7 @@ function armar() {
     <div id="hpRes"></div>
     <div class="bar"><button class="btn" data-ac="reglas">📖 Reglas</button></div>${api.barraHtml()}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar() {
   asp.sortear(); api.setPref('cfg', cfg); clearTimeout(timer);
   S = H.crear({ jugadores: [{ nombre: 'Tú', cpu: false }, ...Array.from({ length: cfg.rivales }, (_, k) => ({ nombre: `CPU ${k + 1}`, cpu: true }))], nivel: cfg.nivel });

@@ -74,7 +74,7 @@ export async function mount(r, a) {
     reanudar: o => { if (o === 'salir' && !eraPausa) poner_pausa(false); },
     config: { valores: () => ({ modo: cfg.modo, nivel: cfg.nivel, n: cfg.n, mapa: cfg.mapa, tiempo: cfg.tiempo, cajas: cfg.cajas }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: [['cpu', '🤖 Contra la CPU'], ['dos', '👥 2 jugadores']] }, { clave: 'nivel', titulo: 'Nivel de la CPU', visible: v.modo === 'cpu', opciones: M.NIVELES.map((n, i) => [i, n]) }, { clave: 'n', titulo: 'Gusanos por equipo', opciones: M.TAMANOS.map(n => [n, String(n)]) }, { clave: 'mapa', titulo: 'Mapa', opciones: [...Object.entries(M.MAPAS), ['azar', '🎲 Al azar']] }, { clave: 'tiempo', titulo: 'Tiempo por turno', opciones: M.TIEMPOS.map(t => [t, t + ' s']) }, { clave: 'cajas', titulo: 'Cajas de suministros', opciones: [[true, '📦 Sí'], [false, 'No']] }], aplicar: v => { Object.assign(cfg, v); nuevaPartida(); } } });
   api.menu([
-    { texto: 'Nueva partida', accion: () => { if (!S || S.turno.fase === 'fin' || api.confirmar('¿Dejar la partida actual?')) ajustes(); } },
+    { texto: 'Nueva partida', accion: async () => { if (!S || S.turno.fase === 'fin' || await api.confirmar('¿Dejar la partida actual?')) ajustes(); } },
     { texto: '🎒 Armas', accion: () => armas() },
     { texto: '⏸️ Pausa', accion: () => poner_pausa(true) },
     { texto: '⏭️ Terminar turno', accion: () => { if (humano()) M.terminarTurno(S); } },
@@ -272,7 +272,7 @@ function ptrArriba(e) {
 }
 
 /* ---------- clics de la interfaz ---------- */
-function clic(e) {
+async function clic(e) {
   const b = e.target.closest('[data-cfg],[data-ac]'); if (!b || !root.contains(b)) return;
   if (b.dataset.cfg) { const k = b.dataset.cfg, v = b.dataset.v; cfg[k] = k === 'cajas' ? v === 'true' : (k === 'mapa' || k === 'modo') ? v : +v; api.sonido('click'); if (!S) ajustes(); return; }
   const ac = b.dataset.ac;
@@ -289,9 +289,9 @@ function clic(e) {
   else if (ac === 'temp') { if (humano()) { M.ajustarTemp(S, S.turno.temp % 5 + 1); api.sonido('click'); } }
   else if (ac === 'seguirpausa') poner_pausa(false);
   else if (ac === 'pasar') { if (humano()) { M.terminarTurno(S); api.sonido('click'); } else api.aviso('Espera a tu turno'); }
-  else if (ac === 'nuevaJ') { if (!S || S.turno.fase === 'fin' || api.confirmar('¿Dejar la partida actual y crear otra?')) ajustes(); }
+  else if (ac === 'nuevaJ') { if (!S || S.turno.fase === 'fin' || await api.confirmar('¿Dejar la partida actual y crear otra?')) ajustes(); }
   else if (ac === 'aspectoJ') { poner_pausa(true); asp.abrir(); }
-  else if (ac === 'salir') { if (!S || S.turno.fase === 'fin' || api.confirmar('¿Salir? La partida queda guardada.')) { guardar(); location.hash = '#/cat/arcade'; } }
+  else if (ac === 'salir') { if (!S || S.turno.fase === 'fin' || await api.confirmar('¿Salir? La partida queda guardada.')) { guardar(); location.hash = '#/cat/arcade'; } }
   else if (ac === 'otra') nuevaPartida();
   else if (ac === 'menu') ajustes();
 }

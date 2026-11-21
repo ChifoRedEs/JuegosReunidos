@@ -80,10 +80,10 @@ function arrancar() { crono.s = S.t; if (S.minas && !S.fin) crono.iniciar(); els
 const hayProgreso = () => S && S.minas && !S.fin;
 // Medidas del tablero personalizado (preferencia)
 function dims() { const p = api.pref('dims', null); return p && typeof p === 'object' ? p : { w: 10, h: 12, m: 18 }; }
-function nueva(niv, forzar = false, reto = false) {
+async function nueva(niv, forzar = false, reto = false) {
   if (reto && S && S.reto === api.reto.fecha()) { api.aviso(S.fin ? 'Ya has jugado el reto de hoy' : 'Ya estás jugando el reto de hoy'); return; }
   if (reto && api.reto.hecho()) { api.aviso('Ya has completado el reto de hoy'); return; }
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   nivel = niv; if (!reto) api.setPref('nivel', niv);
   if (crono) crono.detener();
   S = { ...nuevo(niv, dims()), nivel: niv, t: 0, pistas: 0, reg: false, sa: reto ? true : api.pref('sa', true), reto: reto ? api.reto.fecha() : null }; cache = crearCache(); pst = null;

@@ -31,7 +31,7 @@ export async function mount(r, a) {
   const g = api.cargar();
   if (g) { S = g.s; marcador = g.marcador; reg = g.reg; } else S = null;
   root.addEventListener('click', clic);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
@@ -60,7 +60,7 @@ function armar() {
       <div class="brmsg" id="brMsg" role="status" aria-live="polite"></div><div class="brmano" id="brMano"></div></div>
     <div class="bar" id="brAcc"></div><div id="brFin"></div>${api.barraHtml()}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la mano actual?')) return; clearTimeout(timer); api.borrar(); setup(); }
 function empezar(lider = null) {
   asp.sortear();
   api.setPref('cfg', cfg); S = B.nueva(cfg.n, cfg.nivel, cfg.cambio, lider); reg = false; prevMesa = 0; armar(); pintar(); guardar(); bucle();

@@ -27,7 +27,7 @@ export async function mount(r, a) {
   const c0 = api.pref('cfg', null); if (c0 && NIVEL[c0.nivel] && C.METAS.includes(c0.meta)) cfg = { nivel: c0.nivel, meta: c0.meta, luna: c0.luna === 'resta' ? 'resta' : 'resto' };
   const g = api.cargar(); S = g ? g.s : null; reg = g ? g.reg : false;
   root.addEventListener('click', clic);
-  api.barra({ nueva: () => { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'fin') bucle(); },
@@ -49,7 +49,7 @@ function setup() {
     <div class="bar"><span class="lbl">Tiro a la luna</span>${seg('luna', [['resto', 'Los rivales +26'], ['resta', 'Tú −26']])}</div>
     ${pieMenu({})}`;
 }
-function nuevaSetup() { if (S && S.fase !== 'fin' && !api.confirmar('¿Abandonar la partida actual?')) return; api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.fase !== 'fin' && !await api.confirmar('¿Abandonar la partida actual?')) return; api.borrar(); setup(); }
 function empezar() {
   asp.sortear();
   api.setPref('cfg', cfg); S = C.crear(cfg); reg = false; sel = new Set();

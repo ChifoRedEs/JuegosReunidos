@@ -72,7 +72,7 @@ export async function mount(r, a) {
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
   onKey = e => { if (e.code === 'Space' && !pendiente && G && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); jugar(); } };
   document.addEventListener('keydown', onKey);
-  api.barra({ nueva: () => { if (G && !G.terminada && !api.confirmar('¿Abandonar la partida actual?')) return; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } enPausa = false; empezar(); },
+  api.barra({ nueva: async () => { if (G && !G.terminada && !await api.confirmar('¿Abandonar la partida actual?')) return; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } enPausa = false; empezar(); },
     salir: () => { enPausa = false; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => { enPausa = true; },
     reanudar: () => { enPausa = false; },
@@ -110,8 +110,8 @@ function setup() {
     ${pieMenu({ deshabilitado: n < 2 })}
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos.`}</p>`;
 }
-function nuevaSetup() {
-  if (G && !G.terminada && !api.confirmar('¿Abandonar la partida actual?')) return;
+async function nuevaSetup() {
+  if (G && !G.terminada && !await api.confirmar('¿Abandonar la partida actual?')) return;
   sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; }
   api.borrar(); setup();
 }

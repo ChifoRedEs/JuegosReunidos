@@ -76,8 +76,8 @@ function cambioAspecto() {
 
 /* ---------- partida ---------- */
 const hayProgreso = () => S && S.fin !== 'partida' && (S.ronda > 1 || S.dichas.length || S.pts[0] || S.pts[1]);
-function nueva(forzar, v) {
-  if (!forzar && hayProgreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+async function nueva(forzar, v) {
+  if (!forzar && hayProgreso() && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
   parar();
   const nivel = v ? v.nivel : (S ? S.nivel : api.pref('nivel', 'medio')), rondas = Number(v ? v.rondas : (S ? S.rondas : api.pref('rondas', 3))) || 3;
   api.setPref('nivel', nivel); api.setPref('rondas', rondas);

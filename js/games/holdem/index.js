@@ -36,7 +36,7 @@ function verEstad() {
     <tr><td>Mejor mano enseñada</td><td>${esc(E.mejorTxt || '–')}</td></tr></table>
     <p class="note">Como referencia, un jugador sólido en mesas de 4-6 suele tener un VPIP de 20-30 % y un PFR algo menor. ${E.manos >= 30 && E.vpip / E.manos > .45 ? 'Juegas muchas manos: prueba a retirarte más con cartas flojas.' : E.manos >= 30 && E.vpip / E.manos < .15 ? 'Juegas muy pocas manos: puedes permitirte entrar algo más.' : ''}</p>
     <div class="bar"><button class="btn danger" data-borrarest>Borrar estadísticas</button></div>` : '<p>Juega unas manos y aquí verás tus estadísticas.</p>');
-  const b = document.querySelector('[data-borrarest]'); if (b) b.addEventListener('click', () => { if (api.confirmar('¿Borrar tus estadísticas de póker?')) { api.setPref('estad', {}); document.querySelector('.modal')?.remove(); api.aviso('Estadísticas borradas'); } });
+  const b = document.querySelector('[data-borrarest]'); if (b) b.addEventListener('click', async () => { if (await api.confirmar('¿Borrar tus estadísticas de póker?')) { api.setPref('estad', {}); document.querySelector('.modal')?.remove(); api.aviso('Estadísticas borradas'); } });
 }
 
 /* ---------- validación / resumen ---------- */
@@ -59,7 +59,7 @@ export async function mount(r, a) {
   const g = api.cargar(); S = g; consejo = api.pref('consejo', true);
   const c0 = api.pref('cfg', null); if (c0 && c0.bots >= 2 && c0.bots <= 5 && NIVEL[c0.nivel]) cfg = { bots: c0.bots, nivel: c0.nivel, modo: c0.modo === 'libre' ? 'libre' : 'torneo', ciegas: H.CIEGAS_LIBRE[c0.ciegas] ? c0.ciegas : 'baja' };
   root.addEventListener('click', clic); root.addEventListener('input', alMover);
-  api.barra({ nueva: () => { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; clearTimeout(timer); empezar(); },
+  api.barra({ nueva: async () => { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !await api.confirmar('¿Abandonar el torneo actual?')) return; clearTimeout(timer); empezar(); },
     salir: () => { clearTimeout(timer); if (S && S.modo === 'libre' && S.fase !== 'terminado') levantarse(true); else api.borrar(); location.hash = '#/cat/cartas'; },
     pausar: () => clearTimeout(timer),
     reanudar: () => { if (S && S.fase !== 'terminado') bucle(); },
@@ -90,12 +90,12 @@ function armar() {
     <div class="bar">${S.modo === 'libre' ? '<button class="btn" data-ac="levantarse">🚪 Levantarse de la mesa</button>' : ''}<button class="btn" data-ac="estad">📊</button><button class="btn" data-ac="rank">Ranking</button></div>${api.barraHtml()}`;
   if (modo3d) iniciar3D();
 }
-function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
+async function nuevaSetup() { if (S && S.modo === 'libre' && S.fase !== 'terminado') return levantarse(); if (S && S.fase !== 'terminado' && !await api.confirmar('¿Abandonar el torneo actual?')) return; api.borrar(); setup(); }
 // Partida libre: al levantarse se anota el balance (ganada si terminas con más fichas de las que compraste)
-function levantarse(forzar) {
+async function levantarse(forzar) {
   if (!S || S.modo !== 'libre') return;
-  if (!forzar && S.turno >= 0 && !api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
-  if (!forzar && !api.confirmar(`¿Levantarte de la mesa? Balance: ${H.neto(S) >= 0 ? '+' : ''}${H.neto(S)} fichas.`)) return;
+  if (!forzar && S.turno >= 0 && !await api.confirmar('La mano sigue en juego: si te levantas, la pierdes. ¿Levantarte?')) return;
+  if (!forzar && !await api.confirmar(`¿Levantarte de la mesa? Balance: ${H.neto(S) >= 0 ? '+' : ''}${H.neto(S)} fichas.`)) return;
   const n = H.neto(S); clearTimeout(timer);
   if (S.mano > 0 && !S.reg) { S.reg = true; api.registrar({ res: n > 0 ? 'victoria' : n < 0 ? 'derrota' : 'tablas', variante: `Partida libre · ${NIVEL[S.nivel]}`, puntos: Math.max(0, n) }); }
   S.fase = 'terminado'; S.turno = -1; guardar();

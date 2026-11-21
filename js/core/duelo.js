@@ -152,8 +152,8 @@ export function crearDuelo(def) {
 
   /* ---------- partida ---------- */
   const progreso = () => S.hist.length > 0 && !S.e.fin;
-  function nuevaPartida(forzar = false, remontar = false) {
-    if (!forzar && progreso() && !api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
+  async function nuevaPartida(forzar = false, remontar = false) {
+    if (!forzar && progreso() && !await api.confirmar('¿Empezar una partida nueva? Perderás la actual.')) return;
     clearTimeout(timer); pensando = false; turnoIA++;
     const termino = S.e && S.e.fin;
     if (S.serie.fin || S.serie.n === 1) S.serie = serieVacia(S.serie.n);   // la serie terminada empieza de nuevo
@@ -224,15 +224,15 @@ export function crearDuelo(def) {
     if (m != null) ctx.pista = m;
     pintar();
   }
-  function rendirse() {
+  async function rendirse() {
     if (!S || S.e.fin || !S.hist.length) { api.aviso('No hay ninguna partida en juego'); return; }
-    if (!api.confirmar('¿Abandonar la partida? Contará como derrota.')) return;
+    if (!await api.confirmar('¿Abandonar la partida? Contará como derrota.')) return;
     clearTimeout(timer); pensando = false;
     if (S.modo === 'cpu' && S.e.turn !== S.yo) S.e = { ...S.e, turn: S.yo };   // abandona quien juega, no la CPU
     S.e = def.rendirse(S.e); terminar(); pintar(); guardar();
   }
-  function reiniciarMarcador() {
-    if (!api.confirmar('¿Poner el marcador a cero?')) return;
+  async function reiniciarMarcador() {
+    if (!await api.confirmar('¿Poner el marcador a cero?')) return;
     S.marcador = { p1: 0, p2: 0, t: 0 }; S.serie = serieVacia(S.serie.n); pintar(); guardar();
   }
   function guardar() {

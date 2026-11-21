@@ -211,7 +211,7 @@ function tocarCelda(x, y) {
   const o = K.destinoEn(S, sel, x, y); if (o) mover(sel, o.d, o.dist); else { sel = -1; pintar(); }
 }
 function deshacer() { if (!S || ocupado) return; if (!K.deshacer(S)) { api.aviso('No hay nada que deshacer'); return; } sel = -1; pistaMov = null; if (!crono && !S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); } api.sonido('click'); pintar(); guardar(); }
-function reiniciar() { if (!S || ocupado) return; if (S.movs && !S.done && !api.confirmar('¿Volver a empezar este puzle?')) return; K.reiniciar(S); S.t = 0; sel = -1; pistaMov = null; if (!crono) { crono = new Cronometro(s => { S.t = s; info(); }, 0); crono.iniciar(); } else crono.s = 0; pintar(); guardar(); }
+async function reiniciar() { if (!S || ocupado) return; if (S.movs && !S.done && !await api.confirmar('¿Volver a empezar este puzle?')) return; K.reiniciar(S); S.t = 0; sel = -1; pistaMov = null; if (!crono) { crono = new Cronometro(s => { S.t = s; info(); }, 0); crono.iniciar(); } else crono.s = 0; pintar(); guardar(); }
 async function pedirPista() {
   if (!S || S.done || ocupado) return; ocupado = true; const m = $('#klMsg'); if (m) m.textContent = '💡 Buscando la mejor jugada…';
   const peque = { modo: S.modo, w: S.w, h: S.h, p: S.p };
@@ -240,7 +240,7 @@ function tecla(e) {
   if (sel < 0) { sel = 0; pintar(); return; }
   if (K.maxDist(S.p, S.w, S.h, sel, d) >= 1) mover(sel, d, 1); else api.sonido('error');
 }
-function clic(e) {
+async function clic(e) {
   const dot = e.target.closest('.kldot'); if (dot) return tocarCelda(+dot.dataset.cx, +dot.dataset.cy);
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   if (d.cfg) {
@@ -248,11 +248,11 @@ function clic(e) {
     return setup();
   }
   const a = d.ac;
-  if (a === 'jugar') { if (S && !S.done && S.movs && !api.confirmar('¿Empezar un puzle nuevo y abandonar el actual?')) return; jugar(); }
+  if (a === 'jugar') { if (S && !S.done && S.movs && !await api.confirmar('¿Empezar un puzle nuevo y abandonar el actual?')) return; jugar(); }
   else if (a === 'volver') { armar(); }
   else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
   else if (a === 'deshacer') deshacer(); else if (a === 'pista') pedirPista(); else if (a === 'reiniciar') reiniciar();
-  else if (a === 'nueva') { if (S && !S.done && S.movs && !api.confirmar('¿Abandonar este puzle?')) return; parar(); setup(); }
+  else if (a === 'nueva') { if (S && !S.done && S.movs && !await api.confirmar('¿Abandonar este puzle?')) return; parar(); setup(); }
 }
 function reglas() {
   api.modal('Deslizadas', `<ul><li><b>Fichas de colores</b> (Deslizadas clásico): hay bloques de varios tamaños y solo dos casillas vacías. Lleva el <b>bloque grande ★</b> hasta la <b>salida</b> del borde inferior.</li>
