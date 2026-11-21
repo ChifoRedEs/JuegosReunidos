@@ -311,12 +311,12 @@ body.fondo .panel{background:linear-gradient(135deg,var(--pan1),var(--pan2))}
 :root[data-theme="dark"]{--velo-cat:rgba(10,16,44,.68);--ficha-a:94%;--ficha-b:84%;--ficha-sombra:55%}
 body.fijo .cat-seccion::before{content:none}
 body.fijo:has(.cat-seccion) main{position:relative;isolation:isolate}
-body.fijo:has(.cat-seccion) main::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo-cat),var(--velo-cat)),var(--fondo-tile)}
+body.fijo:has(.cat-seccion) main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--velo-cat),var(--velo-cat)),var(--fondo-tile)}
 body.fijo .cat-seccion .ficha{background:linear-gradient(145deg,color-mix(in srgb,var(--c) var(--ficha-a),transparent),color-mix(in srgb,var(--c) var(--ficha-b),transparent));box-shadow:0 6px 18px color-mix(in srgb,var(--c) var(--ficha-sombra),transparent);backdrop-filter:blur(2px)}
 body.fijo .cat-seccion>.cat{align-self:flex-start;padding:4px 18px 4px 8px;border-radius:99px;background:linear-gradient(90deg,#F5B91E 0%,#F5B91E 14%,#3E6FE0 100%);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);box-shadow:0 3px 10px rgba(30,50,160,.3)}
 
 /* 3.36.3 (y 3.37.1 también en oscuro): Estadísticas y Ajustes con el fondo de las categorías: imagen completa bajo el menú */
-body.fondo main::before{top:0;background:linear-gradient(var(--velo-cat),var(--velo-cat)),var(--fondo-tile)}
+body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--velo-cat),var(--velo-cat)),var(--fondo-tile)}
 
 /* 3.36.7: ventana «¿A qué quieres jugar?» con el banner de fondo (velo blanco 50 % en claro; el de las pantallas en oscuro) */
 .hoja.hoja-elegir{--vl:rgba(255,255,255,.5);background:linear-gradient(var(--vl),var(--vl)),var(--fondo-tile),var(--card)}

@@ -41,7 +41,7 @@ export function aplicarTema() {
   const r = document.documentElement;
   if (A.tema === 'auto') delete r.dataset.theme; else r.dataset.theme = A.tema === 'claro' ? 'light' : 'dark';
   const oscuro = A.tema === 'oscuro' || (A.tema === 'auto' && mqOscuro && mqOscuro.matches);
-  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = oscuro ? '#0F1A33' : '#F4EBD9';
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = oscuro ? '#0B1429' : '#14213D';
 }
 // En «Auto», si el sistema cambia de claro a oscuro con la app abierta, se actualiza también la barra del navegador.
 if (mqOscuro && mqOscuro.addEventListener) mqOscuro.addEventListener('change', () => { if (A.tema === 'auto') aplicarTema(); });
