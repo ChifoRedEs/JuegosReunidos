@@ -1,5 +1,5 @@
 // Dominó: clásico con pozo, bloqueo, «de a cinco» y por parejas, de 2 a 4 jugadores (tú contra la máquina), con fichas doble 6 o doble 9.
-// Reglas y lógica en motor.js. Apariencia: Tapete + Fichas (color, textura, forma, tamaño y puntos).
+// Reglas y lógica en motor.js. Apariencia: Tapete, Fichas (lisas, madera, piedra) y Color.
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { grupoFondo } from '../../core/aspectos.js';
@@ -7,23 +7,11 @@ import { tintar } from '../../core/tinte.js';
 import * as M from './motor.js';
 
 /* ---------- apariencia de las fichas ---------- */
-const hsl = (h, s, l) => { s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('').toUpperCase(); };
-const NEUTROS = [['marfil', 'Marfil', '#F4EEDC'], ['blanco', 'Blanco', '#FFFFFF'], ['plata', 'Plata', '#C3C7CF'], ['gris', 'Gris', '#8A8F98'], ['grafito', 'Grafito', '#3A3D45'], ['negro', 'Negro', '#17181C'],
-  ['dorado', 'Dorado', '#D4AF37'], ['bronce', 'Bronce', '#A5682A'], ['crema', 'Crema', '#EBD9A8'], ['hueso', 'Hueso', '#E6DCC3']];
-const TONOS = [['Rojo', 0], ['Naranja', 26], ['Amarillo', 48], ['Lima', 78], ['Verde', 128], ['Esmeralda', 158], ['Turquesa', 178], ['Cian', 195], ['Azul', 215], ['Índigo', 238], ['Violeta', 268], ['Magenta', 305], ['Rosa', 338]];
-const COLORES = [...NEUTROS.map(([id, nombre, hex]) => ({ id, nombre, hex })),
-  ...TONOS.flatMap(([n, h]) => [['c', 'claro', 75, 72], ['m', '', 72, 48], ['o', 'oscuro', 68, 28]].map(([k, suf, s, l]) => ({ id: `${n.toLowerCase().replace('í', 'i')}-${k}`, nombre: `${n} ${suf}`.trim(), hex: hsl(h, s, l) })))];
-const IDS_POCOS = ['marfil', 'blanco', 'plata', 'gris', 'negro', 'dorado', 'rojo-m', 'naranja-m', 'amarillo-m', 'lima-m', 'verde-m', 'turquesa-m', 'azul-m', 'violeta-m', 'rosa-m', 'azul-o', 'verde-o', 'rojo-o'];
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const luz = h => { const [r, g, b] = hexRgb(h); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
-const TEXTURAS = { liso: ['Liso', ['#EDE6D2', '#CFC5A6']], brillante: ['Brillante', ['#FFFFFF', '#9EA6B5']], marmol: ['Mármol', ['#F4F1EA', '#8F8C86']], madera: ['Madera', ['#B07A45', '#6B4423']],
-  granito: ['Granito', ['#9AA0A8', '#3C3F45']], carbono: ['Fibra de carbono', ['#3B3F47', '#15161A']], metal: ['Metal cepillado', ['#D9DDE3', '#7C838E']], cristal: ['Cristal', ['#D6F1FF', '#7BC3EA']] };
-const FORMAS = { redonda: 'Lisa', bisel: 'Biselada', punteada: 'Punteada', rombo: 'Con rombo' };
 const MATS = { liso: 'Lisas', madera: 'Madera', piedra: 'Piedra' };
-const TAMANOS = { pequeno: ['Pequeñas', .8], normal: ['Normales', 1], grande: ['Grandes', 1.25] };
-const PUNTOS = { auto: 'Automático (contraste)', color: 'Clásicos de colores', negro: 'Negros', blanco: 'Blancos', oro: 'Dorados', numeros: 'Números' };
-const PCOL = { negro: '#15161A', blanco: '#FFFFFF', oro: '#D4AF37' };
+// Colores de las fichas: los básicos del resto de juegos + marfil, blanco y negro
+const COLORES = [['marfil', 'Marfil', '#F4EEDC'], ['blanco', 'Blanco', '#FFFFFF'], ['negro', 'Negro', '#17181C'], ['azul', 'Azul', '#2F6BFF'], ['rojo', 'Rojo', '#E5383B'], ['naranja', 'Naranja', '#FF7A1A'], ['amarillo', 'Amarillo', '#F2B600'], ['verde', 'Verde', '#0FB56A'], ['turquesa', 'Turquesa', '#0FA3B1'], ['violeta', 'Violeta', '#7A4DFF'], ['rosa', 'Rosa', '#FF3FA4'], ['marron', 'Marrón', '#8B5A2B'], ['grafito', 'Grafito', '#4A5568']];
 
 let S = null, api = null, asp = null, root = null, tim = 0, pausado = false, sel = null, pista = null, anim = false, registrada = false, onResize = null, cap = 6;
 let cfg = { modo: 'robar', n: 2, doble: 6, objetivo: 0, nivel: 'medio' };
@@ -47,11 +35,8 @@ export async function mount(r, a) {
   asp = api.aspecto([
     { ...{ ...grupoFondo('#dmMesa'), def: 't-n-mesa-juegos-1' }, tt: true },
     { clave: 'tablero', tt: true, titulo: 'Tablero', def: 'verde', opciones: [{ id: 'verde', nombre: 'Verde', sw: ['#1F6B46'] }, { id: 'azul', nombre: 'Azul', sw: ['#1F4F9E'] }, { id: 'burdeos', nombre: 'Burdeos', sw: ['#7A1F36'] }, { id: 'violeta', nombre: 'Violeta', sw: ['#4B3592'] }, { id: 'madera', nombre: 'Madera', sw: ['#8A5A34'] }, { id: 'noche', nombre: 'Noche', sw: ['#1A2150'] }] },
-    { clave: 'fichas', titulo: 'Color de Fichas', icono: '🎨', def: 'marfil', soloColor: true, opciones: COLORES.filter(c => IDS_POCOS.includes(c.id)).map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] })) },
-    { clave: 'textura', etiqueta: 'Material', titulo: 'Estilos de Fichas', icono: '✨', ventana: true, forma: 'figura', def: 'liso', opciones: Object.entries(MATS).map(([id, nombre]) => ({ id, nombre, img: `img/domino/${id}-h.webp` })) },
-    { clave: 'forma', junto: 'textura', etiqueta: 'Diseño', titulo: 'Fichas · Diseño', icono: '📐', ventana: true, forma: 'figura', def: 'redonda', opciones: Object.entries(FORMAS).map(([id, nombre]) => ({ id, nombre, img: `img/domino/liso-${id}.webp` })) },
-    { clave: 'tamano', junto: 'textura', etiqueta: 'Tamaño', titulo: 'Fichas · Tamaño', icono: '🔎', def: 'normal', opciones: Object.entries(TAMANOS).map(([id, [nombre]]) => ({ id, nombre })) },
-    { clave: 'puntos', junto: 'textura', etiqueta: 'Puntos', titulo: 'Fichas · Puntos', icono: '⚫', def: 'auto', opciones: Object.entries(PUNTOS).map(([id, nombre]) => ({ id, nombre })) },
+    { clave: 'textura', titulo: 'Fichas', def: 'liso', opciones: Object.entries(MATS).map(([id, nombre]) => ({ id, nombre })) },
+    { clave: 'fichas', titulo: 'Color', desplegable: true, def: 'marfil', opciones: COLORES.map(([id, nombre, hex]) => ({ id, nombre, sw: [hex] })) },
   ], () => { aplicarAspecto(); if (S && $('#dmCad')) { medir(); pintar(); } });
   await api.css(new URL('./domino.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0)) cfg = M.normalizar(c0);
@@ -89,17 +74,14 @@ function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.text
 /* ---------- apariencia ---------- */
 function aplicarAspecto() {
   if (!asp || !root) return;
-  const v = asp.valores, c = COLORES.find(x => x.id === v.fichas) || COLORES[0], dark = luz(c.hex) < .45;
-  root.style.setProperty('--dm-c', c.hex);
-  root.style.setProperty('--dm-p', PCOL[v.puntos] || (dark ? '#F4F4F6' : '#17181C'));
-  root.style.setProperty('--dm-l', dark ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.45)');
-  root.style.setProperty('--tm', (TAMANOS[v.tamano] || TAMANOS.normal)[1]);
-  imagenesFicha(MATS[v.textura] ? v.textura : 'liso', FORMAS[v.forma] ? v.forma : 'redonda', c.hex);
+  const v = asp.valores, c = COLORES.find(x => x[0] === v.fichas) || COLORES[0], hex = c[2], claro = luz(hex) >= .45;
+  root.style.setProperty('--dm-c', hex);
+  imagenesFicha(MATS[v.textura] ? v.textura : 'liso', hex, claro ? '#17181C' : '#F4F4F6');
 }
 function medir() {
   const mesa = $('#dmMesa'); if (!mesa) return;
-  const W = Math.max(240, mesa.clientWidth - 16), f = (TAMANOS[asp && asp.valores.tamano] || TAMANOS.normal)[1];
-  const ts = Math.max(12, Math.min(26, Math.floor(W / 15))) * f; mesa.style.setProperty('--ts', ts + 'px');
+  const W = Math.max(240, mesa.clientWidth - 16);
+  const ts = Math.max(12, Math.min(26, Math.floor(W / 15))); mesa.style.setProperty('--ts', ts + 'px');
   cap = Math.max(3, Math.floor(W / (2 * ts + 9)));
 }
 
@@ -125,8 +107,8 @@ function jugar() {
 
 /* ---------- dibujo ---------- */
 const celdas = n => { const p = { 0: [], 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9], 7: [1, 3, 4, 5, 6, 7, 9], 8: [1, 2, 3, 4, 6, 7, 8, 9], 9: [1, 2, 3, 4, 5, 6, 7, 8, 9] }[n]; return Array.from({ length: 9 }, (_, k) => `<i${p.includes(k + 1) ? ' class="p"' : ''}></i>`).join(''); };
-const mitad = n => `<span class="dmh" data-n="${n}">${celdas(n)}<em>${n}</em></span>`;
-const ficha = (f, extra = '', attrs = '') => `<span class="dmt${f[0] === f[1] ? ' d' : ''} ${extra}" ${attrs}>${mitad(f[0])}<b class="dml"></b>${mitad(f[1])}</span>`;
+const mitad = n => `<span class="dmh" data-n="${n}">${celdas(n)}</span>`;
+const ficha = (f, extra = '', attrs = '') => `<span class="dmt${f[0] === f[1] ? ' d' : ''} t${(f[0] * 3 + f[1] * 5 + f[0] * f[1]) % 3} ${extra}" ${attrs}>${mitad(f[0])}<b class="dml"></b>${mitad(f[1])}</span>`;
 const dorso = () => '<i class="dmb"></i>';
 
 function armar() {
@@ -244,20 +226,27 @@ function reglas() {
     <li>Gana la mano quien se queda sin fichas y suma los puntos de las fichas de los rivales. Si nadie puede mover, el juego se <b>cierra</b> y gana quien menos puntos tenga en la mano.</li>
     <li>Partida: a una sola mano o hasta 50, 100 o 200 puntos. <b>Por parejas</b>: tú y la ficha de enfrente (tu pareja) contra los otros dos; los puntos van al equipo.</li>
     <li>💡 La pista te señala una buena jugada. La máquina tiene 3 niveles; en Difícil recuerda qué números les faltan a los demás.</li>
-    <li>🎨 En Apariencia cambias el tapete y las fichas: color (paleta reducida), textura, forma, tamaño y estilo de los puntos.</li></ul>`);
+    <li>🎨 En Apariencia cambias el tapete y las fichas: material (lisas, madera o piedra) y color.</li></ul>`);
 }
 
-// Ficha ilustrada: se tiñe con el color elegido y se prepara también girada 90° para las fichas verticales y los dobles
+// Fichas: cuerpo ilustrado (gris) teñido con el color elegido. Madera y piedra traen 3 variantes (veta/grano distintos) que se reparten entre las fichas.
+// Cada cuerpo se prepara también girado 90° para las fichas verticales. Los puntos son un único disco gris, teñido para contrastar con la ficha.
 let sigImg = '';
-async function imagenesFicha(mat, forma, hex) {
-  const sig = mat + forma + hex; if (sig === sigImg) return; sigImg = sig;
+const cargarImg = u => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = u; });
+async function imagenesFicha(mat, hex, pip) {
+  const sig = mat + hex; if (sig === sigImg) return; sigImg = sig;
   try {
-    const u = await tintar(`img/domino/${mat}-${forma}.webp`, hex); if (sig !== sigImg || !root) return;
-    const im = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = u; });
-    const cv = document.createElement('canvas'); cv.width = im.naturalHeight; cv.height = im.naturalWidth; const x = cv.getContext('2d');
-    x.translate(cv.width / 2, cv.height / 2); x.rotate(Math.PI / 2); x.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2);
-    const uv = await new Promise(ok => cv.toBlob(b => ok(URL.createObjectURL(b)), 'image/png'));
+    const vs = mat === 'liso' ? [0] : [0, 1, 2];
+    const cuerpos = await Promise.all(vs.map(async k => {
+      const u = await tintar(`img/domino/${mat}-${k}.webp`, hex), im = await cargarImg(u);
+      const cv = document.createElement('canvas'); cv.width = im.naturalHeight; cv.height = im.naturalWidth; const x = cv.getContext('2d');
+      x.translate(cv.width / 2, cv.height / 2); x.rotate(Math.PI / 2); x.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2);
+      const uv = await new Promise(ok => cv.toBlob(b => ok(URL.createObjectURL(b)), 'image/png'));
+      return [u, uv];
+    }));
+    const pu = await tintar('img/domino/punto.webp', pip);
     if (sig !== sigImg || !root) return;
-    root.style.setProperty('--dm-ih', `url("${u}")`); root.style.setProperty('--dm-iv', `url("${uv}")`);
+    for (let k = 0; k < 3; k++) { const [u, uv] = cuerpos[Math.min(k, cuerpos.length - 1)]; root.style.setProperty(`--dm-ih${k}`, `url("${u}")`); root.style.setProperty(`--dm-iv${k}`, `url("${uv}")`); }
+    root.style.setProperty('--dm-pip', `url("${pu}")`);
   } catch { sigImg = ''; }
 }

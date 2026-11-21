@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-6724281320';
+const VERSION = 'jr-e255ae0d58';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -855,6 +855,7 @@ const EXTRA = [
 './img/daleotravez/t-sabana.webp',
 './img/daleotravez/t-transporte.webp',
 './img/daleotravez/t-verduras.webp',
+'./img/domino/liso-0.webp',
 './img/domino/liso-13.webp',
 './img/domino/liso-65.webp',
 './img/domino/liso-bisel.webp',
@@ -867,7 +868,10 @@ const EXTRA = [
 './img/domino/liso-rombo.webp',
 './img/domino/liso-soporte.webp',
 './img/domino/liso-v.webp',
+'./img/domino/madera-0.webp',
+'./img/domino/madera-1.webp',
 './img/domino/madera-13.webp',
+'./img/domino/madera-2.webp',
 './img/domino/madera-65.webp',
 './img/domino/madera-bisel.webp',
 './img/domino/madera-h.webp',
@@ -879,7 +883,10 @@ const EXTRA = [
 './img/domino/madera-rombo.webp',
 './img/domino/madera-soporte.webp',
 './img/domino/madera-v.webp',
+'./img/domino/piedra-0.webp',
+'./img/domino/piedra-1.webp',
 './img/domino/piedra-13.webp',
+'./img/domino/piedra-2.webp',
 './img/domino/piedra-65.webp',
 './img/domino/piedra-bisel.webp',
 './img/domino/piedra-h.webp',
@@ -891,6 +898,7 @@ const EXTRA = [
 './img/domino/piedra-rombo.webp',
 './img/domino/piedra-soporte.webp',
 './img/domino/piedra-v.webp',
+'./img/domino/punto.webp',
 './img/encadenadas/abierto.webp',
 './img/encadenadas/ancla.webp',
 './img/encadenadas/anillo.webp',
