@@ -5,7 +5,8 @@
 /* Casillas: imágenes grises teñidas con los colores del Tablero (variables --f-* puestas por index.js) */
 .fc{position:relative;display:block;padding:0;border:0;min-width:0;min-height:0;cursor:pointer;background:var(--f-celda) center/100% 100% no-repeat;color:var(--tb-ink);font-family:var(--fu-font)}
 .fc.fijo{background-image:var(--f-dado);color:var(--tb-strong);cursor:default}
-.fc.s::after,.fc.fijo.s::after{content:"";position:absolute;inset:0;background:var(--f-sel) center/100% 100% no-repeat;pointer-events:none}
+.fc.s::before{content:"";position:absolute;inset:7%;border-radius:14%;background:var(--tb-hi);pointer-events:none}
+.fc .fv{position:relative}.fc .fv,.fc .fn{z-index:1}
 .fc.x{background-image:var(--f-mala);color:var(--red)}
 .fc .fv{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:calc(min(88vw,420px) / (var(--n) * 1.42) * .56);font-weight:800}
 .fc .fn{position:absolute;inset:16% 12% 12% 12%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;font:800 max(8px,calc(min(88vw,420px) / (var(--n) * 1.42) * .2))/1.15 Nunito,sans-serif;color:var(--tb-ink);opacity:.75;text-align:center;pointer-events:none}
@@ -47,7 +48,7 @@
 .juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="8"] .fv{color:var(--c8)}
 .juego-futoshiki[data-numeros="color"] .fc[data-d="9"] .fv{color:color-mix(in srgb,var(--c9) 62%,#000)}
 .juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc[data-d="9"] .fv{color:var(--c9)}
-/* Casilla seleccionada: número siempre legible sobre su fondo */
-.juego-futoshiki .fc.s .fv,.juego-futoshiki[data-numeros="color"] .fc.s .fv{color:#0F1A44}
-.juego-futoshiki[data-tablero^="neon"] .fc.s .fv,.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc.s .fv{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+/* Casilla seleccionada: color de selección del Tablero (como Sudoku); el número se ve siempre */
+.juego-futoshiki .fc.s .fv,.juego-futoshiki[data-numeros="color"] .fc.s .fv,.juego-futoshiki[data-numeros="color"][data-tablero^="neon"] .fc.s .fv{color:var(--tb-hiink);text-shadow:none}
+.juego-futoshiki .fc.s .fn{color:var(--tb-hiink);opacity:1}
 .juego-futoshiki .fc.x .fv,.juego-futoshiki[data-numeros="color"] .fc.x .fv{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}

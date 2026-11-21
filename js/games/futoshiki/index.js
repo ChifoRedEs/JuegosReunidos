@@ -68,7 +68,7 @@ function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.de
 /* ---------- imágenes (variables CSS con el color elegido) ---------- */
 function pintarImagenes() {      // casillas y flechas: imágenes grises teñidas con los colores del Tablero
   const t = coloresTablero(asp && asp.valores.tablero), L = (n, h) => ['--f-' + n, IMG + 'liso-' + n + '.webp', h];
-  variablesTintadas(root, [L('celda', t.cel), L('dado', t.dado), L('sel', t.sel), L('mala', t.cel), ...FLECHAS.map((f, k) => ['--f' + k, IMG + 'liso-' + f + '.webp', t.flecha])], 'fu' + t.id);
+  variablesTintadas(root, [L('celda', t.cel), L('dado', t.dado), L('mala', t.cel), ...FLECHAS.map((f, k) => ['--f' + k, IMG + 'liso-' + f + '.webp', t.flecha])], 'fu' + t.id);
 }
 
 /* ---------- partida ---------- */
