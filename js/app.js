@@ -459,7 +459,7 @@ function crearApi(j, ent, mod, root) {
           }
           const imgs = g.opciones.some(o => o.img) && g.forma;
           if (imgs) {
-            const rej0 = lista => el('div', { class: 'ap-rej ap-' + g.forma }, ...lista.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : ''), 'data-o': o.id, title: o.nombre },
+            const rej0 = lista => el('div', { class: 'ap-rej ap-' + g.forma }, ...lista.map(o => el('button', { type: 'button', class: 'ap-ficha' + (elec[g.clave] === o.id ? ' on' : '') + (o.modo && o.modo !== modo() ? ' dis' : ''), 'data-o': o.id, title: o.nombre + (o.modo && o.modo !== modo() ? (o.modo === 'claro' ? ' (solo en modo Claro)' : ' (solo en modo Nocturno)') : ''), ...(o.modo && o.modo !== modo() ? { disabled: '' } : {}) },
               o.img ? el('img', { src: o.img, alt: '', loading: 'lazy' }) : el('span', { class: 'ap-azar' }, o.icono || (o.nada ? '🚫' : '🎲')), el('small', {}, o.nombre))));
             // Con secciones (o.sec) la rejilla lleva un título por sección (Personajes: Gente, Oficios, Fantasía…)
             const rej = lista => { if (!lista.some(o => o.sec)) return rej0(lista); const cs = el('div', { class: 'ap-secs' }); let sec = null, tr = [];

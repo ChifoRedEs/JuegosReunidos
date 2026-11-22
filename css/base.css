@@ -253,7 +253,7 @@ main{padding-top:14px}
 .ap-slot.on{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 28%,transparent)}
 .ap-slot .sw,.ap-mres .sw{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid rgba(0,0,0,.25);display:inline-grid;place-items:center;font-size:12px;font-style:normal}
 .ap-mres{display:inline-flex;gap:4px}
-.ap-o.dis{opacity:.28;pointer-events:none}
+.ap-o.dis,.ap-ficha.dis{opacity:.28;pointer-events:none}
 .ap-multi .ap-sec{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:6px 0}
 .ap-sub .ap-sec{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:8px 0 4px}.ap-sub .ap-cuerpo{margin-bottom:4px}
 

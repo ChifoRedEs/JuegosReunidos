@@ -17,5 +17,13 @@
  "0-baul": "Baúl de madera",
  "0-lona": "Lona turquesa",
  "n-campo-bombardeo": "Campo de Minas",
- "n-campo-bombardeo-noche": "Campo de Minas Noche"
+ "n-campo-bombardeo-noche": "Campo de Minas Noche",
+ "n-campo-bombardeo-desierto": "Campo de Minas · Desierto",
+ "n-campo-bombardeo-desierto-noche": "Campo de Minas · Desierto Noche",
+ "n-campo-bombardeo-lago": "Campo de Minas · Lago Helado",
+ "n-campo-bombardeo-lago-noche": "Campo de Minas · Lago Helado Noche",
+ "n-campo-bombardeo-infierno": "Campo de Minas · Infierno",
+ "n-campo-bombardeo-infierno-noche": "Campo de Minas · Infierno Noche",
+ "n-campo-bombardeo-isla": "Campo de Minas · Isla",
+ "n-campo-bombardeo-isla-noche": "Campo de Minas · Isla Noche"
 }

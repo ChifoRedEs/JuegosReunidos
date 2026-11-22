@@ -7,7 +7,11 @@ const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'P
 const RETO = 'medio';
 const IMG = n => `<img class="em" src="img/bombardeo/${n}.webp" alt="" draggable="false">`;
 const carita = (fin, pulsando) => IMG(fin === 'gana' ? 'ok' : fin === 'pierde' ? 'bombatriste' : 'radar');
-let S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false;
+let S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false, ultLargo = 0;
+
+/* ---------- Apariencia · Área (imagen de las casillas ocultas; el CSS la aplica por data-area) ---------- */
+const AREAS = [['cesped', 'Césped'], ['tablas', 'Tablas'], ['losas', 'Losas'], ['rocas', 'Rocas'], ['hielo', 'Hielo'], ['tierra', 'Tierra'], ['arena', 'Arena'], ['nieve', 'Nieve'], ['musgo', 'Musgo']];
+const grupoArea = () => ({ clave: 'area', titulo: 'Área', icono: '🧱', ventana: true, forma: 'figura', def: 'cesped', opciones: AREAS.map(([id, nombre]) => ({ id, nombre, img: `img/bombardeo/area/${id}.webp` })) });
 
 /* ---------- validación / resumen ---------- */
 export function validar(d) {
@@ -38,8 +42,10 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; modo = 'abrir'; pst = null; press = null; pulsando = false;
-  const gF = { ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo' }; gF.opciones = gF.opciones.filter(o => !o.azar);   // sin «Aleatoria»
-  asp = api.aspecto([gF, { ...grupoTableroDN(), ocultarSi: { clave: 'tapete', empieza: 't-' } }],
+  // Tapetes de día solo en modo Claro y los «-noche» solo en modo Nocturno (como los colores de tablero); sin «Aleatoria»
+  const gF = { ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo', defModo: { claro: 't-n-campo-bombardeo', oscuro: 't-n-campo-bombardeo-noche' } };
+  gF.opciones = gF.opciones.filter(o => !o.azar).map(o => o.img ? { ...o, modo: /-noche$/.test(o.id) ? 'oscuro' : 'claro' } : o);
+  asp = api.aspecto([gF, { ...grupoTableroDN(), ocultarSi: { clave: 'tapete', empieza: 't-' } }, grupoArea()],
     () => { cel.forEach(b => { b.dataset.k = ''; }); pintar(); });
   await api.css(new URL('./bombardeo.css', import.meta.url));
   const g = api.cargar();
@@ -55,7 +61,8 @@ export async function mount(r, a) {
   root.addEventListener('click', clic);
   const tab = $('#bmTab');
   tab.addEventListener('pointerdown', pDown); tab.addEventListener('pointerup', pUp); tab.addEventListener('pointercancel', pCancel); tab.addEventListener('pointerleave', pCancel);
-  tab.addEventListener('contextmenu', e => { e.preventDefault(); const b = e.target.closest('.bc'); if (b) accion(+b.dataset.i, 'bandera'); });
+  // El menú contextual (clic derecho de ratón) pone/quita la bandera. En pantalla táctil la pulsación larga ya la gestiona pDown: se ignora aquí el contextmenu que el móvil lanza a la vez (si no, quitaba la bandera recién puesta).
+  tab.addEventListener('contextmenu', e => { e.preventDefault(); if (pulsando || Date.now() - ultLargo < 1500 || e.pointerType === 'touch') return; const b = e.target.closest('.bc'); if (b) accion(+b.dataset.i, 'bandera'); });
   onKey = teclado; tab.addEventListener('keydown', onKey);
   api.barra({ nueva: () => nueva(S.nivel),
     salir: () => { location.hash = '#/cat/logica'; },
@@ -166,7 +173,7 @@ function pintarReto() {
 function pDown(e) {
   const b = e.target.closest('.bc'); if (!b || !S || S.fin || e.button > 0) return;
   const i = +b.dataset.i; pulsando = true; $('#bmCara').textContent = '😮';
-  const lp = setTimeout(() => { if (press) { press.largo = true; api.vibrar(25); accion(i, modo === 'abrir' ? 'bandera' : 'abrir'); } }, 380);
+  const lp = setTimeout(() => { if (press) { press.largo = true; ultLargo = Date.now(); api.vibrar(25); accion(i, modo === 'abrir' ? 'bandera' : 'abrir'); } }, 380);
   press = { i, lp, largo: false };
 }
 function pUp(e) {
