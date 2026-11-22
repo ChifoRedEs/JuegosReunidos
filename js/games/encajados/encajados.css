@@ -25,12 +25,10 @@
 .juego-encajados .sktab.cajas-carton .skcaja::before{background-image:url(../../../img/encajados/caja-carton.webp)}
 .juego-encajados .sktab.cajas-cuerdas .skcaja::before{background-image:url(../../../img/encajados/caja-cuerdas.webp)}
 .juego-encajados .sktab.cajas-hielo .skcaja::before{background-image:url(../../../img/encajados/caja-hielo.webp)}
-.juego-encajados .sktab.cajas-madera .skcaja::before{background-image:url(../../../img/encajados/caja-madera.webp)}
 .juego-encajados .sktab.cajas-metal .skcaja::before{background-image:url(../../../img/encajados/caja-metal.webp)}
-.juego-encajados .sktab.cajas-militar .skcaja::before{background-image:url(../../../img/encajados/caja-militar.webp)}
 .juego-encajados .sktab.cajas-piedra .skcaja::before{background-image:url(../../../img/encajados/caja-piedra.webp)}
-.juego-encajados .sktab.cajas-roja .skcaja::before{background-image:url(../../../img/encajados/caja-roja.webp)}
 .juego-encajados .sktab.cajas-tec .skcaja::before{background-image:url(../../../img/encajados/caja-tec.webp)}
+.juego-encajados .sktab.cajas-blindada .skcaja::before{background-image:url(../../../img/encajados/caja-blindada.webp)}
 .juego-encajados .skcaja.en::before{filter:drop-shadow(0 0 3px #2ECC71) drop-shadow(0 0 5px #2ECC71)}
 .juego-encajados .sktab:not([class*="cajas-"]) .skcaja.en::before,.juego-encajados .sktab.cajas-caja .skcaja.en::before{background-image:url(../../../img/encajados/caja-meta.webp)}
 .juego-encajados .skcaja.en::after{content:'✓';position:absolute;right:4%;bottom:4%;width:36%;height:36%;border-radius:50%;background:#2ECC71;border:2px solid #fff;display:grid;place-items:center;color:#fff;font:800 clamp(9px,2.6vw,16px)/1 'Baloo 2',sans-serif}

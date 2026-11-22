@@ -5,9 +5,8 @@ import { enSegundoPlano } from '../../core/ia/remoto.js';
 import * as K from './motor.js';
 import { NIVELES } from './niveles.js';
 import { estilo, aplicarVars, oscuro } from '../../core/fichas.js';
-// Personajes del almacén (img/encajados/<id>-abajo|arriba|izq|der.webp). h = hombres y m = mujeres (cuerpo entero); p1…p6 = bustos vistos desde arriba.
-const PROPIOS = [['h1', 'Mozo con gorra'], ['h2', 'Obrero barbudo'], ['h3', 'Repartidor'], ['h4', 'Abuelo del almacén'], ['m1', 'Capataz'], ['m2', 'Mecánica'], ['m3', 'Repartidora'], ['m4', 'Abuela del almacén'],
-  ['p1', 'Personaje 1'], ['p2', 'Personaje 2'], ['p3', 'Personaje 3'], ['p4', 'Personaje 4'], ['p5', 'Personaje 5'], ['p6', 'Personaje 6']];
+// Personajes del almacén (img/encajados/<id>-abajo|arriba|izq|der.webp): h = hombres y m = mujeres, de cuerpo entero.
+const PROPIOS = [['h1', 'Mozo con gorra'], ['h2', 'Obrero barbudo'], ['h3', 'Repartidor'], ['h4', 'Abuelo del almacén'], ['m1', 'Capataz'], ['m2', 'Mecánica'], ['m3', 'Repartidora'], ['m4', 'Abuela del almacén']];
 const CUERPO = /^[hm]\d$/;   // los de cuerpo entero se dibujan algo más pequeños que la caja
 
 const MOTOR = new URL('./motor.js', import.meta.url).href;
@@ -21,7 +20,7 @@ const TEMAS = {   // 4 escenarios, cada uno con su versión de día (modo Claro)
   'desierto-n': { nombre: 'Desierto', sw: ['#3B2F5C', '#4A3F62'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Hielo', sw: ['#1B2B5E', '#25355F'], modo: 'oscuro' },
 };
 // Cajas: imágenes de img/encajados (la primera es la de siempre)
-const CAJAS = { caja: 'Madera', carton: 'Cartón', cuerdas: 'Cuerdas', hielo: 'Hielo', madera: 'Madera vieja', metal: 'Metal', militar: 'Militar', piedra: 'Piedra', roja: 'Roja', tec: 'Tecnológica' };
+const CAJAS = { caja: 'Madera', metal: 'Metal', tec: 'Tecnológica', carton: 'Cartón', cuerdas: 'Cuerdas', hielo: 'Hielo', piedra: 'Piedra', blindada: 'Blindada' };
 const SUF = { izquierda: 'izq', derecha: 'der', arriba: 'arriba', abajo: 'abajo' };
 let dirV = 'abajo';
 const ficha = () => ({ sec: 'propios' });
@@ -56,9 +55,9 @@ export async function mount(r, a) {
   api = a; root = r; ocupado = false; andando = null; forzar2d = false; modo3d = false;
   hay3d = false;   // sin vista 3D
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
-    { clave: 'tema', titulo: 'Escenario (muros y suelo)', icono: '🏭', def: 'almacen', defModo: { claro: 'almacen', oscuro: 'almacen-n' }, opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw, modo: t.modo, sec: t.modo === 'claro' ? 'Día' : 'Noche' })) },
+    { clave: 'tema', titulo: 'Escenario', icono: '🏭', def: 'almacen', defModo: { claro: 'almacen', oscuro: 'almacen-n' }, opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw, modo: t.modo, sec: t.modo === 'claro' ? 'Día' : 'Noche' })) },
     { clave: 'cajas', titulo: 'Cajas', icono: '📦', ventana: true, forma: 'figura', def: 'caja', opciones: Object.entries(CAJAS).map(([id, nombre]) => ({ id, nombre, img: `img/encajados/caja${id === 'caja' ? '' : '-' + id}.webp` })) },
-    { clave: 'ficha', titulo: 'Personaje', icono: '🧑', ventana: true, forma: 'figura', def: 'p1', opciones: PROPIOS.map(([id, nombre]) => ({ id, nombre, sec: CUERPO.test(id) ? 'Cuerpo entero' : 'Vistos desde arriba', img: `img/encajados/${id}-abajo.webp` })) }],
+    { clave: 'ficha', titulo: 'Personaje', icono: '🧑', ventana: true, forma: 'figura', def: 'h1', opciones: PROPIOS.map(([id, nombre]) => ({ id, nombre, sec: id[0] === 'h' ? 'Hombres' : 'Mujeres', img: `img/encajados/${id}-abajo.webp` })) }],
   () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./encajados.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && MODOS[c0.modo] && K.TAMANOS[c0.tam]) cfg = { ...c0 };
@@ -272,7 +271,7 @@ function reglas() {
     <li>Cuidado con las esquinas: una caja arrinconada fuera de su meta ya no sale. Te avisaré si pasa.</li>
     <li>Muévete deslizando el dedo sobre el almacén, con las flechas de pantalla o del teclado (también WASD). <b>Toca una casilla</b> y el personaje irá andando hasta allí.</li>
     <li>↶ Deshacer (también Z) no tiene límite y se guarda con la partida. ⟲ Reiniciar vuelve al principio del nivel.</li>
-    <li>🎨 <b>Apariencia</b>: 4 escenarios con versión de día y de noche (según el modo Claro/Nocturno), 10 tipos de caja y 14 personajes del almacén que se giran según hacia dónde avanzan.</li>
+    <li>🎨 <b>Apariencia</b>: 4 escenarios con versión de día y de noche (según el modo Claro/Nocturno), 8 tipos de caja y 8 personajes del almacén que se giran según hacia dónde avanzan.</li>
     <li>💡 <b>Pista</b>: busco la mejor solución desde donde estás y hago por ti el siguiente empuje.</li>
     <li><b>Campaña</b>: 20 niveles de dificultad creciente. <b>Generados</b>: niveles nuevos sin fin en 3 tamaños, siempre con solución. <b>Reto del día</b>: el mismo nivel para todo el mundo.</li></ul>`);
 }
