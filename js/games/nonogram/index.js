@@ -8,7 +8,6 @@ import { SIZES, PANEL, pistasMax, runs, colsOf, generarAleatorio } from './solve
 const COLORES = [['azul', 'Azul', '#2F6BFF'], ['rojo', 'Rojo', '#E5383B'], ['naranja', 'Naranja', '#FF7A1A'], ['amarillo', 'Amarillo', '#F2B600'], ['verde', 'Verde', '#0FB56A'], ['turquesa', 'Turquesa', '#0FA3B1'], ['violeta', 'Violeta', '#7A4DFF'], ['rosa', 'Rosa', '#FF3FA4'], ['marron', 'Marrón', '#8B5A2B'], ['grafito', 'Grafito', '#4A5568']];
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 const MAX_DESHACER = 40, RETO = { n: 10, diff: 'medio' };
-const NFONT = { 5: 17, 10: 13, 15: 11 };
 let malas = new Set(), asp = null, N = null, api = null, hist = null, crono = null, modo = 'f', tipo = 'azar', banco = null, ocupado = false, rootEl = null;
 let cel = [], rcEl = [], ccEl = [], drag = null, activo = null;
 const vacia = n => Array.from({ length: n }, () => Array(n).fill(0));
@@ -134,16 +133,16 @@ function guardar() {
 
 /* ---------- pintado: la cuadrícula se construye una vez por panel y luego se parchea ---------- */
 function construir() {
-  const n = N.n, fs = NFONT[n];
-  // Panel de tamaño fijo por tamaño de tablero: reserva sitio para el máximo de números (3 en 5×5, 5 en 10×10 y 15×15); si una partida guardada trae más, se amplía
-  const need = Math.max(PANEL[n], pistasMax(N.rc, N.cc)), digs = Math.max(...N.rc.map(r => r.reduce((s, x) => s + String(x).length, 0)), need);
-  const cw = Math.round(digs * fs * .62 + (need - 1) * 4 + 12) - (n === 15 ? 4.5 : 0), ch = Math.round(need * fs * 1.15 + 6);
-  const tab = $('#ngTab');
-  tab.style.cssText = `--n:${n};--fs:${fs}px;--cw:${cw}px;--ch:${ch}px`;
-  let h = '<div></div>' + N.cc.map(c => `<div class="cc">${c.map(x => `<span>${x}</span>`).join('')}</div>`).join('');
+  const n = N.n;
+  // Panel a todo el ancho: la CSS reparte el espacio entre casillas y píldoras según n y el máximo de números (need)
+  const need = Math.max(PANEL[n], pistasMax(N.rc, N.cc));
+  const tab = $('#ngTab'), sep = j => j % 5 === 4 && j < n - 1;
+  const cab = 'calc(var(--need)*var(--pw) + (var(--need) - 1)*2px + 6px)', pista = j => sep(j) ? 'calc(var(--cs) + 3px)' : 'var(--cs)', pistas = [...Array(n).keys()].map(pista).join(' ');
+  tab.style.cssText = `--n:${n};--need:${need};--sep:${3 * Math.floor((n - 1) / 5)}px;grid-template-columns:${cab} ${pistas};grid-template-rows:${cab} ${pistas}`;
+  let h = '<div></div>' + N.cc.map((c, j) => `<div class="cc ${sep(j) ? 'm5' : ''}">${c.map(x => `<span>${x}</span>`).join('')}</div>`).join('');
   for (let i = 0; i < n; i++) {
-    h += `<div class="rc">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>`;
-    for (let j = 0; j < n; j++) h += `<button type="button" class="c ${j % 5 === 4 && j < n - 1 ? 'm5' : ''} ${i % 5 === 4 && i < n - 1 ? 'b5' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`;
+    h += `<div class="rc ${sep(i) ? 'b5' : ''}">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>`;
+    for (let j = 0; j < n; j++) h += `<button type="button" class="c ${(i + j) % 2 ? 'al' : ''} ${sep(j) ? 'm5' : ''} ${sep(i) ? 'b5' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`;
   }
   tab.innerHTML = h;
   ccEl = [...tab.querySelectorAll('.cc')]; rcEl = [...tab.querySelectorAll('.rc')];
@@ -243,6 +242,6 @@ function reglas() {
     <li>Entre dos grupos hay al menos una casilla vacía. Cada línea tiene como máximo 3 números en Fácil, 4 en Medio y 5 en Difícil.</li>
     <li><b>Toca</b> una casilla: la primera vez se rellena, la segunda se marca con ✕ y la tercera se limpia. <b>Arrastra</b> el dedo por una fila o columna para pintar de golpe.</li>
     <li>Bajo el panel hay un menú con un botón <b>Rellenar / Marcar</b> (cada pulsación cambia lo que pinta el arrastre: rellenar o ✕), <b>Deshacer</b>, <b>Pista</b> y <b>Comprobar</b> (marca en rojo lo incorrecto) (corrige una casilla; con pistas no cuenta el récord de tiempo).</li>
-    <li>Las pistas se <b>tachan</b> cuando esa línea ya está bien.</li>
+    <li>Las pistas se ponen en <b>verde</b> cuando esa línea ya está bien.</li>
     <li>Los paneles aleatorios se resuelven siempre por lógica; el modo <b>Dibujo</b> usa imágenes hechas a mano en todos los tamaños (5×5, 10×10 y 15×15).</li><li><b>Reto del día</b>: un panel 10×10 igual para todo el mundo. El historial de deshacer se guarda con la partida.</li></ul>`);
 }
