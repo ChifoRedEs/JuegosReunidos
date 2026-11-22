@@ -4,33 +4,29 @@ import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import * as K from './motor.js';
 import { NIVELES } from './niveles.js';
-import { FICHAS, opcionesPersonajes } from '../../core/personajes.js';
-const PROPIOS = [['j', 'Explorador'], ['p1', 'Personaje 1'], ['p2', 'Personaje 2'], ['p3', 'Personaje 3'], ['p4', 'Personaje 4'], ['p5', 'Personaje 5'], ['p6', 'Personaje 6']];
-import { grupoFondo } from '../../core/aspectos.js';
-import { gruposFichas, estilo, aplicarVars, oscuro } from '../../core/fichas.js';
+import { estilo, aplicarVars, oscuro } from '../../core/fichas.js';
+// Personajes del almacén (img/encajados/<id>-abajo|arriba|izq|der.webp). h = hombres y m = mujeres (cuerpo entero); p1…p6 = bustos vistos desde arriba.
+const PROPIOS = [['h1', 'Mozo con gorra'], ['h2', 'Obrero barbudo'], ['h3', 'Repartidor'], ['h4', 'Abuelo del almacén'], ['m1', 'Capataz'], ['m2', 'Mecánica'], ['m3', 'Repartidora'], ['m4', 'Abuela del almacén'],
+  ['p1', 'Personaje 1'], ['p2', 'Personaje 2'], ['p3', 'Personaje 3'], ['p4', 'Personaje 4'], ['p5', 'Personaje 5'], ['p6', 'Personaje 6']];
+const CUERPO = /^[hm]\d$/;   // los de cuerpo entero se dibujan algo más pequeños que la caja
 
 const MOTOR = new URL('./motor.js', import.meta.url).href;
 const MODOS = { campana: '🗺️ Campaña', azar: '🎲 Generados' };
 const MAX_HIST = 400;
 // 🎨 Apariencia: escenario (muros, suelo y metas), cajas y personaje. Los colores están en encajados.css (.tema-… y .cajas-…)
-const TEMAS = {
-  almacen: { nombre: 'Almacén', sw: ['#6B7A99', '#EFE6D8'] }, hielo: { nombre: 'Hielo', sw: ['#3A5BA0', '#EAF6FF'] }, jardin: { nombre: 'Jardín', sw: ['#3E8E5A', '#F3EBD8'] },
-  noche: { nombre: 'Noche', sw: ['#1B2147', '#2E3566'] }, desierto: { nombre: 'Desierto', sw: ['#B5651D', '#F6DFB0'] }, caramelo: { nombre: 'Caramelo', sw: ['#E84A8A', '#FFE6F1'] },
-  mina: { nombre: 'Mina', sw: ['#4A3B33', '#8C7B6B'] }, playa: { nombre: 'Playa', sw: ['#1FA2B8', '#FFF1C9'] },
+const TEMAS = {   // 4 escenarios, cada uno con su versión de día (modo Claro) y de noche (modo Nocturno)
+  almacen: { nombre: 'Almacén', sw: ['#6B7A99', '#EFE6D8'], modo: 'claro' }, jardin: { nombre: 'Jardín', sw: ['#3E8E5A', '#F3EBD8'], modo: 'claro' },
+  desierto: { nombre: 'Desierto', sw: ['#B5651D', '#F6DFB0'], modo: 'claro' }, hielo: { nombre: 'Hielo', sw: ['#3A5BA0', '#EAF6FF'], modo: 'claro' },
+  'almacen-n': { nombre: 'Almacén', sw: ['#232B45', '#353B52'], modo: 'oscuro' }, 'jardin-n': { nombre: 'Jardín', sw: ['#1F4A33', '#2C3B33'], modo: 'oscuro' },
+  'desierto-n': { nombre: 'Desierto', sw: ['#3B2F5C', '#4A3F62'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Hielo', sw: ['#1B2B5E', '#25355F'], modo: 'oscuro' },
 };
-const CAJAS = {
-  madera: { nombre: 'Madera', sw: ['#C98A4B', '#9C6230'] }, roja: { nombre: 'Rojas', sw: ['#FF5A5F', '#C0303A'] }, azul: { nombre: 'Azules', sw: ['#4C8DFF', '#2453B8'] },
-  verde: { nombre: 'Verdes', sw: ['#3DCB7A', '#1E8F4E'] }, dorada: { nombre: 'Doradas', sw: ['#FFD23F', '#C99A00'] }, metal: { nombre: 'Metálicas', sw: ['#B8C2D1', '#6D7A8F'] },
-  regalo: { nombre: 'Regalos', sw: ['#9B5DE5', '#FFD23F'] }, carton: { nombre: 'Cartón', sw: ['#D9B27C', '#A8834F'] },
-};
-// Personajes por secciones (js/core/personajes.js). Los de «Animales» y «Vehículos» se giran según hacia dónde caminan.
-const GIRAN = new Set(['Animales (cuerpo entero)', 'Vehículos']);
+// Cajas: imágenes de img/encajados (la primera es la de siempre)
+const CAJAS = { caja: 'Madera', carton: 'Cartón', cuerdas: 'Cuerdas', hielo: 'Hielo', madera: 'Madera vieja', metal: 'Metal', militar: 'Militar', piedra: 'Piedra', roja: 'Roja', tec: 'Tecnológica' };
 const SUF = { izquierda: 'izq', derecha: 'der', arriba: 'arriba', abajo: 'abajo' };
 let dirV = 'abajo';
-const propio = () => PROPIOS.some(([id]) => id === asp.valores.ficha);
-const ficha = () => propio() ? { sec: 'propios' } : (FICHAS[asp.valores.ficha] || { img: 'img/encajados/j-abajo.webp', sec: 'propios' });
-// Los «propios» tienen sprite por dirección; el resto es una sola imagen que se vuelca al mirar a la derecha
-const urlJug = () => propio() ? `img/encajados/${asp.valores.ficha}-${SUF[dirV] || 'abajo'}.webp` : (FICHAS[asp.valores.ficha] || { img: 'img/encajados/j-abajo.webp' }).img;
+const ficha = () => ({ sec: 'propios' });
+// Cada personaje tiene un sprite por dirección
+const urlJug = () => `img/encajados/${asp.valores.ficha}-${SUF[dirV] || 'abajo'}.webp`;
 let S = null, L = null, api = null, asp = null, root = null, cfg = { modo: 'campana', tam: 'mediano' };
 let V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0;
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
@@ -59,10 +55,10 @@ export function resumen(d) { return { texto: `${titulo(d)} · ${d.done ? `resuel
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; andando = null; forzar2d = false; modo3d = false;
   hay3d = false;   // sin vista 3D
-  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }, { ...grupoFondo('#skTab'), def: 't-n-almacen' }, { clave: 'tema', titulo: 'Escenario (muros y suelo)', def: 'almacen', opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    { clave: 'cajas', titulo: 'Cajas', def: 'madera', opciones: Object.entries(CAJAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    ...gruposFichas({ titulo: 'Cajas', icono: '📦', color: false }),
-    { clave: 'ficha', titulo: 'Personaje', icono: '🧑', ventana: true, forma: 'figura', def: 'j', opciones: [...PROPIOS.map(([id, nombre]) => ({ id, nombre, sec: 'Del almacén', img: `img/encajados/${id}-abajo.webp` })), ...opcionesPersonajes()] }],
+  asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
+    { clave: 'tema', titulo: 'Escenario (muros y suelo)', icono: '🏭', def: 'almacen', defModo: { claro: 'almacen', oscuro: 'almacen-n' }, opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw, modo: t.modo, sec: t.modo === 'claro' ? 'Día' : 'Noche' })) },
+    { clave: 'cajas', titulo: 'Cajas', icono: '📦', ventana: true, forma: 'figura', def: 'caja', opciones: Object.entries(CAJAS).map(([id, nombre]) => ({ id, nombre, img: `img/encajados/caja${id === 'caja' ? '' : '-' + id}.webp` })) },
+    { clave: 'ficha', titulo: 'Personaje', icono: '🧑', ventana: true, forma: 'figura', def: 'p1', opciones: PROPIOS.map(([id, nombre]) => ({ id, nombre, sec: CUERPO.test(id) ? 'Cuerpo entero' : 'Vistos desde arriba', img: `img/encajados/${id}-abajo.webp` })) }],
   () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });
   await api.css(new URL('../../../css/fichas.css', import.meta.url)); await api.css(new URL('./encajados.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && MODOS[c0.modo] && K.TAMANOS[c0.tam]) cfg = { ...c0 };
@@ -169,16 +165,16 @@ function construir() {
   tab.style.setProperty('--w', L.w); tab.style.setProperty('--h', L.h);
   let html = '';
   for (let i = 0; i < L.w * L.h; i++) html += `<div class="skc ${L.muro[i] ? 'muro' : L.fuera[i] ? 'fuera' : 'suelo'}${L.meta[i] ? ' meta' : ''}" data-c="${i}"></div>`;
-  html += L.cajas.map((_, k) => `<div class="skcaja fxb" data-k="${k}"></div>`).join('') + `<div class="skjug"><span><img src="${urlJug()}" alt=""></span></div>`;
+  html += L.cajas.map((_, k) => `<div class="skcaja fxb" data-k="${k}"></div>`).join('') + `<div class="skjug${CUERPO.test(asp.valores.ficha) ? ' cuerpo' : ''}"><span><img src="${urlJug()}" alt=""></span></div>`;
   tab.innerHTML = html;
 }
 const pos = i => `--x:${i % L.w};--y:${(i / L.w) | 0}`;
 function pintar() {
   if (!S || !$('#skTab')) return;
-  if (modo3d) { if (V3) V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: urlJug(), volteo: mira === 'derecha' && GIRAN.has(ficha().sec) }); }
+  if (modo3d) { if (V3) V3.pintar({ cajas: S.cajas, jugador: S.jugador, emoji: urlJug(), volteo: false }); }
   else S.cajas.forEach((c, k) => { const el = $(`#skTab [data-k="${k}"]`); el.setAttribute('style', pos(c)); el.classList.toggle('en', !!L.meta[c]); });
   const j = modo3d ? null : $('#skTab .skjug'); if (j) { j.setAttribute('style', pos(S.jugador));
-  j.classList.toggle('derecha', mira === 'derecha' && GIRAN.has(ficha().sec)); const im = j.querySelector('img'); if (im && im.getAttribute('src') !== urlJug()) im.src = urlJug(); }   // los emojis de animales y vehículos miran a la izquierda
+  j.classList.toggle('cuerpo', CUERPO.test(asp.valores.ficha)); const im = j.querySelector('img'); if (im && im.getAttribute('src') !== urlJug()) im.src = urlJug(); }  
   const enMeta = S.cajas.filter(c => L.meta[c]).length, M = S.modo === 'campana' ? mejores()[S.nivel] : null;
   $('#skTit').textContent = titulo(S);
   $('#skCont').innerHTML = `📦 ${enMeta}/${S.cajas.length} · 👣 ${S.movs} · 🫸 ${S.empujes}${M ? ` · récord ${M[0]}` : ''}`;
@@ -276,7 +272,7 @@ function reglas() {
     <li>Cuidado con las esquinas: una caja arrinconada fuera de su meta ya no sale. Te avisaré si pasa.</li>
     <li>Muévete deslizando el dedo sobre el almacén, con las flechas de pantalla o del teclado (también WASD). <b>Toca una casilla</b> y el personaje irá andando hasta allí.</li>
     <li>↶ Deshacer (también Z) no tiene límite y se guarda con la partida. ⟲ Reiniciar vuelve al principio del nivel.</li>
-    <li>🎨 <b>Apariencia</b>: 8 escenarios, 8 tipos de caja y más de 90 personajes (hombres, mujeres, oficios, fantasía, animales y vehículos). Los animales y vehículos se giran según hacia dónde avanzan.</li>
+    <li>🎨 <b>Apariencia</b>: 4 escenarios con versión de día y de noche (según el modo Claro/Nocturno), 10 tipos de caja y 14 personajes del almacén que se giran según hacia dónde avanzan.</li>
     <li>💡 <b>Pista</b>: busco la mejor solución desde donde estás y hago por ti el siguiente empuje.</li>
     <li><b>Campaña</b>: 20 niveles de dificultad creciente. <b>Generados</b>: niveles nuevos sin fin en 3 tamaños, siempre con solución. <b>Reto del día</b>: el mismo nivel para todo el mundo.</li></ul>`);
 }

@@ -4,35 +4,36 @@
 .juego-encajados .skcab span{font-size:13px;font-weight:800;color:var(--mut)}
 .juego-encajados .sktab{--w:8;--h:8;--muro:#6B7A99;--muro2:#56637F;--suelo:#EFE6D8;--suelo2:#E6DBC9;--caja:#C98A4B;--caja2:#9C6230;--meta:#FF4757;
   position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 48px));aspect-ratio:var(--w)/var(--h);margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
-/* escenarios: muro, juntas, suelo, líneas del suelo y metas */
-.juego-encajados .sktab.tema-hielo{--muro:#3A5BA0;--muro2:#2E4A85;--suelo:#EAF6FF;--suelo2:#DDEFFC;--meta:#FF4FA3}
-.juego-encajados .sktab.tema-jardin{--muro:#3E8E5A;--muro2:#2F7046;--suelo:#F3EBD8;--suelo2:#E9DFC6;--meta:#7B3FC4}
-.juego-encajados .sktab.tema-noche{--muro:#1B2147;--muro2:#0F1430;--suelo:#2E3566;--suelo2:#272D58;--meta:#FFD23F}
-.juego-encajados .sktab.tema-desierto{--muro:#B5651D;--muro2:#94501A;--suelo:#F6DFB0;--suelo2:#EED39C;--meta:#1F7A8C}
-.juego-encajados .sktab.tema-caramelo{--muro:#E84A8A;--muro2:#C93372;--suelo:#FFE6F1;--suelo2:#FBD4E5;--meta:#7B3FC4}
-.juego-encajados .sktab.tema-mina{--muro:#4A3B33;--muro2:#352A24;--suelo:#8C7B6B;--suelo2:#7F6F60;--meta:#FFC21A}
-.juego-encajados .sktab.tema-playa{--muro:#1FA2B8;--muro2:#14829A;--suelo:#FFF1C9;--suelo2:#F7E4AE;--meta:#FF5A5F}
+/* escenarios Día (modo Claro) y Noche (modo Nocturno): muro, juntas, suelo, líneas del suelo y metas */
+.juego-encajados .sktab.tema-almacen,.juego-encajados .sk3.tema-almacen{--muro:#6B7A99;--muro2:#56637F;--suelo:#EFE6D8;--suelo2:#E6DBC9;--meta:#FF4757}
+.juego-encajados .sktab.tema-jardin,.juego-encajados .sk3.tema-jardin{--muro:#3E8E5A;--muro2:#2F7046;--suelo:#F3EBD8;--suelo2:#E9DFC6;--meta:#7B3FC4}
+.juego-encajados .sktab.tema-desierto,.juego-encajados .sk3.tema-desierto{--muro:#B5651D;--muro2:#94501A;--suelo:#F6DFB0;--suelo2:#EED39C;--meta:#1F7A8C}
+.juego-encajados .sktab.tema-hielo,.juego-encajados .sk3.tema-hielo{--muro:#3A5BA0;--muro2:#2E4A85;--suelo:#EAF6FF;--suelo2:#DDEFFC;--meta:#FF4FA3}
+.juego-encajados .sktab.tema-almacen-n,.juego-encajados .sk3.tema-almacen-n{--muro:#232B45;--muro2:#151B30;--suelo:#353B52;--suelo2:#2D3248;--meta:#35E0FF}
+.juego-encajados .sktab.tema-jardin-n,.juego-encajados .sk3.tema-jardin-n{--muro:#1F4A33;--muro2:#15331F;--suelo:#2C3B33;--suelo2:#25332C;--meta:#B6FF4A}
+.juego-encajados .sktab.tema-desierto-n,.juego-encajados .sk3.tema-desierto-n{--muro:#3B2F5C;--muro2:#2A2145;--suelo:#4A3F62;--suelo2:#41375A;--meta:#FFB84A}
+.juego-encajados .sktab.tema-hielo-n,.juego-encajados .sk3.tema-hielo-n{--muro:#1B2B5E;--muro2:#111C42;--suelo:#25355F;--suelo2:#1F2D54;--meta:#5CFFE1}
 /* cajas: color y borde (el aspa de las de madera usa el borde) */
-.juego-encajados .sktab.cajas-roja{--caja:#FF5A5F;--caja2:#C0303A}
-.juego-encajados .sktab.cajas-azul{--caja:#4C8DFF;--caja2:#2453B8}
-.juego-encajados .sktab.cajas-verde{--caja:#3DCB7A;--caja2:#1E8F4E}
-.juego-encajados .sktab.cajas-dorada{--caja:#FFD23F;--caja2:#C99A00}
-.juego-encajados .sktab.cajas-metal{--caja:#B8C2D1;--caja2:#6D7A8F}
-.juego-encajados .sktab.cajas-carton{--caja:#D9B27C;--caja2:#A8834F}
-.juego-encajados .sktab.cajas-regalo{--caja:#9B5DE5;--caja2:#FFD23F}
-.juego-encajados .sktab.cajas-regalo .skcaja::before{background-image:linear-gradient(90deg,transparent 42%,var(--caja2) 42% 58%,transparent 58%),linear-gradient(transparent 42%,var(--caja2) 42% 58%,transparent 58%);border-color:color-mix(in srgb,var(--caja) 70%,#000)}
-.juego-encajados .sktab.cajas-metal .skcaja::before{background-image:radial-gradient(circle at 18% 18%,var(--caja2) 6%,transparent 7%),radial-gradient(circle at 82% 18%,var(--caja2) 6%,transparent 7%),radial-gradient(circle at 18% 82%,var(--caja2) 6%,transparent 7%),radial-gradient(circle at 82% 82%,var(--caja2) 6%,transparent 7%),linear-gradient(160deg,#fff6 0 30%,transparent 30%)}
-.juego-encajados .sktab.cajas-carton .skcaja::before{background-image:linear-gradient(transparent 44%,#C9A06A 44% 56%,transparent 56%)}
 .juego-encajados .skc{aspect-ratio:1}
 .juego-encajados .skc.muro{background:var(--muro);background-image:linear-gradient(var(--muro2) 2px,transparent 2px),linear-gradient(90deg,var(--muro2) 2px,transparent 2px);background-size:50% 50%;border-radius:3px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
 .juego-encajados .skc.suelo{background:var(--suelo);box-shadow:inset 0 0 0 1px var(--suelo2)}
 .juego-encajados .skc.meta{position:relative}
 .juego-encajados .skc.meta::after{content:'';position:absolute;inset:32%;border-radius:50%;background:var(--meta);box-shadow:0 0 0 3px color-mix(in srgb,var(--meta) 30%,transparent)}
 .juego-encajados .skcaja,.juego-encajados .skjug{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));left:calc(var(--x) * 100% / var(--w));top:calc(var(--y) * 100% / var(--h));transition:left .09s linear,top .09s linear;pointer-events:none}
-.juego-encajados .skcaja::before{content:'';position:absolute;inset:7%;border-radius:12%;background:var(--caja);border:3px solid var(--caja2);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);
-  background-image:linear-gradient(45deg,transparent 45%,var(--caja2) 45% 55%,transparent 55%),linear-gradient(-45deg,transparent 45%,var(--caja2) 45% 55%,transparent 55%)}
-.juego-encajados .skcaja.en::before{background-color:#2ECC71;border-color:#1E8F4E;background-image:none}
-.juego-encajados .skcaja.en::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:800 clamp(14px,4vw,24px) 'Baloo 2',sans-serif}
+/* cajas: imagen elegida en Apariencia (en meta: brillo verde y ✓) */
+.juego-encajados .skcaja::before{content:'';position:absolute;inset:3%;background:center/contain no-repeat url(../../../img/encajados/caja.webp)}
+.juego-encajados .sktab.cajas-carton .skcaja::before{background-image:url(../../../img/encajados/caja-carton.webp)}
+.juego-encajados .sktab.cajas-cuerdas .skcaja::before{background-image:url(../../../img/encajados/caja-cuerdas.webp)}
+.juego-encajados .sktab.cajas-hielo .skcaja::before{background-image:url(../../../img/encajados/caja-hielo.webp)}
+.juego-encajados .sktab.cajas-madera .skcaja::before{background-image:url(../../../img/encajados/caja-madera.webp)}
+.juego-encajados .sktab.cajas-metal .skcaja::before{background-image:url(../../../img/encajados/caja-metal.webp)}
+.juego-encajados .sktab.cajas-militar .skcaja::before{background-image:url(../../../img/encajados/caja-militar.webp)}
+.juego-encajados .sktab.cajas-piedra .skcaja::before{background-image:url(../../../img/encajados/caja-piedra.webp)}
+.juego-encajados .sktab.cajas-roja .skcaja::before{background-image:url(../../../img/encajados/caja-roja.webp)}
+.juego-encajados .sktab.cajas-tec .skcaja::before{background-image:url(../../../img/encajados/caja-tec.webp)}
+.juego-encajados .skcaja.en::before{filter:drop-shadow(0 0 3px #2ECC71) drop-shadow(0 0 5px #2ECC71)}
+.juego-encajados .sktab:not([class*="cajas-"]) .skcaja.en::before,.juego-encajados .sktab.cajas-caja .skcaja.en::before{background-image:url(../../../img/encajados/caja-meta.webp)}
+.juego-encajados .skcaja.en::after{content:'✓';position:absolute;right:4%;bottom:4%;width:36%;height:36%;border-radius:50%;background:#2ECC71;border:2px solid #fff;display:grid;place-items:center;color:#fff;font:800 clamp(9px,2.6vw,16px)/1 'Baloo 2',sans-serif}
 .juego-encajados .skjug span{display:block;transition:transform .12s}
 .juego-encajados .skjug.derecha span{transform:scaleX(-1)}
 .juego-encajados .skjug{display:grid;place-items:center;font-size:clamp(18px,calc(80vw / var(--w) * .62),34px);line-height:1;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
@@ -53,19 +54,7 @@
 
 /* vista 3D: el contenedor lleva las mismas variables de color que el tablero 2D */
 .juego-encajados .sk3{--muro:#6B7A99;--muro2:#56637F;--suelo:#EFE6D8;--suelo2:#E6DBC9;--caja:#C98A4B;--caja2:#9C6230;--meta:#FF4757;}
-.juego-encajados .sk3.tema-hielo{--muro:#3A5BA0;--muro2:#2E4A85;--suelo:#EAF6FF;--suelo2:#DDEFFC;--meta:#FF4FA3}
-.juego-encajados .sk3.tema-jardin{--muro:#3E8E5A;--muro2:#2F7046;--suelo:#F3EBD8;--suelo2:#E9DFC6;--meta:#7B3FC4}
-.juego-encajados .sk3.tema-noche{--muro:#1B2147;--muro2:#0F1430;--suelo:#2E3566;--suelo2:#272D58;--meta:#FFD23F}
-.juego-encajados .sk3.tema-desierto{--muro:#B5651D;--muro2:#94501A;--suelo:#F6DFB0;--suelo2:#EED39C;--meta:#1F7A8C}
-.juego-encajados .sk3.tema-caramelo{--muro:#E84A8A;--muro2:#C93372;--suelo:#FFE6F1;--suelo2:#FBD4E5;--meta:#7B3FC4}
-.juego-encajados .sk3.tema-mina{--muro:#4A3B33;--muro2:#352A24;--suelo:#8C7B6B;--suelo2:#7F6F60;--meta:#FFC21A}
-.juego-encajados .sk3.tema-playa{--muro:#1FA2B8;--muro2:#14829A;--suelo:#FFF1C9;--suelo2:#F7E4AE;--meta:#FF5A5F}
-.juego-encajados .sk3.cajas-roja{--caja:#FF5A5F;--caja2:#C0303A}
-.juego-encajados .sk3.cajas-azul{--caja:#4C8DFF;--caja2:#2453B8}
-.juego-encajados .sk3.cajas-verde{--caja:#3DCB7A;--caja2:#1E8F4E}
-.juego-encajados .sk3.cajas-dorada{--caja:#FFD23F;--caja2:#C99A00}
-.juego-encajados .sk3.cajas-metal{--caja:#B8C2D1;--caja2:#6D7A8F}
-.juego-encajados .sk3.cajas-carton{--caja:#D9B27C;--caja2:#A8834F}
-.juego-encajados .sk3.cajas-regalo{--caja:#9B5DE5;--caja2:#FFD23F}
 .juego-encajados .e3d.sk3{width:min(calc(100vw - 28px),560px);touch-action:none}
 .juego-encajados .skjug img{width:112%;height:112%;max-width:none;object-fit:contain;display:block}
+.juego-encajados .skjug.cuerpo{display:flex;align-items:center;justify-content:center}.juego-encajados .skjug.cuerpo span{display:contents}
+.juego-encajados .skjug.cuerpo img{width:auto;height:90%;max-width:none}   /* cuerpo entero: algo más pequeño que la caja */
