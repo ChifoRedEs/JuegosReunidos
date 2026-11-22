@@ -10,7 +10,7 @@ const carita = (fin, pulsando) => IMG(fin === 'gana' ? 'ok' : fin === 'pierde' ?
 let S = null, nivel = 'medio', api = null, asp = null, root = null, crono = null, cel = [], cache = crearCache(), modo = 'abrir', pst = null, pstT = null, press = null, onKey = null, pulsando = false, ultLargo = 0;
 
 /* ---------- Apariencia · Área (imagen de las casillas ocultas; el CSS la aplica por data-area) ---------- */
-const AREAS = [['cesped', 'Césped'], ['tablas', 'Tablas'], ['losas', 'Losas'], ['rocas', 'Rocas'], ['hielo', 'Hielo'], ['tierra', 'Tierra'], ['arena', 'Arena'], ['nieve', 'Nieve'], ['musgo', 'Musgo']];
+const AREAS = [['cesped', 'Césped'], ['tablas', 'Tablas'], ['losas', 'Losas'], ['rocas', 'Rocas'], ['tierra', 'Tierra'], ['arena', 'Arena'], ['nieve', 'Nieve'], ['musgo', 'Musgo']];
 const grupoArea = () => ({ clave: 'area', titulo: 'Área', icono: '🧱', ventana: true, forma: 'figura', def: 'cesped', opciones: AREAS.map(([id, nombre]) => ({ id, nombre, img: `img/bombardeo/area/${id}.webp` })) });
 
 /* ---------- validación / resumen ---------- */
