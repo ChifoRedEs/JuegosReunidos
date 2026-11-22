@@ -615,3 +615,4 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 .ap-dd-o.on{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 10%,var(--card))}
 .ap-dd-ok{font-style:normal;font-weight:900;color:var(--purple);visibility:hidden}.ap-dd-o.on .ap-dd-ok{visibility:visible}
 .ap-dd-btn:focus-visible,.ap-dd-o:focus-visible{outline:3px solid var(--purple);outline-offset:1px}
+.bar>.ap-dd{flex:1 1 100%}

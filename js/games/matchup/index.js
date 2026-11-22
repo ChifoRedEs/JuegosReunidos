@@ -2,6 +2,7 @@
 // Reglas y lógica en motor.js; los bancos de imágenes (img/matchup/<tema>) se listan en bancos.js (tools/generar_matchup.py).
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
+import { mejorarSelects } from '../../core/desplegable.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoFondo, grupoDorso } from '../../core/aspectos.js';
 import { BARAJAS, cargarBarajas, urlDorso } from '../../core/cartas.js';
@@ -90,6 +91,7 @@ function setup() {
     ${cfg.modo === 'cpu' ? `<div class="bar"><span class="lbl">Memoria de la máquina</span>${seg('nivel', Object.entries(M.NIVELES))}</div>` : ''}
     ${cfg.modo === 'solo' && mej ? `<p class="note">🏆 Tu mejor marca aquí: <b>${mej.movs}</b> movimientos · ${fmt(mej.t)}</p>` : ''}
     ${pieMenu({ ac: 'jugar', seguir: S && !S.done ? 'volver' : null })}`;
+  mejorarSelects(root);
 }
 function jugar() {
   api.setPref('cfg', cfg); parar(); if (asp) asp.sortear();

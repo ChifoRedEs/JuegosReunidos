@@ -11,6 +11,7 @@ import { filtrarTapetes, ocultarClasicas, modoOscuro } from './core/aspectos.js'
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION } from './version.js';
+import { mejorarSelects } from './core/desplegable.js';
 import { TUTORIALES } from './tutoriales/indice.js';
 
 // «Palabras Cruzadas» (el nombre más largo) ocupa justo la zona clara del banner (50 % de su ancho); los demás, más cortos, caben siempre
@@ -240,6 +241,7 @@ function crearApi(j, ent, mod, root) {
             ? el('select', { class: 'desplegable', 'data-ks': g.clave, 'aria-label': g.titulo }, ...g.opciones.map(([v, l]) => el('option', { value: JSON.stringify(v), selected: String(vals[g.clave]) === String(v) }, l)))
             : el('div', { class: 'seg' }, ...g.opciones.map(([v, l]) => el('button', { type: 'button', class: 'btn' + (String(vals[g.clave]) === String(v) ? ' on' : ''), 'data-k': g.clave, 'data-v': JSON.stringify(v) }, l))),
           g.nota ? el('small', { class: 'note' }, g.nota) : null)));
+        mejorarSelects(cont);
       };
       cont.addEventListener('click', e => {
         const b = e.target.closest('button[data-k]'); if (!b) return;
