@@ -142,8 +142,8 @@ function construir() {
   const fila = f => '<div></div>' + ent.map(j => j < 0 ? '<i class="sp sph"></i>' : f(j)).join('');
   let h = fila(j => `<div class="cc">${N.cc[j].map(x => `<span>${x}</span>`).join('')}</div>`);
   for (let i = 0; i < n; i++) {
-    h += `<div class="rc">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>` + ent.map(j => j < 0 ? sp : `<button type="button" class="c ${(i + j) % 2 ? 'al' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`).join('');
-    if (sep(i)) h += '<div class="sp sph"></div>' + ent.map(() => sp).join('');
+    h += `<div class="rc">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>` + ent.map(j => j < 0 ? `<i class="sp ${i % 5 === 4 && i < n - 1 ? 'vge' : i % 5 === 0 && i > 0 ? 'vgs' : ''}"></i>` : `<button type="button" class="c ${(i + j) % 2 ? 'al' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`).join('');
+    if (sep(i)) h += '<div class="sp sph"></div>' + ent.map(j => j < 0 ? '<i class="sp sx"></i>' : `<i class="sp ${j % 5 === 4 && j < n - 1 ? 'hge' : j % 5 === 0 && j > 0 ? 'hgs' : ''}"></i>`).join('');
   }
   tab.innerHTML = h;
   ccEl = [...tab.querySelectorAll('.cc')]; rcEl = [...tab.querySelectorAll('.rc')];
@@ -170,9 +170,9 @@ function pintarCelda(i, j) {
 function pintar() {
   if (!N) return;
   const n = N.n, cu = N.cur.map(r => r.map(v => v === 1 ? 1 : 0));
-  for (let i = 0; i < n; i++) { for (let j = 0; j < n; j++) pintarCelda(i, j); rcEl[i].classList.toggle('ok', same(runs(cu[i]), N.rc[i])); }
-  const cols = colsOf(cu, n); ccEl.forEach((e, j) => e.classList.toggle('ok', same(runs(cols[j]), N.cc[j])));
-  okPrev = { r: new Set([...Array(n).keys()].filter(i => same(runs(cu[i]), N.rc[i]))), c: new Set([...Array(n).keys()].filter(j => same(runs(cols[j]), N.cc[j]))) };
+  for (let i = 0; i < n; i++) { for (let j = 0; j < n; j++) pintarCelda(i, j); rcEl[i].classList.toggle('ok', filaOk(i)); }
+  const cols = colsOf(cu, n); ccEl.forEach((e, j) => e.classList.toggle('ok', colOk(j)));
+  okPrev = { r: new Set([...Array(n).keys()].filter(filaOk)), c: new Set([...Array(n).keys()].filter(colOk)) };
   const ok = completo(N);
   if (ok && !N.done) {
     N.done = true; crono.detener(); N.t = crono.s;
@@ -229,12 +229,13 @@ function pUp() {
   // un toque: rellena → ✕ → limpia (en modo ✕ alterna ✕ / limpia)
   hist.push(copia(N.cur)); setCelda(d.i0, d.j0, modo === 'f' ? (d.prev + 1) % 3 : (d.prev === 2 ? 0 : 2)); api.sonido('click'); pintarEstado();
 }
+const filaOk = (i) => N.cur[i].every((v, j) => (v === 1) === !!N.sol[i][j]), colOk = (j) => N.cur.every((r, i) => (r[j] === 1) === !!N.sol[i][j]);
 // Al completar una fila o columna (la pista se pone en verde), las casillas vacías que le queden se marcan solas con ✕. Solo actúa sobre líneas que acaban de completarse
 function autoX() {
-  const n = N.n, cu = N.cur.map(r => r.map(v => v === 1 ? 1 : 0)), cols = colsOf(cu, n); let c = false;
+  const n = N.n; let c = false;
   const llena = (i, j) => { if (N.cur[i][j] === 0) { N.cur[i][j] = 2; c = true; } };
-  for (let i = 0; i < n; i++) if (!okPrev.r.has(i) && same(runs(cu[i]), N.rc[i])) for (let j = 0; j < n; j++) llena(i, j);
-  for (let j = 0; j < n; j++) if (!okPrev.c.has(j) && same(runs(cols[j]), N.cc[j])) for (let i = 0; i < n; i++) llena(i, j);
+  for (let i = 0; i < n; i++) if (!okPrev.r.has(i) && filaOk(i)) for (let j = 0; j < n; j++) llena(i, j);
+  for (let j = 0; j < n; j++) if (!okPrev.c.has(j) && colOk(j)) for (let i = 0; i < n; i++) llena(i, j);
   return c;
 }
 function pintarEstado() { if (!N.done) autoX(); if (malas.size) { malas = new Set(); for (let i = 0; i < N.n; i++) for (let j = 0; j < N.n; j++) cel[i][j].classList.remove('mal'); } pintar(); guardar(); }
