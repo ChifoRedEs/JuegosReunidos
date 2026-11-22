@@ -50,3 +50,8 @@
 .juego-bombardeo[data-area="arena"] .bc.h{background-image:url(../../../img/bombardeo/area/arena.webp)}.juego-bombardeo[data-area="arena"] .bc.r::before{background-image:url(../../../img/bombardeo/area/arena-abierta.webp)}
 .juego-bombardeo[data-area="nieve"] .bc.h{background-image:url(../../../img/bombardeo/area/nieve.webp)}.juego-bombardeo[data-area="nieve"] .bc.r::before{background-image:url(../../../img/bombardeo/area/nieve-abierta.webp)}
 .juego-bombardeo[data-area="musgo"] .bc.h{background-image:url(../../../img/bombardeo/area/musgo.webp)}.juego-bombardeo[data-area="musgo"] .bc.r::before{background-image:url(../../../img/bombardeo/area/musgo-abierta.webp)}
+
+/* 3.100.3: los números de las casillas abiertas llevan un contorno (claro en día, oscuro en noche) para leerse sobre cualquier imagen de Área */
+.juego-bombardeo{--halo:#fff}
+.juego-bombardeo[data-tablero^="neon"]{--halo:#0F1630}
+.bc.r{paint-order:stroke fill;-webkit-text-stroke:.22em var(--halo);text-shadow:0 0 .2em var(--halo),0 0 .1em var(--halo)}
