@@ -14,8 +14,8 @@
 .kb .kv{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:calc(var(--ka-l) / var(--n) * .58);font-weight:800}
 .kb .knt{position:absolute;inset:5%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;font:800 max(7px,calc(var(--ka-l) / var(--n) * .2))/1.05 Nunito,sans-serif;color:var(--mut);text-align:center;pointer-events:none}
 .kb .knt i{font-style:normal}
-.kb.p{background:color-mix(in srgb,var(--tb-sel) 35%,var(--tb-cell))}
-.kb.s{background:var(--tb-sel)!important;color:var(--tb-selink)}
+.kb.p{background:var(--tb-soft)}
+.kb.s{background:var(--tb-cel)!important;color:var(--tb-ink)}
 .kb.x .kv{color:var(--red)}
 .kb.x{background:var(--bad)!important}
 .kb.jx::after{content:"";position:absolute;inset:0;background:rgba(255,71,87,.18);pointer-events:none;border-radius:4px}
@@ -42,4 +42,4 @@
 .juego-crucisumas[data-numeros="color"] .kb[data-d="7"] .kv,.juego-crucisumas[data-numeros="color"] .kpad button[data-v="7"]{color:var(--c7)}
 .juego-crucisumas[data-numeros="color"] .kb[data-d="8"] .kv,.juego-crucisumas[data-numeros="color"] .kpad button[data-v="8"]{color:var(--c8)}
 .juego-crucisumas[data-numeros="color"] .kb[data-d="9"] .kv,.juego-crucisumas[data-numeros="color"] .kpad button[data-v="9"]{color:var(--c9)}
-.juego-crucisumas[data-numeros="color"] .kb.s .kv,.juego-crucisumas[data-numeros="color"] .kb.x .kv,.juego-crucisumas[data-numeros="color"] .kb.ok .kv{color:var(--tb-selink)}
+.juego-crucisumas[data-numeros="color"] .kb.s .kv,.juego-crucisumas[data-numeros="color"] .kb.x .kv,.juego-crucisumas[data-numeros="color"] .kb.ok .kv{color:var(--tb-ink)}

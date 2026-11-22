@@ -7,8 +7,8 @@ export const TUTORIAL = {
     { t: 'Ejercicio: dibuja una T', h: `<p>Tablero 5×5. Filas: <b>5</b>, <b>1</b>, <b>1</b>, <b>1</b>, <b>1</b>. Columnas: <b>1</b>, <b>1</b>, <b>5</b>, <b>1</b>, <b>1</b>. Toca las casillas para rellenarlas. Pista: la fila de "5" va entera y la columna de "5" también.</p>`, req: true,
       demo(z, ctx) {
         const F = ['5', '1', '1', '1', '1'], C = ['1', '1', '5', '1', '1']; const v = OBJ.map(r => [...r].map(() => 0));
-        let h = '<div class="tt-g" style="grid-template-columns:24px repeat(5,38px)"><div></div>' + C.map(c => `<div class="tt-k neg" style="min-height:24px;font-size:13px;display:flex;align-items:center;justify-content:center">${c}</div>`).join('');
-        for (let y = 0; y < 5; y++) { h += `<div class="tt-k neg" style="font-size:13px;display:flex;align-items:center;justify-content:center">${F[y]}</div>`; for (let x = 0; x < 5; x++) h += `<button class="tt-k" type="button" data-p="${y}${x}"></button>`; }
+        let h = '<div class="tt-g" style="grid-template-columns:repeat(6,38px);grid-auto-rows:38px"><div></div>' + C.map(c => `<div class="tt-k neg" style="width:100%;height:100%;font-size:14px">${c}</div>`).join('');
+        for (let y = 0; y < 5; y++) { h += `<div class="tt-k neg" style="width:100%;height:100%;font-size:14px">${F[y]}</div>`; for (let x = 0; x < 5; x++) h += `<button class="tt-k" style="width:100%;height:100%" type="button" data-p="${y}${x}"></button>`; }
         z.innerHTML = h + '</div>';
         const bs = [...z.querySelectorAll('button')];
         const pinta = () => { bs.forEach(b => { const y = +b.dataset.p[0], x = +b.dataset.p[1]; b.style.background = v[y][x] ? 'var(--ink,#222)' : ''; }); };

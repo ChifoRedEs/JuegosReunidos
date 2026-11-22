@@ -11,7 +11,7 @@
 .cwg .c{position:relative;padding:0;border:0;border-radius:6px;background:var(--tb-cell);color:var(--tb-ink);font:800 calc(var(--cs) * .56)/1 var(--cw-font);display:flex;align-items:center;justify-content:center;min-width:0;cursor:pointer;text-transform:uppercase}
 .cwg .c .n{position:absolute;left:3px;top:1px;font:800 calc(var(--cs) * .27)/1 Nunito,sans-serif;color:var(--tb-strong);pointer-events:none}
 .cwg .c.w{background:var(--tb-soft)}
-.cwg .c.s{background:var(--tb-sel);color:var(--tb-selink)}
+.cwg .c.s{background:var(--tb-cel);color:var(--tb-ink)}
 .cwg .c.x{background:var(--bad);color:var(--red)}
 .cwg .c.ok{color:var(--ok)}
 .cwg .c.rv{color:var(--purple)}

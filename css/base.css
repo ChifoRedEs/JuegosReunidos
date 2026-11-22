@@ -592,7 +592,7 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 
 /* Selector de casilla (Sudoku, Calcudoku, Futoshiki, CruciSumas, Akari, Crucigramas): el color COMPLEMENTARIO del Tablero elegido.
    --tb-sel = color del selector · --tb-selink = color del número encima (claro u oscuro según contraste) */
-.juego{--tb-sel:var(--tb-hi);--tb-selink:#17214A}
+.juego{--tb-sel:var(--tb-hi);--tb-selink:#17214A;--tb-cel:color-mix(in srgb,var(--tb-acc) 32%,var(--tb-soft))}   /* --tb-cel: casilla seleccionada = color del Tablero, algo más oscuro que la zona resaltada (--tb-soft) */
 :root:root:root .juego[data-tablero="dia1"]{--tb-sel:#FF9F1C;--tb-selink:#17214A}   /* Cielo (azul) → naranja */
 :root:root:root .juego[data-tablero="dia2"]{--tb-sel:#E5383B;--tb-selink:#fff}      /* Menta (verde) → rojo */
 :root:root:root .juego[data-tablero="dia3"]{--tb-sel:#1FA8D6;--tb-selink:#fff}      /* Coral (rojo anaranjado) → azul turquesa */
