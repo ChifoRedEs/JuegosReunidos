@@ -21,14 +21,15 @@
 
 /* Casillas ilustradas (img/bombardeo): césped sin abrir, suelo abierto, bombas, banderas y cara del botón */
 .bc.h{background:url(../../../img/bombardeo/cesped.webp) center/100% 100% no-repeat;box-shadow:none}
-.bc.r{background:url(../../../img/bombardeo/suelo.webp) center/100% 100% no-repeat;cursor:default}
+.bc.r{background:none;cursor:default}
 .bc.h .em{width:78%;height:78%}
 .bmf{padding:4px}.bmf .em{width:100%;height:100%;object-fit:contain;display:block}
 
-/* 3.93: las casillas vacías abiertas dejan ver el camino del tapete (suelo al 50 %) */
+/* 3.93: las casillas abiertas dejan ver el tapete (vacías al 50 %, con número al 80 %) */
 .bc{isolation:isolate}
 .bc.r.vac{background:none}
-.bc.r.vac::before{content:"";position:absolute;inset:0;z-index:-1;background:url(../../../img/bombardeo/suelo.webp) center/100% 100% no-repeat;opacity:.5}
+.bc.r::before{content:"";position:absolute;inset:0;z-index:-1;background:url(../../../img/bombardeo/area/cesped-abierta.webp) center/100% 100% no-repeat;opacity:.8}   /* casilla abierta con un poco de transparencia: se leen los números y se intuye el tapete */
+.bc.r.vac::before{opacity:.5}
 
 /* 3.93.1: «Personalizar» en una sola línea en Configurar partida */
 .cfg-cont .btn[data-k="nivel"][data-v='"personal"']{white-space:nowrap;flex:1 0 auto;min-width:118px}
@@ -40,11 +41,12 @@
 .pad4{grid-template-columns:repeat(4,1fr)}.pad3{grid-template-columns:repeat(3,1fr)}
 .pad .acc{text-align:center;justify-content:center}
 
-/* Área: imagen de las casillas ocultas (Apariencia) */
-.juego-bombardeo[data-area="tablas"] .bc.h{background-image:url(../../../img/bombardeo/area/tablas.webp)}
-.juego-bombardeo[data-area="losas"] .bc.h{background-image:url(../../../img/bombardeo/area/losas.webp)}
-.juego-bombardeo[data-area="rocas"] .bc.h{background-image:url(../../../img/bombardeo/area/rocas.webp)}
-.juego-bombardeo[data-area="tierra"] .bc.h{background-image:url(../../../img/bombardeo/area/tierra.webp)}
-.juego-bombardeo[data-area="arena"] .bc.h{background-image:url(../../../img/bombardeo/area/arena.webp)}
-.juego-bombardeo[data-area="nieve"] .bc.h{background-image:url(../../../img/bombardeo/area/nieve.webp)}
-.juego-bombardeo[data-area="musgo"] .bc.h{background-image:url(../../../img/bombardeo/area/musgo.webp)}
+/* Área (Apariencia): imagen de la casilla oculta y de la abierta de cada una */
+.juego-bombardeo[data-area="cesped"] .bc.h{background-image:url(../../../img/bombardeo/area/cesped.webp)}.juego-bombardeo[data-area="cesped"] .bc.r::before{background-image:url(../../../img/bombardeo/area/cesped-abierta.webp)}
+.juego-bombardeo[data-area="tablas"] .bc.h{background-image:url(../../../img/bombardeo/area/tablas.webp)}.juego-bombardeo[data-area="tablas"] .bc.r::before{background-image:url(../../../img/bombardeo/area/tablas-abierta.webp)}
+.juego-bombardeo[data-area="losas"] .bc.h{background-image:url(../../../img/bombardeo/area/losas.webp)}.juego-bombardeo[data-area="losas"] .bc.r::before{background-image:url(../../../img/bombardeo/area/losas-abierta.webp)}
+.juego-bombardeo[data-area="rocas"] .bc.h{background-image:url(../../../img/bombardeo/area/rocas.webp)}.juego-bombardeo[data-area="rocas"] .bc.r::before{background-image:url(../../../img/bombardeo/area/rocas-abierta.webp)}
+.juego-bombardeo[data-area="tierra"] .bc.h{background-image:url(../../../img/bombardeo/area/tierra.webp)}.juego-bombardeo[data-area="tierra"] .bc.r::before{background-image:url(../../../img/bombardeo/area/tierra-abierta.webp)}
+.juego-bombardeo[data-area="arena"] .bc.h{background-image:url(../../../img/bombardeo/area/arena.webp)}.juego-bombardeo[data-area="arena"] .bc.r::before{background-image:url(../../../img/bombardeo/area/arena-abierta.webp)}
+.juego-bombardeo[data-area="nieve"] .bc.h{background-image:url(../../../img/bombardeo/area/nieve.webp)}.juego-bombardeo[data-area="nieve"] .bc.r::before{background-image:url(../../../img/bombardeo/area/nieve-abierta.webp)}
+.juego-bombardeo[data-area="musgo"] .bc.h{background-image:url(../../../img/bombardeo/area/musgo.webp)}.juego-bombardeo[data-area="musgo"] .bc.r::before{background-image:url(../../../img/bombardeo/area/musgo-abierta.webp)}

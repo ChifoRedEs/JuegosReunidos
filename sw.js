@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-c96b4cc8dd';
+const VERSION = 'jr-fe9d0a97e3';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -591,14 +591,22 @@ const EXTRA = [
 './img/bombardeo/ok.webp',
 './img/bombardeo/radar.webp',
 './img/bombardeo/suelo.webp',
+'./img/bombardeo/area/arena-abierta.webp',
 './img/bombardeo/area/arena.webp',
+'./img/bombardeo/area/cesped-abierta.webp',
 './img/bombardeo/area/cesped.webp',
 './img/bombardeo/area/hielo.webp',
+'./img/bombardeo/area/losas-abierta.webp',
 './img/bombardeo/area/losas.webp',
+'./img/bombardeo/area/musgo-abierta.webp',
 './img/bombardeo/area/musgo.webp',
+'./img/bombardeo/area/nieve-abierta.webp',
 './img/bombardeo/area/nieve.webp',
+'./img/bombardeo/area/rocas-abierta.webp',
 './img/bombardeo/area/rocas.webp',
+'./img/bombardeo/area/tablas-abierta.webp',
 './img/bombardeo/area/tablas.webp',
+'./img/bombardeo/area/tierra-abierta.webp',
 './img/bombardeo/area/tierra.webp',
 './img/c4/brillo.webp',
 './img/c4/celda.webp',
