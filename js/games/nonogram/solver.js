@@ -1,10 +1,9 @@
 // Utilidades y resolvedor lógico de Nonogramas (sin DOM: se puede probar con Node).
 export const SIZES = [5, 10, 15];
-// Máximo de números por fila/columna según la dificultad (así el panel tiene siempre el mismo tamaño)
-export const MAXPISTAS = { facil: 3, medio: 4, dificil: 5 };
-export const maxPistas = (n, diff) => Math.min(MAXPISTAS[diff] ?? 4, Math.ceil(n / 2));
-// Panel fijo por tamaño: nº de números que reserva el panel (el de la dificultad más alta)
-export const PANEL = { 5: 3, 10: 5, 15: 5 };
+// Máximo de números por fila/columna según tamaño y dificultad: es también lo que reserva el panel (siempre del mismo tamaño en cada tamaño/dificultad)
+export const LIMITE = { 5: { facil: 2, medio: 2, dificil: 2 }, 10: { facil: 3, medio: 3, dificil: 3 }, 15: { facil: 3, medio: 3, dificil: 4 } };
+export const maxPistas = (n, diff) => LIMITE[n]?.[diff] ?? 3;
+export const panelDe = (n, diff) => maxPistas(n, diff);
 export const pistasMax = (rc, cc) => Math.max(...rc.map(r => r.length), ...cc.map(c => c.length));
 export const DENS = { facil: 0.66, medio: 0.57, dificil: 0.48 };      // menos casillas rellenas = pistas menos evidentes
 export const runs = l => { const r = []; let k = 0; l.forEach(v => { if (v === 1) k++; else if (k) { r.push(k); k = 0; } }); if (k) r.push(k); return r.length ? r : [0]; };

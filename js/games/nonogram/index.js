@@ -3,7 +3,7 @@ import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
 import { grupoTableroDN } from '../../core/aspectos.js';
 import { variablesTintadas } from '../../core/tinte.js';
-import { SIZES, PANEL, pistasMax, runs, colsOf, generarAleatorio } from './solver.js';
+import { SIZES, panelDe, pistasMax, runs, colsOf, generarAleatorio } from './solver.js';
 
 const COLORES = [['azul', 'Azul', '#2F6BFF'], ['rojo', 'Rojo', '#E5383B'], ['naranja', 'Naranja', '#FF7A1A'], ['amarillo', 'Amarillo', '#F2B600'], ['verde', 'Verde', '#0FB56A'], ['turquesa', 'Turquesa', '#0FA3B1'], ['violeta', 'Violeta', '#7A4DFF'], ['rosa', 'Rosa', '#FF3FA4'], ['marron', 'Marrón', '#8B5A2B'], ['grafito', 'Grafito', '#4A5568']];
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
@@ -73,6 +73,7 @@ export function unmount() {
   if (N && crono) { N.t = crono.s; guardar(); }
   if (crono) crono.detener();
   if (rootEl) { rootEl.removeEventListener('click', clic); rootEl.removeEventListener('pointerdown', pDown); rootEl.removeEventListener('pointermove', pMove); rootEl.removeEventListener('pointerup', pUp); rootEl.removeEventListener('pointercancel', pUp); }
+  if (ro) { ro.disconnect(); ro = null; }
   malas = new Set(); N = null; crono = null; cel = []; rcEl = []; ccEl = []; drag = null;
 }
 function arrancar() { crono.s = N.t; if (!N.done) crono.iniciar(); else crono.detener(); $('#ngCrono').textContent = fmtTiempo(N.t); }
@@ -94,7 +95,7 @@ async function nuevo(n, diff, forzar = false, nuevoTipo = tipo, reto = false) {
   await esperar(20);
   let p = null, nombre = '';
   if (nuevoTipo === 'dibujo') {
-    const b = await cargarBanco(), lista = (b[n] || []).filter(x => { const f = x.filas.map(r => [...r].map(c => c === '#' ? 1 : 0)); return pistasMax(f.map(runs), colsOf(f, n).map(runs)) <= PANEL[n]; });
+    const b = await cargarBanco(), lista = (b[n] || []).filter(x => { const f = x.filas.map(r => [...r].map(c => c === '#' ? 1 : 0)); return pistasMax(f.map(runs), colsOf(f, n).map(runs)) <= panelDe(n, diff); });
     if (lista.length) {
       const otros = lista.filter(x => !N || x.nombre !== N.nombre), d = (otros.length ? otros : lista)[rnd((otros.length ? otros : lista).length)];
       const sol = d.filas.map(f => [...f].map(c => c === '#' ? 1 : 0)); p = { sol, rc: sol.map(runs), cc: colsOf(sol, n).map(runs) }; nombre = d.nombre;
@@ -132,21 +133,33 @@ function guardar() {
 }
 
 /* ---------- pintado: la cuadrícula se construye una vez por panel y luego se parchea ---------- */
+let need = 3, ro = null;
+const SEP = 2, GAP = 2, PWMAX = 26;   // SEP: hueco extra entre bloques de 5 (pista aparte: no cambia el tamaño de las casillas)
 function construir() {
-  const n = N.n;
-  // Panel a todo el ancho: la CSS reparte el espacio entre casillas y píldoras según n y el máximo de números (need)
-  const need = Math.max(PANEL[n], pistasMax(N.rc, N.cc));
-  const tab = $('#ngTab'), sep = j => j % 5 === 4 && j < n - 1;
-  const cab = 'calc(var(--need)*var(--pw) + (var(--need) - 1)*2px + 6px)', pista = j => sep(j) ? 'calc(var(--cs) + 3px)' : 'var(--cs)', pistas = [...Array(n).keys()].map(pista).join(' ');
-  tab.style.cssText = `--n:${n};--need:${need};--sep:${3 * Math.floor((n - 1) / 5)}px;grid-template-columns:${cab} ${pistas};grid-template-rows:${cab} ${pistas}`;
-  let h = '<div></div>' + N.cc.map((c, j) => `<div class="cc ${sep(j) ? 'm5' : ''}">${c.map(x => `<span>${x}</span>`).join('')}</div>`).join('');
+  const n = N.n; need = Math.max(panelDe(n, N.diff), pistasMax(N.rc, N.cc));
+  const tab = $('#ngTab'), sep = j => j % 5 === 4 && j < n - 1, sp = '<i class="sp"></i>';
+  const ent = []; for (let j = 0; j < n; j++) { ent.push(j); if (sep(j)) ent.push(-1); }
+  const fila = f => '<div></div>' + ent.map(j => j < 0 ? sp : f(j)).join('');
+  let h = fila(j => `<div class="cc">${N.cc[j].map(x => `<span>${x}</span>`).join('')}</div>`);
   for (let i = 0; i < n; i++) {
-    h += `<div class="rc ${sep(i) ? 'b5' : ''}">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>`;
-    for (let j = 0; j < n; j++) h += `<button type="button" class="c ${(i + j) % 2 ? 'al' : ''} ${sep(j) ? 'm5' : ''} ${sep(i) ? 'b5' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`;
+    h += `<div class="rc">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>` + ent.map(j => j < 0 ? sp : `<button type="button" class="c ${(i + j) % 2 ? 'al' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`).join('');
+    if (sep(i)) h += '<div class="sp"></div>' + ent.map(() => sp).join('');
   }
   tab.innerHTML = h;
   ccEl = [...tab.querySelectorAll('.cc')]; rcEl = [...tab.querySelectorAll('.rc')];
   const bs = [...tab.querySelectorAll('.c')]; cel = Array.from({ length: n }, (_, i) => bs.slice(i * n, i * n + n));
+  medir();
+  if (!ro && window.ResizeObserver) { ro = new ResizeObserver(() => medir()); ro.observe($('.ngwrap')); }
+}
+// Tamaños en píxeles enteros: todas las casillas, filas y columnas miden exactamente igual y el panel ocupa todo el ancho posible
+function medir() {
+  const w = document.querySelector('.ngwrap'), tab = $('#ngTab'); if (!w || !tab || !N) return;
+  const cs = getComputedStyle(w), W = Math.floor(w.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)); if (W < 100) return;
+  const n = N.n, seps = Math.floor((n - 1) / 5), tot = t => { const pw = Math.min(PWMAX, Math.floor(t * .66)); return { pw, cab: need * pw + (need - 1) * GAP + 6 + GAP, w: 0 }; };
+  let t = Math.floor(W / n), d = tot(t);
+  for (; t > 10; t--) { d = tot(t); if (d.cab + n * t + seps * SEP <= W) break; }
+  const pw = d.pw, cab = d.cab, trk = [...Array(n).keys()].flatMap(j => j % 5 === 4 && j < n - 1 ? [t + 'px', SEP + 'px'] : [t + 'px']).join(' ');
+  tab.style.cssText = `--t:${t}px;--pw:${pw}px;--rh:${Math.min(pw, t - 2 - 4)}px;--fs:${Math.max(8, Math.min(18, Math.floor(pw * .74)))}px;grid-template-columns:${W - n * t - seps * SEP}px ${trk};grid-template-rows:${cab}px ${trk}`;   // la columna de pistas absorbe los píxeles sobrantes
 }
 function pintarCelda(i, j) {
   const v = N.cur[i][j], b = cel[i][j];

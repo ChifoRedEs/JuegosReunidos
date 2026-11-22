@@ -1,18 +1,18 @@
-/* 3.99: panel a ancho completo; pistas en píldoras regulares; casillas como baldosas */
-.ngwrap{container-type:inline-size;overflow:hidden;margin:6px -10px;padding:4px;background:var(--card);border:2px solid var(--tb-line,var(--line));border-radius:20px;box-shadow:0 4px 12px rgba(60,40,200,.08)}
-.ng{--g:2px;--k:.66;--cs:calc((100cqw - var(--n)*var(--g) - (var(--need) - 1)*2px - 6px - var(--sep)) / (var(--n) + var(--need)*var(--k)));--pw:calc(var(--cs)*var(--k));display:grid;gap:var(--g);width:100%;font-size:max(8px,calc(var(--pw)*.74));font-weight:900;user-select:none;-webkit-user-select:none;color:var(--tb-ink)}
-.ng .cc,.ng .rc{display:flex;gap:2px;padding:2px;background:var(--tb-alt);border-radius:7px;line-height:1;min-width:0}
+/* 3.99: panel a ancho completo; pistas en píldoras regulares; casillas como baldosas. Tamaños (--t, --pw…) calculados en píxeles enteros por medir() */
+.ngwrap{overflow:hidden;margin:6px -10px;padding:4px;background:var(--card);border:2px solid var(--tb-line,var(--line));border-radius:20px;box-shadow:0 4px 12px rgba(60,40,200,.08)}
+.ng{display:grid;gap:0;width:max-content;margin:0 auto;font-size:var(--fs);font-weight:900;user-select:none;-webkit-user-select:none;color:var(--tb-ink)}
+.ng .sp{pointer-events:none}
+.ng .cc,.ng .rc{display:flex;gap:2px;padding:2px;margin:1px;background:var(--tb-alt);border-radius:7px;line-height:1;min-width:0;min-height:0}
 .ng .cc{flex-direction:column;justify-content:flex-end;align-items:stretch}
 .ng .rc{justify-content:flex-end;align-items:center}
 .ng .cc span,.ng .rc span{display:grid;place-items:center;border-radius:5px;letter-spacing:-.04em;color:var(--tb-ink)}
 .ng .cc span{height:var(--pw)}
-.ng .rc span{width:var(--pw);height:min(var(--pw),calc(var(--cs) - 4px))}
+.ng .rc span{width:var(--pw);height:var(--rh)}
 .ng .cc span:nth-child(odd),.ng .rc span:nth-child(odd){color:var(--tb-acc)}
 .ng .cc.ok,.ng .rc.ok{background:color-mix(in srgb,var(--ok) 24%,var(--card))}
 .ng .cc.ok span,.ng .rc.ok span{color:var(--ok)}
 .ng .cc.act,.ng .rc.act{box-shadow:0 0 0 2px var(--tb-acc)}
-.ng .m5{margin-right:3px}.ng .b5{margin-bottom:3px}
-.ng .c{width:100%;height:100%;position:relative;border:0;background:var(--tb-cell);padding:0;font-size:calc(var(--cs) * .55);line-height:1;color:var(--red);overflow:hidden;touch-action:none;border-radius:5px;font-weight:800;box-shadow:inset 0 1px 2px rgba(20,33,61,.18)}
+.ng .c{margin:1px;width:auto;height:auto;justify-self:stretch;align-self:stretch;position:relative;border:0;background:var(--tb-cell);padding:0;font-size:calc(var(--t) * .55);line-height:1;color:var(--red);overflow:hidden;touch-action:none;border-radius:5px;font-weight:800;box-shadow:inset 0 1px 2px rgba(20,33,61,.18)}
 .ng .c.al{background:var(--tb-alt)}
 .ng .c.ha{background:var(--tb-soft)}
 .ng .c.f::after{content:"";position:absolute;inset:11%;background:var(--ng-fill);border-radius:22%;box-shadow:0 2px 0 rgba(0,0,0,.18)}
