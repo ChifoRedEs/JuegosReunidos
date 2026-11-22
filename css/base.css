@@ -602,3 +602,16 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 :root:root:root .juego[data-tablero="neon3"]{--tb-sel:#FF2E7A;--tb-selink:#fff}     /* Lima (verde) → rojo rosado */
 :root:root:root .juego[data-tablero="neon4"]{--tb-sel:#3D8BFF;--tb-selink:#fff}     /* Naranja → azul */
 .confirma{font:800 18px/1.35 var(--f-titulo);text-align:center;margin:6px 4px 0;text-wrap:balance}
+/* Desplegable propio de Apariencia (miniatura de color + nombre), con el diseño del juego */
+.ap-dd{display:flex;flex-direction:column;gap:6px}
+.ap-dd-btn,.ap-dd-o{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 12px;font:inherit;font-size:16px;font-weight:800;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:12px;text-align:left}
+.ap-dd-btn.open{border-color:var(--purple)}
+.ap-dd .sw{width:22px;height:22px;flex:none;margin:0;border:2px solid rgba(0,0,0,.28)}
+.ap-dd-n{flex:1;min-width:0}
+.ap-dd-fl{font-style:normal;color:var(--mut);transition:transform .15s}.ap-dd-btn.open .ap-dd-fl{transform:rotate(180deg)}
+.ap-dd-lista{position:relative;display:flex;flex-direction:column;gap:4px;max-height:264px;overflow-y:auto;padding:4px;border:2px solid var(--line);border-radius:14px;background:var(--bg);-webkit-overflow-scrolling:touch}
+.ap-dd-lista[hidden]{display:none}
+.ap-dd-o{min-height:44px;border-width:1.5px;border-color:transparent;background:var(--card)}
+.ap-dd-o.on{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 10%,var(--card))}
+.ap-dd-ok{font-style:normal;font-weight:900;color:var(--purple);visibility:hidden}.ap-dd-o.on .ap-dd-ok{visibility:visible}
+.ap-dd-btn:focus-visible,.ap-dd-o:focus-visible{outline:3px solid var(--purple);outline-offset:1px}

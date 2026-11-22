@@ -438,8 +438,22 @@ function crearApi(j, ent, mod, root) {
           if (g.multi) return cuerpoMulti(g);
           if (g.sub) return cuerpoSub(g);
           if (g.desplegable) {
-            const sl = el('select', { class: 'desplegable ap-sel', 'aria-label': g.titulo }, ...g.opciones.map(o => el('option', { value: o.id, selected: elec[g.clave] === o.id }, o.nombre)));
-            sl.addEventListener('change', () => elegir(g, sl.value)); return sl;
+            // Desplegable propio (no el selector nativo del móvil): cada opción lleva su miniatura de color (o.sw) junto al nombre
+            const mini = o => (o.sw || []).map(c => el('i', { class: 'sw', style: `background:${c}` }));
+            const actual = () => g.opciones.find(o => o.id === elec[g.clave]) || g.opciones[0];
+            const btn = el('button', { type: 'button', class: 'ap-dd-btn', 'aria-haspopup': 'listbox', 'aria-expanded': 'false', 'aria-label': g.titulo });
+            const lista = el('div', { class: 'ap-dd-lista', role: 'listbox', 'aria-label': g.titulo }, ...g.opciones.map(o => el('button', { type: 'button', class: 'ap-dd-o', role: 'option', 'data-id': o.id }, ...mini(o), el('span', { class: 'ap-dd-n' }, o.nombre), el('em', { class: 'ap-dd-ok', 'aria-hidden': 'true' }, '✓'))));
+            lista.hidden = true;
+            const pinta = () => {
+              const o = actual(); btn.replaceChildren(...mini(o), el('span', { class: 'ap-dd-n' }, o.nombre), el('em', { class: 'ap-dd-fl', 'aria-hidden': 'true' }, '▾'));
+              [...lista.children].forEach(x => { const on = x.dataset.id === o.id; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); });
+            };
+            const abre = v => { lista.hidden = !v; btn.setAttribute('aria-expanded', String(v)); btn.classList.toggle('open', v); if (v) { const on = lista.querySelector('.on'); if (on) lista.scrollTop = Math.max(0, on.offsetTop - 60); } };
+            btn.addEventListener('click', () => abre(lista.hidden));
+            lista.addEventListener('click', e => { const x = e.target.closest('.ap-dd-o'); if (!x) return; elegir(g, x.dataset.id); pinta(); abre(false); btn.focus(); });
+            const caja = el('div', { class: 'ap-dd' }, btn, lista);
+            caja.addEventListener('keydown', e => { if (e.key === 'Escape' && !lista.hidden) { e.stopPropagation(); abre(false); btn.focus(); } });
+            pinta(); return caja;
           }
           const imgs = g.opciones.some(o => o.img) && g.forma;
           if (imgs) {
