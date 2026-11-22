@@ -139,13 +139,15 @@ function construir() {
   const n = N.n; need = Math.max(panelDe(n, N.diff), pistasMax(N.rc, N.cc));
   const tab = $('#ngTab'), sep = j => j % 5 === 4 && j < n - 1, sp = '<i class="sp"></i>';
   const ent = []; for (let j = 0; j < n; j++) { ent.push(j); if (sep(j)) ent.push(-1); }
-  const fila = f => '<div></div>' + ent.map(j => j < 0 ? '<i class="sp sph"></i>' : f(j)).join('');
+  const fila = f => '<div></div>' + ent.map(j => j < 0 ? sp : f(j)).join('');
   let h = fila(j => `<div class="cc">${N.cc[j].map(x => `<span>${x}</span>`).join('')}</div>`);
   for (let i = 0; i < n; i++) {
-    h += `<div class="rc">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>` + ent.map(j => j < 0 ? `<i class="sp ${i % 5 === 4 && i < n - 1 ? 'vge' : i % 5 === 0 && i > 0 ? 'vgs' : ''}"></i>` : `<button type="button" class="c ${(i + j) % 2 ? 'al' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`).join('');
-    if (sep(i)) h += '<div class="sp sph"></div>' + ent.map(j => j < 0 ? '<i class="sp sx"></i>' : `<i class="sp ${j % 5 === 4 && j < n - 1 ? 'hge' : j % 5 === 0 && j > 0 ? 'hgs' : ''}"></i>`).join('');
+    h += `<div class="rc">${N.rc[i].map(x => `<span>${x}</span>`).join('')}</div>` + ent.map(j => j < 0 ? sp : `<button type="button" class="c ${(i + j) % 2 ? 'al' : ''}" data-i="${i}" data-j="${j}" aria-label="Fila ${i + 1}, columna ${j + 1}"></button>`).join('');
+    if (sep(i)) h += '<div class="sp"></div>' + ent.map(() => sp).join('');
   }
-  tab.innerHTML = h;
+  const nb = Math.ceil(n / 5); let pl = '';
+  if (nb > 1) for (let a = 0; a < nb; a++) for (let b = 0; b < nb; b++) pl += `<i class="pl p${(a + b) % 2}" data-a="${a}" data-b="${b}"></i>`;
+  tab.innerHTML = pl + h;
   ccEl = [...tab.querySelectorAll('.cc')]; rcEl = [...tab.querySelectorAll('.rc')];
   const bs = [...tab.querySelectorAll('.c')]; cel = Array.from({ length: n }, (_, i) => bs.slice(i * n, i * n + n));
   medir();
@@ -159,6 +161,8 @@ function medir() {
   let t = Math.floor(W / n), d = tot(t);
   for (; t > 10; t--) { d = tot(t); if (d.cab + n * t + seps * SEP <= W) break; }
   const pw = d.pw, cab = d.cab, trk = [...Array(n).keys()].flatMap(j => j % 5 === 4 && j < n - 1 ? [t + 'px', SEP + 'px'] : [t + 'px']).join(' ');
+  const c0 = W - n * t - seps * SEP;
+  tab.querySelectorAll('.pl').forEach(e => { const a = +e.dataset.a, b = +e.dataset.b; e.style.cssText = `left:${c0 + b * (5 * t + SEP)}px;top:${cab + a * (5 * t + SEP)}px;width:${Math.min(5, n - b * 5) * t}px;height:${Math.min(5, n - a * 5) * t}px`; });
   tab.style.cssText = `--t:${t}px;--pw:${pw}px;--rh:${Math.min(pw, t - 2 - 4)}px;--fs:${Math.max(8, Math.min(18, Math.floor(pw * .74)))}px;grid-template-columns:${W - n * t - seps * SEP}px ${trk};grid-template-rows:${cab}px ${trk}`;   // la columna de pistas absorbe los píxeles sobrantes
 }
 function pintarCelda(i, j) {

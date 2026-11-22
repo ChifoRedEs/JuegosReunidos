@@ -1,8 +1,11 @@
 /* 3.99: panel a ancho completo; pistas en píldoras regulares; casillas como baldosas. Tamaños (--t, --pw…) calculados en píxeles enteros por medir() */
 .ngwrap{overflow:hidden;margin:6px -10px;padding:4px;background:var(--card);border:2px solid var(--tb-line,var(--line));border-radius:20px;box-shadow:0 4px 12px rgba(60,40,200,.08)}
 .ng{display:grid;gap:0;width:max-content;margin:0 auto;font-size:var(--fs);font-weight:900;user-select:none;-webkit-user-select:none;color:var(--tb-ink)}
-.ng .sp{pointer-events:none;background:color-mix(in srgb,var(--tb-strong) 55%,var(--card))}.ng .sph,.ng .sx{background:none}
-.ng .vge{clip-path:inset(0 0 4px 0)}.ng .vgs{clip-path:inset(4px 0 0 0)}.ng .hge{clip-path:inset(0 4px 0 0)}.ng .hgs{clip-path:inset(0 0 0 4px)}
+/* bloques de 5×5: placas alternas muy sutiles bajo las casillas (el hueco entre bloques queda como separación) */
+.ng{position:relative}.ng .sp{pointer-events:none}
+.ng .pl{position:absolute;border-radius:9px;pointer-events:none;box-shadow:0 1px 3px rgba(20,33,61,.16)}
+.ng .pl.p0{background:color-mix(in srgb,var(--tb-line) 38%,var(--card))}
+.ng .pl.p1{background:color-mix(in srgb,var(--tb-line) 70%,var(--card))}
 .ng .cc,.ng .rc{display:flex;gap:2px;padding:2px;margin:1px;background:var(--tb-alt);border-radius:7px;line-height:1;min-width:0;min-height:0}
 .ng .cc{flex-direction:column;justify-content:flex-end;align-items:stretch}
 .ng .rc{justify-content:flex-end;align-items:center}
