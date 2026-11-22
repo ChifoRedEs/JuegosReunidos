@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-cbe28ec4e7';
+const VERSION = 'jr-9fc4e7c3cb';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -1010,6 +1010,22 @@ const EXTRA = [
 './img/encajados/puerta.webp',
 './img/encajados/rejilla.webp',
 './img/encajados/suelo.webp',
+'./img/encajados/escenario/ladrillo-muro.webp',
+'./img/encajados/escenario/ladrillo-sueloa.webp',
+'./img/encajados/escenario/ladrillo-suelob.webp',
+'./img/encajados/escenario/metal-muro.webp',
+'./img/encajados/escenario/metal-sueloa.webp',
+'./img/encajados/escenario/metal-suelob.webp',
+'./img/encajados/escenario/piedra-muro.webp',
+'./img/encajados/escenario/piedra-sueloa.webp',
+'./img/encajados/escenario/piedra-suelob.webp',
+'./img/encajados/marca/amarilla.webp',
+'./img/encajados/marca/avisos.webp',
+'./img/encajados/marca/cinta.webp',
+'./img/encajados/marca/discontinua.webp',
+'./img/encajados/marca/esquinas.webp',
+'./img/encajados/marca/puntos.webp',
+'./img/encajados/marca/rayas.webp',
 './img/fichas/a/aguila.webp',
 './img/fichas/a/caballo.webp',
 './img/fichas/a/cerdo.webp',

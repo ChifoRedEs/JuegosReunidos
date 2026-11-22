@@ -20,6 +20,8 @@ const TEMAS = {   // 4 escenarios, cada uno con su versión de día (modo Claro)
   'desierto-n': { nombre: 'Desierto', sw: ['#3B2F5C', '#4A3F62'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Hielo', sw: ['#1B2B5E', '#25355F'], modo: 'oscuro' },
 };
 // Cajas: imágenes de img/encajados (la primera es la de siempre)
+const ESTILOS = { ladrillo: 'Ladrillo', piedra: 'Piedra', metal: 'Metal industrial' };   // texturas grises de img/encajados/escenario, teñidas con los colores del escenario
+const MARCAS = { cinta: 'Cinta de seguridad', rayas: 'Cinta roja y blanca', amarilla: 'Cinta amarilla', avisos: 'Cinta de avisos', esquinas: 'Esquinas pintadas', discontinua: 'Línea discontinua', puntos: 'Puntos pintados' };   // img/encajados/marca
 const CAJAS = { caja: 'Madera', metal: 'Metal', tec: 'Tecnológica', carton: 'Cartón', cuerdas: 'Cuerdas', hielo: 'Hielo', piedra: 'Piedra', blindada: 'Blindada' };
 const SUF = { izquierda: 'izq', derecha: 'der', arriba: 'arriba', abajo: 'abajo' };
 let dirV = 'abajo';
@@ -56,6 +58,8 @@ export async function mount(r, a) {
   hay3d = false;   // sin vista 3D
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
     { clave: 'tema', titulo: 'Escenario', icono: '🏭', def: 'almacen', defModo: { claro: 'almacen', oscuro: 'almacen-n' }, opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw, modo: t.modo, sec: t.modo === 'claro' ? 'Día' : 'Noche' })) },
+    { clave: 'estilo', titulo: 'Estilo del escenario', icono: '🧱', def: 'ladrillo', opciones: Object.entries(ESTILOS).map(([id, nombre]) => ({ id, nombre })) },
+    { clave: 'marca', titulo: 'Marca de meta', icono: '🚧', ventana: true, forma: 'figura', def: 'cinta', opciones: Object.entries(MARCAS).map(([id, nombre]) => ({ id, nombre, img: `img/encajados/marca/${id}.webp` })) },
     { clave: 'cajas', titulo: 'Cajas', icono: '📦', ventana: true, forma: 'figura', def: 'caja', opciones: Object.entries(CAJAS).map(([id, nombre]) => ({ id, nombre, img: `img/encajados/caja${id === 'caja' ? '' : '-' + id}.webp` })) },
     { clave: 'ficha', titulo: 'Personaje', icono: '🧑', ventana: true, forma: 'figura', def: 'h1', opciones: PROPIOS.map(([id, nombre]) => ({ id, nombre, sec: id[0] === 'h' ? 'Hombres' : 'Mujeres', img: `img/encajados/${id}-abajo.webp` })) }],
   () => { if (S && $('#skTab')) { if (modo3d !== quiere3D()) armar(); else { construir(); pintar(); } } });
@@ -160,10 +164,10 @@ function construir() {
     if (V3) V3.recolor({ cajas: asp.valores.cajas, est: e3 }); else if (!tab.dataset.iniciando) iniciar3D();
     return;
   }
-  tab.className = `sktab tema-${asp.valores.tema} cajas-${asp.valores.cajas}`; aplicarCajas(tab);
+  tab.className = `sktab tema-${asp.valores.tema} cajas-${asp.valores.cajas} est-${asp.valores.estilo} marca-${asp.valores.marca}${String(asp.valores.tema).endsWith('-n') ? ' noche' : ''}`; aplicarCajas(tab);
   tab.style.setProperty('--w', L.w); tab.style.setProperty('--h', L.h);
   let html = '';
-  for (let i = 0; i < L.w * L.h; i++) html += `<div class="skc ${L.muro[i] ? 'muro' : L.fuera[i] ? 'fuera' : 'suelo'}${L.meta[i] ? ' meta' : ''}" data-c="${i}"></div>`;
+  for (let i = 0; i < L.w * L.h; i++) html += `<div class="skc ${L.muro[i] ? 'muro' : L.fuera[i] ? 'fuera' : 'suelo'}${!L.muro[i] && !L.fuera[i] && ((i % L.w) * 3 + ((i / L.w) | 0) * 5) % 4 === 0 ? ' b' : ''}${L.meta[i] ? ' meta' : ''}" data-c="${i}"></div>`;
   html += L.cajas.map((_, k) => `<div class="skcaja fxb" data-k="${k}"></div>`).join('') + `<div class="skjug${CUERPO.test(asp.valores.ficha) ? ' cuerpo' : ''}"><span><img src="${urlJug()}" alt=""></span></div>`;
   tab.innerHTML = html;
 }

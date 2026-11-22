@@ -15,13 +15,26 @@
 .juego-encajados .sktab.tema-hielo-n,.juego-encajados .sk3.tema-hielo-n{--muro:#1B2B5E;--muro2:#111C42;--suelo:#25355F;--suelo2:#1F2D54;--meta:#5CFFE1}
 /* cajas: color y borde (el aspa de las de madera usa el borde) */
 .juego-encajados .skc{aspect-ratio:1}
-.juego-encajados .skc.muro{background:var(--muro);background-image:linear-gradient(var(--muro2) 2px,transparent 2px),linear-gradient(90deg,var(--muro2) 2px,transparent 2px);background-size:50% 50%;border-radius:3px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
-.juego-encajados .skc.suelo{background:var(--suelo);box-shadow:inset 0 0 0 1px var(--suelo2)}
+/* muro y suelo: textura gris (img/encajados/escenario) mezclada con el color del escenario (overlay) */
+.juego-encajados .skc.muro{background-color:var(--muro);background-image:var(--t-muro);background-size:100% 100%;background-blend-mode:overlay}
+.juego-encajados .skc.suelo{background-color:var(--suelo);background-image:var(--t-sa);background-size:100% 100%;background-blend-mode:overlay}
+.juego-encajados .skc.suelo.b{background-image:var(--t-sb)}
+.juego-encajados .sktab{--t-muro:url(../../../img/encajados/escenario/ladrillo-muro.webp);--t-sa:url(../../../img/encajados/escenario/ladrillo-sueloa.webp);--t-sb:url(../../../img/encajados/escenario/ladrillo-suelob.webp);--marca-img:url(../../../img/encajados/marca/cinta.webp)}
+.juego-encajados .sktab.est-piedra{--t-muro:url(../../../img/encajados/escenario/piedra-muro.webp);--t-sa:url(../../../img/encajados/escenario/piedra-sueloa.webp);--t-sb:url(../../../img/encajados/escenario/piedra-suelob.webp)}
+.juego-encajados .sktab.est-metal{--t-muro:url(../../../img/encajados/escenario/metal-muro.webp);--t-sa:url(../../../img/encajados/escenario/metal-sueloa.webp);--t-sb:url(../../../img/encajados/escenario/metal-suelob.webp)}
+/* marca de meta: pintada en el suelo, con el perímetro de la casilla (la caja se queda dentro) */
 .juego-encajados .skc.meta{position:relative}
-.juego-encajados .skc.meta::after{content:'';position:absolute;inset:32%;border-radius:50%;background:var(--meta);box-shadow:0 0 0 3px color-mix(in srgb,var(--meta) 30%,transparent)}
+.juego-encajados .skc.meta::after{content:'';position:absolute;inset:3%;background:var(--marca-img) center/100% 100% no-repeat}
+.juego-encajados .sktab.noche .skc.meta::after{filter:drop-shadow(0 0 3px rgba(255,220,90,.75))}
+.juego-encajados .sktab.marca-rayas{--marca-img:url(../../../img/encajados/marca/rayas.webp)}
+.juego-encajados .sktab.marca-amarilla{--marca-img:url(../../../img/encajados/marca/amarilla.webp)}
+.juego-encajados .sktab.marca-avisos{--marca-img:url(../../../img/encajados/marca/avisos.webp)}
+.juego-encajados .sktab.marca-esquinas{--marca-img:url(../../../img/encajados/marca/esquinas.webp)}
+.juego-encajados .sktab.marca-discontinua{--marca-img:url(../../../img/encajados/marca/discontinua.webp)}
+.juego-encajados .sktab.marca-puntos{--marca-img:url(../../../img/encajados/marca/puntos.webp)}
 .juego-encajados .skcaja,.juego-encajados .skjug{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));left:calc(var(--x) * 100% / var(--w));top:calc(var(--y) * 100% / var(--h));transition:left .09s linear,top .09s linear;pointer-events:none}
 /* cajas: imagen elegida en Apariencia (en meta: brillo verde y ✓) */
-.juego-encajados .skcaja::before{content:'';position:absolute;inset:3%;background:center/contain no-repeat url(../../../img/encajados/caja.webp)}
+.juego-encajados .skcaja::before{content:'';position:absolute;inset:8%;background:center/contain no-repeat url(../../../img/encajados/caja.webp)}
 .juego-encajados .sktab.cajas-carton .skcaja::before{background-image:url(../../../img/encajados/caja-carton.webp)}
 .juego-encajados .sktab.cajas-cuerdas .skcaja::before{background-image:url(../../../img/encajados/caja-cuerdas.webp)}
 .juego-encajados .sktab.cajas-hielo .skcaja::before{background-image:url(../../../img/encajados/caja-hielo.webp)}
