@@ -58,11 +58,11 @@
 .juego-encajados .skacc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .juego-encajados .skacc .btn{min-height:44px;padding:6px 4px;font-size:14px;white-space:nowrap}
 .juego-encajados .sktramo{margin:14px 0 2px;font:800 17px/1.2 'Baloo 2',system-ui,sans-serif;color:var(--ink)}.juego-encajados .sktramo small{font:700 12px/1 system-ui,sans-serif;color:var(--mut);margin-left:4px}
-.juego-encajados .skniveles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:8px 0}
-.juego-encajados .sknv{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
-.juego-encajados .sknv b{font:800 22px/1 'Baloo 2',system-ui,sans-serif}
-.juego-encajados .sknv span{font-size:12px;font-weight:800;text-align:center;line-height:1.15}
-.juego-encajados .sknv small{font-size:11px;color:var(--mut);min-height:14px}
+.juego-encajados .skniveles{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0}
+.juego-encajados .sknv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 1px;min-width:0;border-radius:11px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.juego-encajados .sknv b{font:800 19px/1 'Baloo 2',system-ui,sans-serif}
+.juego-encajados .sknv span{font-size:9.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;text-align:center;line-height:1.15}
+.juego-encajados .sknv small{font-size:10px;color:var(--mut);min-height:12px}
 .juego-encajados .sknv.ok{border-color:#2ECC71;background:color-mix(in srgb,#2ECC71 12%,var(--card))}
 .juego-encajados .sknv:disabled{opacity:.45;cursor:default}
 .juego-encajados .sk-cargando{text-align:center;font-size:17px;padding:40px 0}

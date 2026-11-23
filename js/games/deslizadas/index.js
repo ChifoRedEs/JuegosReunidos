@@ -4,15 +4,11 @@ import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoFondo } from '../../core/aspectos.js';
+import { grupoTableroDN } from '../../core/aspectos.js';
 import { gruposFichas, estilo, aplicarVars, variantes, luz, oscuro, claro } from '../../core/fichas.js';
 import * as K from './motor.js';
 
 const MOTOR = new URL('./motor.js', import.meta.url).href;
-const MARCOS = {
-  madera: { nombre: 'Madera', sw: ['#8A5A2B', '#2B1D12'] }, nogal: { nombre: 'Nogal oscuro', sw: ['#5B3A29', '#1E1410'] }, pizarra: { nombre: 'Pizarra', sw: ['#5B6577', '#1D222C'] },
-  azul: { nombre: 'Azul', sw: ['#3B6FD8', '#142750'] }, verde: { nombre: 'Verde', sw: ['#3E8E5A', '#12331F'] }, rosa: { nombre: 'Rosa', sw: ['#D9488C', '#4A1431'] },
-};
 const PALETAS = {
   vivo: { nombre: 'Vivos', sw: ['#FF5A5F', '#4C8DFF', '#3DCB7A', '#FFD23F'] }, pastel: { nombre: 'Pastel', sw: ['#FFA8B0', '#9CC4FF', '#9BE3B8', '#FFE08A'] },
   joya: { nombre: 'Joyas', sw: ['#B3123F', '#1B4FB3', '#0F8A52', '#C98A00'] }, mono: { nombre: 'Azules', sw: ['#9CC4FF', '#4C8DFF', '#2453B8', '#142E73'] },
@@ -37,8 +33,7 @@ export async function mount(r, a) {
   hay3d = false;   // sin vista 3D
   asp = api.aspecto([
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
-    { ...grupoFondo('#klTab'), def: 't-n-mesa-juegos-3' },
-    { clave: 'marco', titulo: 'Tablero', icono: '🪵', def: 'madera', opciones: Object.entries(MARCOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
+    grupoTableroDN(),
     { clave: 'paleta', titulo: 'Colores de las fichas', icono: '🎨', def: 'vivo', opciones: Object.entries(PALETAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'estilo', titulo: 'Estilo de las fichas', icono: '🧩', def: 'clasico', opciones: Object.entries(ESTILOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     ...gruposFichas({ titulo: 'Fichas', icono: '🟦', color: false, tamano: ['pequeno', 'normal'] }),
@@ -51,7 +46,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => { cfg = { modo: S.modo, tam: S.tam, nivel: cfg.nivel }; parar(); jugar(); },
     salir: () => { parar(); location.hash = '#/cat/logica'; },
     crono: () => crono,
-    config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(K.MODOS).map(([k, l]) => [k, (k === 'colores' ? '🟦 ' : '🔢 ') + l]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(K.TAMANOS[v.modo]).map(([k, t]) => [k, t.nombre]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVELES) }], alCambiar: (v, c) => { if (c === 'modo' && !K.TAMANOS[v.modo][v.tam]) v.tam = v.modo === 'colores' ? '4x5' : '4x4'; }, aplicar: v => { cfg = { modo: v.modo, tam: v.tam, nivel: v.nivel }; parar(); jugar(); } } });
+    config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(K.MODOS).map(([k, l]) => [k, l]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(K.TAMANOS[v.modo]).map(([k, t]) => [k, t.nombre]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVELES) }], alCambiar: (v, c) => { if (c === 'modo' && !K.TAMANOS[v.modo][v.tam]) v.tam = v.modo === 'colores' ? '4x5' : '4x4'; }, aplicar: v => { cfg = { modo: v.modo, tam: v.tam, nivel: v.nivel }; parar(); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '↶ Deshacer', accion: deshacer }, { texto: '💡 Pista', accion: pedirPista }, { texto: '↺ Reiniciar este puzle', accion: reiniciar },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
@@ -71,7 +66,7 @@ function setup() {
   root.innerHTML = `<p class="note">${cfg.modo === 'colores'
     ? 'Desliza los bloques por el tablero para llevar el <b>bloque grande ★</b> hasta la <b>salida</b>, abajo. Cada bloque se mueve en línea recta: ¡piensa antes de mover!'
     : 'Ordena las fichas del <b>1</b> al <b>' + (K.dims('numeros', cfg.tam).w * K.dims('numeros', cfg.tam).h - 1) + '</b> deslizándolas por el hueco. Toca una ficha y se mueve toda la fila hacia el hueco.'}</p>
-    <div class="bar"><span class="lbl">Modo</span>${seg('modo', Object.entries(K.MODOS).map(([k, v]) => [k, (k === 'colores' ? '🟦 ' : '🔢 ') + v]))}</div>
+    <div class="bar"><span class="lbl">Modo</span>${seg('modo', Object.entries(K.MODOS).map(([k, v]) => [k, v]))}</div>
     <div class="bar"><span class="lbl">Tablero</span>${seg('tam', Object.entries(K.TAMANOS[cfg.modo]).map(([k, v]) => [k, v.nombre]))}</div>
     <div class="bar"><span class="lbl">Nivel</span>${seg('nivel', Object.entries(K.NIVELES))}</div>
     ${mej ? `<p class="note">🏆 Tu mejor marca aquí: <b>${mej.movs}</b> movimientos · ${fmt(mej.t)}</p>` : ''}

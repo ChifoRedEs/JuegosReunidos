@@ -90,8 +90,9 @@ function elegirModo(modo) {
   root.innerHTML = `<div class="reto ${retoHecho ? 'hecho' : ''}"><span>${retoHecho ? '✅' : '📅'}</span><div><b>Reto del día · ${api.reto.texto(hoy)}</b>${retoHecho ? 'Completado. Vuelve mañana para otro.' : 'Un almacén mediano, el mismo para todo el mundo hoy.'}</div>${retoHecho ? '' : '<button class="btn on" data-ac="reto">Jugar</button>'}</div>
     <div class="bar"><div class="seg">${Object.entries(MODOS).map(([k, l]) => `<button class="btn ${modo === k ? 'on' : ''}" data-modo="${k}">${l}</button>`).join('')}</div></div>
     ${modo === 'campana' ? `<p class="note">${hechos.size} de ${NIVELES.length} niveles superados. Los niveles se desbloquean en orden.</p>
-      ${Object.entries(TRAMOS).map(([dif, t]) => { const idx = NIVELES.map((n, i) => i).filter(i => NIVELES[i].dif === dif), hechosT = idx.filter(i => hechos.has(i)).length;
-        return `<h3 class="sktramo">${t.icono} ${t.nombre} <small>${t.desc} · ${hechosT}/${idx.length}</small></h3><div class="skniveles">${idx.map(i => { const n = NIVELES[i], ok = hechos.has(i), libre = ok || i <= Math.max(0, siguiente === -1 ? NIVELES.length : siguiente), m = M[i];
+      ${Object.entries(TRAMOS).map(([dif, t]) => { const idx = NIVELES.map((n, i) => i).filter(i => NIVELES[i].dif === dif), hechosT = idx.filter(i => hechos.has(i)).length, tope = Math.max(0, siguiente === -1 ? NIVELES.length : siguiente), vis = idx.filter(i => hechos.has(i) || i <= tope);
+        if (!vis.length) return '';   // tramo todavía sin estrenar: oculto
+        return `<h3 class="sktramo">${t.icono} ${t.nombre} <small>${t.desc} · ${hechosT}/${idx.length}</small></h3><div class="skniveles">${vis.map(i => { const n = NIVELES[i], ok = hechos.has(i), libre = ok || i <= Math.max(0, siguiente === -1 ? NIVELES.length : siguiente), m = M[i];
           return `<button class="sknv ${ok ? 'ok' : ''}" data-nivel="${i}" ${libre ? '' : 'disabled'} aria-label="Nivel ${i + 1}: ${esc(n.nombre)}${ok ? ', superado' : ''}"><b>${i + 1}</b><span>${esc(n.nombre)}</span><small>${ok ? `✔ ${m ? m[0] + ' mov.' : ''}` : libre ? '' : '🔒'}</small></button>`; }).join('')}</div>`; }).join('')}`
     : `<p class="note">Niveles nuevos sin fin, creados al momento y comprobados: siempre tienen solución.</p>
       <div class="bar"><span class="lbl">Tamaño</span><div class="seg">${Object.entries(K.TAMANOS).map(([k, t]) => `<button class="btn ${cfg.tam === k ? 'on' : ''}" data-tam="${k}">${t.nombre} · ${t.cajas} cajas</button>`).join('')}</div></div>
@@ -186,8 +187,8 @@ function pintar() {
   const m = $('#skMsg');
   if (S.done) {
     m.className = 'msg win';
-    const sig = S.modo === 'campana' && S.nivel < NIVELES.length - 1;
-    m.innerHTML = `🎉 ¡Nivel resuelto en ${S.movs} movimientos y ${S.empujes} empujes!${S.pistas ? ` (con ${S.pistas} pista${S.pistas > 1 ? 's' : ''})` : ''} <span class="bar" style="justify-content:center;margin-top:6px">${sig ? '<button class="btn on" data-ac="siguiente">Siguiente nivel ▶</button>' : S.modo === 'azar' ? '<button class="btn on" data-ac="generar">🎲 Otro nivel</button>' : ''}<button class="btn" data-ac="menu">☰ Niveles</button></span>`;
+    const sig = S.modo === 'campana' && S.nivel < NIVELES.length - 1 && !S.ventana;
+    m.innerHTML = `🎉 ¡Nivel resuelto en ${S.movs} movimientos y ${S.empujes} empujes!${S.pistas ? ` (con ${S.pistas} pista${S.pistas > 1 ? 's' : ''})` : ''}${S.gen && !S.ventana ? ` 🎲 ${S.gen}/10 generados para el sello.` : ''} <span class="bar" style="justify-content:center;margin-top:6px">${sig ? '<button class="btn on" data-ac="siguiente">Siguiente nivel ▶</button>' : S.modo === 'azar' && !S.ventana ? '<button class="btn on" data-ac="generar">🎲 Otro nivel</button>' : ''}<button class="btn" data-ac="menu">☰ Niveles</button></span>`;
   } else { m.className = 'msg'; m.textContent = atascado() ? '⚠️ Alguna caja ha quedado atascada en una esquina: deshaz o reinicia.' : ''; }
   root.querySelectorAll('[data-ac="deshacer"]').forEach(b => { b.disabled = !S.hist.length || S.done; });
 }
@@ -223,7 +224,11 @@ function ganar() {
     const h = superados(); if (!h.includes(S.nivel)) api.setPref('superados', [...h, S.nivel]);
     const M = mejores(), m = M[S.nivel]; if (!m || S.movs < m[0]) { M[S.nivel] = [S.movs, S.empujes]; api.setPref('mejores', M); }
   }
-  api.registrar({ res: 'victoria', variante: S.modo === 'campana' ? 'Campaña' : S.modo === 'reto' ? 'Reto del día' : `Generado ${K.TAMANOS[S.tam].nombre.toLowerCase()}`, limpio: !S.pistas });
+  // Ventana de Victoria (y sello) solo al terminar el último nivel de cada tramo (20 fáciles, 20 medios, 20 difíciles), cada 10 niveles generados
+  // y en el reto del día; en el resto de niveles solo sale el mensaje de la pantalla (con «Siguiente nivel»)
+  if (S.modo === 'campana') { const dif = NIVELES[S.nivel].dif; if (!NIVELES[S.nivel + 1] || NIVELES[S.nivel + 1].dif !== dif) { S.ventana = true; api.registrar({ res: 'victoria', variante: `Campaña ${TRAMOS[dif].nombre}`, limpio: !S.pistas }); } }
+  else if (S.modo === 'reto') { S.ventana = true; api.registrar({ res: 'victoria', variante: 'Reto del día', limpio: !S.pistas }); }
+  else { const n = (Number(api.pref('gen10', 0)) || 0) + 1; S.gen = n; if (n >= 10) { api.setPref('gen10', 0); S.ventana = true; api.registrar({ res: 'victoria', variante: 'Generados', limpio: !S.pistas }); } else api.setPref('gen10', n); }
   if (S.reto && api.reto.completar(S.reto)) setTimeout(() => api.aviso('📅 ¡Reto del día completado!'), 400);
   api.sonido('ganar'); api.vibrar([60, 40, 60]); if (V3) V3.celebrar();
 }
