@@ -8,6 +8,8 @@ import { grupoTableroDN } from '../../core/aspectos.js';
 import { gruposFichas, estilo, aplicarVars, variantes, luz, oscuro, claro } from '../../core/fichas.js';
 import * as K from './motor.js';
 
+/* etiqueta de dos renglones, igual en los dos modos: medida arriba y descripción abajo («4×5» / «Clásico», «4×4» / «15 fichas») */
+const etiquetaTam = t => t.nombre.includes(' · ') ? t.nombre.split(' · ').join('\n') : t.nombre.split(' ').reverse().join('\n');
 const MOTOR = new URL('./motor.js', import.meta.url).href;
 const PALETAS = {
   vivo: { nombre: 'Vivos', sw: ['#FF5A5F', '#4C8DFF', '#3DCB7A', '#FFD23F'] }, pastel: { nombre: 'Pastel', sw: ['#FFA8B0', '#9CC4FF', '#9BE3B8', '#FFE08A'] },
@@ -46,7 +48,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => { cfg = { modo: S.modo, tam: S.tam, nivel: cfg.nivel }; parar(); jugar(); },
     salir: () => { parar(); location.hash = '#/cat/logica'; },
     crono: () => crono,
-    config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(K.MODOS).map(([k, l]) => [k, l]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(K.TAMANOS[v.modo]).map(([k, t]) => [k, t.nombre]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVELES) }], alCambiar: (v, c) => { if (c === 'modo' && !K.TAMANOS[v.modo][v.tam]) v.tam = v.modo === 'colores' ? '4x5' : '4x4'; }, aplicar: v => { cfg = { modo: v.modo, tam: v.tam, nivel: v.nivel }; parar(); jugar(); } } });
+    config: { valores: () => ({ modo: cfg.modo, tam: cfg.tam, nivel: cfg.nivel }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(K.MODOS).map(([k, l]) => [k, l]) }, { clave: 'tam', titulo: 'Tablero', opciones: Object.entries(K.TAMANOS[v.modo]).map(([k, t]) => [k, etiquetaTam(t)]) }, { clave: 'nivel', titulo: 'Nivel', opciones: Object.entries(K.NIVELES) }], alCambiar: (v, c) => { if (c === 'modo' && !K.TAMANOS[v.modo][v.tam]) v.tam = v.modo === 'colores' ? '4x5' : '4x4'; }, aplicar: v => { cfg = { modo: v.modo, tam: v.tam, nivel: v.nivel }; parar(); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '↶ Deshacer', accion: deshacer }, { texto: '💡 Pista', accion: pedirPista }, { texto: '↺ Reiniciar este puzle', accion: reiniciar },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
