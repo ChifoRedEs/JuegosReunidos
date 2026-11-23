@@ -1,93 +1,295 @@
 // Niveles de la campaña del Encajados: originales de JugamiGO (unos diseñados a mano y otros creados con el
 // generador del juego con semillas fijas y elegidos por dificultad). No son copia de ninguna colección publicada.
-// Van de menos a más: los primeros enseñan las reglas y los últimos piden planear varios empujes por delante.
+// 60 niveles en 3 tramos de 20 (dif: facil = pequeño, 2 cajas · medio = mediano, 3 cajas · dificil = grande, 4-5 cajas), de menos a más
+// empujes dentro de cada tramo. Los 20 primeros de siempre se han reubicado según su tamaño; el resto salen del generador con semilla fija
+// y se han comprobado con el resolvedor del juego.
 // Para añadir uno: copia el formato (# muro · . meta · $ caja · * caja en meta · @ jugador · + jugador en meta)
 // y comprueba con `node tests/motores.mjs` que tiene solución.
 export const NIVELES = [
-  { nombre: 'Primer empujón', mapa: `
+  { dif: 'facil', nombre: 'Primer empujón', mapa: `
 #######
 #@ $ .#
-#######` },
-  { nombre: 'Pasillo', mapa: `
+#######
+` },
+  { dif: 'facil', nombre: 'Pasillo', mapa: `
 ########
 #  .   #
 # #$## #
 # @  $.#
-########` },
-  { nombre: 'La esquina', mapa: `
+########
+` },
+  { dif: 'facil', nombre: 'La esquina', mapa: `
 ######
 #.   #
 # $# #
 # $@ #
 #.   #
-######` },
-  { nombre: 'Dos cajas', mapa: `
+######
+` },
+  { dif: 'facil', nombre: 'Estantería', mapa: `
+#######
+###@###
+#  $  #
+#.$  ##
+##   ##
+##  .##
+#######
+` },
+  { dif: 'facil', nombre: 'Carretilla', mapa: `
+######
+#  ###
+#  . #
+#   .#
+##$$##
+##@ ##
+######
+` },
+  { dif: 'facil', nombre: 'Palé', mapa: `
+######
+###  #
+###  #
+#@$  #
+## $ #
+##.. #
+######
+` },
+  { dif: 'facil', nombre: 'Montacargas', mapa: `
+#######
+#     #
+#.   ##
+#.$ $@#
+#   ###
+#######
+` },
+  { dif: 'facil', nombre: 'Dos cajas', mapa: `
 #######
 #.  $ #
 #  @  #
 # $  .#
-#######` },
-  { nombre: 'Torre', mapa: `
 #######
-##### #
-### ..#
+` },
+  { dif: 'facil', nombre: 'Andén', mapa: `
+#######
+###@  #
+###$$##
+###  ##
+###  ##
+#  .. #
+#######
+` },
+  { dif: 'facil', nombre: 'Pasarela', mapa: `
+#######
+#### ##
+###. ##
+###   #
 #@$   #
-## $  #
-##  ###
-#######` },
-  { nombre: 'Escalón', mapa: `
+# $.  #
+#######
+` },
+  { dif: 'facil', nombre: 'Silo', mapa: `
 ######
-##. ##
-#@$ ##
-##.  #
-## $ #
-##   #
-######` },
-  { nombre: 'Cruce', mapa: `
+##@  #
+##$ .#
+#  $ #
+#   .#
+######
+` },
+  { dif: 'facil', nombre: 'Cruce', mapa: `
   ####
 ###  ##
 # $ $ #
 #. @ .#
 ##   ##
- #####` },
-  { nombre: 'Almacén', mapa: `
+ #####
+` },
+  { dif: 'facil', nombre: 'Rampa', mapa: `
 #######
-#.  # #
-# $   #
-#.$# @#
-#  $ .#
-#######` },
-  { nombre: 'Rincón', mapa: `
+#     #
+#   $ #
+## $+##
+## .###
 #######
-###@  #
-# $$ ##
-#    ##
-#.  .##
-#######` },
-  { nombre: 'Embudo', mapa: `
+` },
+  { dif: 'facil', nombre: 'Compuerta', mapa: `
+######
+## . #
+##$ .#
+#  $ #
+#  @ #
+######
+` },
+  { dif: 'facil', nombre: 'Embudo', mapa: `
 ######
 ## @##
 ##$$##
 #    #
 #   .#
 #.   #
-######` },
-  { nombre: 'Tres en fila', mapa: `
+######
+` },
+  { dif: 'facil', nombre: 'Cobertizo', mapa: `
+#######
+####. #
+#@$  .#
+# $   #
+###   #
+#######
+` },
+  { dif: 'facil', nombre: 'Torre', mapa: `
+#######
+##### #
+### ..#
+#@$   #
+## $  #
+##  ###
+#######
+` },
+  { dif: 'facil', nombre: 'Escalón', mapa: `
+######
+##. ##
+#@$ ##
+##.  #
+## $ #
+##   #
+######
+` },
+  { dif: 'facil', nombre: 'Rincón', mapa: `
+#######
+###@  #
+# $$ ##
+#    ##
+#.  .##
+#######
+` },
+  { dif: 'facil', nombre: 'Hangar', mapa: `
+######
+# .@##
+#. $##
+#    #
+## $ #
+##   #
+######
+` },
+  { dif: 'medio', nombre: 'Almacén', mapa: `
+#######
+#.  # #
+# $   #
+#.$# @#
+#  $ .#
+#######
+` },
+  { dif: 'medio', nombre: 'Taller', mapa: `
+#######
+#. @###
+# $$###
+# $  ##
+##   ##
+# . .##
+#     #
+#######
+` },
+  { dif: 'medio', nombre: 'Cámara fría', mapa: `
+#######
+#  ####
+#   ###
+#   $@#
+#  $ ##
+#..$.##
+###  ##
+#######
+` },
+  { dif: 'medio', nombre: 'Trastienda', mapa: `
+#######
+#  . .#
+##  $ #
+#@$   #
+## $  #
+#### .#
+##### #
+#######
+` },
+  { dif: 'medio', nombre: 'Depósito', mapa: `
 ########
-#      #
-# $$$  #
-# #  # #
-#  ...@#
-########` },
-  { nombre: 'La U', mapa: `
+####  .#
+#@$  $ #
+###..  #
+#### $ #
+###    #
+###### #
+########
+` },
+  { dif: 'medio', nombre: 'Granero', mapa: `
+########
+#..    #
+#@$  $ #
+#  # ###
+# $  ###
+#  . ###
+########
+` },
+  { dif: 'medio', nombre: 'Aduana', mapa: `
+#######
+# .####
+# $ ..#
+# $   #
+#@$   #
+###  ##
+#######
+` },
+  { dif: 'medio', nombre: 'Esclusa', mapa: `
+#######
+###@# #
+#. $  #
+#     #
+# $ $ #
+#..   #
+#######
+` },
+  { dif: 'medio', nombre: 'La U', mapa: `
 #########
 #.  #   #
 # $ # $ #
 #   @   #
 # $   ..#
 ###   ###
-  #####` },
-  { nombre: 'Laberinto', mapa: `
+  #####
+` },
+  { dif: 'medio', nombre: 'Rellano', mapa: `
+########
+#  $.  #
+#   $. #
+####   #
+####$. #
+####@# #
+###### #
+########
+` },
+  { dif: 'medio', nombre: 'Tres en fila', mapa: `
+########
+#      #
+# $$$  #
+# #  # #
+#  ...@#
+########
+` },
+  { dif: 'medio', nombre: 'Zócalo', mapa: `
+########
+#.  ####
+#      #
+# $$ $ #
+#.+    #
+########
+` },
+  { dif: 'medio', nombre: 'Vagón', mapa: `
+########
+#  @   #
+# $$$  #
+## .#  #
+### .. #
+###### #
+########
+` },
+  { dif: 'medio', nombre: 'Laberinto', mapa: `
 ######
 ##   #
 ## $ #
@@ -95,24 +297,46 @@ export const NIVELES = [
 #    #
 # .$ #
 #. @.#
-######` },
-  { nombre: 'Patio', mapa: `
+######
+` },
+  { dif: 'medio', nombre: 'Dársena', mapa: `
+########
+## $  .#
+#@$ .. #
+##  $# #
+####  ##
+##    ##
+####  ##
+########
+` },
+  { dif: 'medio', nombre: 'Patio', mapa: `
 ########
 ##     #
 #@$ $$ #
 ###.  ##
 #. .  ##
 #  #####
-########` },
-  { nombre: 'Muelle', mapa: `
+########
+` },
+  { dif: 'medio', nombre: 'Faro', mapa: `
+#######
+#  ## #
+# $.  #
+#@$  .#
+##$  .#
+#     #
+#######
+` },
+  { dif: 'medio', nombre: 'Muelle', mapa: `
 ########
 #      #
 #  $ $ #
 # $#####
 # +.. ##
 # ##  ##
-########` },
-  { nombre: 'Bodega', mapa: `
+########
+` },
+  { dif: 'medio', nombre: 'Bodega', mapa: `
 #######
 ####@##
 ### $ #
@@ -120,18 +344,120 @@ export const NIVELES = [
 #  $$ #
 #     #
 #..  .#
-#######` },
-  { nombre: 'Fábrica', mapa: `
 #######
-# @  ##
-##$$ ##
-##  ###
-#  $  #
+` },
+  { dif: 'medio', nombre: 'Atalaya', mapa: `
+########
+#####  #
+#  ##$ #
+#. ##  #
+#..  $@#
+#  # $ #
+####  ##
+########
+` },
+  { dif: 'dificil', nombre: 'Cantera', mapa: `
+########
+### @###
+#  $$ ##
+#    $##
+#   $.##
+# .  . #
+#  .   #
+########
+` },
+  { dif: 'dificil', nombre: 'Bóveda', mapa: `
+#########
+###     #
+##@$ $$.#
+##$   . #
+#     . #
+#   . ###
+#########
+` },
+  { dif: 'dificil', nombre: 'Galería', mapa: `
+#########
+### . ###
+#.    # #
+# $$  $+#
+# . $ # #
+#     ###
+#  ######
+#########
+` },
+  { dif: 'dificil', nombre: 'Mirador', mapa: `
+#######
+## @ ##
+###$$##
+##  . #
 # $   #
-# ... #
-# .   #
-#######` },
-  { nombre: 'Puerto', mapa: `
+# .$$ #
+# . . #
+#.    #
+#######
+` },
+  { dif: 'dificil', nombre: 'Claustro', mapa: `
+########
+###@  ##
+###$$$##
+#   .  #
+#  .$  #
+#      #
+# .   .#
+########
+` },
+  { dif: 'dificil', nombre: 'Cripta', mapa: `
+#########
+#    .  #
+# $     #
+# $$ .  #
+# #. $ .#
+# ###@###
+# #######
+#########
+` },
+  { dif: 'dificil', nombre: 'Foso', mapa: `
+#######
+#     #
+# $ $ #
+#  . .#
+##    #
+##  # #
+## $#.#
+#@$ . #
+#######
+` },
+  { dif: 'dificil', nombre: 'Garita', mapa: `
+#########
+##   ####
+# $  ## #
+#    .$.#
+# $   $+#
+#  .  # #
+#########
+` },
+  { dif: 'dificil', nombre: 'Pantano', mapa: `
+#########
+###     #
+#### $ ##
+#     .##
+#  $ ####
+# .  $@##
+#   $ ###
+#..######
+#########
+` },
+  { dif: 'dificil', nombre: 'Ribera', mapa: `
+#########
+#    .  #
+# .# .  #
+#     ###
+##  $$###
+##$$ .###
+## @#####
+#########
+` },
+  { dif: 'dificil', nombre: 'Puerto', mapa: `
 ########
 ##   ###
 #   $ ##
@@ -140,8 +466,59 @@ export const NIVELES = [
 #    .##
 # .#####
 # .#####
-########` },
-  { nombre: 'Ciudadela', mapa: `
+########
+` },
+  { dif: 'dificil', nombre: 'Sótano', mapa: `
+#########
+# #   ###
+#   $   #
+#  $@$ .#
+# $## . #
+#   ..  #
+#########
+` },
+  { dif: 'dificil', nombre: 'Terraza', mapa: `
+#########
+###   . #
+##  $ $ #
+# $     #
+#@$     #
+####. # #
+####..###
+#########
+` },
+  { dif: 'dificil', nombre: 'Umbral', mapa: `
+#########
+# ..   .#
+####  $ #
+## $ $  #
+##@$   .#
+######  #
+####    #
+#########
+` },
+  { dif: 'dificil', nombre: 'Gran almacén', mapa: `
+#######
+## @ ##
+##$$$ #
+##    #
+#     #
+# .$ .#
+# .  .#
+#######
+` },
+  { dif: 'dificil', nombre: 'Fábrica', mapa: `
+#######
+# @  ##
+##$$ ##
+##  ###
+#  $  #
+# $   #
+# ... #
+# .   #
+#######
+` },
+  { dif: 'dificil', nombre: 'Ciudadela', mapa: `
 #######
 #   ###
 # $ ###
@@ -150,14 +527,34 @@ export const NIVELES = [
 #  .$ #
 #.  $##
 #.   ##
-#######` },
-  { nombre: 'Gran almacén', mapa: `
 #######
-## @ ##
-##$$$ #
-##    #
-#     #
-# .$ .#
-# .  .#
-#######` },
+` },
+  { dif: 'dificil', nombre: 'Vestíbulo', mapa: `
+#########
+#  ######
+# $     #
+#@$   $ #
+###   . #
+###  .. #
+### $  .#
+#########
+` },
+  { dif: 'dificil', nombre: 'Yacimiento', mapa: `
+#########
+#..   ###
+#     $@#
+#  #  $ #
+# .$ $ ##
+# .    ##
+#########
+` },
+  { dif: 'dificil', nombre: 'Almacenillo', mapa: `
+#########
+#  .  $.#
+#.  . $ #
+#$ ###  #
+#  # $$ #
+#. #  @ #
+#########
+` },
 ];

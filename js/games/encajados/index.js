@@ -1,4 +1,4 @@
-// Encajados: empuja todas las cajas hasta las metas. Campaña de 20 niveles, niveles generados sin fin y reto del día.
+// Encajados: empuja todas las cajas hasta las metas. Campaña de 60 niveles (20 fácil, 20 medio, 20 difícil), niveles generados sin fin y reto del día.
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { enSegundoPlano } from '../../core/ia/remoto.js';
@@ -78,6 +78,7 @@ export async function mount(r, a) {
 }
 export function unmount() { cerrar3D(); modo3d = false; serie++; clearTimeout(andando); andando = null; document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; L = null; asp = null; }
 function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.texto, r.fin); }
+const TRAMOS = { facil: { nombre: 'Fácil', icono: '🟢', desc: 'almacén pequeño, 1-2 cajas' }, medio: { nombre: 'Medio', icono: '🟡', desc: 'almacén mediano, 3 cajas' }, dificil: { nombre: 'Difícil', icono: '🔴', desc: 'almacén grande, 4-5 cajas' } };
 const superados = () => { const s = api.pref('superados', []); return Array.isArray(s) ? s.filter(i => ent(i, 0, NIVELES.length - 1)) : []; };
 const mejores = () => { const m = api.pref('mejores', {}); return m && typeof m === 'object' ? m : {}; };
 
@@ -89,8 +90,9 @@ function elegirModo(modo) {
   root.innerHTML = `<div class="reto ${retoHecho ? 'hecho' : ''}"><span>${retoHecho ? '✅' : '📅'}</span><div><b>Reto del día · ${api.reto.texto(hoy)}</b>${retoHecho ? 'Completado. Vuelve mañana para otro.' : 'Un almacén mediano, el mismo para todo el mundo hoy.'}</div>${retoHecho ? '' : '<button class="btn on" data-ac="reto">Jugar</button>'}</div>
     <div class="bar"><div class="seg">${Object.entries(MODOS).map(([k, l]) => `<button class="btn ${modo === k ? 'on' : ''}" data-modo="${k}">${l}</button>`).join('')}</div></div>
     ${modo === 'campana' ? `<p class="note">${hechos.size} de ${NIVELES.length} niveles superados. Los niveles se desbloquean en orden.</p>
-      <div class="skniveles">${NIVELES.map((n, i) => { const ok = hechos.has(i), libre = ok || i <= Math.max(0, siguiente === -1 ? NIVELES.length : siguiente), m = M[i];
-        return `<button class="sknv ${ok ? 'ok' : ''}" data-nivel="${i}" ${libre ? '' : 'disabled'} aria-label="Nivel ${i + 1}: ${esc(n.nombre)}${ok ? ', superado' : ''}"><b>${i + 1}</b><span>${esc(n.nombre)}</span><small>${ok ? `✔ ${m ? m[0] + ' mov.' : ''}` : libre ? '' : '🔒'}</small></button>`; }).join('')}</div>`
+      ${Object.entries(TRAMOS).map(([dif, t]) => { const idx = NIVELES.map((n, i) => i).filter(i => NIVELES[i].dif === dif), hechosT = idx.filter(i => hechos.has(i)).length;
+        return `<h3 class="sktramo">${t.icono} ${t.nombre} <small>${t.desc} · ${hechosT}/${idx.length}</small></h3><div class="skniveles">${idx.map(i => { const n = NIVELES[i], ok = hechos.has(i), libre = ok || i <= Math.max(0, siguiente === -1 ? NIVELES.length : siguiente), m = M[i];
+          return `<button class="sknv ${ok ? 'ok' : ''}" data-nivel="${i}" ${libre ? '' : 'disabled'} aria-label="Nivel ${i + 1}: ${esc(n.nombre)}${ok ? ', superado' : ''}"><b>${i + 1}</b><span>${esc(n.nombre)}</span><small>${ok ? `✔ ${m ? m[0] + ' mov.' : ''}` : libre ? '' : '🔒'}</small></button>`; }).join('')}</div>`; }).join('')}`
     : `<p class="note">Niveles nuevos sin fin, creados al momento y comprobados: siempre tienen solución.</p>
       <div class="bar"><span class="lbl">Tamaño</span><div class="seg">${Object.entries(K.TAMANOS).map(([k, t]) => `<button class="btn ${cfg.tam === k ? 'on' : ''}" data-tam="${k}">${t.nombre} · ${t.cajas} cajas</button>`).join('')}</div></div>
       <div class="bar"><button class="btn on" data-ac="generar">🎲 Crear nivel</button></div>`}
