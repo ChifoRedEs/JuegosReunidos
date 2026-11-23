@@ -12,15 +12,28 @@ const TEMAS = { tropical: ['isla1', 'isla2', 'isla3'], hielo: ['hielo1', 'hielo2
 const navidadActiva = () => { const m = new Date().getMonth(); return m === 11 || m === 0; };
 const temasAuto = () => Object.keys(TEMAS).filter(t => t !== 'navidad' || navidadActiva());
 let semilla = 0, inicio = -1;
-// Adornos que pasean por el mar: [imagen, ancho en % del tablero, segundos en cruzar, ondula]. Cada puzle sortea 3 (o 1).
-const ADORNOS = [['adorno-barco', 16, 46, 0], ['adorno-tortuga', 11, 70, 0], ['adorno-gaviotas', 12, 30, 0], ['adorno-manta', 22, 80, 1], ['adorno-delfin', 16, 24, 1], ['adorno-tiburon', 30, 95, 0], ['adorno-peces', 20, 55, 1], ['adorno-paddle', 17, 85, 0], ['adorno-buzo1', 15, 62, 1], ['adorno-buzo2', 15, 66, 1]];
+// Adornos que pasean por el mar: [imagen, ancho en % del tablero, segundos en cruzar, ondula, acompañantes]. Cada acompañante: [imagen, ancho en % del adorno, izquierda %, arriba %, ondula].
+// Van saliendo de uno en uno y al azar (sin repetir hasta haber salido todos); a la vez se ven unos 3, como antes.
+const ADORNOS = [['adorno-barco', 16, 46, 0], ['adorno-tortuga', 11, 70, 0, [['adorno-tortuga', 45, -60, -30, 0], ['adorno-tortuga', 45, -75, 70, 0]]], ['adorno-gaviotas', 12, 30, 0], ['adorno-manta', 22, 80, 1, [['adorno-manta', 40, -50, -45, 1], ['adorno-manta', 40, -50, 60, 1]]], ['adorno-delfin', 16, 24, 1], ['adorno-tiburon', 30, 95, 0], ['adorno-peces', 20, 55, 1], ['adorno-paddle', 17, 85, 0], ['adorno-buzo1', 15, 62, 1], ['adorno-buzo2', 15, 66, 1]];
+let tAd = 0, bolsa = [];
+const azar = (a, b) => a + Math.random() * (b - a);
+function lanzarAdorno(c, mitad) {
+  const vivos = new Set([...c.children].map(x => x.dataset.k));
+  if (!bolsa.length) bolsa = ADORNOS.map((x, i) => i).sort(() => Math.random() - .5);
+  let j = bolsa.findIndex(i => !vivos.has(String(i))); if (j < 0) return; const k = bolsa.splice(j, 1)[0];
+  const [img, w, seg, onda, extra = []] = ADORNOS[k], t = Math.round(seg * azar(.85, 1.2)), y0 = Math.round(azar(4, 78)), y1 = Math.max(2, Math.min(84, y0 + Math.round(azar(-14, 14))));
+  const el = document.createElement('span'); el.className = 'ad' + (Math.random() < .5 ? ' rev' : ''); el.dataset.k = k;
+  el.style.cssText = `--w:${w}%;--y0:${y0}%;--y1:${y1}%;--t:${t}s;--d:-${mitad ? Math.round(azar(0, t * .8)) : 0}s`;
+  el.innerHTML = extra.map(([im, ew, l, tp, o], n) => `<img class="ex ${o ? 'onda' : ''}" src="${IMG(im)}" alt="" style="width:${ew}%;left:${l}%;top:${tp}%;animation-delay:-${n + 1}s">`).join('') + `<img class="${onda ? 'onda' : ''}" src="${IMG(img)}" alt="">`;
+  el.addEventListener('animationend', e => { if (e.target === el) el.remove(); });
+  c.appendChild(el);
+}
 function ponerAdornos() {
   const c = document.getElementById('hsAd'); if (!c || !root) return;
-  const modo = root.dataset.adornos, n = modo === 'no' ? 0 : 3, l = ADORNOS.slice(), r = (a, b) => a + Math.random() * (b - a);
-  c.innerHTML = Array.from({ length: n }, () => {
-    const [img, w, seg, onda] = l.splice(Math.random() * l.length | 0, 1)[0], t = Math.round(seg * r(.85, 1.2)), y0 = Math.round(r(4, 78)), y1 = Math.max(2, Math.min(84, y0 + Math.round(r(-14, 14))));
-    return `<span class="ad${Math.random() < .5 ? ' rev' : ''}" style="--w:${w}%;--y0:${y0}%;--y1:${y1}%;--t:${t}s;--d:-${Math.round(r(0, t))}s"><img class="${onda ? 'onda' : ''}" src="${IMG(img)}" alt=""></span>`;
-  }).join('');
+  clearTimeout(tAd); c.innerHTML = ''; if (root.dataset.adornos === 'no') return;
+  for (let i = 0; i < 3; i++) lanzarAdorno(c, true);
+  const sig = () => { tAd = setTimeout(() => { if (c.isConnected) { if (c.children.length < 4) lanzarAdorno(c, false); sig(); } }, azar(11, 22) * 1000); };
+  sig();
 }
 function imgIsla(r, c, n, modo) {
   const l = temasAuto(), tema = TEMAS[modo] ? modo : modo === 'revuelto' ? l[(r * 5 + c * 3 + n) % l.length] : l[semilla % l.length];
@@ -89,7 +102,7 @@ function menu() {
 export function unmount() {
   if (S && crono) { S.t = crono.s; guardar(); }
   if (crono) crono.detener();
-  clearTimeout(tPista);
+  clearTimeout(tPista); clearTimeout(tAd);
   document.removeEventListener('keydown', onKey);
   if (root) root.removeEventListener('click', clic);
   S = null; crono = null; P = null; par = null; asp = null;

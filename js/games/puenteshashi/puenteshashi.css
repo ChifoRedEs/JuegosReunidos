@@ -33,9 +33,11 @@
 @keyframes hs-brillo{50%{filter:drop-shadow(0 0 6px #ffe066)}}
 /* adornos: pasean por el mar, detrás del tablero (se sortean en index.js) */
 .hs-ad{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.hs-ad .ad{position:absolute;width:var(--w);left:-40%;top:var(--y0);animation:hs-nada var(--t) linear var(--d) infinite}
+.hs-ad .ad{position:absolute;width:var(--w);left:-40%;top:var(--y0);animation:hs-nada var(--t) linear var(--d) 1 forwards}
 .hs-ad .ad.rev{transform:scaleX(-1);animation-name:hs-nada-r}
 .hs-ad .ad img{display:block;width:100%;height:auto;opacity:.93;filter:drop-shadow(0 4px 4px rgba(20,60,70,.35))}
+.hs-ad .ad img.ex{position:absolute;z-index:0}
+.hs-ad .ad img:not(.ex){position:relative;z-index:1}
 .hs-ad .ad img.onda{animation:hs-onda 2.8s ease-in-out infinite}
 @keyframes hs-nada{from{left:-40%;top:var(--y0)}to{left:115%;top:var(--y1)}}
 @keyframes hs-nada-r{from{left:115%;top:var(--y0)}to{left:-40%;top:var(--y1)}}
