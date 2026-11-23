@@ -274,7 +274,7 @@ function clic(e) {
   const a = d.ac;
   if (a === 'deshacer') deshacer(); else if (a === 'reiniciar') reiniciar(); else if (a === 'pista') pista();
   else if (a === 'volver') armar(); else if (a === 'generar') generado(cfg.tam); else if (a === 'reto') reto();
-  else if (a === 'siguiente') nivelCampana(S.nivel + 1); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
+  else if (a === 'menu') elegirModo(S && S.modo === 'campana' ? 'campana' : cfg.modo); else if (a === 'siguiente') nivelCampana(S.nivel + 1); else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
 }
 function reglas() {
   api.modal('Encajados', `<ul><li>Eres el mozo del almacén: <b>empuja todas las cajas</b> hasta las casillas marcadas.</li>
