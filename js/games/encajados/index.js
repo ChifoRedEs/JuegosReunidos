@@ -16,12 +16,12 @@ const MAX_HIST = 400;
 const TEMAS = {   // 4 escenarios, cada uno con su versión de día (modo Claro) y de noche (modo Nocturno)
   almacen: { nombre: 'Almacén', sw: ['#6B7A99', '#EFE6D8'], modo: 'claro' }, jardin: { nombre: 'Jardín', sw: ['#3E8E5A', '#F3EBD8'], modo: 'claro' },
   desierto: { nombre: 'Desierto', sw: ['#B5651D', '#F6DFB0'], modo: 'claro' }, hielo: { nombre: 'Hielo', sw: ['#3A5BA0', '#EAF6FF'], modo: 'claro' },
-  'almacen-n': { nombre: 'Turno de noche', sw: ['#2A3B86', '#2F3558'], modo: 'oscuro' }, 'jardin-n': { nombre: 'Luciérnagas', sw: ['#14684A', '#1F3A33'], modo: 'oscuro' },
-  'desierto-n': { nombre: 'Dunas de luna', sw: ['#5E2A8C', '#3E2F5A'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Aurora', sw: ['#1E4AA8', '#1F3A66'], modo: 'oscuro' },
+  'almacen-n': { nombre: 'Cian', sw: ['#2A3B86', '#29D9FF'], modo: 'oscuro' }, 'jardin-n': { nombre: 'Lima', sw: ['#14684A', '#7CFF4D'], modo: 'oscuro' },
+  'desierto-n': { nombre: 'Naranja', sw: ['#8A3A0E', '#FF9A1F'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Magenta', sw: ['#A0207F', '#FF2EC4'], modo: 'oscuro' },
 };
 // Cajas: imágenes de img/encajados (la primera es la de siempre)
 const ESTILOS = { ladrillo: 'Ladrillo', piedra: 'Piedra', metal: 'Metal industrial' };   // texturas grises de img/encajados/escenario, teñidas con los colores del escenario
-const MARCAS = { cinta: 'Cinta de seguridad', rayas: 'Cinta roja y blanca', amarilla: 'Cinta amarilla', avisos: 'Cinta de avisos', esquinas: 'Esquinas pintadas', discontinua: 'Línea discontinua', puntos: 'Puntos pintados', 'esquinas-rojas': 'Esquinas rojas' };   // img/encajados/marca
+const MARCAS = { cinta: 'Cinta de seguridad', rayas: 'Cinta roja y blanca', amarilla: 'Cinta amarilla', avisos: 'Cinta de avisos', esquinas: 'Esquinas blancas', 'esquinas-rojas': 'Esquinas rojas', discontinua: 'Línea discontinua', puntos: 'Puntos pintados' };   // img/encajados/marca
 const CAJAS = { caja: 'Madera', metal: 'Metal', tec: 'Tecnológica', carton: 'Cartón', cuerdas: 'Cuerdas', hielo: 'Hielo', piedra: 'Piedra', blindada: 'Blindada' };
 const SUF = { izquierda: 'izq', derecha: 'der', arriba: 'arriba', abajo: 'abajo' };
 let dirV = 'abajo';
@@ -57,8 +57,8 @@ export async function mount(r, a) {
   api = a; root = r; ocupado = false; andando = null; forzar2d = false; modo3d = false;
   hay3d = false;   // sin vista 3D
   asp = api.aspecto([{ clave: 'vista', titulo: 'Vista del almacén', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] },
-    { clave: 'tema', titulo: 'Escenario', icono: '🏭', def: 'almacen', defModo: { claro: 'almacen', oscuro: 'almacen-n' }, opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw, modo: t.modo, sec: t.modo === 'claro' ? 'Día' : 'Noche' })) },
-    { clave: 'estilo', titulo: 'Estilo del escenario', icono: '🧱', def: 'ladrillo', opciones: Object.entries(ESTILOS).map(([id, nombre]) => ({ id, nombre })) },
+    { clave: 'tema', titulo: 'Tablero', icono: '🏭', def: 'almacen', defModo: { claro: 'almacen', oscuro: 'almacen-n' }, opciones: Object.entries(TEMAS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw, modo: t.modo, sec: t.modo === 'claro' ? 'Día' : 'Noche' })) },
+    { clave: 'estilo', titulo: 'Escenario', icono: '🧱', def: 'ladrillo', opciones: Object.entries(ESTILOS).map(([id, nombre]) => ({ id, nombre })) },
     { clave: 'marca', titulo: 'Marca de meta', icono: '🚧', ventana: true, forma: 'figura', def: 'cinta', opciones: Object.entries(MARCAS).map(([id, nombre]) => ({ id, nombre, img: `img/encajados/marca/${id}.webp` })) },
     { clave: 'cajas', titulo: 'Cajas', icono: '📦', ventana: true, forma: 'figura', def: 'caja', opciones: Object.entries(CAJAS).map(([id, nombre]) => ({ id, nombre, img: `img/encajados/caja${id === 'caja' ? '' : '-' + id}.webp` })) },
     { clave: 'ficha', titulo: 'Personaje', icono: '🧑', ventana: true, forma: 'figura', def: 'h1', opciones: PROPIOS.map(([id, nombre]) => ({ id, nombre, sec: id[0] === 'h' ? 'Hombres' : 'Mujeres', img: `img/encajados/${id}-abajo.webp` })) }],
