@@ -78,7 +78,7 @@ export async function mount(r, a) {
 }
 export function unmount() { cerrar3D(); modo3d = false; serie++; clearTimeout(andando); andando = null; document.removeEventListener('keydown', onKey); if (root) root.removeEventListener('click', clic); S = null; L = null; asp = null; }
 function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.texto, r.fin); }
-const TRAMOS = { facil: { nombre: 'Fácil', icono: '🟢', desc: 'almacén pequeño, 1-2 cajas' }, medio: { nombre: 'Medio', icono: '🟡', desc: 'almacén mediano, 3 cajas' }, dificil: { nombre: 'Difícil', icono: '🔴', desc: 'almacén grande, 4-5 cajas' } };
+const TRAMOS = { facil: { nombre: 'Fácil', icono: '🟢', desc: '2-3 cajas' }, medio: { nombre: 'Medio', icono: '🟡', desc: '3-4 cajas' }, dificil: { nombre: 'Difícil', icono: '🔴', desc: '4-5 cajas' } };
 const superados = () => { const s = api.pref('superados', []); return Array.isArray(s) ? s.filter(i => ent(i, 0, NIVELES.length - 1)) : []; };
 const mejores = () => { const m = api.pref('mejores', {}); return m && typeof m === 'object' ? m : {}; };
 
