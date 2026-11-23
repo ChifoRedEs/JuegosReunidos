@@ -11,7 +11,7 @@ const MARCOS = {
   madera: { nombre: 'Madera', sw: ['#8A5A2B', '#2B1D12'] }, nogal: { nombre: 'Nogal oscuro', sw: ['#5B3A29', '#1E1410'] }, pizarra: { nombre: 'Pizarra', sw: ['#5B6577', '#1D222C'] },
   azul: { nombre: 'Azul', sw: ['#3B6FD8', '#142750'] }, verde: { nombre: 'Verde', sw: ['#3E8E5A', '#12331F'] }, rosa: { nombre: 'Rosa', sw: ['#D9488C', '#4A1431'] },
 };
-let S = null, api = null, asp = null, root = null, crono = null, serie = 0, sel = -1, onKey = null, V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0, tIA = 0, pop = -1;
+let roPanel = null, S = null, api = null, asp = null, root = null, crono = null, serie = 0, sel = -1, onKey = null, V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0, tIA = 0, pop = -1;
 let panel = null, posPanel = null, arrP = null, onRes = null;
 let cfg = { modo: 'adivinar', preset: 'clasico', ...M.PRESETS.clasico };
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
@@ -87,7 +87,7 @@ function armar() {
   root.innerHTML = `<div class="mmcab"><b id="mmTit">${esc(M.MODOS[S.modo])}</b><span id="mmInfo"></span></div>
     <div id="mmTab" ${modo3d ? 'class="e3d mm3"' : 'class="mmtab"'} style="--p:${S.pos}" role="application" aria-label="Tablero de Código Cifrado"></div>
     <p class="mmmsg" id="mmMsg" role="status" aria-live="polite"></p>
-${api.barraHtml()}`;
+${api.barraHtml()}<div id="mmEsp" aria-hidden="true"></div>`;   // #mmEsp: hueco al final de la página del alto del panel flotante, para que al hacer scroll no tape el menú
   crearPanel();
   if (modo3d) iniciar3D();
   if (S.modo === 'adivinar' && !S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); }
@@ -198,9 +198,10 @@ function crearPanel() {
   quitarPanel();
   panel = document.createElement('div'); panel.className = 'mmpanel juego-codigocifrado'; panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Colores y acciones');
   panel.innerHTML = `<div class="mmasa" title="Arrastra para mover el panel"><span aria-hidden="true"></span><small>Mover</small></div>
-    <div class="mmpal" id="mmPal">${Array.from({ length: S.col }, (_, c) => `<button type="button" class="mmb" data-c="${c}" data-s="${SIMB[c]}" data-col="${c}" aria-label="Color ${c + 1}"></button>`).join('')}</div>
+    <div class="mmpal" id="mmPal" style="--n:${S.col}">${Array.from({ length: S.col }, (_, c) => `<button type="button" class="mmb" data-c="${c}" data-s="${SIMB[c]}" data-col="${c}" aria-label="Color ${c + 1}"></button>`).join('')}</div>
     <div class="bar mmbar"><button class="btn on" data-ac="comprobar" id="mmOk">✔ Comprobar</button><button class="btn" data-ac="borrar">⌫ Borrar</button><button class="btn" data-ac="pista" id="mmPista">💡 Pista</button></div>`;
   document.body.append(panel); panel.addEventListener('click', clic);
+  if (typeof ResizeObserver === 'function') { roPanel = new ResizeObserver(() => limitarPanel()); roPanel.observe(panel); }   // el hueco de #mmEsp sigue al alto del panel
   const asa = panel.querySelector('.mmasa');
   asa.addEventListener('pointerdown', e => {
     if (e.button > 0) return; e.preventDefault();
@@ -217,13 +218,14 @@ function crearPanel() {
 // El panel vive en <body>: copia la Apariencia elegida (paleta, estilo…) para que sus bolas se vean igual que las del tablero
 function sincronizarPanel() { if (!panel || !root) for (const k of Object.keys(panel.dataset)) delete panel.dataset[k]; if (panel && root) Object.assign(panel.dataset, root.dataset); }
 function limitarPanel() {
+  const esp = $('#mmEsp'); if (esp) esp.style.height = panel && !panel.hidden ? (panel.offsetHeight + 24) + 'px' : '0px';
   if (!panel || panel.hidden) return;
   const w = panel.offsetWidth, h = panel.offsetHeight, vw = document.documentElement.clientWidth || innerWidth, vh = innerHeight, mg = 6;
   if (!posPanel) posPanel = { x: (vw - w) / 2, y: vh - h - 14 };                 // al principio: abajo y centrado
   const x = Math.min(Math.max(mg, posPanel.x), Math.max(mg, vw - w - mg)), y = Math.min(Math.max(mg, posPanel.y), Math.max(mg, vh - h - mg));
   panel.style.left = x + 'px'; panel.style.top = y + 'px';
 }
-function quitarPanel() { if (panel) { panel.remove(); panel = null; } arrP = null; }
+function quitarPanel() { if (roPanel) { roPanel.disconnect(); roPanel = null; } if (panel) { panel.remove(); panel = null; } arrP = null; }
 
 /* ---------- entrada ---------- */
 function tecla(e) {

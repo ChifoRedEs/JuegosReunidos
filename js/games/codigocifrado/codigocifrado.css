@@ -11,12 +11,12 @@
 .mmbar{justify-content:center}
 .mmcargando{text-align:center;font-weight:800;margin:60px 0}
 /* tablero 2D */
-.mmtab{width:min(100%,430px);margin:8px auto 4px;container-type:inline-size;--b:min(46px,calc(100cqw / (var(--p) + 3.6)))}
+.mmtab{width:min(100%,430px);margin:8px auto 4px;container-type:inline-size;--b:min(46px,calc(100cqw / (var(--p) + 4)))}
 .mmmarco{padding:3% 3% 2.5%;border-radius:16px;background:linear-gradient(145deg,var(--mm-marco),var(--mm-marco2));box-shadow:0 8px 18px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.28)}
 .mmfila{display:flex;align-items:center;gap:calc(var(--b) * .22);padding:calc(var(--b) * .1) calc(var(--b) * .2);border-radius:12px;margin-bottom:2px}
 .mmfila.act{background:rgba(255,255,255,.18);box-shadow:0 0 0 2px var(--yel) inset}
-.mmn{width:calc(var(--b) * .5);text-align:center;font:800 calc(var(--b) * .3)/1 var(--f-titulo);color:rgba(255,255,255,.65)}
-.mmslots{display:flex;gap:calc(var(--b) * .16)}
+.mmn{flex:none;width:calc(var(--b) * .7);min-width:0;overflow:visible;white-space:nowrap;text-align:center;font:800 calc(var(--b) * .3)/1 var(--f-titulo);color:rgba(255,255,255,.65)}
+.mmslots{flex:none;display:flex;gap:calc(var(--b) * .16)}
 .mmb{position:relative;width:var(--b);height:var(--b);border-radius:50%;border:0;padding:0;flex:none;background:var(--mm-hueco);box-shadow:inset 0 3px 6px rgba(0,0,0,.55);color:#fff;font:800 calc(var(--b) * .5)/1 var(--f-titulo);display:flex;align-items:center;justify-content:center}
 .mmb[data-c]:not(.vacio){background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.85) 0 8%,rgba(255,255,255,.18) 22%,transparent 46%),radial-gradient(circle at 50% 50%,var(--c) 55%,color-mix(in srgb,var(--c) 70%,#000));box-shadow:0 3px 5px rgba(0,0,0,.45),inset 0 -3px 5px rgba(0,0,0,.25)}
 .mmb[data-c="0"]{--c:var(--m0)}.mmb[data-c="1"]{--c:var(--m1)}.mmb[data-c="2"]{--c:var(--m2)}.mmb[data-c="3"]{--c:var(--m3)}.mmb[data-c="4"]{--c:var(--m4)}.mmb[data-c="5"]{--c:var(--m5)}.mmb[data-c="6"]{--c:var(--m6)}.mmb[data-c="7"]{--c:var(--m7)}
@@ -47,6 +47,9 @@
 .mmasa span{width:40px;height:5px;border-radius:99px;background:var(--line)}
 .mmasa small{font-size:11px;font-weight:800;color:var(--mut)}
 .mmpanel .mmbar{margin:0}
+/* hasta 8 colores siempre en una sola línea: el tamaño de la bola se ajusta al ancho del panel */
+.mmpanel .mmpal{--b:min(46px,calc((min(100vw - 12px,400px) - 16px) / (var(--n,8) * 1.2 - .2)));flex-wrap:nowrap}
+#mmEsp{flex:none;pointer-events:none}
 /* Bolas y clavijas: ilustraciones IA (img/codigo). a1–a8 colores · b1–b8 símbolos */
 .juego-codigocifrado{--bi0:url(../../../img/codigo/a1.webp);--bi1:url(../../../img/codigo/a2.webp);--bi2:url(../../../img/codigo/a3.webp);--bi3:url(../../../img/codigo/a4.webp);--bi4:url(../../../img/codigo/a5.webp);--bi5:url(../../../img/codigo/a6.webp);--bi6:url(../../../img/codigo/a7.webp);--bi7:url(../../../img/codigo/a8.webp);--pn:url(../../../img/codigo/negra.webp);--pb:url(../../../img/codigo/blanca.webp);--ph:url(../../../img/codigo/hueco.webp);--pse:url(../../../img/codigo/secreto.webp)}
 .juego-codigocifrado[data-bolas="b"]{--bi0:url(../../../img/codigo/b1.webp);--bi1:url(../../../img/codigo/b2.webp);--bi2:url(../../../img/codigo/b3.webp);--bi3:url(../../../img/codigo/b4.webp);--bi4:url(../../../img/codigo/b5.webp);--bi5:url(../../../img/codigo/b6.webp);--bi6:url(../../../img/codigo/b7.webp);--bi7:url(../../../img/codigo/b8.webp);}
