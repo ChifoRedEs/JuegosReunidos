@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-c985e3d692';
+const VERSION = 'jr-32c412c8dd';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -773,6 +773,14 @@ const EXTRA = [
 './img/codigo/blanca.webp',
 './img/codigo/hueco.webp',
 './img/codigo/negra.webp',
+'./img/codigo/p1.webp',
+'./img/codigo/p2.webp',
+'./img/codigo/p3.webp',
+'./img/codigo/p4.webp',
+'./img/codigo/p5.webp',
+'./img/codigo/p6.webp',
+'./img/codigo/p7.webp',
+'./img/codigo/p8.webp',
 './img/codigo/secreto.webp',
 './img/dados/liso-1.webp',
 './img/dados/liso-2.webp',
@@ -3178,7 +3186,7 @@ const DICC_TODO = [
 './data/diccionario/lemas-1f6f9c6b.txt'
 /*DICC-FIN*/
 ];
-const DESCARGA_MB = /*MB*/32/*MB-FIN*/;
+const DESCARGA_MB = /*MB*/33/*MB-FIN*/;
 // Tipografías de Google Fonts (Fraunces, Baloo 2, Chewy y Nunito): se guardan en una caché aparte que NO se borra al actualizar la app,
 // para que sin conexión los textos se vean igual que con internet. Debe ser la MISMA dirección que en index.html.
 const FUENTES = 'jr-fuentes', CARTAS = 'jr-cartas', DICC = 'jr-diccionario';      // cachés que se conservan entre versiones

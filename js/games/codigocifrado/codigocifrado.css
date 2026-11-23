@@ -1,10 +1,6 @@
-/* Código Cifrado · colores del tablero y de las bolas según 🎨 Apariencia (data-marco, data-paleta, data-estilo en .juego-codigocifrado) */
+/* Código Cifrado · colores del tablero y de las bolas según 🎨 Apariencia (data-tablero en .juego-codigocifrado) */
 .juego-codigocifrado{--mm-marco:#8A5A2B;--mm-marco2:#5E3B1A;--mm-hueco:#2B1D12;--m0:#E53935;--m1:#1E88E5;--m2:#43A047;--m3:#FDD835;--m4:#8E24AA;--m5:#FB8C00;--m6:#00ACC1;--m7:#EC407A}
-.juego-codigocifrado[data-marco="nogal"]{--mm-marco:#5B3A29;--mm-marco2:#33200F;--mm-hueco:#1E1410}
-.juego-codigocifrado[data-marco="pizarra"]{--mm-marco:#5B6577;--mm-marco2:#323947;--mm-hueco:#1D222C}
-.juego-codigocifrado[data-marco="azul"]{--mm-marco:#3B6FD8;--mm-marco2:#1E3F8F;--mm-hueco:#142750}
-.juego-codigocifrado[data-marco="verde"]{--mm-marco:#3E8E5A;--mm-marco2:#1F5A38;--mm-hueco:#12331F}
-.juego-codigocifrado[data-marco="rosa"]{--mm-marco:#D9488C;--mm-marco2:#8F2459;--mm-hueco:#4A1431}
+.juego-codigocifrado[data-tablero]{--mm-marco:var(--tb-acc);--mm-marco2:color-mix(in srgb,var(--tb-acc) 62%,#000);--mm-hueco:var(--tb-alt)}
 .mmcab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:4px 2px;font-size:14px}
 .mmcab b{font:800 16px var(--f-titulo)}.mmcab span{color:var(--mut);font-weight:800;font-variant-numeric:tabular-nums}
 .mmmsg{text-align:center;font-size:14px;min-height:22px;margin:6px 4px}
@@ -51,8 +47,7 @@
 .mmpanel .mmpal{--b:min(46px,calc((min(100vw - 12px,400px) - 16px) / (var(--n,8) * 1.2 - .2)));flex-wrap:nowrap}
 #mmEsp{flex:none;pointer-events:none}
 /* Bolas y clavijas: ilustraciones IA (img/codigo). a1–a8 colores · b1–b8 símbolos */
-.juego-codigocifrado{--bi0:url(../../../img/codigo/a1.webp);--bi1:url(../../../img/codigo/a2.webp);--bi2:url(../../../img/codigo/a3.webp);--bi3:url(../../../img/codigo/a4.webp);--bi4:url(../../../img/codigo/a5.webp);--bi5:url(../../../img/codigo/a6.webp);--bi6:url(../../../img/codigo/a7.webp);--bi7:url(../../../img/codigo/a8.webp);--pn:url(../../../img/codigo/negra.webp);--pb:url(../../../img/codigo/blanca.webp);--ph:url(../../../img/codigo/hueco.webp);--pse:url(../../../img/codigo/secreto.webp)}
-.juego-codigocifrado[data-bolas="b"]{--bi0:url(../../../img/codigo/b1.webp);--bi1:url(../../../img/codigo/b2.webp);--bi2:url(../../../img/codigo/b3.webp);--bi3:url(../../../img/codigo/b4.webp);--bi4:url(../../../img/codigo/b5.webp);--bi5:url(../../../img/codigo/b6.webp);--bi6:url(../../../img/codigo/b7.webp);--bi7:url(../../../img/codigo/b8.webp);}
+.juego-codigocifrado{--bi0:url(../../../img/codigo/p1.webp);--bi1:url(../../../img/codigo/p2.webp);--bi2:url(../../../img/codigo/p3.webp);--bi3:url(../../../img/codigo/p4.webp);--bi4:url(../../../img/codigo/p5.webp);--bi5:url(../../../img/codigo/p6.webp);--bi6:url(../../../img/codigo/p7.webp);--bi7:url(../../../img/codigo/p8.webp);--pn:url(../../../img/codigo/negra.webp);--pb:url(../../../img/codigo/blanca.webp);--ph:url(../../../img/codigo/hueco.webp);--pse:url(../../../img/codigo/secreto.webp)}
 .mmb[data-c="0"]:not(.vacio){--bi:var(--bi0)}.mmb[data-c="1"]:not(.vacio){--bi:var(--bi1)}.mmb[data-c="2"]:not(.vacio){--bi:var(--bi2)}.mmb[data-c="3"]:not(.vacio){--bi:var(--bi3)}.mmb[data-c="4"]:not(.vacio){--bi:var(--bi4)}.mmb[data-c="5"]:not(.vacio){--bi:var(--bi5)}.mmb[data-c="6"]:not(.vacio){--bi:var(--bi6)}.mmb[data-c="7"]:not(.vacio){--bi:var(--bi7)}
 .mmb[data-c]:not(.vacio){background:var(--bi) center/contain no-repeat;box-shadow:none;border-radius:0;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
 .mmb[data-c]:not(.vacio)::after{content:none}

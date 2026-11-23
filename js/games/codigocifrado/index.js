@@ -3,14 +3,10 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoFondo } from '../../core/aspectos.js';
+import { grupoTableroDN } from '../../core/aspectos.js';
 import * as M from './motor.js';
 
 const SIMB = ['●', '▲', '■', '◆', '★', '♥', '☘', '☾'];
-const MARCOS = {
-  madera: { nombre: 'Madera', sw: ['#8A5A2B', '#2B1D12'] }, nogal: { nombre: 'Nogal oscuro', sw: ['#5B3A29', '#1E1410'] }, pizarra: { nombre: 'Pizarra', sw: ['#5B6577', '#1D222C'] },
-  azul: { nombre: 'Azul', sw: ['#3B6FD8', '#142750'] }, verde: { nombre: 'Verde', sw: ['#3E8E5A', '#12331F'] }, rosa: { nombre: 'Rosa', sw: ['#D9488C', '#4A1431'] },
-};
 let roPanel = null, S = null, api = null, asp = null, root = null, crono = null, serie = 0, sel = -1, onKey = null, V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0, tIA = 0, pop = -1;
 let panel = null, posPanel = null, arrP = null, onRes = null;
 let cfg = { modo: 'adivinar', preset: 'clasico', ...M.PRESETS.clasico };
@@ -34,9 +30,7 @@ export async function mount(r, a) {
   hay3d = false;   // sin vista 3D
   asp = api.aspecto([
     ...(hay3d ? [{ clave: 'vista', titulo: 'Vista del tablero', icono: '🧊', def: '2d', opciones: [{ id: '3d', nombre: '🧊 3D' }, { id: '2d', nombre: '🔲 2D clásica' }] }] : []),
-    { ...grupoFondo('#mmTab'), def: 't-n-escritorio-codigo' },
-    { clave: 'marco', titulo: 'Tablero', icono: '🪵', def: 'madera', opciones: Object.entries(MARCOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
-    { clave: 'bolas', titulo: 'Bolas y clavijas', icono: '🔴', ventana: true, forma: 'figura', def: 'a', opciones: [{ id: 'a', nombre: 'Bolas de colores', img: 'img/codigo/a1.webp' }, { id: 'b', nombre: 'Bolas con símbolos', img: 'img/codigo/b1.webp' }] },
+    grupoTableroDN(),
   ], () => { if (S && $('#mmTab')) { if (modo3d !== quiere3D()) armar(); else if (V3) { V3.recolor(); pintar(); } else pintar(); } });
   await api.css(new URL('./codigocifrado.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0) && (c0.modo === 'adivinar' || c0.modo === 'codigo')) cfg = { modo: c0.modo, preset: typeof c0.preset === 'string' ? c0.preset : 'personal', pos: c0.pos, col: c0.col, rep: c0.rep, max: c0.max };
@@ -217,13 +211,22 @@ function crearPanel() {
 }
 // El panel vive en <body>: copia la Apariencia elegida (paleta, estilo…) para que sus bolas se vean igual que las del tablero
 function sincronizarPanel() { if (!panel || !root) for (const k of Object.keys(panel.dataset)) delete panel.dataset[k]; if (panel && root) Object.assign(panel.dataset, root.dataset); }
+// Hueco al final de la página: lo justo para que, con el scroll abajo del todo, el panel flotante no tape el menú (solo lo que el panel ocupa por encima del borde inferior, menos el margen que la página ya deja)
+function espacioFinal() {
+  const esp = $('#mmEsp'); if (!esp) return;
+  if (!panel || panel.hidden) { esp.style.height = '0px'; return; }
+  esp.style.height = '0px';
+  const de = document.documentElement, margen = Math.max(0, de.scrollHeight - (esp.getBoundingClientRect().bottom + (window.scrollY || de.scrollTop || 0)));
+  const cubre = Math.max(0, (de.clientHeight || innerHeight) - panel.getBoundingClientRect().top);
+  esp.style.height = Math.max(0, Math.round(cubre - margen)) + 'px';
+}
 function limitarPanel() {
-  const esp = $('#mmEsp'); if (esp) esp.style.height = panel && !panel.hidden ? (panel.offsetHeight + 24) + 'px' : '0px';
-  if (!panel || panel.hidden) return;
+  if (!panel || panel.hidden) { espacioFinal(); return; }
   const w = panel.offsetWidth, h = panel.offsetHeight, vw = document.documentElement.clientWidth || innerWidth, vh = innerHeight, mg = 6;
   if (!posPanel) posPanel = { x: (vw - w) / 2, y: vh - h - 14 };                 // al principio: abajo y centrado
   const x = Math.min(Math.max(mg, posPanel.x), Math.max(mg, vw - w - mg)), y = Math.min(Math.max(mg, posPanel.y), Math.max(mg, vh - h - mg));
   panel.style.left = x + 'px'; panel.style.top = y + 'px';
+  espacioFinal();
 }
 function quitarPanel() { if (roPanel) { roPanel.disconnect(); roPanel = null; } if (panel) { panel.remove(); panel = null; } arrP = null; }
 
@@ -260,5 +263,5 @@ function reglas() {
     <li>Niveles: <b>Fácil</b> (4 bolas, 5 colores, sin repetir), <b>Clásico</b> (4 bolas, 6 colores), <b>Súper</b> (5 bolas, 8 colores), <b>Experto</b> (6 bolas, 8 colores) o <b>A tu gusto</b>.</li>
     <li><b>🔒 Tú pones el código</b>: escondes tú uno y la máquina intenta descifrarlo (sin estadísticas). Si no lo consigue en los intentos disponibles, ganas tú.</li>
     <li>💡 <b>Pista</b>: te dice cuántas combinaciones siguen siendo posibles y rellena una que encaja con todo lo que sabes. Teclado: 1–8 colores, ← → posición, Retroceso borra, Intro comprueba.</li>
-    <li>Con 🎨 Apariencia cambias tablero, colores, estilo de las bolas (hay un juego con símbolos para daltonismo) y fondo.</li></ul>`);
+    <li>Con 🎨 Apariencia cambias el color del tablero (día y noche).</li></ul>`);
 }
