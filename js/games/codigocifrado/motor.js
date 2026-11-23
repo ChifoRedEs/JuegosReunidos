@@ -5,8 +5,8 @@
 export const MODOS = { adivinar: 'Tú adivinas', codigo: 'Tú pones el código' };
 export const PRESETS = {
   facil: { nombre: 'Fácil', pos: 4, col: 5, rep: false, max: 12 },
-  clasico: { nombre: 'Clásico', pos: 4, col: 6, rep: true, max: 10 },
-  super: { nombre: 'Súper', pos: 5, col: 8, rep: true, max: 12 },
+  medio: { nombre: 'Medio', pos: 4, col: 6, rep: true, max: 10 },
+  dificil: { nombre: 'Difícil', pos: 5, col: 8, rep: true, max: 12 },
   experto: { nombre: 'Experto', pos: 6, col: 8, rep: true, max: 12 },
 };
 export const POS = [3, 4, 5, 6], COLS = [4, 5, 6, 7, 8], MAXS = [6, 8, 10, 12, 15];

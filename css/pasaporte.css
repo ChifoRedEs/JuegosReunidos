@@ -246,8 +246,11 @@ html[data-anim="no"] #splash{display:none}
 
 /* selectores de modo/nivel (2-4 botones): pastilla de papel con la opción activa en coral */
 .seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))){background:color-mix(in srgb,var(--borde) 8%,transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--borde) 30%,transparent)}
+.cfg-g .seg:has(> .btn:nth-child(2)){background:color-mix(in srgb,var(--borde) 8%,transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--borde) 30%,transparent)}
 .seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))) > .btn{color:var(--ink)}
+.cfg-g .seg:has(> .btn:nth-child(2)) > .btn{color:var(--ink)}
 .seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))) > .btn.on{background:#C9441C;color:#fff;box-shadow:0 3px 0 #7E2610}
+.cfg-g .seg:has(> .btn:nth-child(2)) > .btn.on{background:#C9441C;color:#fff;box-shadow:0 3px 0 #7E2610}
 
 /* ---------- diseño común de la pantalla de cada juego (3.72.0) ---------- */
 /* texto de presentación = «billete» con filete coral */

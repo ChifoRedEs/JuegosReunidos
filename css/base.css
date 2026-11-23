@@ -343,8 +343,11 @@ body.fondo main::before{top:var(--htop,0px);background:linear-gradient(var(--vel
 .top .icono,.e3d-cam .btn{box-shadow:none}
 /* Interruptores y selectores: carril hundido con bola/gema que se ilumina */
 .seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))){padding:4px;gap:4px;flex-wrap:nowrap;border-radius:99px;background:color-mix(in srgb,var(--purple) 10%,var(--line));box-shadow:inset 0 3px 7px rgba(30,20,100,.28),inset 0 -1px 0 rgba(255,255,255,.6)}
+.cfg-g .seg:has(> .btn:nth-child(2)){padding:4px;gap:4px;flex-wrap:nowrap;border-radius:99px;background:color-mix(in srgb,var(--purple) 10%,var(--line));box-shadow:inset 0 3px 7px rgba(30,20,100,.28),inset 0 -1px 0 rgba(255,255,255,.6)}
 .seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))) > .btn{border-radius:99px;border-color:transparent;background:transparent;box-shadow:none;color:var(--mut)}
+.cfg-g .seg:has(> .btn:nth-child(2)) > .btn{border-radius:99px;border-color:transparent;background:transparent;box-shadow:none;color:var(--mut)}
 .seg:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(5))) > .btn.on{color:#fff;background:linear-gradient(145deg,#9A74FF,var(--blue));box-shadow:0 3px 0 #3A22B0,0 0 14px rgba(122,77,255,.55),inset 0 2px 0 rgba(255,255,255,.45)}
+.cfg-g .seg:has(> .btn:nth-child(2)) > .btn.on{color:#fff;background:linear-gradient(145deg,#9A74FF,var(--blue));box-shadow:0 3px 0 #3A22B0,0 0 14px rgba(122,77,255,.55),inset 0 2px 0 rgba(255,255,255,.45)}
 /* Bandeja hundida: paneles con marco y contenido en hueco */
 .panel{border:3px solid color-mix(in srgb,var(--purple) 55%,var(--card));box-shadow:inset 0 5px 10px rgba(30,20,100,.18),inset 3px 0 6px rgba(30,20,100,.08),0 3px 0 color-mix(in srgb,var(--purple) 65%,#1a0f66),0 8px 14px rgba(60,40,200,.16)}
 /* Cristal: ventanas emergentes brillantes */
@@ -581,6 +584,7 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 :root:root:root .juego[data-tablero="neon4"]{--tb-line:#8A5220;--tb-cell:#1A0F08;--tb-alt:#26150A;--tb-acc:#FF9100;--tb-ink:#FFF1E0;--tb-soft:#4A2A10;--tb-hi:#00E5FF;--tb-strong:#FFB000}
 
 /* 3.93: títulos de sección dentro de listas de opciones (Día / Noche) y desplegables de Configurar partida */
+.cfg-g .seg:has(> .btn:nth-child(2)) > .btn{flex:1 1 0;min-width:0;padding-inline:4px;justify-content:center}
 .seg .ap-sec{flex:0 0 100%;display:block;font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
 /* 3.102.2: fichas de color (Día / Noche) todas del mismo ancho, 2 por fila, igual en todos los juegos */
 .seg:has(> .ap-sec) > .btn{flex:0 0 calc(50% - 3px);box-sizing:border-box;justify-content:center}

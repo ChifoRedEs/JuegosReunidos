@@ -9,10 +9,10 @@ import * as M from './motor.js';
 const SIMB = ['●', '▲', '■', '◆', '★', '♥', '☘', '☾'];
 let roPanel = null, S = null, api = null, asp = null, root = null, crono = null, serie = 0, sel = -1, onKey = null, V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0, tIA = 0, pop = -1;
 let panel = null, posPanel = null, arrP = null, onRes = null;
-let cfg = { modo: 'adivinar', preset: 'clasico', ...M.PRESETS.clasico };
+let cfg = { modo: 'adivinar', preset: 'medio', ...M.PRESETS.medio };
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-const nombreVar = d => { const p = Object.values(M.PRESETS).find(x => x.pos === d.pos && x.col === d.col && x.rep === d.rep && x.max === d.max); return `${p ? p.nombre : 'Personalizado'} · ${d.pos} bolas, ${d.col} colores${d.rep ? '' : ', sin repetir'}`; };
+const nombreVar = d => { const p = Object.values(M.PRESETS).find(x => x.pos === d.pos && x.col === d.col && x.max === d.max); return `${p ? p.nombre : 'Personalizado'} · ${d.pos} bolas, ${d.col} colores${d.rep ? '' : ', sin repetir'}`; };
 const claveRec = d => `${d.pos}-${d.col}-${d.rep ? 1 : 0}-${d.max}`;
 
 /* ---------- validación / resumen ---------- */
@@ -33,7 +33,7 @@ export async function mount(r, a) {
     grupoTableroDN(),
   ], () => { if (S && $('#mmTab')) { if (modo3d !== quiere3D()) armar(); else if (V3) { V3.recolor(); pintar(); } else pintar(); } });
   await api.css(new URL('./codigocifrado.css', import.meta.url));
-  const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0) && (c0.modo === 'adivinar' || c0.modo === 'codigo')) cfg = { modo: c0.modo, preset: typeof c0.preset === 'string' ? c0.preset : 'personal', pos: c0.pos, col: c0.col, rep: c0.rep, max: c0.max };
+  const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0) && (c0.modo === 'adivinar' || c0.modo === 'codigo')) cfg = { modo: c0.modo, preset: typeof c0.preset === 'string' ? ({ clasico: 'medio', super: 'dificil' }[c0.preset] || c0.preset) : 'personal', pos: c0.pos, col: c0.col, rep: c0.rep, max: c0.max };
   S = api.cargar();
   root.addEventListener('click', clic);
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
@@ -41,7 +41,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => jugar(),
     salir: () => { parar(); location.hash = '#/cat/logica'; },
     crono: () => crono,
-    config: { valores: () => ({ modo: cfg.modo, preset: cfg.preset, pos: cfg.pos, col: cfg.col, rep: cfg.rep, max: cfg.max }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'adivinar' ? '🔍 ' : '🔒 ') + l]) }, { clave: 'preset', titulo: 'Nivel', opciones: [...Object.entries(M.PRESETS).map(([k, p]) => [k, p.nombre]), ['personal', '⚙️ A tu gusto']] }, { clave: 'pos', titulo: 'Bolas', visible: v.preset === 'personal', opciones: M.POS.map(n => [n, String(n)]) }, { clave: 'col', titulo: 'Colores', visible: v.preset === 'personal', opciones: M.COLS.map(n => [n, String(n)]) }, { clave: 'rep', titulo: 'Repetir colores', visible: v.preset === 'personal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'max', titulo: 'Intentos', visible: v.preset === 'personal', opciones: M.MAXS.map(n => [n, String(n)]) }], alCambiar: (v, c) => { if (c === 'preset' && M.PRESETS[v.preset]) Object.assign(v, { pos: M.PRESETS[v.preset].pos, col: M.PRESETS[v.preset].col, rep: M.PRESETS[v.preset].rep, max: M.PRESETS[v.preset].max }); else if (c !== 'modo' && c !== 'preset' && !v.rep && v.col < v.pos) v.col = M.COLS.find(x => x >= v.pos) || 8; }, aplicar: v => { Object.assign(cfg, v); jugar(); } } });
+    config: { valores: () => ({ modo: cfg.modo, preset: cfg.preset, pos: cfg.pos, col: cfg.col, rep: cfg.rep, max: cfg.max }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, l]) }, { clave: 'preset', titulo: 'Nivel', opciones: [...Object.entries(M.PRESETS).map(([k, p]) => [k, p.nombre]), ['personal', 'Personal']] }, { clave: 'pos', titulo: 'Bolas', visible: v.preset === 'personal', opciones: M.POS.map(n => [n, String(n)]) }, { clave: 'col', titulo: 'Colores', visible: v.preset === 'personal', opciones: M.COLS.map(n => [n, String(n)]) }, { clave: 'rep', titulo: 'Repetir colores', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'max', titulo: 'Intentos', visible: v.preset === 'personal', opciones: M.MAXS.map(n => [n, String(n)]) }], alCambiar: (v, c) => { if (c === 'preset' && M.PRESETS[v.preset]) Object.assign(v, { pos: M.PRESETS[v.preset].pos, col: M.PRESETS[v.preset].col, rep: M.PRESETS[v.preset].rep, max: M.PRESETS[v.preset].max }); else if (c !== 'modo' && c !== 'preset' && !v.rep && v.col < v.pos) v.col = M.COLS.find(x => x >= v.pos) || 8; }, aplicar: v => { Object.assign(cfg, v); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '⌫ Borrar', accion: borrar }, { texto: '💡 Pista', accion: pedirPista },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
@@ -61,12 +61,12 @@ function setup() {
   root.innerHTML = `<p class="note">${cfg.modo === 'adivinar'
     ? 'La máquina esconde un <b>código de colores</b>. Prueba combinaciones: cada <b>clavija negra</b> es un color bien colocado y cada <b>blanca</b>, un color que está pero en otro sitio.'
     : 'Esconde tú un código y mira cómo la máquina intenta descifrarlo con las mismas pistas. ¿Conseguirás despistarla?'}</p>
-    <div class="bar"><span class="lbl">Modo</span>${seg('modo', Object.entries(M.MODOS).map(([k, v]) => [k, (k === 'adivinar' ? '🔍 ' : '🔒 ') + v]))}</div>
-    <div class="bar"><span class="lbl">Nivel</span>${seg('preset', [...Object.entries(M.PRESETS).map(([k, v]) => [k, v.nombre]), ['personal', '⚙️ A tu gusto']])}</div>
-    ${cfg.preset === 'personal' ? `<div class="bar"><span class="lbl">Bolas</span>${seg('pos', M.POS.map(n => [n, n]))}</div>
-    <div class="bar"><span class="lbl">Colores</span>${seg('col', M.COLS.map(n => [n, n]))}</div>
-    <div class="bar"><span class="lbl">Repetir</span>${seg('rep', [[true, 'Sí'], [false, 'No']])}</div>
-    <div class="bar"><span class="lbl">Intentos</span>${seg('max', M.MAXS.map(n => [n, n]))}</div>` : `<p class="note">${cfg.pos} bolas · ${cfg.col} colores · ${cfg.rep ? 'se pueden repetir' : 'sin repetir colores'} · ${cfg.max} intentos</p>`}
+    <div class="cfg-g"><span class="lbl">Modo</span>${seg('modo', Object.entries(M.MODOS).map(([k, v]) => [k, v]))}</div>
+    <div class="cfg-g"><span class="lbl">Nivel</span>${seg('preset', [...Object.entries(M.PRESETS).map(([k, v]) => [k, v.nombre]), ['personal', 'Personal']])}</div>
+    ${cfg.preset === 'personal' ? `<div class="cfg-g"><span class="lbl">Bolas</span>${seg('pos', M.POS.map(n => [n, n]))}</div>
+    <div class="cfg-g"><span class="lbl">Colores</span>${seg('col', M.COLS.map(n => [n, n]))}</div>` : ''}
+    <div class="cfg-g"><span class="lbl">Repetir colores</span>${seg('rep', [[true, 'Sí'], [false, 'No']])}</div>
+    ${cfg.preset === 'personal' ? `<div class="cfg-g"><span class="lbl">Intentos</span>${seg('max', M.MAXS.map(n => [n, n]))}</div>` : `<p class="note">${cfg.pos} bolas · ${cfg.col} colores · ${cfg.max} intentos</p>`}
     ${cfg.modo === 'adivinar' && rec ? `<p class="note">🏆 Tu mejor marca aquí: <b>${rec.n}</b> ${rec.n === 1 ? 'intento' : 'intentos'} · ${fmt(rec.t)}</p>` : ''}
     ${pieMenu({ ac: 'jugar', seguir: S && !S.done ? 'volver' : null })}`;
 }
@@ -215,10 +215,9 @@ function sincronizarPanel() { if (!panel || !root) for (const k of Object.keys(p
 function espacioFinal() {
   const esp = $('#mmEsp'); if (!esp) return;
   if (!panel || panel.hidden) { esp.style.height = '0px'; return; }
-  esp.style.height = '0px';
-  const de = document.documentElement, margen = Math.max(0, de.scrollHeight - (esp.getBoundingClientRect().bottom + (window.scrollY || de.scrollTop || 0)));
-  const cubre = Math.max(0, (de.clientHeight || innerHeight) - panel.getBoundingClientRect().top);
-  esp.style.height = Math.max(0, Math.round(cubre - margen)) + 'px';
+  // Alto fijo = alto del panel + un respiro, menos lo que la página ya deja debajo (relleno y márgenes de los contenedores): no depende de dónde esté el panel
+  let margen = 0; for (let n = esp.parentElement; n && n !== document.documentElement; n = n.parentElement) { const c = getComputedStyle(n); margen += (parseFloat(c.paddingBottom) || 0) + (parseFloat(c.marginBottom) || 0) + (parseFloat(c.borderBottomWidth) || 0); }
+  esp.style.height = Math.max(0, Math.round(panel.offsetHeight + 8 - margen)) + 'px';
 }
 function limitarPanel() {
   if (!panel || panel.hidden) { espacioFinal(); return; }

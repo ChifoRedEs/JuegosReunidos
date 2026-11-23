@@ -56,3 +56,6 @@
 .mmk.n{background:var(--pn) center/contain no-repeat;box-shadow:none}
 .mmk.b{background:var(--pb) center/contain no-repeat;box-shadow:none}
 .mmsec .mmtapa{background:var(--pse) center/100% 100% no-repeat,#1b1f33}
+/* noche: marco oscuro y solo el filo en neón */
+.juego-codigocifrado[data-tablero^="neon"]{--mm-marco:color-mix(in srgb,var(--tb-acc) 20%,#070913);--mm-marco2:color-mix(in srgb,var(--tb-acc) 11%,#03040a)}
+.juego-codigocifrado[data-tablero^="neon"] .mmmarco{box-shadow:0 8px 18px rgba(0,0,0,.4),inset 0 0 0 2px color-mix(in srgb,var(--tb-acc) 55%,transparent),0 0 12px color-mix(in srgb,var(--tb-acc) 30%,transparent)}

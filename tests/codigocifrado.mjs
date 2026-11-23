@@ -17,10 +17,10 @@ for (const [k, p] of Object.entries(M.PRESETS)) t(`IA resuelve en «${k}»`, () 
   console.log('   media', (total / N).toFixed(2), 'peor', peor);
 });
 t('sin repetidos: secreto y candidatos', () => { const S = M.nueva('adivinar', M.PRESETS.facil, 'a'); aser(new Set(S.sec).size === 4, 'repetidos'); const c = M.candidatos(S); aser(c.n === 5 * 4 * 3 * 2, 'candidatos ' + c.n); });
-t('pista es compatible', () => { const S = M.nueva('adivinar', M.PRESETS.clasico, 'b'); M.intentar(S, [0, 1, 2, 3]); const p = M.pista(S); aser(p && p.n > 0, 'pista'); const f = M.valorar(p.cod, S.jug[0]); aser(f[0] === S.fb[0][0] && f[1] === S.fb[0][1], 'incompatible'); });
-t('fin por intentos y por acierto', () => { const S = M.nueva('adivinar', { ...M.PRESETS.clasico, max: 6 }, 'c'); for (let i = 0; i < 6; i++) { const g = [0, 0, 0, 0]; if (M.valorar(S.sec, g)[0] === 4) break; M.intentar(S, g); } aser(S.done || S.jug.length < 6, 'x'); const S2 = M.nueva('adivinar', M.PRESETS.clasico, 'd'); M.intentar(S2, S2.sec); aser(S2.done && S2.gano, 'gana'); aser(M.intentar(S2, S2.sec) === null, 'sigue jugando'); });
+t('pista es compatible', () => { const S = M.nueva('adivinar', M.PRESETS.medio, 'b'); M.intentar(S, [0, 1, 2, 3]); const p = M.pista(S); aser(p && p.n > 0, 'pista'); const f = M.valorar(p.cod, S.jug[0]); aser(f[0] === S.fb[0][0] && f[1] === S.fb[0][1], 'incompatible'); });
+t('fin por intentos y por acierto', () => { const S = M.nueva('adivinar', { ...M.PRESETS.medio, max: 6 }, 'c'); for (let i = 0; i < 6; i++) { const g = [0, 0, 0, 0]; if (M.valorar(S.sec, g)[0] === 4) break; M.intentar(S, g); } aser(S.done || S.jug.length < 6, 'x'); const S2 = M.nueva('adivinar', M.PRESETS.medio, 'd'); M.intentar(S2, S2.sec); aser(S2.done && S2.gano, 'gana'); aser(M.intentar(S2, S2.sec) === null, 'sigue jugando'); });
 t('validar rechaza basura y acepta lo bueno', () => {
-  const S = M.nueva('adivinar', M.PRESETS.super, 'e'); M.intentar(S, [0, 1, 2, 3, 4]); aser(M.validar(JSON.parse(JSON.stringify(S))), 'bueno');
+  const S = M.nueva('adivinar', M.PRESETS.dificil, 'e'); M.intentar(S, [0, 1, 2, 3, 4]); aser(M.validar(JSON.parse(JSON.stringify(S))), 'bueno');
   for (const x of [null, {}, { modo: 'adivinar' }, { ...S, sec: [9, 9, 9, 9, 9] }, { ...S, fb: [[0, 0]] }, { ...S, pos: 9 }, { ...S, modo: '__proto__' }, { ...S, jug: Array(40).fill([0, 0, 0, 0, 0]), fb: Array(40).fill([1, 1]) }]) aser(M.validar(x) === null, 'acepta ' + JSON.stringify(x).slice(0, 60));
   aser(M.validar({ ...S, done: true, gano: true }).done === false, 'done falso aceptado');
 });
