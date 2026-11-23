@@ -6,7 +6,6 @@ export const NIVELES = {
   normal:  { nombre: 'Normal',  w: 9,  h: 9,  islas: 16, dobles: .40, ciclos: .30, sinAdivinar: true,  ayuda: '9×9. Se resuelve solo por deducción.' },
   dificil: { nombre: 'Difícil', w: 11, h: 11, islas: 25, dobles: .40, ciclos: .30, sinAdivinar: true,  ayuda: '11×11. Se resuelve solo por deducción.' },
   experto: { nombre: 'Experto', w: 13, h: 13, islas: 36, dobles: .42, ciclos: .30, sinAdivinar: false, ayuda: '13×13. Puede pedir probar hipótesis.' },
-  maestro: { nombre: 'Maestro', w: 15, h: 15, islas: 48, dobles: .42, ciclos: .30, sinAdivinar: false, ayuda: '15×15. El más grande.' },
 };
 export const DIRS = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 

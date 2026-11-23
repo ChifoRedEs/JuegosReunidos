@@ -1,17 +1,17 @@
 import { $, esperar, fmtTiempo } from '../../core/dom.js';
 import { Pila } from '../../core/undo.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { NIVELES, construir, generar, resuelto, grados, bloqueada, componentes, pista as buscarPista } from './motor.js';
+import { NIVELES, construir, generar, resuelto, deducibles, grados, bloqueada, componentes, pista as buscarPista } from './motor.js';
 
 const U = 100, PH = 99, RETO = { dif: 'normal' };
 const IMG = n => new URL(`./img/${n}.webp`, import.meta.url).href;
 let S = null, api = null, asp = null, root = null, crono = null, hist = null, rehacer = [], P = null, par = null, ocupado = false, boyas = false, sel = -1, ultimo = -1, malas = new Set(), pista_ = null, tPista = 0, onKey = null, arr = null;
 const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
-// Temas de islas (3 dibujos cada uno). «Mezcladas» elige un tema por puzle y «Revueltas» los mezcla en el mismo tablero; Navidad solo sale sola en diciembre y enero.
+// Temas de islas (3 dibujos cada uno). «Aleatorias» elige un tema por puzle y «Mezcladas» los mezcla en el mismo tablero; Navidad solo sale sola en diciembre y enero.
 const TEMAS = { tropical: ['isla1', 'isla2', 'isla3'], hielo: ['hielo1', 'hielo2', 'hielo3'], volcan: ['volcan1', 'volcan2', 'volcan3'], desierto: ['desierto1', 'desierto2', 'desierto3'], otono: ['otono1', 'otono2', 'otono3'], navidad: ['navidad1', 'navidad2', 'navidad3'] };
 const navidadActiva = () => { const m = new Date().getMonth(); return m === 11 || m === 0; };
 const temasAuto = () => Object.keys(TEMAS).filter(t => t !== 'navidad' || navidadActiva());
-let semilla = 0;
+let semilla = 0, inicio = -1;
 // Adornos que pasean por el mar: [imagen, ancho en % del tablero, segundos en cruzar, ondula]. Cada puzle sortea 3 (o 1).
 const ADORNOS = [['adorno-barco', 16, 46, 0], ['adorno-tortuga', 11, 70, 0], ['adorno-gaviotas', 12, 30, 0], ['adorno-manta', 22, 80, 1], ['adorno-delfin', 16, 24, 1], ['adorno-tiburon', 30, 95, 0], ['adorno-peces', 20, 55, 1], ['adorno-paddle', 17, 85, 0], ['adorno-buzo1', 15, 62, 1], ['adorno-buzo2', 15, 66, 1]];
 function ponerAdornos() {
@@ -55,11 +55,11 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; boyas = false; sel = -1; ultimo = -1; malas = new Set(); pista_ = null; arr = null; rehacer = [];
   asp = api.aspecto([
-    { clave: 'islas', titulo: 'Islas', icono: '🏝️', def: 'mezcla', opciones: [{ id: 'mezcla', nombre: 'Mezcladas', sec: 'Mezcla de temas' }, { id: 'revuelto', nombre: 'Revueltas', sec: 'Mezcla de temas' }, { id: 'tropical', sec: 'Un tema fijo', nombre: 'Tropical', img: IMG('isla1') }, { id: 'hielo', sec: 'Un tema fijo', nombre: 'Helada', img: IMG('hielo1') }, { id: 'volcan', sec: 'Un tema fijo', nombre: 'Volcánica', img: IMG('volcan1') }, { id: 'desierto', sec: 'Un tema fijo', nombre: 'Desierto', img: IMG('desierto1') }, { id: 'otono', sec: 'Un tema fijo', nombre: 'Otoño', img: IMG('otono1') }, { id: 'navidad', sec: 'Un tema fijo', nombre: 'Navidad', img: IMG('navidad1') }] },
+    { clave: 'islas', titulo: 'Islas', icono: '🏝️', def: 'mezcla', opciones: [{ id: 'mezcla', nombre: 'Aleatorias', sec: 'Mezcla de temas' }, { id: 'revuelto', nombre: 'Mezcladas', sec: 'Mezcla de temas' }, { id: 'tropical', sec: 'Un tema fijo', nombre: 'Tropical', img: IMG('isla1') }, { id: 'hielo', sec: 'Un tema fijo', nombre: 'Helada', img: IMG('hielo1') }, { id: 'volcan', sec: 'Un tema fijo', nombre: 'Volcánica', img: IMG('volcan1') }, { id: 'desierto', sec: 'Un tema fijo', nombre: 'Desierto', img: IMG('desierto1') }, { id: 'otono', sec: 'Un tema fijo', nombre: 'Otoño', img: IMG('otono1') }, { id: 'navidad', sec: 'Un tema fijo', nombre: 'Navidad', img: IMG('navidad1') }] },
     { clave: 'adornos', titulo: 'Adornos del mar', icono: '⛵', def: 'si', opciones: [{ id: 'si', nombre: 'Con adornos' }, { id: 'no', nombre: 'Sin adornos' }] },
   ], () => { ponerAdornos(); if (S) pintar(); });
   await api.css(new URL('./puenteshashi.css', import.meta.url));
-  const g = api.cargar();
+  let g = api.cargar(); if (g && !NIVELES[g.dif]) g = null;
   S = g ? { ...g, done: resuelto(construir(g.isl), g.cur) } : null;
   hist = new Pila(80, g ? g.hist : []);
   root.innerHTML = `<div id="hsReto"></div>
@@ -78,7 +78,7 @@ export async function mount(r, a) {
     config: { valores: () => ({ dif: S.dif }), grupos: v => [{ clave: 'dif', titulo: 'Nivel', nota: (NIVELES[v.dif] || {}).ayuda, opciones: Object.entries(NIVELES).map(([k, x]) => [k, x.nombre]) }], aplicar: v => nueva(v.dif, true, true) } });
   menu();
   crono = new Cronometro(() => { if (S) { S.t = crono.s; $('#hsCrono').textContent = fmtTiempo(crono.s); if (crono.s % 15 === 0) guardar(); } });
-  if (!S) await nueva(api.pref('dif', 'normal'), true);
+  if (!S) await nueva(NIVELES[api.pref('dif', 'normal')] ? api.pref('dif', 'normal') : 'normal', true);
   else { preparar(); arrancar(); pintar(); }
 }
 function menu() {
@@ -98,6 +98,7 @@ function arrancar() { crono.s = S.t; if (!S.done) crono.iniciar(); else crono.de
 function preparar() {
   semilla = S.isl.reduce((a, x) => (a * 31 + x[0] * 17 + x[1] * 7 + x[2]) >>> 0, 7); P = construir(S.isl); par = new Map(); P.E.forEach((e, k) => { par.set(e.a * 1000 + e.b, k); par.set(e.b * 1000 + e.a, k); });
   const w = Math.max(...S.isl.map(x => x[1])) + 1, h = Math.max(...S.isl.map(x => x[0])) + 1, svg = $('#hsSvg');
+  inicio = -1; { const d = deducibles(P); const k = d.findIndex(v => v > 0); if (k >= 0) { const e = P.E[k]; inicio = Math.min(e.a, e.b); } }
   ponerAdornos();
   svg.setAttribute('viewBox', `0 0 ${w * U} ${h * U}`); svg.style.aspectRatio = `${w} / ${h}`; $('#hsWrap').style.setProperty('--w', w); $('#hsWrap').style.setProperty('--h', h);
 }
@@ -156,8 +157,8 @@ function pintar() {
   const vecinos = new Set(); if (sel >= 0) P.inc[sel].forEach(e => { const o = P.E[e].a === sel ? P.E[e].b : P.E[e].a; if (S.cur[e] > 0 || !bloqueada(P, S.cur, e)) vecinos.add(o); });
   S.isl.forEach(([r, c, n], i) => {
     const cx = c * U + U / 2, cy = r * U + U / 2, ok = g[i] === n, mal = g[i] > n, v = imgIsla(r, c, n, mezcla);
-    const cls = (ok ? 'ok ' : '') + (mal ? 'mal ' : '') + (i === sel ? 'sel ' : '') + (vecinos.has(i) ? 'vec ' : '') + (pista_ && pista_.includes(i) ? 'pis ' : '') + (S.done ? 'fin ' : '');
-    capaI += `<g class="hs-i ${cls}" data-i="${i}" style="--d:${(i % 7) * 60}ms"><circle class="hs-halo" cx="${cx}" cy="${cy}" r="52"/><image href="${IMG(v)}" x="${cx - 46}" y="${cy - 46}" width="92" height="92"/><text class="hs-n" x="${cx}" y="${cy + 3}" text-anchor="middle" dominant-baseline="central">${n}</text><circle cx="${cx}" cy="${cy}" r="60" fill="transparent"/><title>Isla ${n}: ${g[i]} puente${g[i] === 1 ? '' : 's'} de ${n}</title></g>`;
+    const cls = (ok ? 'ok ' : '') + (mal ? 'mal ' : '') + (i === sel ? 'sel ' : '') + (vecinos.has(i) ? 'vec ' : '') + (pista_ && pista_.includes(i) ? 'pis ' : '') + (S.done ? 'fin ' : '') + (i === inicio && !S.done && !S.cur.some(Boolean) && sel < 0 ? 'ini ' : '');
+    capaI += `<g class="hs-i ${cls}" data-i="${i}" style="--d:${(i % 7) * 60}ms"><circle class="hs-halo" cx="${cx}" cy="${cy}" r="52"/>${i === inicio && !S.done && !S.cur.some(Boolean) && sel < 0 ? `<circle class="hs-ini" cx="${cx}" cy="${cy}" r="64"/>` : ''}<image href="${IMG(v)}" x="${cx - 46}" y="${cy - 46}" width="92" height="92"/><text class="hs-n" x="${cx}" y="${cy + 3}" text-anchor="middle" dominant-baseline="central">${n}</text><circle cx="${cx}" cy="${cy}" r="60" fill="transparent"/><title>Isla ${n}: ${g[i]} puente${g[i] === 1 ? '' : 's'} de ${n}</title></g>`;
   });
   svg.innerHTML = sv + `<g>${capaP}</g><g>${capaB}</g><g>${capaH}</g><g>${capaI}</g>`;
   ultimo = -1;
@@ -168,7 +169,7 @@ function pintar() {
   root.querySelector('[data-ac="undo"]').disabled = !hist.length || S.done; root.querySelector('[data-ac="redo"]').disabled = !rehacer.length || S.done;
   $('#hsWrap').classList.toggle('ganado', !!S.done);
   const m = $('#hsMsg'); m.className = 'msg' + (S.done ? ' win' : '');
-  m.textContent = S.done ? `¡Archipiélago unido en ${fmtTiempo(S.t)}!` : boyas ? 'Modo boyas: toca entre dos islas para marcar «aquí no hay puente».' : sel >= 0 ? 'Isla elegida: toca otra isla en línea (o arrástrala hasta ella) para tender un puente.' : 'Une las islas: cada una lleva tantos puentes como su número. Toca dos islas o el hueco entre ellas.';
+  m.textContent = S.done ? `¡Archipiélago unido en ${fmtTiempo(S.t)}!` : boyas ? 'Modo boyas: toca entre dos islas para marcar «aquí no hay puente».' : sel >= 0 ? 'Isla elegida: toca otra isla en línea (o arrástrala hasta ella) para tender un puente.' : !S.cur.some(Boolean) && inicio >= 0 ? 'Empieza por la isla resaltada: toca esa isla y luego una vecina para tender el primer puente.' : 'Une las islas: cada una lleva tantos puentes como su número. Toca dos islas o el hueco entre ellas.';
   void comp;
 }
 
@@ -235,5 +236,5 @@ function reglas() {
     <li>Al final, <b>todas las islas</b> deben quedar unidas en una sola red.</li>
     <li>Toca una isla y después otra en línea (o arrastra de una a otra): un toque pone un puente, otro lo dobla y el tercero lo quita. También vale tocar el hueco entre dos islas.</li>
     <li>🛟 <b>Boyas</b>: marca los huecos donde sabes que no hay puente. 💡 <b>Pista</b> tiende un puente correcto y ✔ <b>Comprobar</b> marca en rojo los que sobran.</li>
-    <li>Todos los puzles tienen <b>una única solución</b>. Los tres primeros niveles se resuelven solo con deducción; el Experto y el Maestro pueden pedir probar hipótesis.</li></ul>`);
+    <li>Todos los puzles tienen <b>una única solución</b>. Los tres primeros niveles se resuelven solo con deducción; el Experto puede pedir probar hipótesis.</li></ul>`);
 }
