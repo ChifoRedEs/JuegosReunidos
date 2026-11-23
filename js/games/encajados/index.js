@@ -16,12 +16,12 @@ const MAX_HIST = 400;
 const TEMAS = {   // 4 escenarios, cada uno con su versión de día (modo Claro) y de noche (modo Nocturno)
   almacen: { nombre: 'Almacén', sw: ['#6B7A99', '#EFE6D8'], modo: 'claro' }, jardin: { nombre: 'Jardín', sw: ['#3E8E5A', '#F3EBD8'], modo: 'claro' },
   desierto: { nombre: 'Desierto', sw: ['#B5651D', '#F6DFB0'], modo: 'claro' }, hielo: { nombre: 'Hielo', sw: ['#3A5BA0', '#EAF6FF'], modo: 'claro' },
-  'almacen-n': { nombre: 'Almacén', sw: ['#232B45', '#353B52'], modo: 'oscuro' }, 'jardin-n': { nombre: 'Jardín', sw: ['#1F4A33', '#2C3B33'], modo: 'oscuro' },
-  'desierto-n': { nombre: 'Desierto', sw: ['#3B2F5C', '#4A3F62'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Hielo', sw: ['#1B2B5E', '#25355F'], modo: 'oscuro' },
+  'almacen-n': { nombre: 'Turno de noche', sw: ['#2A3B86', '#2F3558'], modo: 'oscuro' }, 'jardin-n': { nombre: 'Luciérnagas', sw: ['#14684A', '#1F3A33'], modo: 'oscuro' },
+  'desierto-n': { nombre: 'Dunas de luna', sw: ['#5E2A8C', '#3E2F5A'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Aurora', sw: ['#1E4AA8', '#1F3A66'], modo: 'oscuro' },
 };
 // Cajas: imágenes de img/encajados (la primera es la de siempre)
 const ESTILOS = { ladrillo: 'Ladrillo', piedra: 'Piedra', metal: 'Metal industrial' };   // texturas grises de img/encajados/escenario, teñidas con los colores del escenario
-const MARCAS = { cinta: 'Cinta de seguridad', rayas: 'Cinta roja y blanca', amarilla: 'Cinta amarilla', avisos: 'Cinta de avisos', esquinas: 'Esquinas pintadas', discontinua: 'Línea discontinua', puntos: 'Puntos pintados' };   // img/encajados/marca
+const MARCAS = { cinta: 'Cinta de seguridad', rayas: 'Cinta roja y blanca', amarilla: 'Cinta amarilla', avisos: 'Cinta de avisos', esquinas: 'Esquinas pintadas', discontinua: 'Línea discontinua', puntos: 'Puntos pintados', 'esquinas-rojas': 'Esquinas rojas' };   // img/encajados/marca
 const CAJAS = { caja: 'Madera', metal: 'Metal', tec: 'Tecnológica', carton: 'Cartón', cuerdas: 'Cuerdas', hielo: 'Hielo', piedra: 'Piedra', blindada: 'Blindada' };
 const SUF = { izquierda: 'izq', derecha: 'der', arriba: 'arriba', abajo: 'abajo' };
 let dirV = 'abajo';
