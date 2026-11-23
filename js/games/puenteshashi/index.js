@@ -16,7 +16,7 @@ let semilla = 0;
 const ADORNOS = [['adorno-barco', 16, 46, 0], ['adorno-tortuga', 11, 70, 0], ['adorno-gaviotas', 12, 30, 0], ['adorno-manta', 22, 80, 1], ['adorno-delfin', 16, 24, 1], ['adorno-tiburon', 30, 95, 0], ['adorno-peces', 20, 55, 1], ['adorno-paddle', 17, 85, 0], ['adorno-buzo1', 15, 62, 1], ['adorno-buzo2', 15, 66, 1]];
 function ponerAdornos() {
   const c = document.getElementById('hsAd'); if (!c || !root) return;
-  const modo = root.dataset.adornos, n = modo === 'no' ? 0 : modo === 'pocos' ? 1 : 3, l = ADORNOS.slice(), r = (a, b) => a + Math.random() * (b - a);
+  const modo = root.dataset.adornos, n = modo === 'no' ? 0 : 3, l = ADORNOS.slice(), r = (a, b) => a + Math.random() * (b - a);
   c.innerHTML = Array.from({ length: n }, () => {
     const [img, w, seg, onda] = l.splice(Math.random() * l.length | 0, 1)[0], t = Math.round(seg * r(.85, 1.2)), y0 = Math.round(r(4, 78)), y1 = Math.max(2, Math.min(84, y0 + Math.round(r(-14, 14))));
     return `<span class="ad${Math.random() < .5 ? ' rev' : ''}" style="--w:${w}%;--y0:${y0}%;--y1:${y1}%;--t:${t}s;--d:-${Math.round(r(0, t))}s"><img class="${onda ? 'onda' : ''}" src="${IMG(img)}" alt=""></span>`;
@@ -55,8 +55,8 @@ export function resumen(d) {
 export async function mount(r, a) {
   api = a; root = r; ocupado = false; boyas = false; sel = -1; ultimo = -1; malas = new Set(); pista_ = null; arr = null; rehacer = [];
   asp = api.aspecto([
-    { clave: 'islas', titulo: 'Islas', icono: '🏝️', def: 'mezcla', opciones: [{ id: 'mezcla', nombre: 'Mezcladas (un tema por puzle)' }, { id: 'revuelto', nombre: 'Revueltas (todos los temas)' }, { id: 'tropical', nombre: 'Tropical', img: IMG('isla1') }, { id: 'hielo', nombre: 'Helada', img: IMG('hielo1') }, { id: 'volcan', nombre: 'Volcánica', img: IMG('volcan1') }, { id: 'desierto', nombre: 'Desierto', img: IMG('desierto1') }, { id: 'otono', nombre: 'Otoño', img: IMG('otono1') }, { id: 'navidad', nombre: 'Navidad', img: IMG('navidad1') }] },
-    { clave: 'adornos', titulo: 'Adornos del mar', icono: '⛵', def: 'si', opciones: [{ id: 'si', nombre: 'Con adornos (3)' }, { id: 'pocos', nombre: 'Pocos adornos (1)' }, { id: 'no', nombre: 'Sin adornos' }] },
+    { clave: 'islas', titulo: 'Islas', icono: '🏝️', def: 'mezcla', opciones: [{ id: 'mezcla', nombre: 'Mezcladas', sec: 'Mezcla de temas' }, { id: 'revuelto', nombre: 'Revueltas', sec: 'Mezcla de temas' }, { id: 'tropical', sec: 'Un tema fijo', nombre: 'Tropical', img: IMG('isla1') }, { id: 'hielo', sec: 'Un tema fijo', nombre: 'Helada', img: IMG('hielo1') }, { id: 'volcan', sec: 'Un tema fijo', nombre: 'Volcánica', img: IMG('volcan1') }, { id: 'desierto', sec: 'Un tema fijo', nombre: 'Desierto', img: IMG('desierto1') }, { id: 'otono', sec: 'Un tema fijo', nombre: 'Otoño', img: IMG('otono1') }, { id: 'navidad', sec: 'Un tema fijo', nombre: 'Navidad', img: IMG('navidad1') }] },
+    { clave: 'adornos', titulo: 'Adornos del mar', icono: '⛵', def: 'si', opciones: [{ id: 'si', nombre: 'Con adornos' }, { id: 'no', nombre: 'Sin adornos' }] },
   ], () => { ponerAdornos(); if (S) pintar(); });
   await api.css(new URL('./puenteshashi.css', import.meta.url));
   const g = api.cargar();
