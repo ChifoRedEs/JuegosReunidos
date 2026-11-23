@@ -1,6 +1,6 @@
 import { $, fmtTiempo } from '../../core/dom.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoTableroDN, grupoFondo } from '../../core/aspectos.js';
+import { grupoTableroDN, grupoFondo, modoOscuro } from '../../core/aspectos.js';
 import { NIVELES, LIMITES, maxMinas, medidas, nuevo, abrir, acorde, bandera, pista as pistaMotor, banderas, crearCache, crearMinasLogicas } from './motor.js';
 
 const LVL = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil', personal: 'Personalizar' };
@@ -42,9 +42,9 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; modo = 'abrir'; pst = null; press = null; pulsando = false;
-  // Tapetes de día solo en modo Claro y los «-noche» solo en modo Nocturno (como los colores de tablero); sin «Aleatoria»
+  // Tapetes de día solo en modo Claro y los «-noche» solo en modo Nocturno (como los colores de tablero); «Aleatoria» incluida
   const gF = { ...grupoFondo('#bmTab'), def: 't-n-campo-bombardeo', defModo: { claro: 't-n-campo-bombardeo', oscuro: 't-n-campo-bombardeo-noche' } };
-  gF.opciones = gF.opciones.filter(o => !o.azar).map(o => o.img ? { ...o, modo: /-noche$/.test(o.id) ? 'oscuro' : 'claro' } : o);
+  gF.opciones = gF.opciones.map(o => o.img ? { ...o, modo: /-noche$/.test(o.id) ? 'oscuro' : 'claro' } : o.azar ? { ...o, solo: { includes: id => /-noche$/.test(id) === modoOscuro() } } : o);   // «Aleatoria» sortea solo entre los tapetes del modo actual (día en Claro, noche en Nocturno)
   asp = api.aspecto([gF, { ...grupoTableroDN(), ocultarSi: { clave: 'tapete', empieza: 't-' } }, grupoArea()],
     () => { cel.forEach(b => { b.dataset.k = ''; }); pintar(); });
   await api.css(new URL('./bombardeo.css', import.meta.url));

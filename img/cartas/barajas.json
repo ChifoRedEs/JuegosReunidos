@@ -205,48 +205,48 @@
   },
   {
    "id": "t-n-campo-bombardeo-desierto",
-   "nombre": "Campo de Minas · Desierto",
+   "nombre": "Desierto",
    "archivo": "tapetes/n-campo-bombardeo-desierto.webp"
   },
   {
    "id": "t-n-campo-bombardeo-desierto-noche",
-   "nombre": "Campo de Minas · Desierto Noch",
+   "nombre": "Desierto Noche",
    "archivo": "tapetes/n-campo-bombardeo-desierto-noche.webp"
   },
   {
    "id": "t-n-campo-bombardeo-infierno",
-   "nombre": "Campo de Minas · Infierno",
+   "nombre": "Infierno",
    "archivo": "tapetes/n-campo-bombardeo-infierno.webp"
   },
   {
    "id": "t-n-campo-bombardeo-infierno-noche",
-   "nombre": "Campo de Minas · Infierno Noch",
+   "nombre": "Infierno Noche",
    "archivo": "tapetes/n-campo-bombardeo-infierno-noche.webp"
   },
   {
    "id": "t-n-campo-bombardeo-isla",
-   "nombre": "Campo de Minas · Isla",
+   "nombre": "Isla",
    "archivo": "tapetes/n-campo-bombardeo-isla.webp"
   },
   {
    "id": "t-n-campo-bombardeo-isla-noche",
-   "nombre": "Campo de Minas · Isla Noche",
+   "nombre": "Isla Noche",
    "archivo": "tapetes/n-campo-bombardeo-isla-noche.webp"
-  },
-  {
-   "id": "t-n-campo-bombardeo-lago",
-   "nombre": "Campo de Minas · Lago Helado",
-   "archivo": "tapetes/n-campo-bombardeo-lago.webp"
-  },
-  {
-   "id": "t-n-campo-bombardeo-lago-noche",
-   "nombre": "Campo de Minas · Lago Helado N",
-   "archivo": "tapetes/n-campo-bombardeo-lago-noche.webp"
   },
   {
    "id": "t-ladrillos",
    "nombre": "Ladrillos",
    "archivo": "tapetes/ladrillos.webp"
+  },
+  {
+   "id": "t-n-campo-bombardeo-lago",
+   "nombre": "Lago Helado",
+   "archivo": "tapetes/n-campo-bombardeo-lago.webp"
+  },
+  {
+   "id": "t-n-campo-bombardeo-lago-noche",
+   "nombre": "Lago Helado Noche",
+   "archivo": "tapetes/n-campo-bombardeo-lago-noche.webp"
   },
   {
    "id": "t-madera",

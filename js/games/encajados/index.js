@@ -17,7 +17,7 @@ const TEMAS = {   // 4 escenarios, cada uno con su versión de día (modo Claro)
   almacen: { nombre: 'Almacén', sw: ['#6B7A99', '#EFE6D8'], modo: 'claro' }, jardin: { nombre: 'Jardín', sw: ['#3E8E5A', '#F3EBD8'], modo: 'claro' },
   desierto: { nombre: 'Desierto', sw: ['#B5651D', '#F6DFB0'], modo: 'claro' }, hielo: { nombre: 'Hielo', sw: ['#3A5BA0', '#EAF6FF'], modo: 'claro' },
   'almacen-n': { nombre: 'Cian', sw: ['#2A3B86', '#29D9FF'], modo: 'oscuro' }, 'jardin-n': { nombre: 'Lima', sw: ['#14684A', '#7CFF4D'], modo: 'oscuro' },
-  'desierto-n': { nombre: 'Naranja', sw: ['#8A3A0E', '#FF9A1F'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Magenta', sw: ['#A0207F', '#FF2EC4'], modo: 'oscuro' },
+  'desierto-n': { nombre: 'Naranja', sw: ['#8A3A0E', '#FF9A1F'], modo: 'oscuro' }, 'hielo-n': { nombre: 'Magenta', sw: ['#4A2A6E', '#FF2EC4'], modo: 'oscuro' },
 };
 // Cajas: imágenes de img/encajados (la primera es la de siempre)
 const ESTILOS = { ladrillo: 'Ladrillo', piedra: 'Piedra', metal: 'Metal industrial' };   // texturas grises de img/encajados/escenario, teñidas con los colores del escenario

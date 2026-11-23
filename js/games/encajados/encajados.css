@@ -12,7 +12,7 @@
 .juego-encajados .sktab.tema-almacen-n,.juego-encajados .sk3.tema-almacen-n{--muro:#2A3B86;--muro2:#1B2760;--suelo:#2F3558;--suelo2:#272C4B;--meta:#35E0FF;--neon:#29D9FF}
 .juego-encajados .sktab.tema-jardin-n,.juego-encajados .sk3.tema-jardin-n{--muro:#14684A;--muro2:#0C4A33;--suelo:#1F3A33;--suelo2:#19312B;--meta:#B6FF4A;--neon:#7CFF4D}
 .juego-encajados .sktab.tema-desierto-n,.juego-encajados .sk3.tema-desierto-n{--muro:#8A3A0E;--muro2:#632808;--suelo:#4A2E22;--suelo2:#3C241B;--meta:#FFE14A;--neon:#FF9A1F}
-.juego-encajados .sktab.tema-hielo-n,.juego-encajados .sk3.tema-hielo-n{--muro:#A0207F;--muro2:#701559;--suelo:#4A2748;--suelo2:#3C1F3B;--meta:#7CF3FF;--neon:#FF2EC4}
+.juego-encajados .sktab.tema-hielo-n,.juego-encajados .sk3.tema-hielo-n{--muro:#4A2A6E;--muro2:#35205A;--suelo:#2F2748;--suelo2:#272140;--meta:#7CF3FF;--neon:#FF2EC4}
 /* cajas: color y borde (el aspa de las de madera usa el borde) */
 .juego-encajados .skc{aspect-ratio:1}
 /* muro y suelo: textura gris (img/encajados/escenario) mezclada con el color del escenario (overlay) */
