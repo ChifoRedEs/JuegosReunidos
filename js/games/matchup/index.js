@@ -4,8 +4,7 @@ import { pieMenu } from '../../core/pie.js';
 import { $, esc } from '../../core/dom.js';
 import { mejorarSelects } from '../../core/desplegable.js';
 import { Cronometro } from '../../core/cronometro.js';
-import { grupoFondo, grupoDorso } from '../../core/aspectos.js';
-import { BARAJAS, cargarBarajas, urlDorso } from '../../core/cartas.js';
+import { grupoTableroDN } from '../../core/aspectos.js';
 import { BANCOS } from './bancos.js';
 import * as M from './motor.js';
 
@@ -15,6 +14,12 @@ const MARCOS = {
 };
 const FORMAS = { redonda: 'Esquinas redondeadas', cuadrada: 'Cuadradas', circulo: 'Circulares' };
 const PAUSA_FALLO = 1150;
+// Dorsos cuadrados propios de Match-Up (img/dorsos-matchup): 4 paisajes y 4 patrones
+const DORSOS = [['playa', 'Costa'], ['montana', 'Montaña'], ['lago', 'Lago'], ['desierto', 'Desierto'], ['viajes', 'Viajes'], ['sellos', 'Sellos'], ['olas', 'Olas'], ['estrellas', 'Estrellas']];
+const urlDorso = id => new URL(`../../../img/dorsos-matchup/${id}.webp`, import.meta.url).href;
+// Etiquetas de dos renglones para que todas las opciones tengan el mismo tamaño
+const LMODO = { solo: 'Un\njugador', dos: '2\njugadores', cpu: 'Contra la\nmáquina' };
+const LTAM = t => `${t.nombre}\n${t.cols}×${t.filas}`;
 
 let S = null, api = null, asp = null, root = null, crono = null, onKey = null, tim = 0, pausado = false, bloqueo = false, vista = false, cargado = false;
 let cfg = { modo: 'solo', tema: 'frutas', tam: '4x4', nivel: 'medio' };
@@ -34,13 +39,12 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; pausado = false; bloqueo = false; vista = false; clearTimeout(tim); tim = 0;
-  try { await cargarBarajas(); } catch { /* sin dorsos de imagen: se usa el dorso dibujado */ }
   asp = api.aspecto([
-    grupoFondo('#mrTab'),
-    grupoDorso(),
+    grupoTableroDN(),
+    { clave: 'cartas', titulo: 'Cartas', icono: '🎴', ventana: true, forma: 'figura', def: 'azar', opciones: [{ id: 'azar', nombre: '🎲 Aleatoria', azar: true }, ...DORSOS.map(([id, nombre]) => ({ id, nombre, img: urlDorso(id) }))] },
     { clave: 'marco', titulo: 'Color de las cartas', icono: '🎴', def: 'blanco', opciones: Object.entries(MARCOS).map(([id, t]) => ({ id, nombre: t.nombre, sw: t.sw })) },
     { clave: 'forma', titulo: 'Forma de las cartas', icono: '⬜', def: 'redonda', opciones: Object.entries(FORMAS).map(([id, nombre]) => ({ id, nombre })) },
-    { clave: 'nombres', titulo: 'Nombre bajo la imagen', icono: '🔤', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] },
+    { clave: 'nombres', titulo: 'Nombre de Imagen', icono: '🔤', def: 'si', opciones: [{ id: 'si', nombre: 'Mostrar' }, { id: 'no', nombre: 'Ocultar' }] },
   ], () => { aplicarAspecto(); });
   await api.css(new URL('./matchup.css', import.meta.url));
   const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0)) cfg = { modo: c0.modo, tema: c0.tema, tam: c0.tam, nivel: c0.nivel };
@@ -57,9 +61,9 @@ export async function mount(r, a) {
     config: {
       valores: () => ({ modo: cfg.modo, tema: cfg.tema, tam: cfg.tam, nivel: cfg.nivel }),
       grupos: v => [
-        { clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'solo' ? '👤 ' : k === 'dos' ? '👥 ' : '🤖 ') + l]) },
+        { clave: 'modo', titulo: 'Modo', opciones: Object.keys(M.MODOS).map(k => [k, LMODO[k]]) },
         { clave: 'tema', titulo: 'Imágenes', desplegable: true, opciones: Object.entries(M.TEMAS).map(([k, l]) => [k, (BANCOS[k] ? BANCOS[k].icono + ' ' : '🎲 ') + l]) },
-        { clave: 'tam', titulo: 'Tamaño del tablero', opciones: Object.entries(M.TAMANOS).map(([k, t]) => [k, `${t.nombre} ${t.cols}×${t.filas}`]) },
+        { clave: 'tam', titulo: 'Tamaño del tablero', opciones: Object.entries(M.TAMANOS).map(([k, t]) => [k, LTAM({ ...t })]) },
         { clave: 'nivel', titulo: 'Memoria de la máquina', visible: v.modo === 'cpu', opciones: Object.entries(M.NIVELES) },
       ],
       aplicar: v => { cfg = { modo: v.modo, tema: v.tema, tam: v.tam, nivel: v.nivel }; jugar(); },
@@ -84,11 +88,11 @@ function setup() {
   const nota = { solo: 'Destapa las cartas de dos en dos y encuentra todas las <b>parejas</b> con los menos movimientos posibles.', dos: 'Os turnáis para destapar dos cartas. Si son pareja, te las quedas y <b>repites turno</b>. Gana quien reúna más parejas.',
     cpu: 'Turnos contra la máquina. Cuanto mejor sea su <b>memoria</b>, menos se le escapan las cartas que ya ha visto.' }[cfg.modo];
   root.innerHTML = `<p class="note">${nota}</p>
-    <div class="bar"><span class="lbl">Modo</span>${seg('modo', Object.entries(M.MODOS).map(([k, l]) => [k, (k === 'solo' ? '👤 ' : k === 'dos' ? '👥 ' : '🤖 ') + l]))}</div>
-    <div class="bar"><span class="lbl">Imágenes</span><select class="desplegable" data-cfgsel="tema" aria-label="Imágenes">${Object.entries(M.TEMAS).map(([k, l]) => `<option value="${k}"${cfg.tema === k ? ' selected' : ''}>${(BANCOS[k] ? BANCOS[k].icono + ' ' : '🎲 ') + l}</option>`).join('')}</select></div>
-    <div class="bar"><span class="lbl">Tablero</span>${seg('tam', Object.entries(M.TAMANOS).map(([k, t]) => [k, `${t.nombre} ${t.cols}×${t.filas}`]))}</div>
+    <div class="cfg-g"><span class="lbl">Modo</span>${seg('modo', Object.keys(M.MODOS).map(k => [k, LMODO[k]]))}</div>
+    <div class="cfg-g"><span class="lbl">Imágenes</span><select class="desplegable" data-cfgsel="tema" aria-label="Imágenes">${Object.entries(M.TEMAS).map(([k, l]) => `<option value="${k}"${cfg.tema === k ? ' selected' : ''}>${(BANCOS[k] ? BANCOS[k].icono + ' ' : '🎲 ') + l}</option>`).join('')}</select></div>
+    <div class="cfg-g"><span class="lbl">Tamaño del tablero</span>${seg('tam', Object.entries(M.TAMANOS).map(([k, t]) => [k, LTAM(t)]))}</div>
     <p class="note">${M.pares(cfg.tam)} parejas · ${M.TAMANOS[cfg.tam].cols * M.TAMANOS[cfg.tam].filas} cartas</p>
-    ${cfg.modo === 'cpu' ? `<div class="bar"><span class="lbl">Memoria de la máquina</span>${seg('nivel', Object.entries(M.NIVELES))}</div>` : ''}
+    ${cfg.modo === 'cpu' ? `<div class="cfg-g"><span class="lbl">Memoria de la máquina</span>${seg('nivel', Object.entries(M.NIVELES))}</div>` : ''}
     ${cfg.modo === 'solo' && mej ? `<p class="note">🏆 Tu mejor marca aquí: <b>${mej.movs}</b> movimientos · ${fmt(mej.t)}</p>` : ''}
     ${pieMenu({ ac: 'jugar', seguir: S && !S.done ? 'volver' : null })}`;
   mejorarSelects(root);
@@ -113,11 +117,11 @@ function armar() {
   pintar();
   if (!S.done) siguiente();
 }
-// Dorso de imagen elegido en Apariencia (si no hay, se ve el dorso dibujado)
+// Dorso elegido en Apariencia (--dorso en #mrTab); el tablero toma el color de Tablero (día/noche)
 function aplicarAspecto() {
   const tab = $('#mrTab'); if (!tab || !asp) return;
-  const d = BARAJAS.dorsos.find(x => x.id === asp.valores.dorso);
-  if (d) tab.style.setProperty('--dorso', `url("${urlDorso(d)}")`); else tab.style.removeProperty('--dorso');
+  const id = asp.valores.cartas, d = DORSOS.find(x => x[0] === id);
+  if (d) tab.style.setProperty('--dorso', `url("${urlDorso(d[0])}")`); else tab.style.removeProperty('--dorso');
   tab.classList.toggle('con-dorso', !!d);
 }
 const quienJuega = () => (S.modo === 'cpu' ? (S.turno === 0 ? 'Tu turno' : 'Turno de la máquina') : `Turno del jugador ${S.turno + 1}`);
@@ -153,7 +157,7 @@ function destapar(i) {
     api.sonido('ok'); api.vibrar(15); const m = $('#mrMsg'); if (m && !S.done) m.innerHTML = `✅ <b>${esc(M.nombreDe(S.deck[res.a]))}</b>`;
     guardar(); if (S.done) terminar(); else siguiente();
   } else if (res.tipo === 'fallo') { bloqueo = true; pintar(); guardar(); siguiente(); }
-  else guardar();
+  else { guardar(); siguiente(); }                                                      // 1.ª carta: si juega la máquina, que elija la 2.ª
   return true;
 }
 function tocar(i) {
@@ -208,5 +212,5 @@ function reglas() {
     <li><b>👥 2 jugadores</b> y <b>🤖 contra la máquina</b>: si aciertas una pareja te la quedas y <b>repites turno</b>. Gana quien reúna más. La máquina solo recuerda lo que ha visto, y su memoria depende del nivel.</li>
     <li>Tras un fallo puedes tocar otra carta para no esperar. Teclado: flechas para moverte, Intro o espacio para destapar.</li>
     <li>Imágenes: frutas y verduras, animales, comida, banderas del mundo, transportes y más categorías, o todo mezclado. Tableros de 12 a 48 cartas.</li>
-    <li>Con 🎨 Apariencia cambias el tapete, el dorso, el color y la forma de las cartas y si se ve el nombre.</li></ul>`);
+    <li>Con 🎨 Apariencia cambias el color del tablero (día y noche), las cartas (dorso), el color y la forma de las cartas y si se ve el nombre de la imagen.</li></ul>`);
 }

@@ -586,6 +586,8 @@ body.fijo .cat-seccion .ficha{aspect-ratio:auto;height:137px;min-height:0;paddin
 /* 3.93: títulos de sección dentro de listas de opciones (Día / Noche) y desplegables de Configurar partida */
 .cfg-g .seg:has(> .btn:nth-child(2)) > .btn{flex:1 1 0;min-width:0;padding-inline:4px;justify-content:center;text-align:center;white-space:pre;line-height:1.15}
 .cfg-g .seg:has(> .btn:nth-child(5)) > .btn{font-size:13px;padding-inline:2px}
+.cfg-g .seg:has(> .btn:nth-child(6)){display:grid;grid-template-columns:repeat(3,1fr);border-radius:24px}   /* 6 o más opciones: 3 por fila, todas del mismo tamaño */
+.cfg-g .seg:has(> .btn:nth-child(6)) > .btn{font-size:14px;min-height:46px;padding-inline:4px}
 .seg .ap-sec{flex:0 0 100%;display:block;font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
 /* 3.102.2: fichas de color (Día / Noche) todas del mismo ancho, 2 por fila, igual en todos los juegos */
 .seg:has(> .ap-sec) > .btn{flex:0 0 calc(50% - 3px);box-sizing:border-box;justify-content:center}

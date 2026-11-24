@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-b6e696f9c4';
+const VERSION = 'jr-f1870bd089';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -925,6 +925,14 @@ const EXTRA = [
 './img/domino/piedra-soporte.webp',
 './img/domino/piedra-v.webp',
 './img/domino/punto.webp',
+'./img/dorsos-matchup/desierto.webp',
+'./img/dorsos-matchup/estrellas.webp',
+'./img/dorsos-matchup/lago.webp',
+'./img/dorsos-matchup/montana.webp',
+'./img/dorsos-matchup/olas.webp',
+'./img/dorsos-matchup/playa.webp',
+'./img/dorsos-matchup/sellos.webp',
+'./img/dorsos-matchup/viajes.webp',
 './img/encadenadas/abierto.webp',
 './img/encadenadas/ancla.webp',
 './img/encadenadas/anillo.webp',
