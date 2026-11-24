@@ -9,7 +9,11 @@ import * as M from './motor.js';
 const SIMB = ['●', '▲', '■', '◆', '★', '♥', '☘', '☾'];
 let roPanel = null, S = null, api = null, asp = null, root = null, crono = null, serie = 0, sel = -1, onKey = null, V3 = null, hay3d = false, modo3d = false, forzar2d = false, tok3 = 0, tIA = 0, pop = -1;
 let panel = null, posPanel = null, arrP = null, onRes = null;
-let cfg = { modo: 'adivinar', preset: 'medio', ...M.PRESETS.medio };
+let cfg = { modo: 'adivinar', rival: 'uno', preset: 'medio', ...M.PRESETS.medio };
+// Etiquetas de dos renglones (todas las opciones del mismo tamaño)
+const LRIVAL = { uno: 'Un\njugador', cpu: 'Contra\nla CPU', dos: 'Dos\npersonas' };
+const nomJ = (i, rival) => (rival === 'cpu' ? (i === 0 ? 'Tú' : 'La CPU') : `El jugador ${i + 1}`);
+const R = () => M.roles(S);
 const quiere3D = () => hay3d && !forzar2d && !!asp && (asp.valores.vista || '2d') === '3d';
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const nombreVar = d => { const p = Object.values(M.PRESETS).find(x => x.pos === d.pos && x.col === d.col && x.max === d.max); return `${p ? p.nombre : 'Personalizado'} · ${d.pos} bolas, ${d.col} colores${d.rep ? '' : ', sin repetir'}`; };
@@ -19,9 +23,12 @@ const claveRec = d => `${d.pos}-${d.col}-${d.rep ? 1 : 0}-${d.max}`;
 export const validar = M.validar;
 export const migrarV1 = d => d;
 export function resumen(d) {
-  const t = d.modo === 'codigo' ? (d.sec ? (d.done ? `la máquina lo descifra en ${d.jug.length}` : `la máquina va por el intento ${d.jug.length + 1}`) : 'poniendo el código')
+  const rv = d.rival && d.rival !== 'uno' ? ` · ${M.RIVALES[d.rival]}` : '', ro = M.rondas(d) > 1 ? ` · ronda ${d.ronda}/2` : '';
+  const t = d.modo === 'codigo' && d.rival === 'uno' ? (d.sec ? (d.done ? `la máquina lo descifra en ${d.jug.length}` : `la máquina va por el intento ${d.jug.length + 1}`) : 'poniendo el código')
+    : d.rival !== 'uno' && d.modo === 'adivinar' ? (d.done ? (d.gano ? `${nomJ(M.ganadorDuelo(d), d.rival).toLowerCase()} lo descifra` : 'nadie lo descifra') : `fila ${d.jug.length + 1} de ${M.filas(d)}`)
+    : d.modo === 'codigo' ? (d.done ? (d.gano ? `descifrado en ${d.jug.length}` : 'sin descifrar') : `intento ${d.jug.length + 1} de ${d.max}`)
     : (d.done ? (d.gano ? `descifrado en ${d.jug.length} ${d.jug.length === 1 ? 'intento' : 'intentos'}` : 'sin descifrar') : `intento ${d.jug.length + 1} de ${d.max}`);
-  return { texto: `${M.MODOS[d.modo]} · ${d.pos} bolas, ${d.col} colores · ${t}`, fin: d.done };
+  return { texto: `${M.MODOS[d.modo]}${rv}${ro} · ${d.pos} bolas, ${d.col} colores · ${t}`, fin: d.done && (M.rondas(d) === 1 || d.ronda === 2) };
 }
 
 /* ---------- ciclo de vida ---------- */
@@ -33,7 +40,8 @@ export async function mount(r, a) {
     grupoTableroDN(),
   ], () => { if (S && $('#mmTab')) { if (modo3d !== quiere3D()) armar(); else if (V3) { V3.recolor(); pintar(); } else pintar(); } });
   await api.css(new URL('./codigocifrado.css', import.meta.url));
-  const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0) && (c0.modo === 'adivinar' || c0.modo === 'codigo')) cfg = { modo: c0.modo, preset: typeof c0.preset === 'string' ? ({ clasico: 'medio', super: 'dificil' }[c0.preset] || c0.preset) : 'personal', pos: c0.pos, col: c0.col, rep: c0.rep, max: c0.max };
+  const c0 = api.pref('cfg', null); if (c0 && M.cfgOk(c0) && (c0.modo === 'adivinar' || c0.modo === 'codigo')) cfg = { modo: c0.modo, rival: Object.hasOwn(M.RIVALES, c0.rival) ? c0.rival : 'uno', preset: typeof c0.preset === 'string' ? ({ clasico: 'medio', super: 'dificil' }[c0.preset] || c0.preset) : 'personal', pos: c0.pos, col: c0.col, rep: c0.rep, max: c0.max };
+  if (M.PRESETS[cfg.preset]) cfg.rep = M.PRESETS[cfg.preset].rep;                      // «Repetir colores» vuelve a «No» por defecto en todos los niveles
   S = api.cargar();
   root.addEventListener('click', clic);
   onKey = e => tecla(e); document.addEventListener('keydown', onKey);
@@ -41,7 +49,7 @@ export async function mount(r, a) {
   api.barra({ nueva: () => jugar(),
     salir: () => { parar(); location.hash = '#/cat/logica'; },
     crono: () => crono,
-    config: { valores: () => ({ modo: cfg.modo, preset: cfg.preset, pos: cfg.pos, col: cfg.col, rep: cfg.rep, max: cfg.max }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, l]) }, { clave: 'preset', titulo: 'Nivel', opciones: [...Object.entries(M.PRESETS).map(([k, p]) => [k, p.nombre]), ['personal', 'Personal']] }, { clave: 'pos', titulo: 'Bolas', visible: v.preset === 'personal', opciones: M.POS.map(n => [n, String(n)]) }, { clave: 'col', titulo: 'Colores', visible: v.preset === 'personal', opciones: M.COLS.map(n => [n, String(n)]) }, { clave: 'rep', titulo: 'Repetir colores', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'max', titulo: 'Intentos', visible: v.preset === 'personal', opciones: M.MAXS.map(n => [n, String(n)]) }], alCambiar: (v, c) => { if (c === 'preset' && M.PRESETS[v.preset]) Object.assign(v, { pos: M.PRESETS[v.preset].pos, col: M.PRESETS[v.preset].col, rep: M.PRESETS[v.preset].rep, max: M.PRESETS[v.preset].max }); else if (c !== 'modo' && c !== 'preset' && !v.rep && v.col < v.pos) v.col = M.COLS.find(x => x >= v.pos) || 8; }, aplicar: v => { Object.assign(cfg, v); jugar(); } } });
+    config: { valores: () => ({ modo: cfg.modo, rival: cfg.rival, preset: cfg.preset, pos: cfg.pos, col: cfg.col, rep: cfg.rep, max: cfg.max }), grupos: v => [{ clave: 'modo', titulo: 'Modo', opciones: Object.entries(M.MODOS).map(([k, l]) => [k, l]) }, { clave: 'rival', titulo: 'Jugadores', opciones: Object.keys(M.RIVALES).map(k => [k, LRIVAL[k]]) }, { clave: 'preset', titulo: 'Nivel', opciones: [...Object.entries(M.PRESETS).map(([k, p]) => [k, p.nombre]), ['personal', 'Personal']] }, { clave: 'pos', titulo: 'Bolas', visible: v.preset === 'personal', opciones: M.POS.map(n => [n, String(n)]) }, { clave: 'col', titulo: 'Colores', visible: v.preset === 'personal', opciones: M.COLS.map(n => [n, String(n)]) }, { clave: 'rep', titulo: 'Repetir colores', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'max', titulo: 'Intentos', visible: v.preset === 'personal', opciones: M.MAXS.map(n => [n, String(n)]) }], alCambiar: (v, c) => { if (c === 'preset' && M.PRESETS[v.preset]) Object.assign(v, { pos: M.PRESETS[v.preset].pos, col: M.PRESETS[v.preset].col, rep: M.PRESETS[v.preset].rep, max: M.PRESETS[v.preset].max }); else if (c !== 'modo' && c !== 'rival' && c !== 'preset' && !v.rep && v.col < v.pos) v.col = M.COLS.find(x => x >= v.pos) || 8; }, aplicar: v => { Object.assign(cfg, v); jugar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: () => { parar(); setup(); } }, { texto: '⌫ Borrar', accion: borrar }, { texto: '💡 Pista', accion: pedirPista },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (S && !S.done) armar(); else setup();
@@ -57,17 +65,21 @@ function guardar() { if (!S) return; const r = resumen(S); api.guardar(S, r.text
 function setup() {
   cerrar3D(); modo3d = false; sel = -1; parar(); quitarPanel();
   const seg = (k, ops) => `<div class="seg">${ops.map(([v, l]) => `<button class="btn ${String(cfg[k]) === String(v) ? 'on' : ''}" data-cfg="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  const rec = api.pref('mejores', {})[claveRec(cfg)];
-  root.innerHTML = `<p class="note">${cfg.modo === 'adivinar'
-    ? 'La máquina esconde un <b>código de colores</b>. Prueba combinaciones: cada <b>clavija negra</b> es un color bien colocado y cada <b>blanca</b>, un color que está pero en otro sitio.'
-    : 'Esconde tú un código y mira cómo la máquina intenta descifrarlo con las mismas pistas. ¿Conseguirás despistarla?'}</p>
+  const rec = api.pref('mejores', {})[claveRec(cfg)], solo = cfg.rival === 'uno';
+  const nota = cfg.modo === 'adivinar'
+    ? (solo ? 'La máquina esconde un <b>código de colores</b>. Prueba combinaciones: cada <b>clavija negra</b> es un color bien colocado y cada <b>blanca</b>, un color que está pero en otro sitio.'
+      : `La máquina esconde un código y ${cfg.rival === 'cpu' ? 'tú y la <b>CPU</b>' : 'los <b>dos jugadores</b>'} lo buscáis <b>por turnos</b> en el mismo tablero: gana quien lo descifre. Cada uno tiene sus intentos.`)
+    : (solo ? 'Esconde tú un código y mira cómo la máquina intenta descifrarlo con las mismas pistas. ¿Conseguirás despistarla?'
+      : `Dos rondas: en la primera ${cfg.rival === 'cpu' ? 'tú escondes un código y la <b>CPU</b> lo adivina' : 'el <b>jugador 1</b> esconde un código y el <b>2</b> lo adivina'}; en la segunda se cambian los papeles. Gana quien use <b>menos intentos</b>.`);
+  root.innerHTML = `<p class="note">${nota}</p>
     <div class="cfg-g"><span class="lbl">Modo</span>${seg('modo', Object.entries(M.MODOS).map(([k, v]) => [k, v]))}</div>
+    <div class="cfg-g"><span class="lbl">Jugadores</span>${seg('rival', Object.keys(M.RIVALES).map(k => [k, LRIVAL[k]]))}</div>
     <div class="cfg-g"><span class="lbl">Nivel</span>${seg('preset', [...Object.entries(M.PRESETS).map(([k, v]) => [k, v.nombre]), ['personal', 'Personal']])}</div>
     ${cfg.preset === 'personal' ? `<div class="cfg-g"><span class="lbl">Bolas</span>${seg('pos', M.POS.map(n => [n, n]))}</div>
     <div class="cfg-g"><span class="lbl">Colores</span>${seg('col', M.COLS.map(n => [n, n]))}</div>` : ''}
     <div class="cfg-g"><span class="lbl">Repetir colores</span>${seg('rep', [[true, 'Sí'], [false, 'No']])}</div>
     ${cfg.preset === 'personal' ? `<div class="cfg-g"><span class="lbl">Intentos</span>${seg('max', M.MAXS.map(n => [n, n]))}</div>` : `<p class="note">${cfg.pos} bolas · ${cfg.col} colores · ${cfg.max} intentos</p>`}
-    ${cfg.modo === 'adivinar' && rec ? `<p class="note">🏆 Tu mejor marca aquí: <b>${rec.n}</b> ${rec.n === 1 ? 'intento' : 'intentos'} · ${fmt(rec.t)}</p>` : ''}
+    ${cfg.modo === 'adivinar' && solo && rec ? `<p class="note">🏆 Tu mejor marca aquí: <b>${rec.n}</b> ${rec.n === 1 ? 'intento' : 'intentos'} · ${fmt(rec.t)}</p>` : ''}
     ${pieMenu({ ac: 'jugar', seguir: S && !S.done ? 'volver' : null })}`;
 }
 function jugar() {
@@ -78,31 +90,34 @@ function jugar() {
 /* ---------- tablero ---------- */
 function armar() {
   cerrar3D(); modo3d = quiere3D(); parar();
-  root.innerHTML = `<div class="mmcab"><b id="mmTit">${esc(M.MODOS[S.modo])}</b><span id="mmInfo"></span></div>
+  root.innerHTML = `<div class="mmcab"><b id="mmTit">${esc(M.MODOS[S.modo])}${S.rival !== 'uno' ? ' · ' + esc(M.RIVALES[S.rival]) : ''}</b><span id="mmInfo"></span></div>
     <div id="mmTab" ${modo3d ? 'class="e3d mm3"' : 'class="mmtab"'} style="--p:${S.pos}" role="application" aria-label="Tablero de Código Cifrado"></div>
     <p class="mmmsg" id="mmMsg" role="status" aria-live="polite"></p>
 ${api.barraHtml()}<div id="mmEsp" aria-hidden="true"></div>`;   // #mmEsp: hueco al final de la página del alto del panel flotante, para que al hacer scroll no tape el menú
   crearPanel();
   if (modo3d) iniciar3D();
-  if (S.modo === 'adivinar' && !S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); }
-  if (S.modo === 'codigo' && S.sec && !S.done) programarIA(700);
+  if (S.modo === 'adivinar' && S.rival === 'uno' && !S.done) { crono = new Cronometro(s => { S.t = s; info(); }, S.t); crono.iniciar(); }
+  if (M.actor(S) === 'cpu') programarIA(700);
   pintar();
 }
-function info() { const e = $('#mmInfo'); if (!e || !S) return; e.textContent = S.sec === null ? 'Elige tu código' : S.done ? `${S.jug.length} ${S.jug.length === 1 ? 'intento' : 'intentos'}` : `Intento ${S.jug.length + 1}/${S.max}${S.modo === 'adivinar' ? ' · ' + fmt(S.t) : ''}`; }
+function info() {
+  const e = $('#mmInfo'); if (!e || !S) return; const ro = M.rondas(S) > 1 ? `Ronda ${S.ronda}/2 · ` : '', duelo = R().adiv === 'duelo';
+  e.textContent = S.sec === null ? ro + 'Elige el código' : S.done ? `${ro}${S.jug.length} ${S.jug.length === 1 ? 'intento' : 'intentos'}` : duelo ? `Fila ${S.jug.length + 1}/${M.filas(S)}` : `${ro}Intento ${S.jug.length + 1}/${S.max}${S.modo === 'adivinar' && S.rival === 'uno' ? ' · ' + fmt(S.t) : ''}`;
+}
 const bolaHtml = (c, extra = '', tag = 'span') => `<${tag} class="mmb ${c < 0 ? 'vacio' : ''} ${extra}" ${c >= 0 ? `data-c="${c}" data-s="${SIMB[c]}"` : ''}></${tag}>`;
 
 function pintar2D() {
   const tab = $('#mmTab'); if (!tab) return;
-  const editable = !S.done && ((S.modo === 'adivinar' && S.sec) || (S.modo === 'codigo' && S.sec === null));
+  const ac = M.actor(S), oculta = ac === 'oculta', adivina = ac === 'adivina', rl = R(), duelo = rl.adiv === 'duelo', tags = S.rival === 'cpu' ? ['Tú', 'CPU'] : ['J1', 'J2'];
   const fc = Math.ceil(S.pos / 2);
   const slot = (c, i, ed) => ed ? `<button type="button" class="mmb ${c < 0 ? 'vacio' : ''} ${i === sel ? 'sel' : ''} ${i === pop ? 'pop' : ''}" ${c >= 0 ? `data-c="${c}" data-s="${SIMB[c]}"` : ''} data-slot="${i}" aria-label="Posición ${i + 1}${c >= 0 ? ', color ' + (c + 1) : ', vacía'}"></button>` : bolaHtml(c);
-  const mostrar = S.sec && (S.done || S.modo === 'codigo');
+  const mostrar = S.sec && (S.done || (rl.ocul === 'hum' && rl.adiv === 'cpu'));
   const cod = S.sec === null ? S.cur : mostrar ? S.sec : Array(S.pos).fill(-1);
-  let h = `<div class="mmmarco"><div class="mmsec" aria-label="Código secreto">${cod.map((c, i) => slot(c, i, S.sec === null && editable)).join('')}${S.sec && !mostrar ? '<div class="mmtapa" aria-hidden="true">?</div>' : ''}</div>`;
+  let h = `<div class="mmmarco"><div class="mmsec" aria-label="Código secreto">${cod.map((c, i) => slot(c, i, oculta)).join('')}${S.sec && !mostrar ? '<div class="mmtapa" aria-hidden="true">?</div>' : ''}</div>`;
   for (let r = 0; r < S.max; r++) {
-    const g = S.jug[r], f = S.fb[r], act = editable && S.modo === 'adivinar' && r === S.jug.length;
+    const g = S.jug[r], f = S.fb[r], act = adivina && r === S.jug.length, q = duelo ? (r + S.ini) % 2 : -1;
     const fila = g || (act ? S.cur : Array(S.pos).fill(-1));
-    h += `<div class="mmfila ${act ? 'act' : ''}"><span class="mmn">${r + 1}</span><div class="mmslots">${fila.map((c, i) => slot(c, i, act)).join('')}</div><div class="mmfb" style="--fc:${fc}" ${f ? `aria-label="${f[0]} negras, ${f[1]} blancas"` : ''}>${Array.from({ length: S.pos }, (_, k) => `<i class="mmk ${f && k < f[0] ? 'n' : f && k < f[0] + f[1] ? 'b' : ''}"></i>`).join('')}</div></div>`;
+    h += `<div class="mmfila ${act ? 'act' : ''}"><span class="mmn${q >= 0 ? ' q' + q : ''}">${r + 1}${q >= 0 ? `<small>${tags[q]}</small>` : ''}</span><div class="mmslots">${fila.map((c, i) => slot(c, i, act)).join('')}</div><div class="mmfb" style="--fc:${fc}" ${f ? `aria-label="${f[0]} negras, ${f[1]} blancas"` : ''}>${Array.from({ length: S.pos }, (_, k) => `<i class="mmk ${f && k < f[0] ? 'n' : f && k < f[0] + f[1] ? 'b' : ''}"></i>`).join('')}</div></div>`;
   }
   tab.innerHTML = h + '</div>'; pop = -1;
 }
@@ -111,16 +126,35 @@ function pintar() {
   if (modo3d) { if (V3) V3.pintar({ S, sel }); } else pintar2D();
   document.querySelectorAll('#mmPal .mmb').forEach(b => b.classList.toggle('usado', !S.rep && S.cur.includes(+b.dataset.col)));
   const ok = $('#mmOk'), pbtn = $('#mmPista');
-  if (ok) { ok.hidden = S.done || (S.modo === 'codigo' && !!S.sec); ok.textContent = S.modo === 'codigo' && S.sec === null ? '🔒 Fijar código' : '✔ Comprobar'; ok.disabled = !M.llena(S); }
-  if (pbtn) pbtn.hidden = S.modo !== 'adivinar' || S.done;
-  if (panel) { panel.hidden = S.done || (S.modo === 'codigo' && !!S.sec); sincronizarPanel(); limitarPanel(); }
+  const ac = M.actor(S), humano = ac === 'oculta' || ac === 'adivina';
+  if (ok) { ok.hidden = !humano; ok.textContent = ac === 'oculta' ? '🔒 Fijar código' : '✔ Comprobar'; ok.disabled = !M.llena(S); }
+  if (pbtn) pbtn.hidden = !(S.modo === 'adivinar' && S.rival === 'uno') || S.done;
+  if (panel) { panel.hidden = !humano; sincronizarPanel(); limitarPanel(); }
   const m = $('#mmMsg'); if (!m) return;
+  m.innerHTML = mensaje(ac);
+}
+function mensaje(ac) {
+  const rl = R(), dos = S.rival === 'dos', cpu = S.rival === 'cpu', n = S.jug.length, pl = k => `${k} ${k === 1 ? 'intento' : 'intentos'}`;
   if (S.done) {
-    const sec = '';
-    m.innerHTML = S.modo === 'adivinar' ? (S.gano ? `🎉 <b>¡Descifrado!</b> en ${S.jug.length} ${S.jug.length === 1 ? 'intento' : 'intentos'} · ${fmt(S.t)}` : '💔 <b>Se acabaron los intentos.</b> Ese era el código (arriba).')
-      : (S.gano ? `🤖 La máquina descifró tu código en <b>${S.jug.length}</b> ${S.jug.length === 1 ? 'intento' : 'intentos'}.` : `🏆 <b>¡Le has ganado!</b> La máquina no encontró tu código en ${S.max} intentos.`) + sec;
-  } else if (S.modo === 'codigo') m.textContent = S.sec ? '🤖 La máquina está pensando…' : (S.rep ? 'Elige los colores de tu código secreto y pulsa «Fijar código».' : 'Elige tu código (sin repetir colores) y pulsa «Fijar código».');
-  else m.textContent = S.jug.length ? 'Toca los colores de abajo para rellenar la fila. ⚫ color y sitio · ⚪ color en otro sitio.' : 'Toca los colores de abajo para formar tu primer intento.';
+    if (S.rival === 'uno') {
+      if (S.modo === 'adivinar') return S.gano ? `🎉 <b>¡Descifrado!</b> en ${pl(n)} · ${fmt(S.t)}` : '💔 <b>Se acabaron los intentos.</b> Ese era el código (arriba).';
+      return S.gano ? `🤖 La máquina descifró tu código en <b>${pl(n)}</b>.` : `🏆 <b>¡Le has ganado!</b> La máquina no encontró tu código en ${S.max} intentos.`;
+    }
+    if (S.modo === 'adivinar') {
+      const g = M.ganadorDuelo(S); if (g < 0) return '💔 <b>Nadie lo ha descifrado.</b> Ese era el código (arriba).';
+      let k = 0; for (let r = 0; r < n; r++) if ((r + S.ini) % 2 === g) k++;
+      return `🏆 <b>${nomJ(g, S.rival)}</b> ${g === 0 && cpu ? 'has descifrado' : 'ha descifrado'} el código en <b>${pl(k)}</b>.`;
+    }
+    const q1 = nomJ(1, S.rival), q0 = nomJ(0, S.rival);
+    if (S.ronda === 1) return `Ronda 1: ${cpu ? 'la CPU' : 'el jugador 2'} ${S.gano ? `descifró el código en <b>${pl(n)}</b>` : '<b>no</b> lo descifró'}.<br><button type="button" class="btn on" data-ac="ronda">Ronda 2 ▶</button>`;
+    const r = M.resultado2(S), cnt = (g, k) => (g ? pl(k) : 'sin descifrar');
+    return `${r.ganador === 0 ? '🏆 <b>' + (cpu ? '¡Has ganado!' : '¡Gana el jugador 1!') + '</b>' : r.ganador === 1 ? '🏆 <b>' + (cpu ? 'Gana la CPU' : '¡Gana el jugador 2!') + '</b>' : '🤝 <b>¡Empate!</b>'}<br><small>${q0}: ${cnt(r.g0, r.n0)} · ${q1}: ${cnt(r.g1, r.n1)}</small>`;
+  }
+  if (ac === 'oculta') return dos ? `Jugador ${S.ronda === 1 ? 1 : 2}: esconde tu código (que no mire el otro) y pulsa «Fijar código».` : (S.rep ? 'Elige los colores de tu código secreto y pulsa «Fijar código».' : 'Elige tu código (sin repetir colores) y pulsa «Fijar código».');
+  if (ac === 'cpu') return '🤖 La máquina está pensando…';
+  if (rl.adiv === 'duelo') return dos ? `Turno del <b>jugador ${M.turnoDe(S) + 1}</b>. Toca los colores para formar tu intento.` : '<b>Tu turno</b>. Toca los colores para formar tu intento (la CPU juega después).';
+  if (S.modo === 'codigo') return dos ? `Jugador ${S.ronda === 1 ? 2 : 1}: ¡descifra el código del jugador ${S.ronda === 1 ? 1 : 2}!` : 'Ronda 2: la CPU ha escondido un código. ¡Descífralo!';
+  return n ? 'Toca los colores de abajo para rellenar la fila. ⚫ color y sitio · ⚪ color en otro sitio.' : 'Toca los colores de abajo para formar tu primer intento.';
 }
 
 /* ----- vista 3D ----- */
@@ -135,7 +169,7 @@ async function iniciar3D() {
 }
 
 /* ---------- jugadas ---------- */
-const editando = () => S && !S.done && ((S.modo === 'adivinar' && S.sec) || (S.modo === 'codigo' && S.sec === null));
+const editando = () => { if (!S) return false; const a = M.actor(S); return a === 'oculta' || a === 'adivina'; };
 function poner(c) {
   if (!editando()) return;
   const vacio = S.cur.indexOf(-1), i = sel >= 0 ? sel : vacio; if (i < 0) { api.sonido('error'); return; }
@@ -156,28 +190,35 @@ function comprobar() {
   if (!editando()) return;
   if (!M.llena(S)) { api.sonido('error'); api.aviso('Rellena todas las bolas'); return; }
   if (S.sec === null) {                                        // modo «codigo»: fija el secreto y empieza la máquina
-    S.sec = S.cur.slice(); S.cur = Array(S.pos).fill(-1); sel = -1; api.sonido('ok'); pintar(); guardar(); programarIA(900); return;
+    S.sec = S.cur.slice(); S.cur = Array(S.pos).fill(-1); sel = -1; api.sonido('ok'); pintar(); guardar(); if (M.actor(S) === 'cpu') programarIA(900); return;
   }
   const f = M.intentar(S); if (!f) { api.sonido('error'); return; }
   sel = -1; api.sonido(f[0] === S.pos ? 'ok' : 'mover'); api.vibrar(10);
-  if (S.done) fin(); else { pintar(); guardar(); }
+  if (S.done) fin(); else { pintar(); guardar(); if (M.actor(S) === 'cpu') programarIA(900); }
 }
 function programarIA(ms) {
   clearTimeout(tIA); const tok = serie;
   tIA = setTimeout(() => {
-    if (!S || tok !== serie || S.done || !S.sec) return;
+    if (!S || tok !== serie || S.done || !S.sec || M.actor(S) !== 'cpu') return;
     const g = M.jugadaIA(S, 'ia' + S.jug.length + ':' + S.sec.join('')); if (!g || !M.intentar(S, g)) { S.done = true; S.gano = false; }
-    api.sonido('mover'); if (S.done) fin(); else { pintar(); guardar(); programarIA(850); }
+    api.sonido('mover'); if (S.done) fin(); else { pintar(); guardar(); if (M.actor(S) === 'cpu') programarIA(850); }
   }, ms);
 }
 async function pedirPista() {
-  if (!S || S.done || S.modo !== 'adivinar') return;
+  if (!S || S.done || S.modo !== 'adivinar' || S.rival !== 'uno') return;
   const p = M.pista(S, Math.random()); if (!p) { api.aviso('No encuentro ninguna combinación posible… revisa las pistas'); return; }
   S.cur = p.cod.slice(); sel = -1; S.pistas++; api.sonido('ok'); pintar(); guardar();
   const m = $('#mmMsg'); if (m) { m.innerHTML = `💡 Quedan <b>${p.n}</b> ${p.n === 1 ? 'combinación posible' : 'combinaciones posibles'}. He puesto una jugada que encaja con todas las pistas.`; }
 }
 function fin() {
   parar(); sel = -1;
+  if (S.rival !== 'uno') {                                       // contra la CPU / dos personas
+    const dos = S.rival === 'dos', v = nombreVar(S) + ` · ${M.RIVALES[S.rival]}`;
+    if (S.modo === 'codigo' && S.ronda === 1) { api.sonido(S.gano ? 'mover' : 'ok'); pintar(); guardar(); return; }          // falta la 2.ª ronda
+    const g = S.modo === 'adivinar' ? M.ganadorDuelo(S) : M.resultado2(S).ganador;
+    if (dos) { api.registrar({ res: g === -1 ? 'tablas' : 'partida', variante: v }); api.sonido(g === -1 ? 'perder' : 'ganar'); pintar(); guardar(); if (g !== -1) api.victoria(); return; }
+    api.registrar({ res: g === 0 ? 'victoria' : g === 1 ? 'derrota' : 'tablas', variante: v }); api.sonido(g === 1 ? 'perder' : g === 0 ? 'ganar' : 'mover'); if (g === 0) api.vibrar([60, 40, 60]); pintar(); guardar(); return;
+  }
   if (S.modo === 'adivinar') {
     const Mj = api.pref('mejores', {}), k = claveRec(S); let record = false;
     if (S.gano && (!Mj[k] || S.jug.length < Mj[k].n || (S.jug.length === Mj[k].n && S.t < Mj[k].t))) { Mj[k] = { n: S.jug.length, t: S.t }; api.setPref('mejores', Mj); record = true; }
@@ -253,14 +294,16 @@ async function clic(e) {
   else if (a === 'volver') armar();
   else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas();
   else if (a === 'comprobar') comprobar(); else if (a === 'borrar') borrar(); else if (a === 'pista') pedirPista();
+  else if (a === 'ronda') { if (S && S.done && M.rondas(S) === 2 && S.ronda === 1) { M.siguienteRonda(S); sel = -1; armar(); guardar(); } }
   else if (a === 'nueva') { if (S && !S.done && S.jug.length && !await api.confirmar('¿Abandonar esta partida?')) return; parar(); setup(); }
 }
 function reglas() {
-  api.modal('Código Cifrado', `<ul><li>Hay un <b>código secreto</b> de 3 a 6 bolas de colores. En <b>🔍 Tú adivinas</b> lo esconde la máquina y tienes un número limitado de intentos para descubrirlo.</li>
+  api.modal('Código Cifrado', `<ul><li>Hay un <b>código secreto</b> de 3 a 6 bolas de colores. En <b>Tú adivinas</b> lo esconde la máquina y tienes un número limitado de intentos para descubrirlo.</li>
     <li>Rellena una fila con los colores (toca un color; toca una bola de la fila para borrarla o para elegir su sitio) y pulsa <b>✔ Comprobar</b>.</li>
     <li>Cada <b>clavija negra</b> ⚫ = una bola con el color <i>y</i> el sitio correctos. Cada <b>blanca</b> ⚪ = un color que está en el código pero en otro sitio. Las clavijas no dicen cuál es cuál.</li>
-    <li>Niveles: <b>Fácil</b> (4 bolas, 5 colores, sin repetir), <b>Clásico</b> (4 bolas, 6 colores), <b>Súper</b> (5 bolas, 8 colores), <b>Experto</b> (6 bolas, 8 colores) o <b>A tu gusto</b>.</li>
-    <li><b>🔒 Tú pones el código</b>: escondes tú uno y la máquina intenta descifrarlo (sin estadísticas). Si no lo consigue en los intentos disponibles, ganas tú.</li>
-    <li>💡 <b>Pista</b>: te dice cuántas combinaciones siguen siendo posibles y rellena una que encaja con todo lo que sabes. Teclado: 1–8 colores, ← → posición, Retroceso borra, Intro comprueba.</li>
+    <li>«Repetir colores» está en No por defecto. Niveles: <b>Fácil</b> (4 bolas, 5 colores), <b>Medio</b> (4 bolas, 6 colores), <b>Difícil</b> (5 bolas, 8 colores), <b>Experto</b> (6 bolas, 8 colores) o <b>Personal</b>.</li>
+    <li><b>Tú pones el código</b> (un jugador): escondes tú uno y la máquina intenta descifrarlo (sin estadísticas). Si no lo consigue en los intentos disponibles, ganas tú.</li>
+    <li><b>Jugadores</b>: «Un jugador» (como siempre), «Contra la CPU» o «Dos personas». En <b>Tú adivinas</b> es un <b>duelo</b>: la máquina esconde el código y los dos lo buscáis por turnos en el mismo tablero (cada uno tiene sus intentos); gana quien lo descifre. En <b>Tú pones el código</b> son <b>dos rondas</b>: uno esconde y el otro adivina, y luego se cambian; gana quien use menos intentos (si no lo descifra, cuenta como un intento más que el máximo). Con dos personas, el que esconde el código no debe dejar que lo vea el otro.</li>
+        <li>💡 <b>Pista</b>: te dice cuántas combinaciones siguen siendo posibles y rellena una que encaja con todo lo que sabes. Teclado: 1–8 colores, ← → posición, Retroceso borra, Intro comprueba.</li>
     <li>Con 🎨 Apariencia cambias el color del tablero (día y noche).</li></ul>`);
 }

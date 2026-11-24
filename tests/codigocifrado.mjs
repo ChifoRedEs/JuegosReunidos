@@ -24,4 +24,23 @@ t('validar rechaza basura y acepta lo bueno', () => {
   for (const x of [null, {}, { modo: 'adivinar' }, { ...S, sec: [9, 9, 9, 9, 9] }, { ...S, fb: [[0, 0]] }, { ...S, pos: 9 }, { ...S, modo: '__proto__' }, { ...S, jug: Array(40).fill([0, 0, 0, 0, 0]), fb: Array(40).fill([1, 1]) }]) aser(M.validar(x) === null, 'acepta ' + JSON.stringify(x).slice(0, 60));
   aser(M.validar({ ...S, done: true, gano: true }).done === false, 'done falso aceptado');
 });
+t('«Repetir colores» en No por defecto en todos los niveles', () => { for (const [k, p] of Object.entries(M.PRESETS)) aser(p.rep === false, k); });
+t('duelo: papeles, turnos y ganador', () => {
+  const S = M.nueva('adivinar', { ...M.PRESETS.medio, rival: 'cpu' }, 'd1'); aser(M.roles(S).adiv === 'duelo' && M.filas(S) === 20, 'filas');
+  const quien = []; while (!S.done && S.jug.length < 40) { const a = M.actor(S); quien.push(a); const g = a === 'cpu' ? M.jugadaIA(S, 'z' + S.jug.length) : M.pista(S, 'y' + S.jug.length).cod; aser(M.intentar(S, g), 'intento'); }
+  aser(S.done && S.gano, 'se descifra'); aser(quien.every((a, i) => a === (((i + S.ini) % 2) === 0 ? 'adivina' : 'cpu')), 'alternan'); aser(M.ganadorDuelo(S) === (S.jug.length - 1 + S.ini) % 2, 'ganador');
+  aser(M.validar(JSON.parse(JSON.stringify(S))).ini === S.ini, 'validar conserva ini');
+});
+t('dos rondas: contra la CPU y dos personas', () => {
+  for (const rival of ['cpu', 'dos']) {
+    const S = M.nueva('codigo', { ...M.PRESETS.facil, rival }, 'r' + rival); aser(M.rondas(S) === 2 && S.sec === null && M.actor(S) === 'oculta', 'inicio ' + rival);
+    S.sec = [0, 1, 2, 3]; aser(M.actor(S) === (rival === 'cpu' ? 'cpu' : 'adivina'), 'quién adivina 1');
+    while (!S.done) M.intentar(S, rival === 'cpu' ? M.jugadaIA(S, 'q' + S.jug.length) : M.pista(S, 'p' + S.jug.length).cod);
+    const n1 = S.jug.length; M.siguienteRonda(S); aser(S.ronda === 2 && S.res[0].n === n1 && !S.done && !S.jug.length, 'ronda 2');
+    aser(M.actor(S) === (rival === 'cpu' ? 'adivina' : 'oculta'), 'quién actúa 2');
+    if (rival === 'dos') S.sec = [3, 2, 1, 0]; aser(M.actor(S) === 'adivina', 'adivina 2');
+    while (!S.done) M.intentar(S, M.pista(S, 'w' + S.jug.length).cod);
+    const r = M.resultado2(S); aser(r.n1 === n1 && r.n0 === S.jug.length, 'cuentas'); aser(M.validar(JSON.parse(JSON.stringify(S))), 'validar ronda 2');
+  }
+});
 console.log(ok, 'pruebas correctas');

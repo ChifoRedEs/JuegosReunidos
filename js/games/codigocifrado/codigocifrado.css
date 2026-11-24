@@ -66,3 +66,8 @@
 .mmsec .mmtapa::after{content:"";width:22px;height:30px;
   background:radial-gradient(circle at 50% 34%,#0c1330 0 6.5px,transparent 7px),linear-gradient(#0c1330,#0c1330) 50% 86%/6px 15px no-repeat;
   clip-path:polygon(0 0,100% 0,100% 62%,66% 100%,34% 100%,0 62%);filter:drop-shadow(0 1px 0 rgba(255,255,255,.18))}
+
+/* duelo: quién hizo cada fila */
+.mmn.q0,.mmn.q1{display:flex;flex-direction:column;align-items:center;gap:1px}
+.mmn small{font:800 calc(var(--b) * .2)/1 var(--f-texto);opacity:.9}
+.mmn.q0{color:#9fe6ff}.mmn.q1{color:#ffd28a}
