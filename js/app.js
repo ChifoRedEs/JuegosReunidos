@@ -11,6 +11,7 @@ import { filtrarTapetes, ocultarClasicas, modoOscuro } from './core/aspectos.js'
 import * as logros from './core/logros.js';
 import { conSemilla, conSemillaAsync, hoy, fechaLarga } from './core/semilla.js';
 import { VERSION } from './version.js';
+import { usuarioActual, esPremium, ponerPremiumPrueba } from './core/usuario.js';
 import { mejorarSelects } from './core/desplegable.js';
 import { TUTORIALES } from './tutoriales/indice.js';
 
@@ -76,10 +77,9 @@ const RUTAS = [
   ['cat-tablero', 'img:ruta-tablero', 'Estrategia', '#/cat/tablero'],
   ['cat-cartas', 'img:ruta-cartas', 'Cartas', '#/cat/cartas'],
   ['cat-palabras', 'img:ruta-palabras', 'Palabras', '#/cat/palabras'],
-  ['cat-arcade', 'img:ruta-arcade', 'Arcade', '#/cat/arcade'],
-  ['stats', 'ico:diario:📖', 'Diario', '#/stats'],
-  ['ajustes', 'ico:ajustes:⚙️', 'Ajustes', '#/ajustes']
+  ['cat-arcade', 'img:ruta-arcade', 'Arcade', '#/cat/arcade']
 ];
+const VISTAS_USUARIO = ['usuario', 'stats', 'ajustes'];   // la ficha «Usuario» queda marcada en su pantalla y en Diario y Ajustes
 let actual = null, token = 0, menuItems = [];
 // Antes había un menú ⋯ en la cabecera. Ahora «Reglas» va en la barra inferior y el resto de entradas (Historial, Pista, Podio, Compartir…) se abren desde «Pausa / Salir» → «Más opciones».
 const RE_REGLAS = /^(Reglas|Reglamento|Cómo se juega)/i, RE_EN_BARRA = /Apariencia|^(Nuev[oa]\b|Otra palabra)|^⏸️ Pausa/i;
@@ -518,7 +518,7 @@ function ruta() {
   const [a, b] = rutaHash.split('/');
   if (a === 'juego' && JUEGOS.some(j => j.id === b)) return { v: 'juego', id: b, cat: JUEGOS.find(j => j.id === b).categoria };
   if (a === 'cat' && (b === 'favoritos' || Object.keys(CATEGORIAS).includes(b))) return { v: 'inicio', cat: b };
-  return { v: a === 'stats' || a === 'ajustes' ? a : 'inicio', cat: null };
+  return { v: VISTAS_USUARIO.includes(a) ? a : 'inicio', cat: null };
 }
 let desModo = null;
 const quitarVista = () => { if (desModo) { desModo(); desModo = null; } };
@@ -538,15 +538,16 @@ async function render() {
     const activa = k === 'cat-' + (r.cat || '') ? (r.v === 'inicio' || r.v === 'juego') : k === r.v;
     return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span class="${/^(img|ico):/.test(ic) ? 'im' : ''}" aria-hidden="true">${ic.startsWith('img:') ? `<img src="img/marca/${ic.slice(4)}.webp" alt="" width="30" height="30">` : ic.startsWith('ico:') ? icoF(ic.split(':')[1], ic.split(':')[2], 30, 'nv') : ic}</span><b>${tx}</b></a>`;
   }).join('');
+  { const on = VISTAS_USUARIO.includes(r.v), u = usuarioActual(), nu = $('#navUser'); nu.className = 'usr ' + (on ? 'on' : ''); if (on) nu.setAttribute('aria-current', 'page'); else nu.removeAttribute('aria-current'); nu.innerHTML = `<span class="av" aria-hidden="true">${u ? esc(u.alias.slice(0, 2).toUpperCase()) : '👤'}</span><b>${u ? 'Usuario' : 'Entrar'}</b>`; }
   app.innerHTML = '';
   const enFav = r.v === 'inicio' && r.cat === 'favoritos';
   document.body.dataset.hcat = r.v === 'inicio' && r.cat && CATEGORIAS[r.cat] ? r.cat : '';   // la cabecera de cada categoría lleva su banner
   document.body.classList.toggle('fijo', r.v === 'inicio' && !enFav);          // inicio y categorías: pantalla fija (en las categorías solo se desplazan las fichas)
-  document.body.classList.toggle('fondo', r.v === 'stats' || r.v === 'ajustes' || enFav);
+  document.body.classList.toggle('fondo', VISTAS_USUARIO.includes(r.v) || enFav);
   document.body.classList.toggle('jfondo', r.v === 'juego');                 // páginas de juego: mismo fondo y scroll interno
   { const tp = document.querySelector('.top'); if (tp) document.documentElement.style.setProperty('--htop', tp.offsetHeight + 'px'); }   // mismo fondo que las categorías          // inicio y categorías: pantalla fija, sin desplazamiento
   if (r.v === 'juego') return abrirJuego(r.id, t);
-  if (r.v === 'inicio') { if (enFav) vFavoritos(); else { vInicio(r.cat); if (r.cat) colorearFichas(); } } else ({ stats: vStats, ajustes: vAjustes })[r.v]();
+  if (r.v === 'inicio') { if (enFav) vFavoritos(); else { vInicio(r.cat); if (r.cat) colorearFichas(); } } else ({ stats: vStats, ajustes: vAjustes, usuario: vUsuario })[r.v]();
   window.scrollTo(0, 0); app.scrollTop = 0;
 }
 async function abrirJuego(id, t) {
@@ -723,7 +724,40 @@ function colorearFichas(sel = '.ficha') {
     f.style.setProperty('--c', c[1]); f.classList.toggle('clara', !!c[2]);
   });
 }
-function vStats(catSel = null) { const y = leerScroll(); vStats_(catSel); if (ruta().v === 'stats') ponerScroll(y); }
+
+// ---------- Usuario: pantalla propia con perfil, Diario (Premium) y Ajustes ----------
+function vUsuario() {
+  nombreVista = 'Usuario'; cabTxt('JugamiGO');
+  const u = usuarioActual(), prem = esPremium();
+  const T = stats.todas(), nPart = Object.values(T).reduce((a, x) => a + (x && x.partidas || 0), 0);
+  app.innerHTML = `
+  <section class="panel"><div class="usr-cab"><div class="usr-av" aria-hidden="true">${u ? esc(u.alias.slice(0, 2).toUpperCase()) : '👤'}</div><div><h3>${u ? esc(u.alias) : 'Invitado'}</h3>
+    <p class="note">${u ? (prem ? 'Premium' : 'Cuenta gratuita') : 'Juegas sin cuenta. Tus partidas y puntos se guardan en este móvil.'}</p></div></div>
+    ${u ? '' : `<p class="note">Con una cuenta Premium tus puntos («millas») entran en las clasificaciones y se guardan en la nube. Los que consigas como invitado se acreditan al registrarte.</p>
+    <div class="bar"><button class="btn on" id="usrReg" type="button">Registro / Login</button></div>`}
+    <p class="note">${nPart.toLocaleString('es-ES')} partidas jugadas en este móvil.</p></section>
+  <div class="usr-lista">
+    <a class="usr-item ${prem ? '' : 'cand'}" href="#/stats"><span aria-hidden="true">${icoF('diario', '📖', 30, 'nv')}</span><span><b>Diario de viaje</b><small>${prem ? 'Pasaporte, logros, retos y estadísticas.' : 'Vista previa. Se desbloquea con Premium.'}</small></span>${prem ? '<span class="fl" aria-hidden="true">›</span>' : '<span class="usr-cand" aria-hidden="true">🔒</span>'}</a>
+    <a class="usr-item" href="#/ajustes"><span aria-hidden="true">${icoF('ajustes', '⚙️', 30, 'nv')}</span><span><b>Ajustes</b><small>Tema, sonido, copia de seguridad y más.</small></span><span class="fl" aria-hidden="true">›</span></a>
+  </div>
+  <section class="panel"><h3>🧪 Modo prueba</h3><div class="fila"><span>Simular Premium</span><div class="seg"><button class="btn ${prem ? 'on' : ''}" data-prem="1">Sí</button><button class="btn ${prem ? '' : 'on'}" data-prem="0">No</button></div></div>
+    <p class="note">Interruptor temporal para ver el Diario con y sin Premium mientras no existan las cuentas ni el pago.</p></section>`;
+  app.querySelectorAll('[data-prem]').forEach(b => b.onclick = () => { ponerPremiumPrueba(b.dataset.prem === '1'); vUsuario(); });
+  const reg = $('#usrReg'); if (reg) reg.onclick = () => modal('Registro / Login', '<p>Las cuentas llegarán en una versión próxima. Por ahora juegas como invitado y tus partidas se guardan en este móvil.</p>');
+}
+function vStats(catSel = null) {
+  const y = leerScroll(); vStats_(catSel);
+  if (!esPremium()) bloquearDiario();
+  if (ruta().v === 'stats') ponerScroll(y);
+}
+// Sin Premium el Diario se ve difuminado e inactivo, con un aviso arriba.
+function bloquearDiario() {
+  const vel = document.createElement('div'); vel.className = 'diario-vel';
+  while (app.firstChild) vel.appendChild(app.firstChild);
+  const av = document.createElement('section'); av.className = 'panel diario-aviso';
+  av.innerHTML = '<div class="cand-big" aria-hidden="true">🔒</div><h3>Diario de viaje</h3><p class="note">Esto es una vista previa. El Diario completo, con tus sellos, logros y estadísticas, se desbloquea con Premium.</p><div class="bar"><a class="btn" href="#/usuario">‹ Volver a Usuario</a></div>';
+  const w = document.createElement('div'); w.className = 'diario-bloq'; w.append(av, vel); app.appendChild(w);
+}
 function vStats_(catSel = null) {
   nombreVista = 'Diario de viaje'; cabTxt('JugamiGO');
   const T = stats.todas();
