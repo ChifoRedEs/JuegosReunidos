@@ -537,8 +537,7 @@ async function render() {
   nav.innerHTML = RUTAS.map(([k, ic, tx, h]) => {
     const activa = k === 'cat-' + (r.cat || '') ? (r.v === 'inicio' || r.v === 'juego') : k === r.v;
     return `<a href="${h}" class="${activa ? 'on' : ''}" ${activa ? 'aria-current="page"' : ''}><span class="${/^(img|ico):/.test(ic) ? 'im' : ''}" aria-hidden="true">${ic.startsWith('img:') ? `<img src="img/marca/${ic.slice(4)}.webp" alt="" width="30" height="30">` : ic.startsWith('ico:') ? icoF(ic.split(':')[1], ic.split(':')[2], 30, 'nv') : ic}</span><b>${tx}</b></a>`;
-  }).join('');
-  { const on = VISTAS_USUARIO.includes(r.v), u = usuarioActual(), nu = $('#navUser'); nu.className = 'usr ' + (on ? 'on' : ''); if (on) nu.setAttribute('aria-current', 'page'); else nu.removeAttribute('aria-current'); nu.innerHTML = `<span class="av" aria-hidden="true">${u ? esc(u.alias.slice(0, 2).toUpperCase()) : '👤'}</span><b>${u ? 'Usuario' : 'Entrar'}</b>`; }
+  }).join('') + (() => { const on = VISTAS_USUARIO.includes(r.v), u = usuarioActual(); return `<a href="#/usuario" class="usr ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}><span class="av" aria-hidden="true">${u ? esc(u.alias.slice(0, 2).toUpperCase()) : '👤'}</span><b>${u ? 'Usuario' : 'Entrar'}</b></a>`; })();
   app.innerHTML = '';
   const enFav = r.v === 'inicio' && r.cat === 'favoritos';
   document.body.dataset.hcat = r.v === 'inicio' && r.cat && CATEGORIAS[r.cat] ? r.cat : '';   // la cabecera de cada categoría lleva su banner
