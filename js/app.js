@@ -768,11 +768,11 @@ function vStats_(catSel = null) {
   const nSell = JUEGOS.filter(sellado).length, totPart = Object.values(T).reduce((a, x) => a + (x && x.partidas || 0), 0), totVic = Object.values(T).reduce((a, x) => a + (x && x.victorias || 0), 0);
   const mejorR = Object.values(T).reduce((a, x) => Math.max(a, x && x.mejorRacha || 0), 0);
   const rutas = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k)).map(([k, n]) => { const js = JUEGOS.filter(j => j.categoria === k), c = js.filter(sellado).length; return `<div class="pas-ruta"><img src="img/marca/ruta-${k}.webp" alt="" width="40" height="40"><span><b>${esc(n)}</b><small>${c} de ${js.length}</small></span><i class="pas-bar"><u style="width:${Math.round(100 * c / js.length)}%"></u></i></div>`; }).join('');
-  const panelPasaporte = `<section class="panel pasaporte" aria-label="Tu pasaporte"><div class="pas-cab"><img src="img/marca/portada.webp" alt="" width="76" height="102"><div><h3>Tu pasaporte</h3><p class="pas-n"><b>${nSell}</b> de ${JUEGOS.length} destinos sellados</p><i class="pas-bar grande"><u style="width:${Math.round(100 * nSell / Math.max(1, JUEGOS.length))}%"></u></i></div></div>
-    <div class="pas-num"><div><b>${totPart.toLocaleString('es-ES')}</b><small>partidas</small></div><div><b>${totVic.toLocaleString('es-ES')}</b><small>victorias</small></div><div><b>${mejorR}</b><small>mejor racha</small></div></div>
+  const logrosGrid = `<div class="logros">${defs.map(d => { const pg = G[d.id] ? null : logros.progreso(d.id, T, CAT_IDS), pa = pg ? Math.min(pg[0], pg[1]) : 0; return `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span><img src="img/medallas/${d.id}.webp" alt="" width="44" height="50" loading="lazy"></span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small>${pg && pg[1] > 0 ? `<i class="lg-prog" role="img" aria-label="Progreso: ${pa.toLocaleString('es-ES')} de ${pg[1].toLocaleString('es-ES')}"><u style="width:${Math.round(100 * pa / pg[1])}%"></u></i><em>${pa.toLocaleString('es-ES')} / ${pg[1].toLocaleString('es-ES')}</em>` : ''}</div>`; }).join('')}</div>`;
+  const secPasaporte = `<section class="panel suave pasaporte" aria-label="Tu pasaporte"><div class="pas-cab"><img src="img/marca/portada.webp" alt="" width="52" height="70"><div><h3>Tu pasaporte</h3><p class="pas-n"><b>${nSell}</b> de ${JUEGOS.length} destinos sellados</p><i class="pas-bar grande"><u style="width:${Math.round(100 * nSell / Math.max(1, JUEGOS.length))}%"></u></i></div></div>
     <div class="pas-rutas">${rutas}</div><div class="bar"><button class="btn" id="pasComp" type="button">${imgIc('compartir')} Compartir mi pasaporte</button></div></section>`;
-  const panelLogros = `<details class="panel plog"><summary><h3>🏅 Logros · ${nG}/${defs.length}</h3><span class="plogi">${defs.filter(d => G[d.id]).map(d => `<img class="lg-mini" src="img/medallas/${d.id}.webp" alt="" title="${esc(d.nombre)}" width="26" height="29" loading="lazy">`).join('') || `<small>Toca para ver los ${defs.length} logros</small>`}</span></summary><div class="logros">${defs.map(d => { const pg = G[d.id] ? null : logros.progreso(d.id, T, CAT_IDS), pa = pg ? Math.min(pg[0], pg[1]) : 0; return `<div class="logro ${G[d.id] ? 'on' : ''}" title="${esc(d.desc)}"><span><img src="img/medallas/${d.id}.webp" alt="" width="44" height="50" loading="lazy"></span><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small>${pg && pg[1] > 0 ? `<i class="lg-prog" role="img" aria-label="Progreso: ${pa.toLocaleString('es-ES')} de ${pg[1].toLocaleString('es-ES')}"><u style="width:${Math.round(100 * pa / pg[1])}%"></u></i><em>${pa.toLocaleString('es-ES')} / ${pg[1].toLocaleString('es-ES')}</em>` : ''}</div>`; }).join('')}</div></details>
-    <div class="panel"><h3>${imgIc('retos')} Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas, Puentes Hashi y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
+  const secLogros = `<section class="panel suave"><h3>🏅 Logros · ${nG}/${defs.length}</h3>${logrosGrid}</section>
+    <div class="panel suave"><h3>${imgIc('retos')} Retos del día</h3><p class="note">${totR ? `Has completado ${totR} reto${totR === 1 ? '' : 's'} en ${diasR} día${diasR === 1 ? '' : 's'}.` : 'Sudoku, Nonogram, Bombardeo, Calcudoku, CruciSumas, Encajados, Sopa de letras, Crucigramas, Puentes Hashi y Números y Letras tienen un «Reto del día»: el mismo tablero para todo el mundo.'}${retosHoy.length ? ` Hoy: ${retosHoy.map(j => j.icono + ' ' + esc(j.nombre)).join(', ')}.` : ''}</p></div>`;
   const cats = Object.entries(CATEGORIAS).filter(([k]) => JUEGOS.some(j => j.categoria === k));
   const solicitada = catSel || new URLSearchParams(location.hash.split('?')[1] || '').get('categoria');
   const elegida = cats.some(([k]) => k === solicitada) ? solicitada : cats[0]?.[0];
@@ -804,17 +804,32 @@ function vStats_(catSel = null) {
   const top = Object.entries(T).filter(([, x]) => x && x.partidas).sort((a, b) => b[1].partidas - a[1].partidas).slice(0, 5).map(([id, x]) => ({ j: JUEGOS.find(j => j.id === id), x })).filter(o => o.j);
   const mxT = Math.max(1, ...top.map(o => o.x.partidas));
   const barTop = top.length ? `<div class="gr-top"><h4>Tus juegos más jugados</h4>${top.map(({ j, x }) => `<div class="gr-fila"><span class="gr-n">${j.icono} ${esc(j.nombre)}</span><i class="gr-b"><u style="width:${Math.round(100 * x.partidas / mxT)}%"></u></i><b>${x.partidas}</b></div>`).join('')}</div>` : '';
-  const panelHoy = `<section class="panel hoyp" aria-label="Hoy"><h3>Hoy</h3>
-    <div class="pas-num"><div><b>${rd}</b><small>${rd === 1 ? 'día seguido' : 'días seguidos'}</small></div><div><b>${pHoy}</b><small>${pHoy === 1 ? 'partida hoy' : 'partidas hoy'}</small></div><div><b>${Object.keys(D).length}</b><small>días jugados</small></div></div>
-    ${totPart ? barras : ''}${barTop}
-    <div class="ini-acc hoy-acc">${reto ? `<a class="acc" href="#/juego/${reto.j.id}"><span class="acc-i" aria-hidden="true">${imgIc('retos', 26)}</span><b>Reto del día${reto.hecho ? ' · hecho' : ''}</b><small>${esc(reto.j.nombre)}</small></a>` : ''}${cont ? `<a class="acc" href="#/juego/${cont.id}"><span class="acc-i" aria-hidden="true">${imgIc('continuar', 26)}</span><b>Continuar</b><small>${esc(cont.nombre)}</small></a>` : ''}</div></section>`;
-  app.innerHTML = panelHoy + panelPasaporte + (nSell ? '' : '<div class="vacio"><img class="goli" src="img/goli/sellando.webp" alt="" width="130" height="140"><p class="note">Tu pasaporte está en blanco. Termina una partida de cualquier juego y se sellará aquí.</p></div>') + panelLogros + '<div class="sep-ruta" role="presentation"></div>' + tabs + `<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`;
-  $('#pasComp').addEventListener('click', async () => {
+  const trio = (x, y, z) => `<div class="pas-num"><div><b>${x[0]}</b><small>${x[1]}</small></div><div><b>${y[0]}</b><small>${y[1]}</small></div><div><b>${z[0]}</b><small>${z[1]}</small></div></div>`;
+  const accesos = `<div class="ini-acc hoy-acc">${reto ? `<a class="acc" href="#/juego/${reto.j.id}"><span class="acc-i" aria-hidden="true">${imgIc('retos', 26)}</span><b>Reto del día${reto.hecho ? ' · hecho' : ''}</b><small>${esc(reto.j.nombre)}</small></a>` : ''}${cont ? `<a class="acc" href="#/juego/${cont.id}"><span class="acc-i" aria-hidden="true">${imgIc('continuar', 26)}</span><b>Continuar</b><small>${esc(cont.nombre)}</small></a>` : ''}</div>`;
+  const SECS = [['resumen', 'Resumen'], ['sellos', 'Sellos'], ['logros', 'Logros'], ['datos', 'Estadísticas'], ['millas', 'Millas']];
+  const qs = new URLSearchParams(location.hash.split('?')[1] || '');
+  const sec = SECS.some(([k]) => k === qs.get('sec')) ? qs.get('sec') : (solicitada ? 'sellos' : 'resumen');
+  const dtabs = `<div class="dtabs" role="tablist" aria-label="Secciones del Diario">${SECS.map(([k, n]) => `<button type="button" role="tab" class="dtab ${k === sec ? 'on' : ''}" aria-selected="${k === sec}" data-sec="${k}">${n}</button>`).join('')}</div>`;
+  const CUERPO = {
+    resumen: `<section class="panel suave hoyp" aria-label="Hoy">${trio([rd, rd === 1 ? 'día seguido' : 'días seguidos'], [pHoy, pHoy === 1 ? 'partida hoy' : 'partidas hoy'], [Object.keys(D).length, 'días jugados'])}${accesos}</section>`
+      + secPasaporte + (nSell ? '' : '<div class="vacio"><img class="goli" src="img/goli/sellando.webp" alt="" width="130" height="140"><p class="note">Tu pasaporte está en blanco. Termina una partida de cualquier juego y se sellará aquí.</p></div>'),
+    sellos: `${tabs}<div class="stats-fichas stats-sellos">${cards || '<p class="note">No hay juegos en esta categoría.</p>'}</div><div class="bar stats-reset-actions"><button class="btn danger" id="stResetCat">Reiniciar estadísticas de ${esc(elegida ? CATEGORIAS[elegida] : 'esta categoría')}</button></div><p class="note">Toca un sello para ver el detalle de ese juego.</p>`,
+    logros: secLogros,
+    datos: `<section class="panel suave">${trio([totPart.toLocaleString('es-ES'), 'partidas'], [totVic.toLocaleString('es-ES'), 'victorias'], [mejorR, 'mejor racha'])}${totPart ? barras : '<p class="note">Aún no hay partidas. Cuando juegues, aquí verás tu actividad.</p>'}${barTop}</section>
+      <div class="bar stats-reset-actions"><button class="btn danger" id="stResetAll">Reiniciar todo el diario</button></div><p class="note">Los 🏅 logros ya conseguidos no se pierden al reiniciar el diario.</p>`,
+    millas: `<section class="panel suave"><h3>✈️ Mis millas</h3><p class="note">Las millas son los puntos de JugamiGO: cada partida terminada suma según el juego, el nivel y las ayudas que uses.</p><p class="note">Todavía no están activas. Cuando lo estén, tus partidas de invitado se acreditarán al registrarte y verás aquí tu rango y tu posición en las clasificaciones.</p></section>`
+  };
+  app.innerHTML = dtabs + CUERPO[sec];
+  app.querySelectorAll('[data-sec]').forEach(b => b.addEventListener('click', () => {
+    history.replaceState(null, '', '#/stats?sec=' + b.dataset.sec);
+    vStats(); ponerScroll(0);
+  }));
+  const pc = $('#pasComp'); if (pc) pc.addEventListener('click', async () => {
     try { const m = await import('./core/imagen.js'); await m.compartirImagen({ titulo: 'Mi pasaporte JugamiGO', linea: `${nSell} de ${JUEGOS.length} destinos sellados`, pie: `${totVic.toLocaleString('es-ES')} victorias · mejor racha ${mejorR}`, texto: `Llevo ${nSell} de ${JUEGOS.length} destinos sellados en JugamiGO` }, aviso); }
     catch (e) { console.error(e); aviso('No se pudo crear la imagen'); }
   });
   app.querySelectorAll('[data-stat-cat]').forEach(b => b.addEventListener('click', () => {
-    history.replaceState(null, '', '#/stats?categoria=' + b.dataset.statCat);      // sin cambiar de pantalla: no salta el scroll
+    history.replaceState(null, '', '#/stats?sec=sellos&categoria=' + b.dataset.statCat);      // sin cambiar de pantalla: no salta el scroll
     const y = leerScroll(); vStats(b.dataset.statCat); ponerScroll(y);
   }));
   app.querySelectorAll('[data-stat-juego]').forEach(b => b.addEventListener('click', () => {
@@ -822,7 +837,7 @@ function vStats_(catSel = null) {
     const cerrar = hoja([el('h2', {}, `${j.icono} ${j.nombre}`), (() => { const d = el('div', { class: 'cuerpo' }); d.innerHTML = tabla(j); return d; })(), el('div', { class: 'bar', style: 'margin-top:12px' }, el('button', { class: 'btn on', onclick: () => cerrar() }, 'Cerrar'))]);
     const h = [...document.querySelectorAll('.modal > .hoja')].pop(); if (h) h.classList.add('hoja-img');
   }));
-  $('#stResetCat').addEventListener('click', async () => {
+  const rc = $('#stResetCat'); if (rc) rc.addEventListener('click', async () => {
     const nombre = CATEGORIAS[elegida] || 'esta categoría';
     if (!await confirmar(`¿Borrar únicamente las estadísticas de ${nombre}? Las demás categorías se conservarán.`)) return;
     const idsCategoria = new Set(JUEGOS.filter(j => j.categoria === elegida).map(j => j.id));
@@ -830,7 +845,7 @@ function vStats_(catSel = null) {
     stats.importar(restantes);
     vStats();
   });
-  $('#stResetAll').addEventListener('click', async () => {
+  const ra = $('#stResetAll'); if (ra) ra.addEventListener('click', async () => {
     if (await confirmar('¿Borrar todas las estadísticas de todas las categorías? Esta acción no se puede deshacer.')) { stats.reiniciar(); vStats(); }
   });
 }
@@ -869,67 +884,101 @@ function pintarDescarga(m) {
 }
 if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.tipo) pintarDescarga(e.data); });
 function vAjustes() { const y = leerScroll(); vAjustes_(); if (ruta().v === 'ajustes') ponerScroll(y); }   // al volver a pintar (cambiar un ajuste…) no se salta arriba
+let secAbierta = null, cuerpoAj = null;
 function vAjustes_() {
   nombreVista = 'Ajustes'; cabTxt('JugamiGO');
   const A = aj.ajustes();
-  const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="btn ${A[k] === v ? 'on' : ''}" data-set="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   const TT = stats.todas(), nSell = JUEGOS.filter(j => TT[j.id] && TT[j.id].partidas).length;
+  const SYN = v => v ? 'Sí' : 'No';
+  const filas = SECCIONES_AJ.map(s => `<button type="button" class="aj-fila" data-sec="${s.k}" aria-haspopup="dialog"><span class="aj-ic" aria-hidden="true">${s.ic ? imgIc(s.ic, 26) : 'ℹ️'}</span><span class="aj-t">${s.t}</span><span class="aj-v">${esc(s.valor ? s.valor(A) : '')}</span><span class="aj-fl" aria-hidden="true">›</span></button>`).join('');
   app.innerHTML = `
-  <section class="panel ajcab"><img src="img/marca/portada.webp" alt="" width="64" height="86"><div><h3>Pasaporte del viajero</h3><p class="note">${nSell} de ${JUEGOS.length} destinos sellados · JugamiGO ${VERSION}</p></div></section>
-  <div class="panel"><h3>${imgIc('apariencia')} Apariencia</h3><div class="fila"><span>Tema</span>${seg('tema', [['auto', 'Auto'], ['claro', 'Papel'], ['oscuro', 'Noche']])}</div><p class="note">Papel: crema y tinta, para el día. Noche: cuero azul y oro, para la oscuridad. «Auto» sigue el modo de tu móvil.</p></div>
-  <div class="panel"><h3>${imgIc('sonido')} Sonido y vibración</h3>
-    <div class="fila"><span>Sonidos</span>${seg('sonido', [[true, 'Sí'], [false, 'No']])}</div>
-    <div class="fila"><span>Vibración</span>${seg('vibracion', [[true, 'Sí'], [false, 'No']])}</div></div>
-  <div class="panel"><h3>${imgIc('celebracion')} Victorias</h3>
-    <div class="fila"><span>Celebrar al ganar</span>${seg('celebrar', [[true, 'Sí'], [false, 'No']])}</div></div>
-  <div class="panel"><h3>${imgIc('accesibilidad')} Accesibilidad</h3>
-    <div class="fila fila-col"><span>Tamaño del texto</span>${seg('texto', [['normal', 'Normal'], ['grande', 'Grande'], ['enorme', 'Enorme']])}</div>
-    <div class="fila"><span>Contraste</span>${seg('contraste', [['normal', 'Normal'], ['alto', 'Alto']])}</div>
-    <div class="fila"><span>Animaciones</span>${seg('anim', [[true, 'Sí'], [false, 'No']])}</div>
-    <p class="note">El texto grande afecta a paneles, listas y ayudas. «Animaciones: No» quita los movimientos y la bienvenida.</p></div>
-  <div class="panel"><h3>${imgIc('copia')} Copia de seguridad</h3>
-    <p class="note">Tus partidas y estadísticas se guardan solo en este navegador. Exporta un archivo .json para pasarlas a otro dispositivo o como copia.</p>
-    <p class="note">${(() => { const c = copiaAntigua(); return c.u ? `Última copia: ${new Date(c.u).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}${c.toca ? ' (conviene hacer otra).' : '.'}` : (c.n >= 10 ? 'Todavía no has exportado ninguna copia.' : ''); })()}</p>
-    <div class="bar"><button class="btn on" id="gExp">Exportar .json</button>
-      <label class="btn file">Importar .json<input type="file" id="gImp" accept=".json,application/json"></label>
-      <button class="btn danger" id="gBor">Borrar partidas</button></div>
-    <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div></div>
-  <div class="sep-ruta" role="presentation"></div><div class="panel"><h3>${imgIc('avion')} Modo avión</h3><div class="vacio"><img src="img/marca/vacio-sin-conexion.webp" alt="" width="170" height="155" loading="lazy"></div><p class="note" id="gOff" role="status">Comprobando…</p>
-    <div class="prog" id="gProg" hidden><i></i></div><p class="note" id="gDes" role="status"></p>
-    <div class="bar"><button class="btn on" id="gDesc" hidden>⬇️ Descargar todo</button><button class="btn" id="gCanc" hidden>Cancelar</button><button class="btn" id="gQuit" hidden>Quitar descarga</button></div>
-    <div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div></div>
-  <div class="panel"><h3>Acerca de</h3><p class="note">JugamiGO · ${JUEGOS.length} juegos${enApp() ? '. ✅ Instalada en este dispositivo.' : '.'}</p>
-    ${enApp() ? '' : promptInstalar ? '<div class="bar"><button class="btn on" id="gInst" type="button">📲 Instalar la app</button></div>' : `<p class="note">${esIOS() ? 'Para instalarla: pulsa Compartir ⬆️ y «Añadir a pantalla de inicio».' : 'Puedes instalarla desde el menú del navegador («Instalar app» o «Añadir a pantalla de inicio»).'}</p>`}</div>
+  <section class="panel suave aj-cab"><img src="img/marca/portada.webp" alt="" width="36" height="48"><div><b>Pasaporte del viajero</b><small>${nSell} de ${JUEGOS.length} destinos sellados</small></div></section>
+  <section class="panel suave aj-lista">${filas}</section>
   <p class="version">JugamiGO · versión ${VERSION} · by ChifoRedEs</p>`;
-  app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
-    const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); const y = leerScroll(); vAjustes(); ponerScroll(y);
+  app.querySelectorAll('[data-sec]').forEach(b => b.addEventListener('click', () => abrirSecAj(b.dataset.sec)));
+}
+// Cada ajuste se abre en un panel propio; al cambiar algo se repinta el panel y la lista (con el valor nuevo).
+const segAj = (A, k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="btn ${A[k] === v ? 'on' : ''}" data-set="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+const SECCIONES_AJ = [
+  { k: 'apariencia', ic: 'apariencia', t: 'Apariencia', valor: A => ({ auto: 'Auto', claro: 'Papel', oscuro: 'Noche' })[A.tema] || 'Auto',
+    cuerpo: A => `<div class="fila"><span>Tema</span>${segAj(A, 'tema', [['auto', 'Auto'], ['claro', 'Papel'], ['oscuro', 'Noche']])}</div><p class="note">Papel: crema y tinta, para el día. Noche: cuero azul y oro, para la oscuridad. «Auto» sigue el modo de tu móvil.</p>` },
+  { k: 'sonido', ic: 'sonido', t: 'Sonido y vibración', valor: A => `${A.sonido ? 'Sí' : 'No'} · ${A.vibracion ? 'Sí' : 'No'}`,
+    cuerpo: A => `<div class="fila"><span>Sonidos</span>${segAj(A, 'sonido', [[true, 'Sí'], [false, 'No']])}</div><div class="fila"><span>Vibración</span>${segAj(A, 'vibracion', [[true, 'Sí'], [false, 'No']])}</div>` },
+  { k: 'victorias', ic: 'celebracion', t: 'Victorias', valor: A => A.celebrar ? 'Celebrar: sí' : 'Celebrar: no',
+    cuerpo: A => `<div class="fila"><span>Celebrar al ganar</span>${segAj(A, 'celebrar', [[true, 'Sí'], [false, 'No']])}</div>` },
+  { k: 'accesibilidad', ic: 'accesibilidad', t: 'Accesibilidad', valor: A => `Texto ${({ normal: 'normal', grande: 'grande', enorme: 'enorme' })[A.texto] || 'normal'}${A.contraste === 'alto' ? ' · contraste alto' : ''}`,
+    cuerpo: A => `<div class="fila fila-col"><span>Tamaño del texto</span>${segAj(A, 'texto', [['normal', 'Normal'], ['grande', 'Grande'], ['enorme', 'Enorme']])}</div>
+      <div class="fila"><span>Contraste</span>${segAj(A, 'contraste', [['normal', 'Normal'], ['alto', 'Alto']])}</div>
+      <div class="fila"><span>Animaciones</span>${segAj(A, 'anim', [[true, 'Sí'], [false, 'No']])}</div>
+      <p class="note">El texto grande afecta a paneles, listas y ayudas. «Animaciones: No» quita los movimientos y la bienvenida.</p>` },
+  { k: 'copia', ic: 'copia', t: 'Copia de seguridad', valor: () => { const c = copiaAntigua(); return c.u ? (c.toca ? 'Conviene hacer otra' : 'Al día') : 'Sin copia'; },
+    cuerpo: () => `<p class="note">Tus partidas y estadísticas se guardan solo en este navegador. Exporta un archivo .json para pasarlas a otro dispositivo o como copia.</p>
+      <p class="note">${(() => { const c = copiaAntigua(); return c.u ? `Última copia: ${new Date(c.u).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}${c.toca ? ' (conviene hacer otra).' : '.'}` : (c.n >= 10 ? 'Todavía no has exportado ninguna copia.' : ''); })()}</p>
+      <div class="bar"><button class="btn on" id="gExp">Exportar .json</button>
+        <label class="btn file">Importar .json<input type="file" id="gImp" accept=".json,application/json"></label>
+        <button class="btn danger" id="gBor">Borrar partidas</button></div>
+      <div class="msg ${msgAj.err ? 'err' : 'win'}" role="status">${esc(msgAj.t)}</div>` },
+  { k: 'avion', ic: 'avion', t: 'Modo avión', valor: () => '',
+    cuerpo: () => `<div class="vacio"><img src="img/marca/vacio-sin-conexion.webp" alt="" width="150" height="137" loading="lazy"></div><p class="note" id="gOff" role="status">Comprobando…</p>
+      <div class="prog" id="gProg" hidden><i></i></div><p class="note" id="gDes" role="status"></p>
+      <div class="bar"><button class="btn on" id="gDesc" hidden>⬇️ Descargar todo</button><button class="btn" id="gCanc" hidden>Cancelar</button><button class="btn" id="gQuit" hidden>Quitar descarga</button></div>
+      <div class="bar" id="gOffBar" hidden><button class="btn" id="gOffRe">🔄 Volver a intentarlo</button></div>` },
+  { k: 'acerca', ic: null, t: 'Acerca de', valor: () => 'v' + VERSION,
+    cuerpo: () => `<p class="note">JugamiGO · ${JUEGOS.length} juegos${enApp() ? '. ✅ Instalada en este dispositivo.' : '.'}</p>
+      ${enApp() ? '' : promptInstalar ? '<div class="bar"><button class="btn on" id="gInst" type="button">📲 Instalar la app</button></div>' : `<p class="note">${esIOS() ? 'Para instalarla: pulsa Compartir ⬆️ y «Añadir a pantalla de inicio».' : 'Puedes instalarla desde el menú del navegador («Instalar app» o «Añadir a pantalla de inicio»).'}</p>`}
+      <p class="note">Versión ${VERSION} · by ChifoRedEs</p>` }
+];
+function abrirSecAj(k) {
+  const s = SECCIONES_AJ.find(x => x.k === k); if (!s) return;
+  secAbierta = k;
+  const m = modal(s.t, '');
+  cuerpoAj = m.cuerpo;
+  const bCerrar = m.cuerpo.parentElement && [...m.cuerpo.parentElement.querySelectorAll('button')].pop();
+  const fin = () => { secAbierta = null; cuerpoAj = null; };
+  if (bCerrar) bCerrar.addEventListener('click', fin);
+  pintarSecAj();
+}
+function pintarSecAj() {
+  const s = SECCIONES_AJ.find(x => x.k === secAbierta); if (!s || !cuerpoAj) return;
+  cuerpoAj.innerHTML = s.cuerpo(aj.ajustes());
+  cuerpoAj.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.v; aj.set(b.dataset.set, v === 'true' ? true : v === 'false' ? false : v); pintarSecAj(); refrescarListaAj();
   }));
-  const bi = $('#gInst'); if (bi) bi.addEventListener('click', instalar);
-  estadoSinConexion(); swEnviar({ tipo: 'estado-descarga' });
-  $('#gDesc').addEventListener('click', () => { $('#gDesc').hidden = true; $('#gDes').textContent = 'Empezando la descarga…'; swEnviar({ tipo: 'descargar-todo' }); });
-  $('#gCanc').addEventListener('click', () => { swEnviar({ tipo: 'cancelar-descarga' }); $('#gDes').textContent = 'Cancelando…'; });
-  $('#gQuit').addEventListener('click', () => { $('#gQuit').hidden = true; swEnviar({ tipo: 'borrar-descarga' }); });
-  $('#gOffRe').addEventListener('click', async () => {
-    $('#gOff').textContent = 'Descargando los juegos… deja la app abierta unos segundos.';
-    try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); else await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }); } catch { /* sin red */ }
-    setTimeout(estadoSinConexion, 4000);
-  });
-  $('#gExp').addEventListener('click', exportar);
-  $('#gBor').addEventListener('click', async () => {
-    if (!await confirmar('¿Borrar todas las partidas guardadas en este navegador? (Las estadísticas se conservan.)')) return;
-    JUEGOS.forEach(j => store.borrarJuego(j.id)); msgAj = { t: 'Partidas borradas.', err: false }; vAjustes();
-  });
-  $('#gImp').addEventListener('change', e => {
-    const f = e.target.files[0]; if (!f) return;
-    const rd = new FileReader();
-    rd.onload = async () => {
-      try { const got = await importar(JSON.parse(rd.result)); msgAj = { t: got.length ? `Importado: ${got.join(', ')}.` : 'Copia importada (sin partidas guardadas).', err: false }; }
-      catch (err) { msgAj = { t: err instanceof SyntaxError ? 'El archivo no es un JSON válido.' : err.message, err: true }; }
-      vAjustes();
-    };
-    rd.onerror = () => { msgAj = { t: 'No se pudo leer el archivo.', err: true }; vAjustes(); };
-    rd.readAsText(f);
-  });
+  ligarSecAj();
+}
+function refrescarListaAj() { if (ruta().v === 'ajustes') { const y = leerScroll(); vAjustes_(); ponerScroll(y); } }
+function ligarSecAj() {
+  const $$ = q => cuerpoAj.querySelector(q);
+  const bi = $$('#gInst'); if (bi) bi.addEventListener('click', instalar);
+  if ($$('#gOff')) {
+    estadoSinConexion(); swEnviar({ tipo: 'estado-descarga' });
+    $$('#gDesc').addEventListener('click', () => { $$('#gDesc').hidden = true; $$('#gDes').textContent = 'Empezando la descarga…'; swEnviar({ tipo: 'descargar-todo' }); });
+    $$('#gCanc').addEventListener('click', () => { swEnviar({ tipo: 'cancelar-descarga' }); $$('#gDes').textContent = 'Cancelando…'; });
+    $$('#gQuit').addEventListener('click', () => { $$('#gQuit').hidden = true; swEnviar({ tipo: 'borrar-descarga' }); });
+    $$('#gOffRe').addEventListener('click', async () => {
+      $$('#gOff').textContent = 'Descargando los juegos… deja la app abierta unos segundos.';
+      try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); else await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }); } catch { /* sin red */ }
+      setTimeout(estadoSinConexion, 4000);
+    });
+  }
+  if ($$('#gExp')) {
+    $$('#gExp').addEventListener('click', exportar);
+    $$('#gBor').addEventListener('click', async () => {
+      if (!await confirmar('¿Borrar todas las partidas guardadas en este navegador? (Las estadísticas se conservan.)')) return;
+      JUEGOS.forEach(j => store.borrarJuego(j.id)); msgAj = { t: 'Partidas borradas.', err: false }; pintarSecAj(); refrescarListaAj();
+    });
+    $$('#gImp').addEventListener('change', e => {
+      const f = e.target.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = async () => {
+        try { const got = await importar(JSON.parse(rd.result)); msgAj = { t: got.length ? `Importado: ${got.join(', ')}.` : 'Copia importada (sin partidas guardadas).', err: false }; }
+        catch (err) { msgAj = { t: err instanceof SyntaxError ? 'El archivo no es un JSON válido.' : err.message, err: true }; }
+        pintarSecAj(); refrescarListaAj();
+      };
+      rd.onerror = () => { msgAj = { t: 'No se pudo leer el archivo.', err: true }; pintarSecAj(); };
+      rd.readAsText(f);
+    });
+  }
 }
 // Aviso suave de copia de seguridad: ≥10 partidas y ≥14 días sin copia (o nunca), como mucho una vez por sesión
 function copiaAntigua() {
