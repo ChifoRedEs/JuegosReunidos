@@ -1,6 +1,6 @@
 // Registro de juegos. Para añadir uno: crea js/games/<id>/index.js y añade una línea aquí.
 // Los módulos se cargan solo al abrir el juego (import dinámico).
-export const CATEGORIAS = { logica: 'Lógica', tablero: 'Tablero', cartas: 'Cartas', palabras: 'Palabras', arcade: 'Arcade' };
+export const CATEGORIAS = { logica: 'Lógica', tablero: 'Estrategia', cartas: 'Cartas', palabras: 'Palabras', arcade: 'Arcade' };
 
 export const JUEGOS = [
   { id: 'sudoku',   v1: 'sudoku',   nombre: 'Sudoku',   icono: '🔢', color: '#2B6CB0', categoria: 'logica',  descripcion: '4 niveles por técnica, notas y reto del día.', cargar: () => import('./games/sudoku/index.js') },
@@ -60,8 +60,8 @@ export const JUEGOS = [
   { id: 'triviaquesitos', nombre: 'Trivia Quesitos', icono: '🧠', color: '#0FB3C9', categoria: 'palabras', descripcion: 'Preguntas tipo test y definiciones.', cargar: () => import('./games/triviaquesitos/index.js') },
   { id: 'partxis',  v1: 'parchis',  nombre: 'Partxis',  icono: '🎲', color: '#2E9E5B', categoria: 'tablero', descripcion: '2 a 4 jugadores o por parejas, personas o CPU.',               cargar: () => import('./games/partxis/index.js') },
   { id: 'magnateurbano', nombre: 'Magnate Urbano', icono: '💼', color: '#0E9F8E', categoria: 'tablero', descripcion: 'Compra calles por temas y arruina a tus rivales.', cargar: () => import('./games/magnateurbano/index.js') },
-  { id: 'bingolive', nombre: 'Bingo Live', icono: '🎱', color: '#E8453C', categoria: 'tablero', descripcion: 'Bingo de 90 bolas para sala, con bombo en 3D y bolas cantadas con voz.', cargar: () => import('./games/bingolive/index.js') },
-  { id: 'bingomobile', nombre: 'Bingo Mobile', icono: '📱', color: '#E8453C', categoria: 'tablero', descripcion: 'Bingo de 90 bolas en el móvil: tus cartones en 3D, CPU, fichas y apuestas.', cargar: () => import('./games/bingomobile/index.js') },
+  { id: 'bingolive', nombre: 'Bingo Live', icono: '🎱', color: '#E8453C', categoria: 'arcade', descripcion: 'Bingo de 90 bolas para sala, con bombo en 3D y bolas cantadas con voz.', cargar: () => import('./games/bingolive/index.js') },
+  { id: 'bingomobile', nombre: 'Bingo Mobile', icono: '📱', color: '#E8453C', categoria: 'arcade', descripcion: 'Bingo de 90 bolas en el móvil: tus cartones en 3D, CPU, fichas y apuestas.', cargar: () => import('./games/bingomobile/index.js') },
   { id: 'hotel', nombre: 'Hotel', icono: '🏨', color: '#E0457B', categoria: 'tablero', descripcion: 'Compra terrenos, levanta hoteles por fases y cobra las noches. Tablero 3D.', cargar: () => import('./games/hotel/index.js') },
 ];
 

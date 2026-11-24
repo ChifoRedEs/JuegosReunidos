@@ -73,7 +73,7 @@ const leerScroll = () => scrollInterno() ? app.scrollTop : scrollY;
 const ponerScroll = y => { if (scrollInterno()) app.scrollTop = y; else scrollTo(0, y); };
 const RUTAS = [
   ['cat-logica', 'img:ruta-logica', 'Lógica', '#/cat/logica'],
-  ['cat-tablero', 'img:ruta-tablero', 'Tablero', '#/cat/tablero'],
+  ['cat-tablero', 'img:ruta-tablero', 'Estrategia', '#/cat/tablero'],
   ['cat-cartas', 'img:ruta-cartas', 'Cartas', '#/cat/cartas'],
   ['cat-palabras', 'img:ruta-palabras', 'Palabras', '#/cat/palabras'],
   ['cat-arcade', 'img:ruta-arcade', 'Arcade', '#/cat/arcade'],
