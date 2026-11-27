@@ -12,18 +12,18 @@ const ABORTO = Symbol('aborto');                 // al salir del juego a mitad d
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550, dado: 900 }, rapida: { nombre: 'Rápida', paso: 45, bot: 200, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0, enPausa = false, D3 = null, tokD = 0;
 // sesion: cambia al salir del juego o empezar otra partida; los turnos que estuvieran a medias se cancelan (ABORTO)
-let cfg = { jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'n']], bote: true, subasta: true, dinero: 1600, rondas: 0, vel: 'normal' };
+let cfg = { fich: null, jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'n']], bote: true, subasta: true, dinero: 1600, rondas: 0, vel: 'normal' };
 
-/* ---------- fichas de los jugadores: figura con peana y color (🎨 Apariencia → Fichas) ---------- */
+/* ---------- fichas de los jugadores: figura con peana y color, cada uno la suya (botón «Fichas» de la pantalla de inicio) ---------- */
 const FIGS = FIGURAS.filter(f => f.dir !== 'p');                 // solo animales y vehículos (tienen peana)
 const DEF_FIG = ['leon', 'gato', 'perro', 'tigre'], DEF_COL = ['rojo-m', 'azul-m', 'verde-m', 'amarillo-m'];
 const COL_OPC = COLORES.filter(c => IDS_POCOS.includes(c.id) && !['blanco', 'plata', 'gris'].includes(c.id));
 const hexId = id => (COLORES.find(c => c.id === id) || COLORES[0]).hex;
-const figDe = k => { const v = asp && asp.valores['jfig' + (k + 1)]; return FIGS.some(f => f.id === v) ? v : DEF_FIG[k]; };
+const figDe = k => { const v = cfg.fich && cfg.fich[k] && cfg.fich[k][0]; return FIGS.some(f => f.id === v) ? v : DEF_FIG[k]; };
 function paleta() {                                                // color efectivo de cada asiento (nunca dos iguales)
   const usados = new Set(), out = [];
   for (let k = 0; k < 4; k++) {
-    const v = asp && asp.valores['jcol' + (k + 1)]; let h = COL_OPC.some(c => c.id === v) ? hexId(v) : hexId(DEF_COL[k]);
+    const v = cfg.fich && cfg.fich[k] && cfg.fich[k][1]; let h = COL_OPC.some(c => c.id === v) ? hexId(v) : hexId(DEF_COL[k]);
     if (usados.has(h)) h = [...DEF_COL.map(hexId), ...COL_OPC.map(c => c.hex)].find(x => !usados.has(x));
     usados.add(h); out.push(h);
   }
@@ -33,16 +33,30 @@ let PAL = ['#E5383B', '#2F6BFF', '#0FB56A', '#F5A60B'];
 const colK = k => PAL[k] || '#2F6BFF';
 const col = p => colK(p.k);
 const figuraFicha = (k, cls = '') => `<i class="figp mtfg ${cls}" data-fig="${figDe(k)}" data-c="${colK(k)}"></i>`;
-function repintarFig(raiz = document) { raiz.querySelectorAll('.mtfg').forEach(e => { fondoFigura(e, e.dataset.fig, e.dataset.c, () => repintarFig(raiz)); }); }
+function repintarFig(raiz = document) {      // cada figura se pide una sola vez y se pinta ella sola cuando está teñida (sin repintar todas: evita avalanchas)
+  raiz.querySelectorAll('.mtfg').forEach(e => {
+    const k = e.dataset.fig + '|' + e.dataset.c; if (e.dataset.k === k && e.classList.contains('fig')) return; e.dataset.k = k;
+    fondoFigura(e, e.dataset.fig, e.dataset.c, () => { if (e.dataset.k === k) fondoFigura(e, e.dataset.fig, e.dataset.c); });
+  });
+}
 const sinTexto = html => String(html).replace(/<[^>]*>/g, '');
-function gruposFichas() {
-  const g = [];
-  for (let k = 0; k < 4; k++) {
-    g.push({ clave: 'jfig' + (k + 1), etiqueta: `Jugador ${k + 1} · Figura`, titulo: 'Fichas', icono: '🧩', ventana: true, forma: 'figura', def: DEF_FIG[k], opciones: FIGS.map(f => ({ id: f.id, nombre: f.nombre, img: `img/fichas/${f.dir}/${f.id}.webp` })) });
-    g.push({ clave: 'jcol' + (k + 1), etiqueta: `Jugador ${k + 1} · Color`, titulo: 'Fichas', icono: '🎨', def: DEF_COL[k], soloColor: true, opciones: COL_OPC.map(c => ({ id: c.id, nombre: c.nombre, sw: [c.hex] })) });
-  }
-  g[0].sub = g; g.slice(1).forEach(x => { x.oculto = true; }); g[0].titulo = 'Fichas';
-  return g;
+const colorDe = k => { const v = cfg.fich && cfg.fich[k] && cfg.fich[k][1]; return COL_OPC.some(c => c.id === v) ? v : DEF_COL[k]; };
+// Ventana «Fichas» de un jugador: figura (animales y vehículos) y color; solo cambia la suya.
+async function elegirFicha(k) {
+  const cuerpo = document.createElement('div'); let f = figDe(k), c = colorDe(k);
+  const otros = new Set([0, 1, 2, 3].filter(i => i !== k && cfg.jug[i][1] !== 'n').map(i => colorDe(i)));
+  const dibujar = () => {
+    cuerpo.innerHTML = `<div class="mtfichab grande" style="--c:${hexId(c)}"><i class="figp mtfg" data-fig="${f}" data-c="${hexId(c)}"></i></div>
+      <p class="mtsub">Figura</p><div class="mtfigs">${FIGS.map(x => `<button type="button" class="mtfb ${x.id === f ? 'on' : ''}" data-f="${x.id}" aria-label="${esc(x.nombre)}" title="${esc(x.nombre)}"><i class="figp mtfg" data-fig="${x.id}" data-c="${hexId(c)}"></i></button>`).join('')}</div>
+      <p class="mtsub">Color</p><div class="mtcols">${COL_OPC.map(x => `<button type="button" class="mtcb ${x.id === c ? 'on' : ''}" data-k="${x.id}" aria-label="${esc(x.nombre)}" title="${esc(x.nombre)}${otros.has(x.id) ? ' (en uso)' : ''}" style="background:${x.hex}">${otros.has(x.id) ? '<small>•</small>' : ''}</button>`).join('')}</div>`;
+    repintarFig(cuerpo);
+  };
+  cuerpo.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.f) f = b.dataset.f; else if (b.dataset.k) c = b.dataset.k; else return; dibujar(); });
+  dibujar();
+  const r = await dialogo(`Ficha de ${esc(cfg.jug[k][0] || 'Jugador ' + (k + 1))}`, cuerpo, ['Guardar', 'Cancelar'], { cancelable: true });
+  if (r !== 'Guardar') return;
+  cfg.fich = cfg.fich || DEF_FIG.map((x, i) => [x, DEF_COL[i]]); cfg.fich[k] = [f, c];
+  api.setPref('cfg', cfg); PAL = paleta(); setup();
 }
 
 /* ---------- validación / resumen ---------- */
@@ -58,11 +72,11 @@ export function resumen(d) {
 /* ---------- ciclo de vida ---------- */
 export async function mount(r, a) {
   api = a; root = r; vivo = true; jugando = false; pendiente = null;
-  asp = api.aspecto([{ ...grupoTableroDN('Tablero') }, ...gruposFichas()], () => { PAL = paleta(); temaDado(); if (G && root.querySelector('#mtJug')) { tokensFig(); pintar(); } else if (!G) setup(); });
+  asp = api.aspecto([{ ...grupoTableroDN('Tablero') }], () => { PAL = paleta(); temaDado(); if (G && root.querySelector('#mtJug')) { tokensFig(); pintar(); } else if (!G) setup(); });
   PAL = paleta();
   await api.css(new URL('./magnateurbano.css', import.meta.url));
   const c0 = api.pref('cfg', null);
-  if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
+  if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, fich: Array.isArray(c0.fich) && c0.fich.length === 4 ? c0.fich.map(x => [String(x && x[0]), String(x && x[1])]) : null, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
   const g = api.cargar(); reg = g ? g.reg : false;
   sesion++; G = g ? Partida.desde(g.g, crearGanchos(sesion)) : null;
   root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
@@ -98,14 +112,14 @@ function setup() {
   G = null; jugando = false; quitarDado();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra billetes de destino, terminales y servicios del aeropuerto; con todos los destinos de una zona mejora tus vuelos y cobra más a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
-    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${colK(i)}"><span class="mtfichab" aria-hidden="true">${figuraFicha(i)}</span><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${colK(i)}"><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><button type="button" class="btn mtfbtn" data-ficha="${i}" aria-label="Fichas del jugador ${i + 1}"><span class="mtfichab" aria-hidden="true">${figuraFicha(i)}</span>Fichas</button><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
     <div class="bar"><span class="lbl">Dinero inicial</span><div class="seg">${[1200, 1600, 2000].map(v => `<button class="btn ${cfg.dinero === v ? 'on' : ''}" data-dinero="${v}">${v} M</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la bancarrota'], [20, '20 rondas'], [40, '40 rondas']].map(([v, l]) => `<button class="btn ${cfg.rondas === v ? 'on' : ''}" data-rondas="${v}">${l}</button>`).join('')}</div></div>
     <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
     <label class="chk"><input type="checkbox" data-op="bote" ${cfg.bote ? 'checked' : ''}><span><b>Bote del Paraíso Fiscal</b>: los impuestos, multas y fianzas se acumulan y se los lleva quien caiga en el Paraíso Fiscal.</span></label>
     <label class="chk"><input type="checkbox" data-op="subasta" ${cfg.subasta ? 'checked' : ''}><span><b>Subastas</b>: si quien cae en un destino libre no lo compra, se subasta entre todos.</span></label>
     ${pieMenu({ deshabilitado: n < 2 })}
-    <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos. La figura y el color de cada ficha se eligen en 🎨 Apariencia → Fichas.`}</p>`;
+    <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos. Cada jugador elige su figura y color con el botón «Fichas».`}</p>`;
   repintarFig(root);
 }
 async function nuevaSetup() {
@@ -394,6 +408,7 @@ function verJugador(i) {
 function alEscribir(e) { const i = e.target.dataset.name; if (i != null) { cfg.jug[+i][0] = e.target.value; api.setPref('cfg', cfg); } }
 function clic(e) {
   const b = e.target.closest('button,[data-op]'); if (!b) return; const d = b.dataset;
+  if (d.ficha != null) return elegirFicha(+d.ficha);
   if (d.tipo) { const [i, t] = d.tipo.split(','); cfg.jug[+i][1] = t; api.setPref('cfg', cfg); return setup(); }
   if (d.dinero) { cfg.dinero = +d.dinero; api.setPref('cfg', cfg); return setup(); }
   if (d.rondas) { cfg.rondas = +d.rondas; api.setPref('cfg', cfg); return setup(); }

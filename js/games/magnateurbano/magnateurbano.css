@@ -115,3 +115,19 @@
 .mtmodal .mtelige .btn{display:flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left;font-size:12.5px;padding:6px 8px;min-height:36px}
 .mtmodal .mtelige .btn i{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
 .mtmodal .mtelige .btn.on{background:var(--tb-acc);color:var(--mt-btn,#fff)}
+
+/* Botón «Fichas» de la pantalla de inicio y ventana de elección de ficha */
+.juego-magnateurbano .jugfila .nom{flex:1 1 90px}
+.juego-magnateurbano .mtfbtn{display:inline-flex;align-items:center;gap:6px;padding:3px 12px 3px 4px;flex:none}
+.juego-magnateurbano .mtfbtn .mtfichab{width:36px;height:36px;border-width:2px}
+.juego-magnateurbano .mtfbtn .mtfichab .mtfg{width:28px;height:28px}
+.mtmodal .mtfichab.grande{width:84px;height:84px;margin:0 auto 4px;border-radius:50%;border:4px solid var(--c);background:var(--tb-cell);display:grid;place-items:center}
+.mtmodal .mtfichab.grande .mtfg{width:68px;height:68px}
+.mtmodal .mtsub{margin:8px 0 4px;font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--tb-ink);opacity:.7}
+.mtmodal .mtfigs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.mtmodal .mtfb{aspect-ratio:1;display:grid;place-items:center;padding:2px;border-radius:10px;border:2px solid var(--tb-line);background:var(--tb-cell);cursor:pointer}
+.mtmodal .mtfb .mtfg{width:100%;height:100%}
+.mtmodal .mtfb.on{border-color:var(--tb-acc);background:var(--tb-alt);box-shadow:0 0 0 2px var(--tb-acc)}
+.mtmodal .mtcols{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.mtmodal .mtcb{aspect-ratio:1;border-radius:50%;border:3px solid var(--tb-line);cursor:pointer;padding:0;color:#fff;font-size:14px;line-height:1}
+.mtmodal .mtcb.on{border-color:var(--tb-acc);box-shadow:0 0 0 3px var(--tb-acc)}
