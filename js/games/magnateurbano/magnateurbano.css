@@ -126,7 +126,7 @@
 .mtmodal .mtsub{margin:8px 0 4px;font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--tb-ink);opacity:.7}
 .mtmodal .mtfigs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .mtmodal .mtfb{aspect-ratio:1;display:grid;place-items:center;padding:2px;border-radius:10px;border:2px solid var(--tb-line);background:var(--tb-cell);cursor:pointer}
-.mtmodal .mtfb .mtfg{width:100%;height:100%}
+.mtmodal .mtfb .figp{width:100%;height:100%}
 .mtmodal .mtfb.on{border-color:var(--tb-acc);background:var(--tb-alt);box-shadow:0 0 0 2px var(--tb-acc)}
 .mtmodal .mtcols{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
 .mtmodal .mtcb{aspect-ratio:1;border-radius:50%;border:3px solid var(--tb-line);cursor:pointer;padding:0;color:#fff;font-size:14px;line-height:1}

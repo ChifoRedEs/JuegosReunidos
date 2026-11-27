@@ -2,7 +2,7 @@
 import { pieMenu } from '../../core/pie.js';
 import { $, esc, esperar } from '../../core/dom.js';
 import { grupoTableroDN, coloresTablero } from '../../core/aspectos.js';
-import { FIGURAS, fondoFigura } from '../../core/figuras.js';
+import { FIGURAS, fondoFigura, urlFigura } from '../../core/figuras.js';
 import { COLORES, IDS_POCOS } from '../../core/fichas.js';
 import { crearDado3D } from '../../core/dado3d.js';
 import { ZONAS, TIPOS, NIVELES, MULT, SALARIO, FIANZA, MEJORAS, JETS, TERMINAL, SERVICIO, CASILLAS, MAZOS, MAZO_NOMBRE, IMG, TOTAL } from './datos.js';
@@ -36,7 +36,7 @@ const figuraFicha = (k, cls = '') => `<i class="figp mtfg ${cls}" data-fig="${fi
 function repintarFig(raiz = document) {      // cada figura se pide una sola vez y se pinta ella sola cuando está teñida (sin repintar todas: evita avalanchas)
   raiz.querySelectorAll('.mtfg').forEach(e => {
     const k = e.dataset.fig + '|' + e.dataset.c; if (e.dataset.k === k && e.classList.contains('fig')) return; e.dataset.k = k;
-    fondoFigura(e, e.dataset.fig, e.dataset.c, () => { if (e.dataset.k === k) fondoFigura(e, e.dataset.fig, e.dataset.c); });
+    if (!fondoFigura(e, e.dataset.fig, e.dataset.c, () => { if (e.dataset.k === k) fondoFigura(e, e.dataset.fig, e.dataset.c); })) e.style.backgroundImage = `url("${urlFigura(e.dataset.fig)}")`;   // mientras se tiñe, la figura neutra (nunca un hueco)
   });
 }
 const sinTexto = html => String(html).replace(/<[^>]*>/g, '');
@@ -47,7 +47,7 @@ async function elegirFicha(k) {
   const otros = new Set([0, 1, 2, 3].filter(i => i !== k && cfg.jug[i][1] !== 'n').map(i => colorDe(i)));
   const dibujar = () => {
     cuerpo.innerHTML = `<div class="mtfichab grande" style="--c:${hexId(c)}"><i class="figp mtfg" data-fig="${f}" data-c="${hexId(c)}"></i></div>
-      <p class="mtsub">Figura</p><div class="mtfigs">${FIGS.map(x => `<button type="button" class="mtfb ${x.id === f ? 'on' : ''}" data-f="${x.id}" aria-label="${esc(x.nombre)}" title="${esc(x.nombre)}"><i class="figp mtfg" data-fig="${x.id}" data-c="${hexId(c)}"></i></button>`).join('')}</div>
+      <p class="mtsub">Figura</p><div class="mtfigs">${FIGS.map(x => `<button type="button" class="mtfb ${x.id === f ? 'on' : ''}" data-f="${x.id}" aria-label="${esc(x.nombre)}" title="${esc(x.nombre)}"><i class="figp" style="background-image:url('${urlFigura(x.id)}')"></i></button>`).join('')}</div>
       <p class="mtsub">Color</p><div class="mtcols">${COL_OPC.map(x => `<button type="button" class="mtcb ${x.id === c ? 'on' : ''}" data-k="${x.id}" aria-label="${esc(x.nombre)}" title="${esc(x.nombre)}${otros.has(x.id) ? ' (en uso)' : ''}" style="background:${x.hex}">${otros.has(x.id) ? '<small>•</small>' : ''}</button>`).join('')}</div>`;
     repintarFig(cuerpo);
   };
