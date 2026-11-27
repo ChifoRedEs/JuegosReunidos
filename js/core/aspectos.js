@@ -127,7 +127,7 @@ export const OCULTAS = {
   rummy: ['Color de Fichas'], juegodelaoca: ['Estilos de Dados', ...COLOR_FICHAS], elrosco: ['Colores del rosco'], encadenadas: ['Colores'], numerosyletras: ['Fichas'], palabrascruzadas: ['Fichas'],
   serpiente: ['Color de la serpiente'], quantix: ['Color del trazo'], bloques: ['Colores de las piezas', 'Estilo de los bloques'], catapulta: ['Parábola'], rompeladrillos: ['Estilo de pala'],
   airhockey: ['Tu mazo', 'Mazo rival', 'Disco'], billar: ['Bandas', 'Bolas', 'Taco'], guerraorugas: ['Terreno'], triviaquesitos: ['Fichas de los jugadores'],
-  partxis: ['Estilos de Dados', ...COLOR_FICHAS], magnateurbano: ['Estilos de Dados', 'Color de Fichas', 'Estilos de Fichas'], hotel: ['Estilos de Dados', ...COLOR_FICHAS],
+  partxis: ['Estilos de Dados', ...COLOR_FICHAS], magnateurbano: ['Estilos de Dados'], hotel: ['Estilos de Dados', ...COLOR_FICHAS],
   bingolive: ['Bolas · Color'], bingomobile: ['Bolas · Color', 'Color de las marcas'],
 };
 const sinIcono = t => String(t || '').replace(/^[^A-Za-zÁ-ú]+/, '').trim().toLowerCase();

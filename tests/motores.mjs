@@ -19,8 +19,8 @@ import * as PB from '../js/games/pinball/motor.js';
 import * as DV from '../js/games/daleotravez/motor.js';
 import { TEMAS as DVT } from '../js/games/daleotravez/temas.js';
 import * as DIC from '../js/core/diccionario.js';
-import { Partida as MTPartida, validar as validarMT, MAZOS as MTMAZOS } from '../js/games/magnateurbano/motor.js';
-import { CASILLAS as MTC, GRUPOS as MTG } from '../js/games/magnateurbano/datos.js';
+import { Partida as MTPartida, validar as validarMT } from '../js/games/magnateurbano/motor.js';
+import { CASILLAS as MTC, ZONAS as MTZ, MAZOS as MTMAZOS, LIBRE as MTLIBRE, CONTROL as MTCONTROL, PRISION as MTPRISION, MEJORAS as MTMEJ, JETS as MTJETS } from '../js/games/magnateurbano/datos.js';
 import { calificar } from '../js/games/sudoku/generador.js';
 import { cuadradoLatino } from '../js/games/calcudoku/generador.js';
 import { conSemilla, mulberry32 } from '../js/core/semilla.js';
@@ -478,29 +478,40 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
 { assert.ok(Object.keys(FL.FLOTAS).length >= 6); for (const L of LRosco) assert.ok(BRosco[L].length >= 16, L);
   ok('Batalla Naval: 6 flotas · El Rosco: 16 palabras por letra'); }
 
-// ---- Magnate Urbano ----
-{ assert.equal(MTC.length, 40); for (const s of MTC) if (s.g) assert.ok(MTG[s.g]);
-  const mudo = { render() {}, log() {}, async paso() {}, async dados() {}, flash() {}, async pregunta(t, x, b) { return b[0]; }, async carta() {}, async comprar() { return true; }, async puja() { return 0; }, async aceptar() { return false; }, async gestionar() {}, async fin() {} };
+// ---- Aeropuerto (id magnateurbano) ----
+{ assert.equal(MTC.length, 36); for (const s of MTC) if (s.g) assert.ok(MTZ[s.g]);
+  assert.equal(MTC.filter(s => s.tipo === 'esquina').length, 4); assert.equal(MTMAZOS.souvenirs.length, 13); assert.equal(MTMAZOS.retrasos.length, 13);
+  const mudo = { render() {}, log() {}, async paso() {}, async dados() {}, flash() {}, color: () => '#2F6BFF', async pregunta(t, x, b) { return b[0]; }, async carta() {}, async aterriza() {}, async comprar() { return true; }, async puja() { return 0; }, async aceptar() { return false; }, async casilla() { return 8; }, async gestionar() {}, async fin() {} };
   let terminadas = 0;
   for (let k = 0; k < 40; k++) {
-    const n = 2 + k % 3, g = new MTPartida(Array.from({ length: n }, (_, i) => ({ nombre: 'CPU ' + i, ficha: '🤖', color: '#2F6BFF', bot: true })), mudo, { rondas: k % 2 ? 60 : 0 });
+    const n = 2 + k % 3, g = new MTPartida(Array.from({ length: n }, (_, i) => ({ nombre: 'CPU ' + i, k: i, bot: true })), mudo, { rondas: k % 2 ? 60 : 0 });
     let t = 0;
     while (!g.terminada && t++ < 3000) {
       await g.jugarTurno();
-      assert.ok(g.oficinas >= 0 && g.sedes >= 0 && g.jug.every(p => p.dinero >= 0));
-      for (const m of Object.keys(MTMAZOS)) assert.equal(g.mazos[m].length + g.jug.reduce((a, p) => a + p.pases.filter(x => x === m).length, 0), MTMAZOS[m].length);   // los pases no se duplican
+      assert.ok(g.mejoras >= 0 && g.jets >= 0 && g.mejoras <= MTMEJ && g.jets <= MTJETS && g.jug.every(p => p.dinero >= 0));
+      for (const m of Object.keys(MTMAZOS)) assert.equal(g.mazos[m].length + g.jug.reduce((a, p) => a + p.libres.filter(x => x === m).length, 0), MTMAZOS[m].length);   // las tarjetas «sal de la Prisión» no se duplican
       if (t % 40 === 0) { const v = validarMT(JSON.parse(JSON.stringify(g))); assert.ok(v); assert.equal(JSON.stringify(MTPartida.desde(v, mudo)), JSON.stringify(g)); }
     }
     if (g.terminada) { terminadas++; assert.ok(g.ganador >= 0 && !g.jug[g.ganador].fuera); }
   }
-  assert.ok(terminadas >= 38, 'partidas terminadas: ' + terminadas);
-  const g = new MTPartida([{ nombre: 'A', ficha: '🦊', color: '#FF4757' }, { nombre: 'B', ficha: '🤖', color: '#2F6BFF', bot: true }], mudo);
+  assert.ok(terminadas >= 36, 'partidas terminadas: ' + terminadas);
+  const g = new MTPartida([{ nombre: 'A', k: 0 }, { nombre: 'B', k: 1 }], { ...mudo, async aceptar() { return true; } });
   g.c[1].dueno = 0;
-  assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: -50, pide: [], pideM: 0 }), 'dinero negativo');
-  assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [3], daM: 0, pide: [], pideM: 0 }), 'empresa ajena');
-  assert.ok(g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: 10, pide: [], pideM: 0 }));
-  assert.equal(validarMT({ ...JSON.parse(JSON.stringify(g)), oficinas: 3 }), null);
-  ok('Magnate Urbano: 40 partidas entre CPU (con y sin límite de rondas), guardado de ida y vuelta, pases sin duplicar y tratos validados'); }
+  assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: -50, daL: [], pide: [], pideM: 0, pideL: [] }), 'dinero negativo');
+  assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [3], daM: 0, daL: [], pide: [], pideM: 0, pideL: [] }), 'destino ajeno');
+  assert.ok(!g.ofertaValida(g.jug[0], g.jug[1], { da: [], daM: 0, daL: ['souvenirs'], pide: [], pideM: 0, pideL: [] }), 'tarjeta que no tiene');
+  assert.ok(g.ofertaValida(g.jug[0], g.jug[1], { da: [1], daM: 10, daL: [], pide: [], pideM: 0, pideL: [] }));
+  assert.equal(validarMT({ ...JSON.parse(JSON.stringify(g)), mejoras: 3 }), null);
+  // Solo el Control manda a la Prisión; caer en ella de paso es una visita libre
+  const A = g.jug[0], B = g.jug[1];
+  B.pos = MTPRISION; await g.caer(B, 0); assert.ok(!B.espera, 'visita libre');
+  A.pos = MTCONTROL; await g.caer(A, 0); assert.ok(A.espera && A.pos === MTPRISION, 'el Control retiene');
+  // Tarjetas «sal de la Prisión»: se negocian, se usan y vuelven al final de su mazo
+  B.libres.push('retrasos'); g.mazos.retrasos = g.mazos.retrasos.filter(i => i !== MTLIBRE.retrasos);
+  assert.ok(await g.proponer(A, B, { da: [], daM: 40, daL: [], pide: [], pideM: 0, pideL: ['retrasos'] })); assert.deepEqual(A.libres, ['retrasos']); assert.equal(B.libres.length, 0);
+  g.h.pregunta = async (t, x, b) => b.find(o => /tarjeta/i.test(String(o))) || b[0];
+  await g.jugarTurno(); assert.ok(!A.espera && A.libres.length === 0); assert.equal(g.mazos.retrasos.at(-1), MTLIBRE.retrasos);
+  ok('Aeropuerto: 40 partidas entre CPU, guardado de ida y vuelta, tarjetas sin duplicar, visita libre/Control y tratos con tarjetas validados'); }
 
 // ---- Diccionario español (juegos de palabras) ----
 { const info = JSON.parse(readFileSync(new URL('../data/diccionario/indice.json', import.meta.url), 'utf8'));

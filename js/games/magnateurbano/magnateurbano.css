@@ -1,75 +1,103 @@
-/* Magnate Urbano · tablero 11×11 con los colores de la app (variables --tb-* de base.css según 🎨 Apariencia) */
-.juego-magnateurbano{--mt-l:min(calc(100vw - 28px),500px)}             /* ancho real del tablero (main tiene 14px de margen a cada lado) */
-.juego-magnateurbano .mtfichab{width:44px;height:44px;border-radius:50%;border:3px solid var(--c);background:var(--card);font-size:24px;line-height:1;flex:none}
+/* Aeropuerto · tablero vertical 7×13 con 36 casillas de imagen. Los marcos, líneas, botones y dados toman el color de 🎨 Apariencia → Tablero (variables --tb-* de base.css). */
+.juego-aeropuerto,.juego-magnateurbano{--mt-btn:#fff}
+.juego-magnateurbano[data-tablero^="neon"]{--mt-btn:var(--tb-cell)}
+.juego-magnateurbano .mtfichab{width:46px;height:46px;border-radius:50%;border:3px solid var(--c);background:var(--tb-cell);flex:none;display:grid;place-items:center}
+.juego-magnateurbano .mtfichab .mtfg{width:36px;height:36px}
+.mtfg{display:inline-block;background:center/contain no-repeat;flex:none}
+.mtfg.mini{width:22px;height:22px}
 
-/* jugadores */
-.juego-magnateurbano .mtjug{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin:6px 0}
-.juego-magnateurbano .mtj{position:relative;display:grid;grid-template-columns:auto 1fr auto;column-gap:6px;align-items:center;background:var(--card);border:2px solid var(--line);border-left:6px solid var(--c);border-radius:12px;padding:5px 8px;font-size:12px}
-.juego-magnateurbano .mtji{grid-row:span 2;font-size:22px}
-.juego-magnateurbano .mtj b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.juego-magnateurbano .mtdin{font:800 15px 'Baloo 2',system-ui,sans-serif;font-variant-numeric:tabular-nums}
-.juego-magnateurbano .mtj small{grid-column:2/4;color:var(--mut);font-weight:700}
-.juego-magnateurbano .mtchips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:2px;min-height:4px;margin-top:3px}
-.juego-magnateurbano .mtchips i{width:11px;height:8px;border-radius:2px}
-.juego-magnateurbano .mtchips i.h{opacity:.35}
-.juego-magnateurbano .mtj.turno{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
+/* botones y marcos con el color del Tablero */
+.juego-magnateurbano .btn.on,.mtmodal .btn.on{background:var(--tb-acc);border-color:var(--tb-strong);color:var(--mt-btn,#fff);box-shadow:0 3px 0 var(--tb-strong)}
+.mtmodal[data-tablero^="neon"] .btn.on{color:var(--tb-cell)}
+.juego-magnateurbano .btn:not(.on):not(:disabled){border-color:var(--tb-line)}
+.juego-magnateurbano .btn:disabled,.mtmodal .btn:disabled{opacity:.5}
+
+/* jugadores: una fila de 4 fichas pequeñas; al tocarlas se ve su patrimonio */
+.juego-magnateurbano .mtjug{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:5px;margin:6px 0}
+.juego-magnateurbano .mtj{position:relative;display:flex;align-items:center;gap:4px;min-width:0;height:42px;padding:2px 5px;background:var(--tb-cell);color:var(--tb-ink);border:2px solid var(--c);border-radius:11px;font:inherit;text-align:left;cursor:pointer}
+.juego-magnateurbano .mtji{flex:none;display:grid;place-items:center;width:26px;height:26px}
+.juego-magnateurbano .mtji .mtfg{width:26px;height:26px}
+.juego-magnateurbano .mtjt{display:flex;flex-direction:column;min-width:0;line-height:1.05}
+.juego-magnateurbano .mtj b{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.juego-magnateurbano .mtj small{font-size:10.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.juego-magnateurbano .mtj.turno{background:color-mix(in srgb,var(--c) 26%,var(--tb-cell));box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 38%,transparent)}
 .juego-magnateurbano .mtj.fuera{opacity:.45}
 .juego-magnateurbano .mtj.fuera b{text-decoration:line-through}
 .juego-magnateurbano .mtj.gana{border-color:var(--yel);box-shadow:0 0 0 3px color-mix(in srgb,var(--yel) 45%,transparent)}
-.juego-magnateurbano .mtflash{position:absolute;right:8px;top:-8px;font-weight:800;font-size:14px;animation:mtflash 1.2s forwards;pointer-events:none}
+.juego-magnateurbano .mtflash{position:absolute;right:6px;top:-8px;font-weight:800;font-size:13px;animation:mtflash 1.2s forwards;pointer-events:none;text-shadow:0 1px 2px var(--tb-cell)}
 .juego-magnateurbano .mtflash.pos{color:var(--ok)}.juego-magnateurbano .mtflash.neg{color:var(--red)}
 @keyframes mtflash{to{transform:translateY(-16px);opacity:0}}
 
-/* tablero */
-.juego-magnateurbano .mttab{width:var(--mt-l);aspect-ratio:1;margin:6px auto;display:grid;grid-template-columns:1.5fr repeat(9,1fr) 1.5fr;grid-template-rows:1.5fr repeat(9,1fr) 1.5fr;gap:2px;padding:3px;background:var(--tb-line);border-radius:16px;box-shadow:0 10px 24px rgba(40,30,120,.18);font-size:clamp(6.5px,calc(var(--mt-l) / 50),10px)}
-.juego-magnateurbano .mtc{position:relative;display:flex;min-width:0;min-height:0;overflow:hidden;padding:0;border:0;border-radius:4px;background:var(--tb-cell);color:var(--tb-ink);font:700 1em/1.1 Nunito,sans-serif;box-shadow:inset 0 0 0 .35em var(--dueno,transparent)}
-.juego-magnateurbano .mtc.ab{flex-direction:column}.juego-magnateurbano .mtc.ar{flex-direction:column-reverse}.juego-magnateurbano .mtc.iz{flex-direction:row-reverse}.juego-magnateurbano .mtc.de{flex-direction:row}
-.juego-magnateurbano .mtc.esq{background:var(--tb-alt)}
-.juego-magnateurbano .mtc.noticias,.juego-magnateurbano .mtc.tendencias,.juego-magnateurbano .mtc.impuesto{background:var(--tb-soft)}
-/* banda de color = 4 huecos (2×2) para las oficinas; la sede central ocupa los 4. Con edificios la banda crece para que los iconos se vean. */
-.juego-magnateurbano .mtbanda{flex:0 0 26%;display:grid;grid-template:1fr 1fr/1fr 1fr;background:var(--g);color:#fff;line-height:1;overflow:hidden;container-type:size;transition:flex-basis .2s}
-.juego-magnateurbano .mtc.con .mtbanda{flex-basis:42%}
-.juego-magnateurbano .mtbanda i{display:grid;place-items:center;min-width:0;min-height:0;font-style:normal;font-size:min(40cqw,40cqh);overflow:hidden;text-shadow:0 1px 1px rgba(0,0,0,.35)}
-.juego-magnateurbano .mtbanda i.mtsede{grid-area:1/1/3/3;font-size:min(84cqw,84cqh)}
-.juego-magnateurbano .mtnom{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15em;text-align:center;padding:.1em;min-width:0;overflow-wrap:anywhere;hyphens:auto;letter-spacing:-.02em}
-.juego-magnateurbano .mtc.iz .mtnom,.juego-magnateurbano .mtc.de .mtnom{font-size:.92em}
-.juego-magnateurbano .mtc.ab .mtnom,.juego-magnateurbano .mtc.ar .mtnom{font-size:.8em}   /* casillas estrechas: los nombres de hasta 8 letras caben sin partirse */
-.juego-magnateurbano .mtnom i{font-style:normal;font-size:1.6em;line-height:1}
-.juego-magnateurbano .mtc.esq .mtnom{font-size:1.15em}
-.juego-magnateurbano .mtc.esq .mtnom i{font-size:2.3em}
-.juego-magnateurbano .mtc.hip{background-image:repeating-linear-gradient(45deg,transparent 0 5px,color-mix(in srgb,var(--tb-ink) 14%,transparent) 5px 8px)}
-.juego-magnateurbano .mtc.hip .mtnom{opacity:.5}
-.juego-magnateurbano .mttk{position:absolute;inset:auto 0 1px;display:flex;flex-wrap:wrap;justify-content:center;gap:1px;pointer-events:none}
-.juego-magnateurbano .mtficha{display:grid;place-items:center;width:2.1em;height:2.1em;border-radius:50%;background:var(--c);border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.4);font-size:1.25em;line-height:1;z-index:2}
+/* tablero: rejilla 7 columnas × 13 filas; las 36 casillas son iguales (5:4) y la franja de color va siempre abajo */
+.juego-magnateurbano .mttab{--mt-l:min(calc(100vw - 28px),440px);width:var(--mt-l);margin:6px auto;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:3px;background:var(--tb-line);border:3px solid var(--tb-acc);border-radius:16px;box-shadow:0 10px 24px rgba(20,25,70,.22)}
+.juego-magnateurbano .mtc{position:relative;aspect-ratio:5/4;min-width:0;min-height:0;overflow:hidden;padding:0;border:0;border-radius:5px;background:#222;container-type:inline-size;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(10,14,40,.55)}
+.juego-magnateurbano .mtc .f{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.juego-magnateurbano .mtc .pl{position:absolute;left:0;right:0;bottom:0;height:36%;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;font-size:14.8cqw;line-height:.98;padding:0 1cqw;letter-spacing:-.1px;white-space:nowrap}
+.juego-magnateurbano .mtc .pl.d{font-size:13cqw}
+.juego-magnateurbano .mtc .ow{position:absolute;top:0;left:0;width:0;height:0;border-style:solid;border-width:30cqw 30cqw 0 0;border-color:var(--dueno,transparent) transparent transparent transparent;filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff)}
+.juego-magnateurbano .mtc .up{position:absolute;top:1px;right:1px;width:27cqw;height:27cqw;object-fit:contain;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.juego-magnateurbano .mtc .up[hidden]{display:none}
+.juego-magnateurbano .mtc .tk{position:absolute;left:0;right:0;top:3%;height:62%;display:flex;justify-content:center;align-items:flex-end;pointer-events:none;z-index:2}
+.juego-magnateurbano .mtficha{width:44cqw;height:52cqw;margin:0 -7cqw;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
 .juego-magnateurbano .mtficha.salta{animation:mtsalta .16s}
-@keyframes mtsalta{50%{transform:translateY(-35%) scale(1.25)}}
+@keyframes mtsalta{50%{transform:translateY(-30%) scale(1.2)}}
+.juego-magnateurbano .mtc.hip .f{filter:grayscale(.9) brightness(.8)}
+.juego-magnateurbano .mtc.hip::after{content:"HIP";position:absolute;top:30%;left:50%;transform:translateX(-50%);padding:0 1.5cqw;border-radius:3px;background:rgba(0,0,0,.65);color:#fff;font:900 11cqw/1.3 Nunito,sans-serif}
 
-/* centro */
-.juego-magnateurbano .mtcentro{grid-area:2/2/11/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--mt-l) / 80);padding:4%;border-radius:12px;background:radial-gradient(circle at 50% 35%,var(--tb-alt),var(--tb-cell));color:var(--tb-ink);text-align:center}
-.juego-magnateurbano .mttit{font:800 calc(var(--mt-l) / 15)/.95 'Baloo 2',system-ui,sans-serif;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
-.juego-magnateurbano .mtturno{font-size:14px;line-height:1.25}
-.juego-magnateurbano .mtturno small{color:var(--mut);font-size:12px}
-.juego-magnateurbano .mtacc{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
-.juego-magnateurbano .mtacc .btn{min-height:36px;padding:5px 10px;font-size:13px}
-.juego-magnateurbano .mtbote{color:var(--mut);font-weight:800;font-size:12px}
+/* centro: imagen, los dos mazos enfrentados y los mandos del turno */
+.juego-magnateurbano .mtcentro{grid-area:2/2/13/7;position:relative;contain:size;overflow:hidden;border-radius:8px;border:1px solid var(--tb-line);background:var(--tb-alt) url(../../../img/aeropuerto/centro.webp) center/cover no-repeat}
+.juego-magnateurbano .mtcentro .dorso{position:absolute;width:24%;border-radius:5px;box-shadow:0 3px 8px rgba(0,0,0,.45);pointer-events:none}
+.juego-magnateurbano .mtcentro .dorso.r{left:4%;top:2.5%;transform:rotate(172deg)}
+.juego-magnateurbano .mtcentro .dorso.s{right:4%;bottom:2.5%;transform:rotate(-8deg)}
+.juego-magnateurbano .mtmid{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 6px}
+.juego-magnateurbano .mtmid .dadozona{width:100%;margin:0}
+.juego-magnateurbano .mtmid .dado3d{width:100%;height:104px}
+.juego-magnateurbano .mtmid .dado3d-aviso{display:none}
+.juego-magnateurbano .mtst{background:color-mix(in srgb,var(--tb-cell) 92%,transparent);color:var(--tb-ink);border-radius:12px;padding:6px 12px;text-align:center;font-weight:800;font-size:13px;line-height:1.25;box-shadow:0 2px 6px rgba(0,0,0,.2);max-width:100%}
+.juego-magnateurbano .mtst small{display:block;color:var(--mut);font-weight:700;font-size:11.5px}
+.juego-magnateurbano .mtgo{min-height:40px;padding:6px 20px;font-size:15px;max-width:100%}
+.juego-magnateurbano .mtbote{font-weight:800}
+
+.juego-magnateurbano .mtacc{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0}
+.juego-magnateurbano .mtacc .btn{flex:1 1 130px;max-width:210px;min-height:40px;font-size:14px}
 .juego-magnateurbano .mtmsg{text-align:center;font-size:14.5px;min-height:24px}
 .juego-magnateurbano .mtmsg.neg{color:var(--red)}.juego-magnateurbano .mtmsg.pos{color:var(--ok)}
 .juego-magnateurbano .mtlog{list-style:none;margin:6px 0;padding:8px 12px;max-height:200px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;font-size:13px}
 .juego-magnateurbano .mtlog li{padding:4px 0;border-bottom:1px solid var(--line)}
 .juego-magnateurbano .mtlog li:last-child{border-bottom:0}
-.juego-magnateurbano .mtlog li.neg{color:var(--red)}.juego-magnateurbano .mtlog li.pos{color:var(--ok)}.juego-magnateurbano .mtlog li.compra{color:var(--purple)}
-@media(max-width:420px){.juego-magnateurbano .mtc.iz .mtnom,.juego-magnateurbano .mtc.de .mtnom{font-size:.85em}.juego-magnateurbano .mtacc .btn{font-size:12px;padding:4px 8px}.juego-magnateurbano .mtturno{font-size:12.5px}}
+.juego-magnateurbano .mtlog li.neg{color:var(--red)}.juego-magnateurbano .mtlog li.pos{color:var(--ok)}.juego-magnateurbano .mtlog li.compra{color:var(--tb-strong)}
 @media(prefers-reduced-motion:reduce){.juego-magnateurbano *{animation:none!important}}
 
-/* diálogos (van en <body>, fuera de .juego-magnateurbano) */
-.mtmodal .mtcarta{border:2px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:8px}
-.mtmodal .mtcab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px;background:var(--g);color:#fff;font:800 20px 'Baloo 2',system-ui,sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-.mtmodal .mtcab small{font:800 11.5px Nunito,sans-serif;opacity:.95}
-.mtmodal .mtcarta .tabla{margin:0}
-.mtmodal .mtcarta .tabla td{padding:5px 12px;border-top:1px solid var(--line)}
-.mtmodal .mtcartatxt{font-size:17px;line-height:1.4;padding:14px;border-radius:14px;text-align:center}
-.mtmodal .mtcartatxt.mtnoticias{background:color-mix(in srgb,var(--blue) 14%,var(--card))}
-.mtmodal .mtcartatxt.mttendencias{background:color-mix(in srgb,var(--orange) 16%,var(--card))}
+/* ---------- ventanas (van en <body>, fuera del juego: llevan copiadas las variables del Tablero) ---------- */
+.mtmodal.tj{align-items:center}
+.mtmodal.tj .hoja{width:min(350px,calc(100vw - 28px));padding:0;border-radius:20px;border:4px solid var(--tb-acc);box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 2px var(--tb-line);overflow-x:hidden}
+.mtmodal.tj .hoja .cuerpo{font-size:14px}
+.mtmodal.tj .mtbotones{display:flex;gap:8px;padding:0 12px 12px;margin:0}
+.mtmodal.tj .mtbotones .btn{flex:1}
+.mtk{background:var(--card);color:var(--ink)}
+.mtk .mti{position:relative;line-height:0;container-type:inline-size;overflow:hidden;width:100%}
+.mtk .mti img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
+.mtk .mtban{position:absolute;left:0;right:0;bottom:0;height:20%;padding:0 5cqw;background:var(--c);color:var(--t);display:flex;flex-direction:column;justify-content:center;line-height:1.05}
+.mtk .mtban::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:45%;background:linear-gradient(to top,var(--c) 8%,transparent);pointer-events:none}
+.mtk .mtban b{display:block;white-space:nowrap;font-size:8cqw;font-weight:900;letter-spacing:-.2px;line-height:1.05;position:relative}
+.mtk .mtban span{display:block;white-space:nowrap;font-weight:800;font-size:4.9cqw;letter-spacing:.4px;text-transform:uppercase;opacity:.9;margin-top:.8cqw;line-height:1.05;position:relative}
+.mtk .bd{padding:10px 12px 12px;display:grid;gap:8px}
+.mtk .bd p{margin:0;font-weight:700;font-size:17px;line-height:1.3}
+.mtk .bd p.mtnota{font-size:12.5px;color:var(--mut)}
+.mtk .tb div{display:flex;align-items:center;gap:8px;padding:2px 4px;border-bottom:1px dashed var(--line);font-weight:700;font-size:12.5px}
+.mtk .tb div:last-child{border:0}
+.mtk .tb div.act{background:color-mix(in srgb,var(--tb-acc) 20%,transparent);border-radius:6px}
+.mtk .tb img{width:20px;height:20px;object-fit:contain;border-radius:50%}
+.mtk .tb span{width:20px;flex:none}
+.mtk .tb em{margin-left:auto;font-style:normal;font-weight:900}
+.mtk .ft{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:11.5px;color:var(--mut)}
+.mtk .big{font-weight:900;font-size:22px;text-align:center;line-height:1.15;min-height:46px;display:flex;align-items:center;justify-content:center}
+.mtk .big.neg{color:var(--red)}.mtk .big.pos{color:var(--ok)}
+.mtk .mtdu{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.mtk .mtdu i{width:12px;height:12px;border-radius:50%;flex:none}
+.mtmodal .mtsaldo{text-align:center;font-size:12.5px;color:var(--mut);margin:-4px 12px 8px;font-weight:700}
+.mtmodal .mtpuja{padding:0 12px 10px}
+.mtmodal .mtpuja .pedir{width:100%;font-size:16px;padding:7px 9px}
 .mtmodal .mtges{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--line)}
 .mtmodal .mtges>i{width:12px;height:12px;border-radius:3px;flex:none}
 .mtmodal .mtges>span{flex:1;font-weight:800}
@@ -78,28 +106,12 @@
 .mtmodal .mttrato{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .mtmodal .mttrato>div{display:flex;flex-direction:column;gap:4px;max-height:44vh;overflow:auto}
 .mtmodal .mtop{display:flex;align-items:center;gap:6px;font-size:13px}
-.mtmodal .mtop input{width:20px;height:20px;accent-color:var(--purple)}
+.mtmodal .mtop input{width:20px;height:20px;accent-color:var(--tb-acc)}
 .mtmodal .mtop i{width:10px;height:10px;border-radius:2px;flex:none}
+.mtmodal .mtop i.tj{background:#7A3FC8}
 .mtmodal .mtdinero{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:800;margin-top:6px}
 .mtmodal .mtdinero .pedir{font-size:15px;padding:6px 8px}
-.juego-magnateurbano .mtc.ab.tendencias .mtnom,.juego-magnateurbano .mtc.ar.tendencias .mtnom,.juego-magnateurbano .mtc.ab.noticias .mtnom,.juego-magnateurbano .mtc.ar.noticias .mtnom{font-size:.7em;overflow-wrap:normal}
-.juego-magnateurbano .mtc.ab .mtnom.largo,.juego-magnateurbano .mtc.ar .mtnom.largo{font-size:.68em;overflow-wrap:normal}   /* nombres largos (SoundCloud…) en una sola línea */
-.juego-magnateurbano .mtc.con.iz .mtnom,.juego-magnateurbano .mtc.con.de .mtnom{font-size:.78em}   /* con la banda ampliada queda menos sitio para el nombre */
-
-/* vista 3D: panel de turno bajo el tablero (en 2D estos mandos van en el centro del tablero) */
-.juego-magnateurbano .mtpanel{display:flex;flex-direction:column;align-items:center;gap:8px;margin:8px 0;padding:10px;background:var(--card);border:2px solid var(--line);border-radius:var(--r-l);box-shadow:var(--sombra-s)}
-.juego-magnateurbano .mtpanel > .btn.on{width:100%;max-width:340px}
-.juego-magnateurbano .mtpanel .mtacc{width:100%}
-.juego-magnateurbano .mtpanel .mtacc .btn{flex:1 1 130px;max-width:200px;min-height:var(--alto-btn);font-size:14px}
-.juego-magnateurbano .mtpanel .mtturno{font-size:15px}
-
-/* imágenes IA (img/magnate) en lugar de emojis */
-.juego-magnateurbano .mi{width:1em;height:1em;object-fit:contain;vertical-align:middle;pointer-events:none}
-.juego-magnateurbano .mtnom i .mi{width:1.15em;height:1.15em}
-.juego-magnateurbano .mtc.esq .mtnom i .mi{width:1.1em;height:1.1em}
-.juego-magnateurbano .mtbanda i .mi{width:100%;height:100%}
-.juego-magnateurbano .mtsede .mi{width:100%;height:100%}
-.juego-magnateurbano .mi.mig{display:block;width:56px;height:56px;margin:0 auto 8px}
-.juego-magnateurbano .mtficha.fig{background-color:#fff;background-position:center;background-size:80%;background-repeat:no-repeat;border-color:var(--c);color:transparent}
-.juego-magnateurbano .mtfichab .figp{width:30px;height:30px}
-.juego-magnateurbano .mtji .figp{width:1.5em;height:1.5em}
+.mtmodal .mtelige{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:50vh;overflow:auto;margin-top:6px}
+.mtmodal .mtelige .btn{display:flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left;font-size:12.5px;padding:6px 8px;min-height:36px}
+.mtmodal .mtelige .btn i{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+.mtmodal .mtelige .btn.on{background:var(--tb-acc);color:var(--mt-btn,#fff)}

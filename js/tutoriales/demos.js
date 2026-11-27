@@ -106,11 +106,12 @@ DEMOS.mus = { h: '<p>Una mano de ejemplo, lance a lance:</p>', marcos: [
   [R('Apuestas', '<span class="grande">pasar · envidar · quiero · no quiero · órdago</span>'), 'En cada lance se apuesta; si la apuesta no se acepta se lleva 1 tanto quien envidó. El <b>órdago</b> se lo juega todo.'],
 ] };
 DEMOS.magnateurbano = { h: '<p>Un turno típico:</p>', marcos: [
-  [R('Tiras los dados', '<span class="grande">🎲🎲 → 7</span>'), 'Tiras los dados y mueves tu ficha por el tablero.'],
-  [R('Casilla libre', '<span class="grande">🏢 Solar · 160M</span>'), 'Caes en un <b>solar libre</b>: puedes comprarlo. Si no, sale a <b>subasta</b>.'],
-  [R('Sector completo', '<span class="grande">🏢🏢🏢 → oficinas 🏬</span>'), 'Con todo un sector, construyes <b>oficinas</b> (hasta 4) y luego una <b>sede central</b>: la renta se dispara.'],
-  [R('Casilla ajena', '<span class="grande">💸 Pagas renta</span>'), 'Si caes en una propiedad ajena, pagas la <b>renta</b> al dueño.'],
-  [R('Vuelta', '<span class="grande">💰 Ronda de Inversión +220M</span>'), 'Cada vuelta cobras la Ronda de Inversión. Si te quedas sin dinero puedes hipotecar o hacer 🤝 tratos; si no, <b>quiebras</b>.'],
+  [R('Tiras los dados', '<span class="grande">🎲🎲 → 7</span>'), 'Tiras los dados y tu ficha viaja por el aeropuerto.'],
+  [R('Destino libre', '<span class="grande">🌍 Goa · 260 M</span>'), 'Caes en un <b>destino libre</b>: puedes comprar el billete. Si no, sale a <b>subasta</b>.'],
+  [R('Zona completa', '<span class="grande">🌍🌍🌍 → ✈️ Primera Clase</span>'), 'Con todos los destinos de una zona, mejoras los vuelos: <b>Turista, Premium, Ejecutiva, Primera</b> y por fin el <b>Jet Privado</b>.'],
+  [R('Billete ajeno', '<span class="grande">💸 Pagas alquiler</span>'), 'Si caes en un billete de otro jugador, le pagas el <b>alquiler</b>.'],
+  [R('Control de Seguridad', '<span class="grande">🔒 → Prisión Aduanera</span>'), 'Solo el <b>Control</b> te manda a la Prisión: pagas la fianza, usas una tarjeta o sacas dobles.'],
+  [R('Embarque', '<span class="grande">💰 +200 M</span>'), 'Cada vez que pasas por Embarque cobras 200 M. Si te quedas sin dinero, hipoteca o negocia 🤝; si no, <b>quiebras</b>.'],
 ] };
 DEMOS.hotel = { h: '<p>Un turno típico:</p>', marcos: [
   [R('Tiras', '<span class="grande">🎲 → avanzas</span>'), 'Empiezas con 18.000. Tiras el dado y avanzas.'],
