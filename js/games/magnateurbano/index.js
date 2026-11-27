@@ -146,7 +146,7 @@ function armar() {
   root.innerHTML = `<div class="mtjug" id="mtJug"></div>
     <div class="mttab" id="mtTab">
       ${G.c.map((s, i) => { const [f, c] = celda(i), t = tiraDe(s), dos = s.corto.includes('|'); return `<button type="button" class="mtc ${s.tipo}" data-c="${i}" style="grid-row:${f};grid-column:${c}" aria-label="${esc(s.nombre)}">
-        <img class="f" src="${IMG(s.img)}" alt="" draggable="false"><i class="ow"></i><img class="up" alt="" hidden draggable="false"><span class="tk"></span>
+        <img class="f" src="${IMG(s.img)}" alt="" draggable="false"><i class="ow"></i><span class="ins up" hidden><img alt="" draggable="false"></span><span class="tk"></span>
         <span class="pl${dos ? ' d' : ''}" style="background:${t.color};color:${t.tinta}">${esc(s.corto).replace('|', '<br>')}</span></button>`; }).join('')}
       <div class="mtcentro" id="mtCentro">
         <img class="dorso r" src="${IMG('dorso-retrasos')}" alt="Mazo de Retrasos" draggable="false"><img class="dorso s" src="${IMG('dorso-souvenirs')}" alt="Mazo de Souvenirs" draggable="false">
@@ -183,7 +183,7 @@ function pintar() {
   G.c.forEach((s, i) => {
     const d = root.querySelector(`.mtc[data-c="${i}"]`), o = s.dueno === null ? null : G.jug[s.dueno];
     d.style.setProperty('--dueno', o ? col(o) : 'transparent'); d.classList.toggle('propia', !!o); d.classList.toggle('hip', s.hip);
-    const up = d.querySelector('.up'); if (up) { const n = NIVELES[s.of]; up.hidden = !(s.tipo === 'destino' && s.of > 0); if (!up.hidden) up.src = IMG(n.id); }
+    const up = d.querySelector('.up'); if (up) { const n = NIVELES[s.of]; up.hidden = !(s.tipo === 'destino' && s.of > 0); if (!up.hidden) { up.firstChild.src = IMG(n.id); up.setAttribute('style', zoomIns(n.id)); } }
     d.setAttribute('aria-label', `${s.nombre}${s.precio ? ` · ${s.precio} M` : ''}${o ? ` · de ${o.nombre}` : ''}${s.hip ? ' · hipotecado' : ''}${s.of ? ` · ${NIVELES[s.of].nombre}` : ''}`);
   });
   const act = G.terminada ? -1 : G.turno;
@@ -233,7 +233,11 @@ const autoMs = () => (vel().bot ? Math.max(1100, vel().bot * 2.4) : 500);
 
 /* ---------- fichas emergentes ---------- */
 function cabecera(img, nombre, sub, t, ar) { return `<div class="mti" style="aspect-ratio:${ar}"><img src="${img}" alt="" draggable="false"><div class="mtban" style="--c:${t.color};--t:${t.tinta}"><b>${esc(nombre)}</b><span>${esc(sub)}</span></div></div>`; }
-const fila = (img, a, b, cl = '') => `<div class="${cl}">${img ? `<img src="${IMG(img)}" alt="">` : '<span></span>'}${a}<em>${b}</em></div>`;
+// Insignias de mejora: la pegatina ocupa poco de su lienzo blanco; se agranda y centra dentro del círculo (escala, desplazamiento % )
+const ZOOM = { 'm-turista': [1.3, .3, -1.6], 'm-premium': [1.23, .5, -.3], 'm-ejecutiva': [1.25, .8, -1.3], 'm-primera': [1.23, .3, -1.8], 'm-jet': [1.3, -1, 2.1] };
+const zoomIns = id => { const z = ZOOM[id] || [1, 0, 0]; return `--s:${z[0]};--x:${z[1]}%;--y:${z[2]}%`; };
+const insignia = (id, cl = '') => `<span class="ins ${cl}" style="${zoomIns(id)}"><img src="${IMG(id)}" alt=""></span>`;
+const fila = (img, a, b, cl = '') => `<div class="${cl}">${img ? insignia(img, 'gr') : '<span class="ins gr vac"></span>'}${a}<em>${b}</em></div>`;
 function dueno(s) { if (!G || s.dueno === null) return ''; const o = G.jug[s.dueno]; return `<div class="mtdu"><i style="background:${col(o)}"></i>De <b>${esc(o.nombre)}</b>${s.hip ? ' · hipotecado' : ''}</div>`; }
 function fichaCasilla(s, extra = {}) {
   const t = tiraDe(s), cab = cabecera(IMG(s.img), s.nombre, s.sub, t, '5/4');

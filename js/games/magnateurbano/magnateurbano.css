@@ -35,7 +35,7 @@
 .juego-magnateurbano .mtc .pl{position:absolute;left:0;right:0;bottom:0;height:36%;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;font-size:14.8cqw;line-height:.98;padding:0 1cqw;letter-spacing:-.1px;white-space:nowrap}
 .juego-magnateurbano .mtc .pl.d{font-size:13cqw}
 .juego-magnateurbano .mtc .ow{position:absolute;top:0;left:0;width:0;height:0;border-style:solid;border-width:30cqw 30cqw 0 0;border-color:var(--dueno,transparent) transparent transparent transparent;filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff)}
-.juego-magnateurbano .mtc .up{position:absolute;top:1px;right:1px;width:27cqw;height:27cqw;object-fit:contain;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.juego-magnateurbano .mtc .up{position:absolute;top:1px;right:1px;width:27cqw;height:27cqw;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
 .juego-magnateurbano .mtc .up[hidden]{display:none}
 .juego-magnateurbano .mtc .tk{position:absolute;left:0;right:0;top:3%;height:62%;display:flex;justify-content:center;align-items:flex-end;pointer-events:none;z-index:2}
 .juego-magnateurbano .mtficha{width:44cqw;height:52cqw;margin:0 -7cqw;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
@@ -87,8 +87,8 @@
 .mtk .tb div{display:flex;align-items:center;gap:8px;padding:2px 4px;border-bottom:1px dashed var(--line);font-weight:700;font-size:12.5px}
 .mtk .tb div:last-child{border:0}
 .mtk .tb div.act{background:color-mix(in srgb,var(--tb-acc) 20%,transparent);border-radius:6px}
-.mtk .tb img{width:20px;height:20px;object-fit:contain;border-radius:50%}
-.mtk .tb span{width:20px;flex:none}
+.mtk .tb .gr{width:46px;height:46px;flex:none}
+.mtk .tb div{font-size:14px}
 .mtk .tb em{margin-left:auto;font-style:normal;font-weight:900}
 .mtk .ft{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:11.5px;color:var(--mut)}
 .mtk .big{font-weight:900;font-size:22px;text-align:center;line-height:1.15;min-height:46px;display:flex;align-items:center;justify-content:center}
@@ -131,3 +131,8 @@
 .mtmodal .mtcols{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
 .mtmodal .mtcb{aspect-ratio:1;border-radius:50%;border:3px solid var(--tb-line);cursor:pointer;padding:0;color:#fff;font-size:14px;line-height:1}
 .mtmodal .mtcb.on{border-color:var(--tb-acc);box-shadow:0 0 0 3px var(--tb-acc)}
+
+/* Insignia de mejora: círculo recortado con la pegatina ampliada */
+.ins{display:block;position:relative;overflow:hidden;border-radius:50%;background:#fff;flex:none}
+.ins img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(var(--s,1)) translate(var(--x,0),var(--y,0))}
+.ins.vac{display:none}
