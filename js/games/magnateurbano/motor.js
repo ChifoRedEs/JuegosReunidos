@@ -93,7 +93,7 @@ export class Partida {
   // jugadores: [{ nombre, k (asiento 0-3), bot }]
   constructor(jugadores, h, reglas = {}) {
     this.h = h; this.reglas = { ...REGLAS, ...reglas };
-    this.jug = jugadores.map(j => ({ nombre: j.nombre, k: j.k, bot: !!j.bot, dinero: this.reglas.dinero, pos: EMBARQUE, espera: false, intentos: 0, libres: [], pierde: false, huelga: false, fuera: false }));
+    this.jug = jugadores.map(j => ({ nombre: j.nombre, k: j.k, bot: !!j.bot, dinero: this.reglas.dinero, pos: EMBARQUE, espera: false, intentos: 0, libres: [], gratis: 0, pierde: false, huelga: false, fuera: false }));
     this.c = CASILLAS.map((s, i) => ({ ...s, id: i, dueno: null, of: 0, hip: false }));     // estado propio, sin tocar CASILLAS
     this.mazos = { souvenirs: barajar(MAZOS.souvenirs.map((_, i) => i)), retrasos: barajar(MAZOS.retrasos.map((_, i) => i)) };
     this.turno = 0; this.ronda = 1; this.terminada = false; this.ganador = -1; this.motivo = '';
@@ -136,8 +136,25 @@ export class Partida {
   puedeMejorarGratis(s) {
     return s.tipo === 'destino' && s.dueno !== null && s.of < 5 && (s.of < 4 ? this.mejoras > 0 : this.jets > 0) && this.tieneZona(s.dueno, s.g) && this.zona(s).every(x => !x.hip && x.of >= s.of);
   }
-  puedeMejorar(s) { return this.puedeMejorarGratis(s) && this.jug[s.dueno].dinero >= ZONAS[s.g].mejora; }
-  mejorar(s, gratis = false) { if (!gratis) this.jug[s.dueno].dinero -= ZONAS[s.g].mejora; if (s.of < 4) this.mejoras--; else { this.jets--; this.mejoras += 4; } s.of++; }
+  puedeMejorar(s) { const p = s.dueno !== null && this.jug[s.dueno]; return this.puedeMejorarGratis(s) && (p.gratis > 0 || p.dinero >= ZONAS[s.g].mejora); }
+  mejorar(s, gratis = false) { const p = this.jug[s.dueno]; if (!gratis && p.gratis > 0) { p.gratis--; gratis = true; } if (!gratis) p.dinero -= ZONAS[s.g].mejora; if (s.of < 4) this.mejoras--; else { this.jets--; this.mejoras += 4; } s.of++; }
+  // Plan de mejoras de una zona: «objetivo» = {índice de casilla: nivel}. Se prueba con las reglas reales y, si no es válido o no se aplica, todo vuelve a como estaba.
+  planear(p, objetivo, aplicar = false) {
+    const i = this.idx(p), ids = Object.keys(objetivo).map(Number), ss = ids.map(k => this.c[k]);
+    if (!ss.every(s => s.dueno === i && s.tipo === 'destino')) return { ok: false, coste: 0 };
+    const snap = { m: this.mejoras, j: this.jets, d: p.dinero, g: p.gratis, of: ss.map(s => s.of) }, antes = p.dinero;
+    const fin = ok => { const r = { ok, coste: antes - p.dinero, gratis: snap.g - p.gratis }; if (!ok || !aplicar) { this.mejoras = snap.m; this.jets = snap.j; p.dinero = snap.d; p.gratis = snap.g; ss.forEach((s, k) => { s.of = snap.of[k]; }); } return r; };
+    for (let n = 0; n < 60; n++) {                                   // primero se baja (de arriba abajo) y después se sube (de abajo arriba)
+      const b = ss.filter(s => s.of > objetivo[this.c.indexOf(s)] && this.puedeBajar(s)).sort((a, c) => c.of - a.of)[0];
+      if (!b) break; this.bajar(b);
+    }
+    for (let n = 0; n < 60; n++) {
+      const pend = ss.filter(s => s.of !== objetivo[this.c.indexOf(s)]); if (!pend.length) return fin(true);
+      const u = pend.filter(s => s.of < objetivo[this.c.indexOf(s)] && this.puedeMejorar(s)).sort((a, c) => a.of - c.of)[0];
+      if (!u) return fin(false); this.mejorar(u);
+    }
+    return fin(false);
+  }
   puedeBajar(s) { return s.of > 0 && this.zona(s).every(x => x.of <= s.of) && (s.of < 5 || this.mejoras >= 4); }
   bajar(s, cobra = true) { if (cobra) this.jug[s.dueno].dinero += ZONAS[s.g].mejora / 2; if (s.of === 5) { this.jets++; this.mejoras -= 4; } else this.mejoras++; s.of--; }
   puedeHipotecar(s) { return s.dueno !== null && !s.hip && this.zona(s).every(x => !x.of); }
@@ -170,7 +187,7 @@ export class Partida {
     });
     if (a) { a.dinero += p.dinero; a.libres.push(...p.libres); }
     else for (const m of p.libres) this.mazos[m].push(LIBRE[m]);       // las tarjetas vuelven al final de su mazo
-    p.dinero = 0; p.libres = []; p.fuera = true;
+    p.dinero = 0; p.libres = []; p.gratis = 0; p.fuera = true;
     await this.comprobarFin();
   }
   // La partida termina con un solo jugador en pie, si ya no queda ninguna persona o al llegar al límite de rondas
@@ -326,8 +343,7 @@ export class Partida {
     else if (c.terminal) { let d = p.pos; do { d = (d + TOTAL - 1) % TOTAL; } while (this.c[d].tipo !== 'terminal'); await this.saltar(p, d); await this.caer(p, 0); }
     else if (c.otra) this.otra = true;
     else if (c.mejora) {
-      const s = this.propias(this.idx(p)).filter(x => this.puedeMejorarGratis(x)).sort((a, b) => ZONAS[b.g].mejora - ZONAS[a.g].mejora)[0];
-      if (s) { this.mejorar(s, true); this.log(`${this.n(p)} mejora gratis ${esc(s.nombre)}.`, 'pos'); this.h.render(); } else { this.log('Sin destinos que mejorar: cobra 50 M.'); this.cobrar(p, 50); }
+      p.gratis++; this.log(`${this.n(p)} guarda una mejora de vuelo gratis: se aplica la próxima vez que mejore un destino.`, 'pos'); this.h.render();
     } else if (c.elige) {
       const d = p.bot ? this.ia.elegirCasilla(p) : await this.h.casilla(p);
       await this.irA(p, d); this.log(`${this.n(p)} viaja a <b>${esc(this.c[p.pos].nombre)}</b>.`); await this.caer(p, 0);
@@ -353,8 +369,8 @@ export function validar(d) {
   const n = d.jug.length, r = d.reglas || {};
   const reglas = { bote: !!r.bote, subasta: !!r.subasta, dinero: ent(r.dinero, 500, 5000) ? r.dinero : REGLAS.dinero, rondas: ent(r.rondas, 0, 500) ? r.rondas : 0 };
   const jug = d.jug.map(p => p && typeof p === 'object' && typeof p.nombre === 'string' && ent(p.k, 0, 3) && ent(p.dinero, 0, 1e7) && ent(p.pos, 0, TOTAL - 1) && ent(p.intentos, 0, 3)
-    && Array.isArray(p.libres) && p.libres.length <= 2 && p.libres.every(m => Object.hasOwn(MAZOS, m))
-    ? { nombre: p.nombre.slice(0, 14), k: p.k, bot: !!p.bot, dinero: p.dinero, pos: p.pos, espera: !!p.espera, intentos: p.intentos, libres: p.libres.slice(), pierde: !!p.pierde, huelga: !!p.huelga, fuera: !!p.fuera } : null);
+    && Array.isArray(p.libres) && p.libres.length <= 2 && (p.gratis === undefined || ent(p.gratis, 0, 99)) && p.libres.every(m => Object.hasOwn(MAZOS, m))
+    ? { nombre: p.nombre.slice(0, 14), k: p.k, bot: !!p.bot, dinero: p.dinero, pos: p.pos, espera: !!p.espera, intentos: p.intentos, libres: p.libres.slice(), gratis: p.gratis || 0, pierde: !!p.pierde, huelga: !!p.huelga, fuera: !!p.fuera } : null);
   if (jug.includes(null) || new Set(jug.map(p => p.k)).size !== n || !Array.isArray(d.c) || d.c.length !== TOTAL) return null;
   const c = d.c.map((x, i) => {
     if (!Array.isArray(x) || x.length !== 3) return null;

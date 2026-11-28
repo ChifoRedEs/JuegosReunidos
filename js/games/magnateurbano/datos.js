@@ -97,7 +97,7 @@ export const SOUVENIRS = [
   { img: 'sv-06', t: 'Mini monumentos', x: 'Tu colección de recuerdos vale su peso en oro.', e: '+25 M por cada terminal que tengas', porTerminal: 25 },
   { img: 'sv-07', t: 'Álbum de fotos', x: 'Una foto perfecta te lleva más lejos.', e: 'Avanza 3 casillas', avanza: 3 },
   { img: 'sv-08', t: 'Cesta gourmet', x: 'Premio sorpresa de la tienda del aeropuerto.', e: '+100 M', d: 100 },
-  { img: 'sv-09', t: 'Bufanda artesanal', x: 'Un artesano te regala una mejora de vuelo.', e: 'Sube 1 categoría gratis en uno de tus destinos', mejora: true },
+  { img: 'sv-09', t: 'Bufanda artesanal', x: 'Un artesano te regala una mejora de vuelo.', e: 'Te guardas una mejora de vuelo gratis (la próxima que hagas)', mejora: true },
   { img: 'sv-10', t: 'Elefante de madera', x: 'Un amuleto que atrae a los clientes.', e: '+120 M', d: 120 },
   { img: 'sv-11', t: 'Pasaporte sellado', x: 'Tu pasaporte vale oro.', e: 'Ve a Embarque · +200 M', embarque: true, cobra: true },
   { img: 'sv-12', t: 'Billete dorado', x: 'Un billete dorado te lleva donde quieras.', e: 'Viaja a la casilla que elijas', elige: true },

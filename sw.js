@@ -1,6 +1,6 @@
 // Service worker: guarda la app en caché para que funcione sin conexión.
 // La lista de archivos y VERSION se regeneran con:  python tools/generar_sw.py
-const VERSION = 'jr-67da5d35b5';
+const VERSION = 'jr-6e458bf8f8';
 const ARCHIVOS = [
 /*ARCHIVOS-INICIO*/
 './',
@@ -444,6 +444,8 @@ const EXTRA = [
 './img/aeropuerto/e-embarque.webp',
 './img/aeropuerto/e-paraiso.webp',
 './img/aeropuerto/e-prision.webp',
+'./img/aeropuerto/enlace-destinos.webp',
+'./img/aeropuerto/enlace-negociar.webp',
 './img/aeropuerto/i-exceso.webp',
 './img/aeropuerto/i-tasa.webp',
 './img/aeropuerto/m-ejecutiva.webp',

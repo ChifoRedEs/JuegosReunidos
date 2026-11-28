@@ -511,6 +511,14 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
   assert.ok(await g.proponer(A, B, { da: [], daM: 40, daL: [], pide: [], pideM: 0, pideL: ['retrasos'] })); assert.deepEqual(A.libres, ['retrasos']); assert.equal(B.libres.length, 0);
   g.h.pregunta = async (t, x, b) => b.find(o => /tarjeta/i.test(String(o))) || b[0];
   await g.jugarTurno(); assert.ok(!A.espera && A.libres.length === 0); assert.equal(g.mazos.retrasos.at(-1), MTLIBRE.retrasos);
+  // Plan de mejoras con Aceptar: probar no mueve nada; aplicar cobra; la mejora gratis guardada se gasta en la primera
+  { const h = new MTPartida([{ nombre: 'A', k: 0 }, { nombre: 'B', k: 1 }], mudo), z = h.c.filter(s => s.g === 'esp'); z.forEach(s => { s.dueno = 0; }); const P = h.jug[0], d0 = P.dinero, id = z[0].id;
+    assert.ok(h.planear(P, { [id]: 1 }).ok && P.dinero === d0 && z[0].of === 0 && h.mejoras === 32, 'probar no cambia nada');
+    assert.ok(!h.planear(P, { [id]: 2 }).ok, 'mejora pareja');
+    P.gratis = 1; const r = h.planear(P, { [id]: 1 }, true); assert.ok(r.ok && r.coste === 0 && P.gratis === 0 && z[0].of === 1 && P.dinero === d0, 'la primera sale gratis');
+    const r2 = h.planear(P, { [z[1].id]: 1 }, true); assert.ok(r2.ok && r2.coste === MTZ.esp.mejora && P.dinero === d0 - MTZ.esp.mejora, 'la siguiente se paga');
+    const r3 = h.planear(P, { [z[1].id]: 0 }, true); assert.ok(r3.ok && r3.coste === -MTZ.esp.mejora / 2, 'bajar devuelve la mitad');
+    assert.equal(JSON.stringify(MTPartida.desde(validarMT(JSON.parse(JSON.stringify(h))), mudo)), JSON.stringify(h)); }
   ok('Aeropuerto: 40 partidas entre CPU, guardado de ida y vuelta, tarjetas sin duplicar, visita libre/Control y tratos con tarjetas validados'); }
 
 // ---- Diccionario español (juegos de palabras) ----

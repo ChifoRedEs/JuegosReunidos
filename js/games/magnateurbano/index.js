@@ -150,11 +150,12 @@ function armar() {
         <span class="pl${dos ? ' d' : ''}" style="background:${t.color};color:${t.tinta}">${esc(s.corto).replace('|', '<br>')}</span></button>`; }).join('')}
       <div class="mtcentro" id="mtCentro">
         <img class="dorso r" src="${IMG('dorso-retrasos')}" alt="Mazo de Retrasos" draggable="false"><img class="dorso s" src="${IMG('dorso-souvenirs')}" alt="Mazo de Souvenirs" draggable="false">
+        <button type="button" class="mtlnk dest" id="mtGes" data-ac="gestionar" aria-label="Mis destinos"><img src="${IMG('enlace-destinos')}" alt="" draggable="false"></button>
+        <button type="button" class="mtlnk trat" id="mtTrato" data-ac="trato" aria-label="Negociar"><img src="${IMG('enlace-negociar')}" alt="" draggable="false"></button>
         <div class="mtmid"><div class="dadozona" id="mtDado"></div><div class="mtst"><div class="mtturno" id="mtTurno"></div><small class="mtbote" id="mtBote"></small></div>
           <button type="button" class="btn on mtgo" id="mtGo" data-ac="tirar">🎲 Tirar</button></div>
       </div>
     </div>
-    <div class="mtacc"><button type="button" class="btn" data-ac="gestionar" id="mtGes">🧳 Mis destinos</button><button type="button" class="btn" data-ac="trato" id="mtTrato">🤝 Negociar</button></div>
     <div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
     <ul class="mtlog" id="mtLog" aria-label="Historial de la partida"></ul>${api.barraHtml()}`;
   G.jug.forEach((p, i) => { if (!p.fuera) colocar(i); });
@@ -212,7 +213,7 @@ function log(html, clase = '') {
 const TEMA_VARS = ['--tb-line', '--tb-cell', '--tb-alt', '--tb-acc', '--tb-ink', '--tb-soft', '--tb-hi', '--tb-strong'];
 function dialogo(titulo, cuerpo, botones, { cancelable = false, auto = 0, tarjeta = false } = {}) {
   return new Promise(res => {
-    const m = document.createElement('div'); m.className = 'modal mtmodal' + (tarjeta ? ' tj' : ''); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    const previa = pendiente, m = document.createElement('div'); m.className = 'modal mtmodal' + (tarjeta ? ' tj' : ''); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
     if (root) { const cs = getComputedStyle(root); TEMA_VARS.forEach(v => m.style.setProperty(v, cs.getPropertyValue(v))); m.dataset.tablero = root.dataset.tablero || ''; }
     const h = document.createElement('div'); h.className = 'hoja';
     const bt = botones.length ? `<div class="bar mtbotones">${botones.map((b, i) => `<button type="button" class="btn ${i ? '' : 'on'}" data-b="${i}">${esc(b)}</button>`).join('')}</div>` : '';
@@ -220,7 +221,7 @@ function dialogo(titulo, cuerpo, botones, { cancelable = false, auto = 0, tarjet
     const c = h.querySelector('.cuerpo'); if (typeof cuerpo === 'string') c.innerHTML = cuerpo; else c.append(cuerpo);
     m.append(h); document.body.append(m); repintarFig(m);
     let t = null;
-    const fin = v => { if (!m.isConnected) return; clearTimeout(t); m.remove(); document.removeEventListener('keydown', tecla); if (pendiente === fin) pendiente = null; res(v); };
+    const fin = v => { if (!m.isConnected) return; clearTimeout(t); m.remove(); document.removeEventListener('keydown', tecla); if (pendiente === fin) pendiente = previa && previa.activa !== false ? previa : null; res(v); };
     const tecla = e => { if (e.key === 'Escape' && cancelable) fin(null); };
     const b = h.querySelector('.mtbotones'); if (b) b.addEventListener('click', e => { const x = e.target.closest('[data-b]'); if (x) fin(botones[+x.dataset.b]); });
     if (cancelable) m.addEventListener('click', e => { if (e.target === m) fin(null); });
@@ -351,19 +352,64 @@ async function jugar() {
 }
 
 /* ---------- mis destinos (mejorar vuelos, hipotecar) ---------- */
+// Cuadrícula de 4 columnas con todo lo que tienes; al tocar una miniatura se abre su tarjeta. Las mejoras se
+// preparan con ＋/－ y solo se pagan o cobran al pulsar «Aceptar» (antes no se mueve ni un euro).
+async function tarjetaPropia(p, s, sid) {
+  const cont = document.createElement('div'); cont.className = 'mtk'; const i = G.idx(p), zona = ZONAS[s.g] || null; let t = s.of;
+  const prueba = n => G.planear(p, { [s.id]: n }, false);
+  const motivoMas = () => {
+    if (s.hip) return 'Está hipotecado: págala antes de mejorar.';
+    if (!G.tieneZona(i, s.g)) return `Necesitas todos los destinos de ${zona.nombre} para mejorar los vuelos.`;
+    const z = G.zona(s); if (z.some(x => x.hip)) return 'Hay un destino hipotecado en la zona.';
+    if (z.some(x => x.of < t)) return 'Mejora antes los demás destinos de la zona: deben ir parejos.';
+    if (t < 4 ? G.mejoras <= 0 : G.jets <= 0) return t < 4 ? 'El banco no tiene más mejoras de vuelo.' : 'El banco no tiene más Jets Privados.';
+    return `No tienes dinero suficiente (cuesta ${zona.mejora} M).`;
+  };
+  const motivoMenos = () => G.zona(s).some(x => x.of > t) ? 'Baja antes los demás destinos de la zona.' : 'El banco no puede devolver las 4 mejoras de este jet.';
+  const dibujar = () => {
+    const m = cont.closest('.mtmodal'), cab = cabecera(IMG(s.img), s.nombre, s.sub, tiraDe(s), '5/4');
+    let cuerpo;
+    if (s.tipo === 'destino') {
+      const r = prueba(t), mas = t < 5 && prueba(t + 1).ok, menos = t > 0 && prueba(t - 1).ok, cambia = t !== s.of;
+      const nota = r.coste > 0 ? `Pagas ${r.coste} M` : r.coste < 0 ? `Recibes ${-r.coste} M` : cambia ? (r.gratis ? '¡Mejora gratis!' : 'Sin coste') : 'Sin cambios';
+      cuerpo = `<div class="mtniv"><button type="button" class="btn mtpm" data-g="menos" ${menos ? '' : 'disabled'} aria-label="Bajar de categoría">－</button>
+          <div class="mtnivc">${t ? insignia(NIVELES[t].id, 'gde') : '<span class="ins gde bil" aria-hidden="true">🎫</span>'}<b>${NIVELES[t].nombre}</b><small>Alquiler: ${alq(s, t)} M${t === s.of ? '' : ` · antes ${alq(s, s.of)} M`}</small></div>
+          <button type="button" class="btn mtpm" data-g="mas" ${mas ? '' : 'disabled'} aria-label="Mejorar el vuelo">＋</button></div>
+        <div class="big ${r.coste > 0 ? 'neg' : cambia ? 'pos' : ''}">${nota}</div>
+        ${t < 5 && !mas ? `<p class="mtnota">${esc(motivoMas())}</p>` : ''}${t > 0 && !menos ? `<p class="mtnota">${esc(motivoMenos())}</p>` : ''}
+        <div class="ft"><span>Mejora: ${zona.mejora} M · bajar devuelve ${zona.mejora / 2} M</span><span>${p.gratis ? `🎁 Mejoras gratis: ${p.gratis}` : `Tienes ${p.dinero} M`}</span></div>`;
+    } else cuerpo = `<p class="mtnota">${s.tipo === 'terminal' ? 'Terminal' : 'Servicio'}: no admite mejoras de vuelo.</p><div class="ft"><span>Precio: ${s.precio} M</span><span>Tienes ${p.dinero} M</span></div>`;
+    const hip = s.hip ? `<button type="button" class="btn" data-g="desh" ${G.puedeDeshipotecar(s) ? '' : 'disabled'}>Pagar hipoteca ${G.costeDeshipotecar(s)} M</button>` : `<button type="button" class="btn" data-g="hip" ${G.puedeHipotecar(s) && t === s.of ? '' : 'disabled'}>Hipotecar +${s.precio / 2} M</button>`;
+    cont.innerHTML = `${cab}<div class="bd">${cuerpo}${hip}${s.hip ? '<p class="mtnota">Hipotecado: no cobra alquiler.</p>' : ''}</div>`;
+    if (m) { const ok = m.querySelector('.mtbotones [data-b="0"]'); if (ok) { ok.disabled = !(s.tipo === 'destino' && t !== s.of && prueba(t).ok); ok.textContent = 'Aceptar'; } }
+  };
+  cont.addEventListener('click', e => {
+    const b = e.target.closest('[data-g]'); if (!b || b.disabled) return;
+    if (b.dataset.g === 'mas') t++; else if (b.dataset.g === 'menos') t--;
+    else { ({ hip: () => G.hipotecar(s), desh: () => G.deshipotecar(s) })[b.dataset.g](); pintar(); }
+    api.sonido('click'); dibujar();
+  });
+  const pr = dialogo('', cont, s.tipo === 'destino' ? ['Aceptar', 'Volver'] : ['Volver'], { cancelable: true, tarjeta: true }); dibujar();
+  const r = await pr; if (r === ABORTO) vigilaSesion(-1); vigilaSesion(sid);
+  if (r === 'Aceptar' && t !== s.of) {
+    const antes = s.of, res = G.planear(p, { [s.id]: t }, true);
+    if (res.ok) { log(`${esc(p.nombre)} ${t > antes ? 'mejora' : 'baja'} ${esc(s.nombre)} a ${NIVELES[t].nombre}${res.coste > 0 ? ` (−${res.coste} M)` : res.coste < 0 ? ` (+${-res.coste} M)` : res.gratis ? ' (gratis)' : ''}.`, t > antes ? 'pos' : ''); api.sonido('click'); pintar(); guardar(); }
+  }
+}
 async function gestionar(p, sid = sesion) {
   const i = G.idx(p), cont = document.createElement('div');
   const dibujar = () => {
     const mias = G.propias(i);
-    cont.innerHTML = `<p class="note">Dinero: <b>${p.dinero} M</b> · el banco tiene ${G.mejoras} mejoras de vuelo y ${G.jets} jets privados.</p>${filasMano(p)}` + (mias.length ? mias.map(s => `<div class="mtges"><i style="background:${tiraDe(s).color}"></i><span>${esc(s.nombre)}${s.of ? ` <small>· ${NIVELES[s.of].nombre}</small>` : ''}${s.hip ? ' <small>· hipotecado</small>' : ''}</span>
-      ${s.tipo === 'destino' ? `<button class="btn" data-g="mas" data-s="${s.id}" ${G.puedeMejorar(s) ? '' : 'disabled'} aria-label="Mejorar el vuelo de ${esc(s.nombre)} (${ZONAS[s.g].mejora} M)">＋</button><button class="btn" data-g="menos" data-s="${s.id}" ${G.puedeBajar(s) ? '' : 'disabled'} aria-label="Bajar de categoría ${esc(s.nombre)}">－</button>` : ''}
-      ${s.hip ? `<button class="btn" data-g="desh" data-s="${s.id}" ${G.puedeDeshipotecar(s) ? '' : 'disabled'}>Pagar ${G.costeDeshipotecar(s)} M</button>` : `<button class="btn" data-g="hip" data-s="${s.id}" ${G.puedeHipotecar(s) ? '' : 'disabled'}>Hipotecar +${s.precio / 2}</button>`}</div>`).join('')
-      : '<p>Todavía no tienes ningún destino.</p>') + '<p class="note">Para mejorar los vuelos necesitas todos los destinos de la zona sin hipotecas, y hay que mejorar de forma pareja. Tras la Primera Clase llega el ✈️ Jet Privado. Bajar de categoría devuelve la mitad de lo que costó.</p>';
+    cont.innerHTML = `<p class="note">Dinero: <b>${p.dinero} M</b>${p.gratis ? ` · 🎁 Mejoras gratis: <b>${p.gratis}</b>` : ''} · el banco tiene ${G.mejoras} mejoras de vuelo y ${G.jets} jets privados.</p>${filasMano(p)}`
+      + (mias.length ? `<div class="mtgr">${mias.map(s => { const t = tiraDe(s), dos = s.corto.includes('|');
+        return `<button type="button" class="mtmin ${s.hip ? 'hip' : ''}" data-s="${s.id}" aria-label="${esc(s.nombre)}${s.of ? ' · ' + NIVELES[s.of].nombre : ''}${s.hip ? ' · hipotecado' : ''}"><img class="f" src="${IMG(s.img)}" alt="" draggable="false">${s.of ? insignia(NIVELES[s.of].id, 'up') : ''}<span class="pl${dos ? ' d' : ''}" style="background:${t.color};color:${t.tinta}">${esc(s.corto).replace('|', '<br>')}</span></button>`; }).join('')}</div>`
+        : '<p>Todavía no tienes ningún destino.</p>')
+      + '<p class="note">Toca un destino para mejorarlo, venderle categorías o hipotecarlo. Para mejorar los vuelos necesitas todos los destinos de la zona, sin hipotecas, y hay que mejorar de forma pareja. Tras la Primera Clase llega el ✈️ Jet Privado.</p>';
   };
-  cont.addEventListener('click', e => {
-    const b = e.target.closest('[data-g]'); if (!b) return; const s = G.c[+b.dataset.s];
-    ({ mas: () => G.mejorar(s), menos: () => G.bajar(s), hip: () => G.hipotecar(s), desh: () => G.deshipotecar(s) })[b.dataset.g]();
-    api.sonido('click'); dibujar(); pintar();
+  cont.addEventListener('click', async e => {
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    try { await tarjetaPropia(p, G.c[+b.dataset.s], sid); } catch (x) { if (x === ABORTO) { if (pendiente) pendiente(ABORTO); return; } throw x; }
+    dibujar(); pintar();
   });
   dibujar(); const r = await dialogo(`🧳 Destinos de ${esc(p.nombre)}`, cont, ['Cerrar'], { cancelable: true }); if (r === ABORTO) vigilaSesion(-1); vigilaSesion(sid);
 }
@@ -432,6 +478,7 @@ function reglas() {
     <li>Al pasar por <b>Embarque</b> cobras ${SALARIO} M. En las casillas <b>Souvenir</b> robas una carta casi siempre buena y en <b>Retrasos</b>, una con los imprevistos del viaje. Los impuestos y multas van al bote del <b>Paraíso Fiscal</b>: quien caiga allí se lo lleva.</li>
     <li>Solo el <b>Control de Seguridad</b> te manda a la <b>Prisión Aduanera</b> (y las cartas «Cola interminable» o tres dobles seguidos). Si caes en la Prisión de paso, es una visita y no pasa nada. Para salir: paga ${FIANZA} M, usa una tarjeta o saca dobles (tres intentos).</li>
     <li>Hay dos tarjetas de <b>«sal de la Prisión»</b> (Acreditación VIP y Seguro de viaje): te las quedas hasta que las uses, y se pueden <b>vender o cambiar</b> en 🤝 Negociar. Al usarlas vuelven al final de su mazo.</li>
+    <li>🧳 <b>Mis destinos</b> (en el tablero): toca un destino, prepara los cambios con ＋ y － y pulsa <b>Aceptar</b>; hasta entonces no se paga ni se cobra nada. La carta «Bufanda artesanal» te guarda una <b>mejora gratis</b> para la próxima vez que mejores.</li>
     <li>Con dobles vuelves a tirar. Puedes <b>hipotecar</b> destinos (cobras la mitad; recuperarlos cuesta un 10 % más) y bajar de categoría (cobras la mitad de lo que costó).</li>
     <li>🤝 <b>Negociar</b>: en tu turno puedes proponer cambiar destinos, tarjetas y dinero con otro jugador. Las CPU también te harán ofertas cuando les falte un destino para completar una zona.</li>
     <li>Si no puedes pagar, quiebras y quedas fuera. Gana el último que siga en pie (o quien tenga más patrimonio si elegiste un límite de rondas).</li>
