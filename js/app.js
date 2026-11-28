@@ -147,6 +147,10 @@ window.addEventListener('popstate', e => {
   if (pilaModales.length) { pilaModales[pilaModales.length - 1].cerrar(true); return; }   // «Atrás» con una ventana abierta: la cierra
   if (e.state && e.state.jrModal) { saltosHist++; history.back(); }        // entrada de una ventana ya cerrada: se salta
 });
+// Configurar partida: secciones automáticas por tema (si el juego no las indica con «seccion» en cada ajuste)
+const ICONOS_SEC = { Partida: '🎮', Dificultad: '🧠', Tablero: '🧩', Reglas: '📏', Opciones: '⚙️' };
+const SEC_PALABRAS = [['Dificultad', /nivel|dificultad|m[aá]quina|memoria|rival|oponente|cpu|ia\b|ayuda|pistas?|errores|tiempo|velocidad/i], ['Tablero', /tama[nñ]o|tablero|im[aá]genes|tema|ancho|alto|filas|columnas|fichas|cartas|baraja|dorso|mazo|colores|letras|palabras|categor/i], ['Partida', /modo|jugador|equipos?|partida|contra|turno|ronda|duraci|termina|objetivo|apuesta|dinero|puntos?/i]];
+function seccionDe(g) { const t = String(g.titulo || ''); const f = SEC_PALABRAS.find(([, re]) => re.test(t)); return f ? f[0] : 'Reglas'; }
 function hoja(contenido, alCerrar = null) {
   const m = el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' }, el('div', { class: 'hoja' }, contenido));
   let cerrada = false; const id = ++idModal;
@@ -235,12 +239,32 @@ function crearApi(j, ent, mod, root) {
     pausaTemp(volver => {
       const vals = { ...c.valores() }, cont = el('div', { class: 'cfg-cont' });
       let aplicado = false, cerrar;
+      const abiertas = new Map();
+      const grupoEl = g => el('div', { class: 'cfg-g' }, el('span', { class: 'lbl' }, g.titulo),
+        g.desplegable
+          ? el('select', { class: 'desplegable', 'data-ks': g.clave, 'aria-label': g.titulo }, ...g.opciones.map(([v, l]) => el('option', { value: JSON.stringify(v), selected: String(vals[g.clave]) === String(v) }, l)))
+          : el('div', { class: 'seg', role: 'group', 'aria-label': g.titulo }, ...g.opciones.map(([v, l, ic]) => el('button', { type: 'button', class: 'btn' + (String(vals[g.clave]) === String(v) ? ' on' : ''), 'data-k': g.clave, 'data-v': JSON.stringify(v), 'aria-pressed': String(vals[g.clave]) === String(v) }, ic ? el('span', { class: 'cfg-ico', 'aria-hidden': 'true' }, ic) : null, ic ? el('span', {}, l) : l))),
+        g.nota ? el('small', { class: 'note' }, g.nota) : null);
+      const resumen = gs => gs.map(g => { const o = g.opciones.find(([v]) => String(vals[g.clave]) === String(v)); return o ? String(o[1]).split('\n')[0].trim() : ''; }).filter(Boolean).join(' · ');
       const pintar = () => {
-        cont.replaceChildren(...c.grupos(vals).filter(g => g.visible !== false).map(g => el('div', { class: 'cfg-g' }, el('span', { class: 'lbl' }, g.titulo),
-          g.desplegable
-            ? el('select', { class: 'desplegable', 'data-ks': g.clave, 'aria-label': g.titulo }, ...g.opciones.map(([v, l]) => el('option', { value: JSON.stringify(v), selected: String(vals[g.clave]) === String(v) }, l)))
-            : el('div', { class: 'seg' }, ...g.opciones.map(([v, l]) => el('button', { type: 'button', class: 'btn' + (String(vals[g.clave]) === String(v) ? ' on' : ''), 'data-k': g.clave, 'data-v': JSON.stringify(v) }, l))),
-          g.nota ? el('small', { class: 'note' }, g.nota) : null)));
+        const vis = c.grupos(vals).filter(g => g.visible !== false), nodos = [], secs = [];
+        const auto = vis.length >= 4 && !vis.some(g => g.seccion);          // con 4 o más ajustes se ordenan solos en secciones por tema
+        const sec = g => g.seccion || (auto ? seccionDe(g) : null);
+        vis.forEach(g => {
+          const t = sec(g);
+          if (!t) { nodos.push(grupoEl(g)); return; }
+          let x = secs.find(q => q.t === t); if (!x) { x = { t, ic: g.icono || ICONOS_SEC[t] || '⚙️', gs: [], hijos: [] }; secs.push(x); nodos.push(x); }
+          x.gs.push(g); x.hijos.push(grupoEl(g));
+        });
+        const plano = secs.length < 2 && !vis.some(g => g.seccion);          // una sola sección: sin desplegable
+        cont.replaceChildren(...nodos.map(n => {
+          if (!n.t) return n;
+          if (plano) return el('div', { class: 'cfg-plano' }, ...n.hijos);
+          const d = el('details', { class: 'cfg-sec' }, el('summary', {}, el('span', { class: 'cfg-si', 'aria-hidden': 'true' }, n.ic), el('b', {}, n.t), el('small', {}, resumen(n.gs))), el('div', { class: 'cfg-sc' }, ...n.hijos));
+          d.open = abiertas.has(n.t) ? abiertas.get(n.t) : (secs.length <= 3 || n === secs[0]);
+          d.addEventListener('toggle', () => abiertas.set(n.t, d.open));
+          return d;
+        }));
         mejorarSelects(cont);
       };
       cont.addEventListener('click', e => {
@@ -251,7 +275,7 @@ function crearApi(j, ent, mod, root) {
       pintar();
       const emp = el('button', { class: 'btn on', onclick: () => { aplicado = true; cerrar(); c.aplicar({ ...vals }); } }, '▶️ ' + etiquetaNueva());
       cerrar = hoja([el('h2', {}, '⚙️ Configurar partida'), el('p', { class: 'note' }, c.nota || 'Elige las opciones y empieza una partida nueva. La partida actual se abandona.'), cont,
-        el('div', { class: 'bar', style: 'margin-top:14px' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'), emp)], () => { if (!aplicado) volver(); });
+        el('div', { class: 'bar cfg-pie' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'), emp)], () => { if (!aplicado) volver(); });
     });
   }
   function preguntarSalir() {

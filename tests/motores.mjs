@@ -520,6 +520,13 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
     const r2 = h.planear(P, { [z[1].id]: 1 }, true); assert.ok(r2.ok && r2.coste === MTZ.esp.mejora && P.dinero === d0 - MTZ.esp.mejora, 'la siguiente se paga');
     const r3 = h.planear(P, { [z[1].id]: 0 }, true); assert.ok(r3.ok && r3.coste === -MTZ.esp.mejora / 2, 'bajar devuelve la mitad');
     assert.equal(JSON.stringify(MTPartida.desde(validarMT(JSON.parse(JSON.stringify(h))), mudo)), JSON.stringify(h)); }
+  // Opciones nuevas: Embarque doble, premio por dos unos y mejoras libres
+  { const mk = r => new MTPartida([{ nombre: 'A', k: 0 }, { nombre: 'B', k: 1 }], mudo, r), E = 0;
+    for (const [reg, esp] of [[{}, 200], [{ dobleEmbarque: true }, 400]]) { const h = mk(reg), P = h.jug[0], d0 = P.dinero; P.pos = 36 - 3; await h.avanzar(P, 3); assert.equal(P.dinero - d0, esp, 'cae justo en Embarque'); }
+    { const h = mk({ dobleEmbarque: true }), P = h.jug[0], d0 = P.dinero; P.pos = 36 - 2; await h.avanzar(P, 4); assert.equal(P.dinero - d0, 200, 'de paso cobra normal'); }
+    const r0 = Math.random; Math.random = () => 0; { const h = mk({ unosPremio: true }), d0 = h.jug[0].dinero; await h.tirar(); assert.equal(h.jug[0].dinero - d0, 1000, 'dos unos'); const g2 = mk({}), e0 = g2.jug[0].dinero; await g2.tirar(); assert.equal(g2.jug[0].dinero, e0, 'sin la regla no hay premio'); } Math.random = r0;
+    { const h = mk({ mejoraLibre: true }), z = h.c.filter(s => s.g === 'esp'); z.forEach(s => { s.dueno = 0; }); const P = h.jug[0]; assert.ok(h.planear(P, { [z[0].id]: 2 }, true).ok, 'mejora asimétrica'); assert.ok(z[0].of === 2 && z[1].of === 0);
+      assert.equal(JSON.stringify(MTPartida.desde(validarMT(JSON.parse(JSON.stringify(h))), mudo)), JSON.stringify(h)); } }
   ok('Aeropuerto: 40 partidas entre CPU, guardado de ida y vuelta, tarjetas sin duplicar, visita libre/Control y tratos con tarjetas validados'); }
 
 // ---- Diccionario español (juegos de palabras) ----

@@ -189,3 +189,7 @@
 .mtmodal .mttrato>div{max-height:none;overflow:visible}
 .mtmodal .mtlado{padding:0 3px}
 .mtmodal .mtdorsoarr img{width:min(30%,130px)}
+.mtmodal .mtcelda{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mtmodal .mtdue{display:block;text-align:center;font-size:11px;font-weight:800;line-height:1.1;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.1em}
+.mtmodal .mtmin.sel{box-shadow:0 0 0 3px #C9441C}
+.mtmodal:has(.mtcelda) .mtbotones{position:sticky;bottom:0;background:var(--card);padding-top:8px}

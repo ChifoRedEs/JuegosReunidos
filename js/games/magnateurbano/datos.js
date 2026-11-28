@@ -27,6 +27,7 @@ export const NIVELES = [
   { id: 'm-ejecutiva', nombre: 'Clase Ejecutiva' }, { id: 'm-primera', nombre: 'Primera Clase' }, { id: 'm-jet', nombre: 'Jet Privado' },
 ];
 export const MULT = [1, 4, 11, 28, 42, 56];                // × alquiler base (nivel 0..5)
+export const PREMIO_UNOS = 1000;                           // opción «dos unos»
 export const SALARIO = 200;                                // al pasar por Embarque
 export const FIANZA = 50;                                  // para salir de la Prisión Aduanera
 export const MEJORAS = 32, JETS = 12;                      // límite del banco

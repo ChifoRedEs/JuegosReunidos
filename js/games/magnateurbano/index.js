@@ -5,14 +5,15 @@ import { grupoTableroDN, coloresTablero } from '../../core/aspectos.js';
 import { FIGURAS, fondoFigura, urlFigura } from '../../core/figuras.js';
 import { COLORES, IDS_POCOS } from '../../core/fichas.js';
 import { crearDado3D } from '../../core/dado3d.js';
-import { ZONAS, TIPOS, NIVELES, MULT, SALARIO, FIANZA, MEJORAS, JETS, TERMINAL, SERVICIO, CASILLAS, MAZOS, MAZO_NOMBRE, LIBRE, IMG, TOTAL } from './datos.js';
+import { ZONAS, TIPOS, NIVELES, MULT, SALARIO, FIANZA, MEJORAS, JETS, TERMINAL, SERVICIO, CASILLAS, MAZOS, MAZO_NOMBRE, LIBRE, IMG, TOTAL, PREMIO_UNOS } from './datos.js';
 import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
 const VELOCIDAD = { normal: { nombre: 'Normal', paso: 150, bot: 550, dado: 900 }, rapida: { nombre: 'Rápida', paso: 45, bot: 200, dado: 450 }, sin: { nombre: 'Sin animaciones', paso: 0, bot: 0, dado: 0 } };
+const secAb = new Set(['Jugadores', 'Partida']);   // secciones de Configurar partida abiertas
 let G = null, api = null, asp = null, root = null, vivo = false, jugando = false, reg = false, pendiente = null, onKey = null, sesion = 0, enPausa = false, D3 = null, tokD = 0;
 // sesion: cambia al salir del juego o empezar otra partida; los turnos que estuvieran a medias se cancelan (ABORTO)
-let cfg = { fich: null, jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'n']], bote: true, subasta: true, dinero: 1600, rondas: 0, vel: 'normal' };
+let cfg = { fich: null, jug: [['Tú', 'h'], ['CPU 1', 'c'], ['CPU 2', 'c'], ['CPU 3', 'n']], bote: true, subasta: true, dinero: 1600, rondas: 0, vel: 'normal', dobleEmbarque: false, unosPremio: false, mejoraLibre: false };
 
 /* ---------- fichas de los jugadores: figura con peana y color, cada uno la suya (botón «Fichas» de la pantalla de inicio) ---------- */
 const FIGS = FIGURAS.filter(f => f.dir !== 'p');                 // solo animales y vehículos (tienen peana)
@@ -79,18 +80,22 @@ export async function mount(r, a) {
   if (c0 && Array.isArray(c0.jug) && c0.jug.length === 4) cfg = { ...cfg, ...c0, fich: Array.isArray(c0.fich) && c0.fich.length === 4 ? c0.fich.map(x => [String(x && x[0]), String(x && x[1])]) : null, vel: VELOCIDAD[c0.vel] ? c0.vel : 'normal', jug: c0.jug.map(([n, t]) => [String(n).slice(0, 14), ['h', 'c', 'n'].includes(t) ? t : 'n']) };
   const g = api.cargar(); reg = g ? g.reg : false;
   sesion++; G = g ? Partida.desde(g.g, crearGanchos(sesion)) : null;
-  root.addEventListener('click', clic); root.addEventListener('input', alEscribir);
+  root.addEventListener('click', clic); root.addEventListener('input', alEscribir); root.addEventListener('toggle', alSeccion, true);
   onKey = e => { if (e.code === 'Space' && !pendiente && G && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); jugar(); } };
   document.addEventListener('keydown', onKey);
   api.barra({ nueva: async () => { if (G && !G.terminada && !await api.confirmar('¿Abandonar la partida actual?')) return; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } enPausa = false; empezar(); },
     salir: () => { enPausa = false; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => { enPausa = true; },
     reanudar: () => { enPausa = false; },
-    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], dinero: cfg.dinero, rondas: cfg.rondas, vel: cfg.vel, bote: cfg.bote, subasta: cfg.subasta }),
-      grupos: v => [...[0, 1, 2, 3].map(i => ({ clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })),
-        { clave: 'dinero', titulo: 'Dinero inicial', opciones: [1200, 1600, 2000].map(x => [x, x + ' M']) }, { clave: 'rondas', titulo: 'Duración', opciones: [[0, 'Hasta la bancarrota'], [20, '20 rondas'], [40, '40 rondas']] },
-        { clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) }, { clave: 'bote', titulo: 'Bote del Paraíso Fiscal', opciones: [[true, 'Sí'], [false, 'No']] }, { clave: 'subasta', titulo: 'Subastas', opciones: [[true, 'Sí'], [false, 'No']] }],
-      aplicar: v => { enPausa = false; if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.dinero = v.dinero; cfg.rondas = v.rondas; cfg.vel = v.vel; cfg.bote = v.bote; cfg.subasta = v.subasta; empezar(); } } });
+    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], dinero: cfg.dinero, rondas: cfg.rondas, vel: cfg.vel, bote: cfg.bote, subasta: cfg.subasta, dobleEmbarque: !!cfg.dobleEmbarque, unosPremio: !!cfg.unosPremio, mejoraLibre: !!cfg.mejoraLibre }),
+      grupos: v => { const SN = [[true, 'Sí'], [false, 'No']]; return [...[0, 1, 2, 3].map(i => ({ seccion: 'Jugadores', icono: '👥', clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })),
+        { seccion: 'Partida', icono: '🎮', clave: 'dinero', titulo: 'Dinero inicial', opciones: [1200, 1600, 2000].map(x => [x, x + ' M']) }, { seccion: 'Partida', clave: 'rondas', titulo: 'Duración', opciones: [[0, 'Hasta la bancarrota'], [20, '20 rondas'], [40, '40 rondas']] },
+        { seccion: 'Partida', clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) },
+        { seccion: 'Reglas', icono: '📏', clave: 'bote', titulo: 'Bote del Paraíso Fiscal', opciones: SN, nota: 'Impuestos, multas y fianzas se acumulan para quien caiga en el Paraíso Fiscal.' }, { seccion: 'Reglas', clave: 'subasta', titulo: 'Subastas', opciones: SN, nota: 'Un destino libre que no se compra se subasta entre todos.' },
+        { seccion: 'Reglas', clave: 'dobleEmbarque', titulo: 'Embarque doble', opciones: SN, nota: `Caer justo en Embarque paga ${2 * SALARIO} M; pasar de largo sigue pagando ${SALARIO} M.` },
+        { seccion: 'Reglas', clave: 'unosPremio', titulo: 'Dos unos en los dados', opciones: SN, nota: `Sacar 1 y 1 da ${PREMIO_UNOS} M.` },
+        { seccion: 'Reglas', clave: 'mejoraLibre', titulo: 'Mejoras de vuelo libres', opciones: SN, nota: 'Cada destino de una zona completa se mejora por separado, sin tener que hacerlo parejo.' }]; },
+      aplicar: v => { enPausa = false; if ([0, 1, 2, 3].filter(i => v['j' + i] !== 'n').length < 2) { api.aviso('Hacen falta al menos 2 jugadores'); return; } [0, 1, 2, 3].forEach(i => { cfg.jug[i][1] = v['j' + i]; }); cfg.dinero = v.dinero; cfg.rondas = v.rondas; cfg.vel = v.vel; cfg.bote = v.bote; cfg.subasta = v.subasta; cfg.dobleEmbarque = v.dobleEmbarque; cfg.unosPremio = v.unosPremio; cfg.mejoraLibre = v.mejoraLibre; api.setPref('cfg', cfg); empezar(); } } });
   api.menu([{ texto: 'Nueva partida', accion: nuevaSetup }, { texto: '🧳 Mis destinos', accion: () => gestionarDesdeBoton() }, { texto: '🤝 Negociar', accion: () => intercambioDesdeBoton() },
     { texto: '🎨 Apariencia', accion: () => asp.abrir() }, { texto: '📖 Reglas', accion: reglas }]);
   if (G && !G.terminada) { armar(); pintar(); log(`Partida recuperada: ronda ${G.ronda}.`); if (G.p().bot) jugar(); }
@@ -100,7 +105,7 @@ export function unmount() {
   vivo = false; enPausa = false; jugando = false; sesion++;
   if (pendiente) { pendiente(ABORTO); pendiente = null; }
   document.removeEventListener('keydown', onKey);
-  if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); }
+  if (root) { root.removeEventListener('click', clic); root.removeEventListener('input', alEscribir); root.removeEventListener('toggle', alSeccion, true); }
   quitarDado(); G = null; asp = null;
 }
 function guardar() { if (!G) return; const d = { g: G.toJSON(), reg }; const r = resumen(d); api.guardar(d, r.texto, r.fin); }
@@ -112,12 +117,18 @@ function setup() {
   G = null; jugando = false; quitarDado();
   const n = cfg.jug.filter(j => j[1] !== 'n').length;
   root.innerHTML = `<p class="note">Compra billetes de destino, terminales y servicios del aeropuerto; con todos los destinos de una zona mejora tus vuelos y cobra más a tus rivales. Gana quien siga en pie cuando los demás quiebren${cfg.rondas ? ` o quien tenga más patrimonio tras ${cfg.rondas} rondas` : ''}.</p>
-    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${colK(i)}"><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><button type="button" class="btn mtfbtn" data-ficha="${i}" aria-label="Fichas del jugador ${i + 1}"><span class="mtfichab" aria-hidden="true">${figuraFicha(i)}</span>Fichas</button><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
-    <div class="bar"><span class="lbl">Dinero inicial</span><div class="seg">${[1200, 1600, 2000].map(v => `<button class="btn ${cfg.dinero === v ? 'on' : ''}" data-dinero="${v}">${v} M</button>`).join('')}</div></div>
-    <div class="bar"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la bancarrota'], [20, '20 rondas'], [40, '40 rondas']].map(([v, l]) => `<button class="btn ${cfg.rondas === v ? 'on' : ''}" data-rondas="${v}">${l}</button>`).join('')}</div></div>
-    <div class="bar"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
+    <div class="cfg-cont"><details class="cfg-sec" data-sec="Jugadores" ${secAb.has('Jugadores') ? 'open' : ''}><summary><span class="cfg-si">👥</span><b>Jugadores</b></summary><div class="cfg-sc">    ${cfg.jug.map(([nom, t], i) => `<div class="jugfila" style="--c:${colK(i)}"><input class="nom" data-name="${i}" maxlength="14" value="${esc(nom)}" aria-label="Nombre del jugador ${i + 1}"><button type="button" class="btn mtfbtn" data-ficha="${i}" aria-label="Fichas del jugador ${i + 1}"><span class="mtfichab" aria-hidden="true">${figuraFicha(i)}</span>Fichas</button><div class="seg">${[['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']].map(([k, l]) => `<button class="btn ${t === k ? 'on' : ''}" data-tipo="${i},${k}">${l}</button>`).join('')}</div></div>`).join('')}
+    </div></details><details class="cfg-sec" data-sec="Partida" ${secAb.has('Partida') ? 'open' : ''}><summary><span class="cfg-si">🎮</span><b>Partida</b></summary><div class="cfg-sc">
+    <div class="cfg-g"><span class="lbl">Dinero inicial</span><div class="seg">${[1200, 1600, 2000].map(v => `<button class="btn ${cfg.dinero === v ? 'on' : ''}" data-dinero="${v}">${v} M</button>`).join('')}</div></div>
+    <div class="cfg-g"><span class="lbl">Duración</span><div class="seg">${[[0, 'Hasta la bancarrota'], [20, '20 rondas'], [40, '40 rondas']].map(([v, l]) => `<button class="btn ${cfg.rondas === v ? 'on' : ''}" data-rondas="${v}">${l}</button>`).join('')}</div></div>
+    <div class="cfg-g"><span class="lbl">Velocidad</span><div class="seg">${Object.entries(VELOCIDAD).map(([k, v]) => `<button class="btn ${cfg.vel === k ? 'on' : ''}" data-vel="${k}">${v.nombre}</button>`).join('')}</div></div>
+    </div></details><details class="cfg-sec" data-sec="Reglas" ${secAb.has('Reglas') ? 'open' : ''}><summary><span class="cfg-si">📏</span><b>Reglas</b></summary><div class="cfg-sc">
     <label class="chk"><input type="checkbox" data-op="bote" ${cfg.bote ? 'checked' : ''}><span><b>Bote del Paraíso Fiscal</b>: los impuestos, multas y fianzas se acumulan y se los lleva quien caiga en el Paraíso Fiscal.</span></label>
     <label class="chk"><input type="checkbox" data-op="subasta" ${cfg.subasta ? 'checked' : ''}><span><b>Subastas</b>: si quien cae en un destino libre no lo compra, se subasta entre todos.</span></label>
+    <label class="chk"><input type="checkbox" data-op="dobleEmbarque" ${cfg.dobleEmbarque ? 'checked' : ''}><span><b>Embarque doble</b>: caer justo en Embarque paga ${2 * SALARIO} M (pasar de largo, ${SALARIO} M).</span></label>
+    <label class="chk"><input type="checkbox" data-op="unosPremio" ${cfg.unosPremio ? 'checked' : ''}><span><b>Dos unos</b>: sacar 1 y 1 en los dados da ${PREMIO_UNOS} M.</span></label>
+    <label class="chk"><input type="checkbox" data-op="mejoraLibre" ${cfg.mejoraLibre ? 'checked' : ''}><span><b>Mejoras libres</b>: mejora cada destino de la zona por separado, sin hacerlo parejo.</span></label>
+    </div></details></div>
     ${pieMenu({ deshabilitado: n < 2 })}
     <p class="note">${n < 2 ? 'Hacen falta al menos 2 jugadores.' : `${n} jugadores. Las personas se pasan el móvil por turnos. Cada jugador elige su figura y color con el botón «Fichas».`}</p>`;
   repintarFig(root);
@@ -131,7 +142,7 @@ function empezar() {
   const jugadores = cfg.jug.map(([nombre, t], i) => ({ nombre: nombre.trim() || `Jugador ${i + 1}`, k: i, bot: t === 'c', t })).filter(j => j.t !== 'n');
   if (jugadores.length < 2) return;
   api.setPref('cfg', cfg); PAL = paleta();
-  sesion++; G = new Partida(jugadores, crearGanchos(sesion), { bote: cfg.bote, subasta: cfg.subasta, dinero: cfg.dinero, rondas: cfg.rondas }); reg = false;
+  sesion++; G = new Partida(jugadores, crearGanchos(sesion), { bote: cfg.bote, subasta: cfg.subasta, dinero: cfg.dinero, rondas: cfg.rondas, dobleEmbarque: !!cfg.dobleEmbarque, unosPremio: !!cfg.unosPremio, mejoraLibre: !!cfg.mejoraLibre }); reg = false;
   armar(); pintar(); log(`¡Empieza la partida! Cada jugador recibe ${cfg.dinero} M.`); guardar();
   if (G.p().bot) jugar();
 }
@@ -310,8 +321,9 @@ return {
   aceptar: async (a, b, o) => vigila(await dialogo(`🤝 ${esc(b.nombre)}: ¿aceptas el trato?`, `<p><b>${esc(a.nombre)}</b> te da: <b>${listaTrato(o.da, o.daM, o.daL)}</b></p><p>A cambio pide: <b>${listaTrato(o.pide, o.pideM, o.pideL)}</b></p>`, ['Aceptar', 'Rechazar'])) === 'Aceptar',
   casilla: async p => {
     const cont = document.createElement('div'); let eleg = -1;
-    cont.innerHTML = `<p>Billete dorado: elige a dónde viajas.</p><div class="mtelige">${G.c.map((s, i) => (i === 24 || i === p.pos ? '' : `<button type="button" class="btn" data-i="${i}" style="--c:${tiraDe(s).color}"><i></i>${esc(s.nombre)}${s.dueno !== null ? ` <small>(${esc(G.jug[s.dueno].nombre)})</small>` : ''}</button>`)).join('')}</div>`;
-    cont.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; eleg = +b.dataset.i; cont.querySelectorAll('[data-i]').forEach(x => x.classList.toggle('on', x === b)); });
+    const lista = G.c.filter((q, i) => i !== p.pos && i !== 24 && i !== 6 && q.tipo !== 'impuesto' && !(q.tipo === 'carta' && q.mazo === 'retrasos'));   // solo sitios a los que querrías ir
+    cont.innerHTML = `<p class="note">Billete dorado: toca el destino al que quieres viajar.</p>${gruposHtml(lista, 3, () => '', q => q.dueno !== null ? esc(G.jug[q.dueno].nombre) : q.tipo === 'destino' || q.tipo === 'terminal' || q.tipo === 'servicio' ? 'Libre' : '')}`;
+    cont.addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; eleg = +b.dataset.s; cont.querySelectorAll('[data-s]').forEach(x => x.classList.toggle('sel', x === b)); });
     do { vigila(await dialogo('✈️ Billete dorado', cont, ['Viajar'])); } while (eleg < 0);
     return eleg;
   },
@@ -354,14 +366,14 @@ async function jugar() {
 /* ---------- miniaturas de destinos (Mis destinos y Negociar), agrupadas por color ---------- */
 const miniatura = (s, extra = '') => { const t = tiraDe(s), dos = s.corto.includes('|');
   return `<button type="button" class="mtmin ${s.hip ? 'hip' : ''} ${extra}" data-s="${s.id}" aria-label="${esc(s.nombre)}${s.of ? ' · ' + NIVELES[s.of].nombre : ''}${s.hip ? ' · hipotecado' : ''}"><img class="f" src="${IMG(s.img)}" alt="" draggable="false">${s.of ? insignia(NIVELES[s.of].id, 'up') : ''}<span class="pl${dos ? ' d' : ''}" style="background:${t.color};color:${t.tinta}">${esc(s.corto).replace('|', '<br>')}</span></button>`; };
-const claveGrupo = s => s.tipo === 'destino' ? s.g : s.tipo;
-const ORDEN_GRUPOS = [...Object.keys(ZONAS), 'terminal', 'servicio'];
-const nombreGrupo = k => ZONAS[k] ? ZONAS[k].nombre : k === 'terminal' ? 'Terminales' : 'Servicios';
+const claveGrupo = s => s.tipo === 'destino' ? s.g : s.tipo === 'carta' ? s.mazo : s.tipo;
+const ORDEN_GRUPOS = [...Object.keys(ZONAS), 'terminal', 'servicio', 'souvenirs', 'esquina'];
+const nombreGrupo = k => ZONAS[k] ? ZONAS[k].nombre : k === 'terminal' ? 'Terminales' : k === 'souvenirs' ? 'Souvenirs' : k === 'esquina' ? 'Especiales' : 'Servicios';
 const colorGrupo = k => ZONAS[k] ? ZONAS[k].color : TIPOS[k].color;
 // Casillas agrupadas por color (zona), en el orden del tablero dentro de cada grupo; cada grupo con su cabecera y su cuadrícula de «cols» columnas
-function gruposHtml(lista, cols, extra = () => '') {
+function gruposHtml(lista, cols, extra = () => '', pie = null) {
   const g = {}; lista.forEach(s => (g[claveGrupo(s)] = g[claveGrupo(s)] || []).push(s));
-  return ORDEN_GRUPOS.filter(k => g[k]).map(k => `<div class="mtgrp"><div class="mtgh"><i style="background:${colorGrupo(k)}"></i>${esc(nombreGrupo(k))}</div><div class="mtgr c${cols}">${g[k].map(s => miniatura(s, extra(s))).join('')}</div></div>`).join('');
+  return ORDEN_GRUPOS.filter(k => g[k]).map(k => `<div class="mtgrp"><div class="mtgh"><i style="background:${colorGrupo(k)}"></i>${esc(nombreGrupo(k))}</div><div class="mtgr c${cols}">${g[k].map(s => pie ? `<div class="mtcelda">${miniatura(s, extra(s))}<small class="mtdue">${pie(s)}</small></div>` : miniatura(s, extra(s))).join('')}</div></div>`).join('');
 }
 
 /* ---------- mis destinos (mejorar vuelos, hipotecar) ---------- */
@@ -374,11 +386,11 @@ async function tarjetaPropia(p, s, sid) {
     if (s.hip) return 'Está hipotecado: págala antes de mejorar.';
     if (!G.tieneZona(i, s.g)) return `Necesitas todos los destinos de ${zona.nombre} para mejorar los vuelos.`;
     const z = G.zona(s); if (z.some(x => x.hip)) return 'Hay un destino hipotecado en la zona.';
-    if (z.some(x => x.of < t)) return 'Mejora antes los demás destinos de la zona: deben ir parejos.';
+    if (!G.reglas.mejoraLibre && z.some(x => x.of < t)) return 'Mejora antes los demás destinos de la zona: deben ir parejos.';
     if (t < 4 ? G.mejoras <= 0 : G.jets <= 0) return t < 4 ? 'El banco no tiene más mejoras de vuelo.' : 'El banco no tiene más Jets Privados.';
     return `No tienes dinero suficiente (cuesta ${zona.mejora} M).`;
   };
-  const motivoMenos = () => G.zona(s).some(x => x.of > t) ? 'Baja antes los demás destinos de la zona.' : 'El banco no puede devolver las 4 mejoras de este jet.';
+  const motivoMenos = () => !G.reglas.mejoraLibre && G.zona(s).some(x => x.of > t) ? 'Baja antes los demás destinos de la zona.' : 'El banco no puede devolver las 4 mejoras de este jet.';
   const dibujar = () => {
     const m = cont.closest('.mtmodal'), cab = cabecera(IMG(s.img), s.nombre, s.sub, tiraDe(s), '5/4');
     let cuerpo;
@@ -415,7 +427,7 @@ async function gestionar(p, sid = sesion) {
     const mias = G.propias(i);
     cont.innerHTML = `<p class="note">Dinero: <b>${p.dinero} M</b>${p.gratis ? ` · 🎁 Mejoras gratis: <b>${p.gratis}</b>` : ''} · el banco tiene ${G.mejoras} mejoras de vuelo y ${G.jets} jets privados.</p>${filasMano(p)}`
       + (mias.length ? gruposHtml(mias, 4) : '<p>Todavía no tienes ningún destino.</p>')
-      + '<p class="note">Toca un destino para mejorarlo, venderle categorías o hipotecarlo. Para mejorar los vuelos necesitas todos los destinos de la zona, sin hipotecas, y hay que mejorar de forma pareja. Tras la Primera Clase llega el ✈️ Jet Privado.</p>';
+      + `<p class="note">Toca un destino para mejorarlo, venderle categorías o hipotecarlo. Para mejorar los vuelos necesitas todos los destinos de la zona, sin hipotecas${G.reglas.mejoraLibre ? '; en esta partida puedes mejorar cada destino por separado' : ', y hay que mejorar de forma pareja'}. Tras la Primera Clase llega el ✈️ Jet Privado.</p>`;
   };
   cont.addEventListener('click', async e => {
     const b = e.target.closest('[data-s]'); if (!b) return;
@@ -437,7 +449,8 @@ function ventanaMazo(m) {
   if (!G || !MAZOS[m]) return;
   const cont = document.createElement('div'), t = TIPOS[m], cartas = MAZOS[m];
   const mini = (k, pie, extra = '') => `<button type="button" class="mtcm ${extra}" data-m="${m}" data-k="${k}" aria-label="${esc(cartas[k].t)}"><img src="${IMG(cartas[k].img)}" alt="" draggable="false"><span>${esc(pie || cartas[k].t)}</span></button>`;
-  const porJug = G.jug.map((p, i) => ({ p, i, l: G.hist[m].filter(x => x[0] === i).map(x => x[1]) }));
+  const yo = G.p().bot ? (G.jug.findIndex(q => !q.bot && !q.fuera) >= 0 ? G.jug.findIndex(q => !q.bot && !q.fuera) : 0) : G.idx(G.p());   // cada jugador solo ve las cartas que le han salido a él
+  const porJug = [{ p: G.jug[yo], i: yo, l: G.hist[m].filter(x => x[0] === yo).map(x => x[1]) }];
   const hist = porJug.some(x => x.l.length)
     ? porJug.filter(x => x.l.length).map(({ p, l }) => `<div class="mtgrp"><div class="mtgh mtjh"><span class="mtjf">${figuraFicha(p.k, 'mini')}</span>${esc(p.nombre)}<small>${l.length} carta${l.length > 1 ? 's' : ''}</small></div><div class="mtgr c4">${l.map(k => mini(k)).join('')}</div></div>`).join('')
     : '<p class="note">Todavía no ha salido ninguna carta de este mazo.</p>';
@@ -447,8 +460,8 @@ function ventanaMazo(m) {
     if (m === 'souvenirs') for (let n = 0; n < (p.gratis || 0); n++) guardadas.push(mini(BENEFICIO_GRATIS, p.nombre + ' · mejora gratis'));
   });
   cont.innerHTML = `<div class="mtdorsoarr"><img src="${IMG(m === 'souvenirs' ? 'dorso-souvenirs' : 'dorso-retrasos')}" alt="" draggable="false"></div>
-    <p class="note mtc">${m === 'souvenirs' ? 'Casi siempre son buenas noticias.' : 'Los imprevistos del viaje.'} Cartas que han salido: <b>${G.hist[m].length}</b>. Toca una carta para verla.</p>
-    <h3 class="mth">Historial por jugador</h3>${hist}
+    <p class="note mtc">${m === 'souvenirs' ? 'Casi siempre son buenas noticias.' : 'Los imprevistos del viaje.'} Cartas que te han salido: <b>${porJug[0].l.length}</b>. Toca una carta para verla.</p>
+    <h3 class="mth">Tu historial</h3>${hist}
     <h3 class="mth">Tarjetas de beneficio guardadas</h3>
     ${guardadas.length ? `<div class="mtgr c4">${guardadas.join('')}</div>` : '<p class="note">Ahora mismo nadie guarda ninguna.</p>'}
     <p class="note">${m === 'souvenirs' ? 'La «sal de la Prisión» y la mejora de vuelo gratis se quedan con su dueño hasta que las use o las negocie.' : 'La tarjeta «sal de la Prisión» se queda con su dueño hasta que la use o la negocie.'}</p>`;
@@ -497,11 +510,15 @@ async function intercambioDesdeBoton() {
 /* ---------- patrimonio de un jugador (al tocar su ficha) ---------- */
 function verJugador(i) {
   const p = G.jug[i], mias = G.propias(i);
-  const filas = mias.length ? mias.map(s => `<div class="mtges"><i style="background:${tiraDe(s).color}"></i><span>${esc(s.nombre)}${s.of ? ` <small>· ${NIVELES[s.of].nombre}</small>` : ''}${s.hip ? ' <small>· hipotecado</small>' : ''}</span></div>`).join('') : '<p class="note">Todavía no tiene ningún destino.</p>';
-  dialogo(`${figuraFicha(p.k, 'mini')} ${esc(p.nombre)}${p.bot ? ' · CPU' : ''}`, `<p>Dinero: <b>${p.dinero} M</b> · Patrimonio: <b>${G.patrimonio(p)} M</b></p>${p.fuera ? '<p>En bancarrota.</p>' : ''}${p.espera ? '<p>🔒 Retenido en la Prisión Aduanera.</p>' : ''}${filasMano(p)}${filas}`, ['Cerrar'], { cancelable: true }).catch(() => {});
+  const filas = mias.length ? gruposHtml(mias, 4) : '<p class="note">Todavía no tiene ningún destino.</p>';
+  const cont = document.createElement('div');
+  cont.innerHTML = `<p>Dinero: <b>${p.dinero} M</b> · Patrimonio: <b>${G.patrimonio(p)} M</b></p>${p.fuera ? '<p>En bancarrota.</p>' : ''}${p.espera ? '<p>🔒 Retenido en la Prisión Aduanera.</p>' : ''}${filasMano(p)}<div class="mtvj">${filas}</div>`;
+  cont.addEventListener('click', async e => { const b = e.target.closest('[data-s]'); if (!b) return; try { await dialogo('', fichaCasilla(G.c[+b.dataset.s]), ['Cerrar'], { tarjeta: true, cancelable: true }); } catch { /* aborto */ } });
+  dialogo(`${figuraFicha(p.k, 'mini')} ${esc(p.nombre)}${p.bot ? ' · CPU' : ''}`, cont, ['Cerrar'], { cancelable: true }).catch(() => {});
 }
 
 /* ---------- entrada ---------- */
+function alSeccion(e) { const d = e.target; if (d.dataset && d.dataset.sec) { d.open ? secAb.add(d.dataset.sec) : secAb.delete(d.dataset.sec); } }
 function alEscribir(e) { const i = e.target.dataset.name; if (i != null) { cfg.jug[+i][0] = e.target.value; api.setPref('cfg', cfg); } }
 function clic(e) {
   const b = e.target.closest('button,[data-op]'); if (!b) return; const d = b.dataset;

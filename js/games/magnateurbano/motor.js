@@ -3,13 +3,13 @@
 // pregunta(titulo, html, botones) → botón, carta(mazo, carta, auto), aterriza(casilla, jugador, auto, extra) (ficha emergente al caer: impuestos, esquinas y alquileres),
 // comprar(casilla, jugador) → bool, puja(casilla, jugador, actual) → importe, aceptar(a, b, oferta) → bool, casilla(jugador) → índice (Billete dorado),
 // gestionar(partida, jugador), fin(ganador, motivo).
-import { ZONAS, MULT, SALARIO, FIANZA, MEJORAS, JETS, TERMINAL, SERVICIO, EMBARQUE, PRISION, PARAISO, CONTROL, TOTAL, CASILLAS, MAZOS, LIBRE } from './datos.js';
+import { ZONAS, MULT, SALARIO, PREMIO_UNOS, FIANZA, MEJORAS, JETS, TERMINAL, SERVICIO, EMBARQUE, PRISION, PARAISO, CONTROL, TOTAL, CASILLAS, MAZOS, LIBRE } from './datos.js';
 
 export const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const d6 = () => 1 + Math.floor(Math.random() * 6);
 const barajar = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const r5 = x => Math.round(x / 5) * 5;
-export const REGLAS = { bote: true, subasta: true, dinero: 1600, rondas: 0 };   // rondas: 0 = sin límite
+export const REGLAS = { bote: true, subasta: true, dinero: 1600, rondas: 0, dobleEmbarque: false, unosPremio: false, mejoraLibre: false };   // rondas: 0 = sin límite
 const COMPRABLE = ['destino', 'terminal', 'servicio'];
 const VALOR_TARJETA = 110;                                                       // lo que vale para la CPU una tarjeta de «sal de la Prisión»
 
@@ -135,7 +135,7 @@ export class Partida {
 
   // ---------- mejoras de vuelo (uniformes, con límite del banco) e hipotecas ----------
   puedeMejorarGratis(s) {
-    return s.tipo === 'destino' && s.dueno !== null && s.of < 5 && (s.of < 4 ? this.mejoras > 0 : this.jets > 0) && this.tieneZona(s.dueno, s.g) && this.zona(s).every(x => !x.hip && x.of >= s.of);
+    return s.tipo === 'destino' && s.dueno !== null && s.of < 5 && (s.of < 4 ? this.mejoras > 0 : this.jets > 0) && this.tieneZona(s.dueno, s.g) && this.zona(s).every(x => !x.hip && (this.reglas.mejoraLibre || x.of >= s.of));
   }
   puedeMejorar(s) { const p = s.dueno !== null && this.jug[s.dueno]; return this.puedeMejorarGratis(s) && (p.gratis > 0 || p.dinero >= ZONAS[s.g].mejora); }
   mejorar(s, gratis = false) { const p = this.jug[s.dueno]; if (!gratis && p.gratis > 0) { p.gratis--; gratis = true; } if (!gratis) p.dinero -= ZONAS[s.g].mejora; if (s.of < 4) this.mejoras--; else { this.jets--; this.mejoras += 4; } s.of++; }
@@ -156,7 +156,7 @@ export class Partida {
     }
     return fin(false);
   }
-  puedeBajar(s) { return s.of > 0 && this.zona(s).every(x => x.of <= s.of) && (s.of < 5 || this.mejoras >= 4); }
+  puedeBajar(s) { return s.of > 0 && (this.reglas.mejoraLibre || this.zona(s).every(x => x.of <= s.of)) && (s.of < 5 || this.mejoras >= 4); }
   bajar(s, cobra = true) { if (cobra) this.jug[s.dueno].dinero += ZONAS[s.g].mejora / 2; if (s.of === 5) { this.jets++; this.mejoras -= 4; } else this.mejoras++; s.of--; }
   puedeHipotecar(s) { return s.dueno !== null && !s.hip && this.zona(s).every(x => !x.of); }
   hipotecar(s) { this.jug[s.dueno].dinero += s.precio / 2; s.hip = true; }
@@ -242,11 +242,18 @@ export class Partida {
   }
 
   // ---------- movimiento ----------
-  async tirar() { const a = d6(), b = d6(); await this.h.dados(a, b); this.log(`${this.n(this.p())} saca ${a} + ${b} = ${a + b}.`); return [a, b]; }
+  async tirar() {
+    const a = d6(), b = d6(); await this.h.dados(a, b); this.log(`${this.n(this.p())} saca ${a} + ${b} = ${a + b}.`);
+    if (a === 1 && b === 1 && this.reglas.unosPremio) { this.log(`¡Dos unos! ${this.n(this.p())} gana ${PREMIO_UNOS} M.`, 'pos'); this.cobrar(this.p(), PREMIO_UNOS); }
+    return [a, b];
+  }
   async avanzar(p, n) {
     for (let i = 0; i < n; i++) {
       p.pos = (p.pos + 1) % TOTAL;
-      if (p.pos === EMBARQUE) { this.log(`${this.n(p)} cobra ${SALARIO} M al pasar por Embarque.`, 'pos'); this.cobrar(p, SALARIO); }
+      if (p.pos === EMBARQUE) {
+        const justo = i === n - 1 && this.reglas.dobleEmbarque, m = SALARIO * (justo ? 2 : 1);
+        this.log(justo ? `${this.n(p)} cae justo en Embarque: ¡cobra el doble, ${m} M!` : `${this.n(p)} cobra ${m} M al pasar por Embarque.`, 'pos'); this.cobrar(p, m);
+      }
       await this.h.paso(p);
     }
   }
@@ -369,7 +376,7 @@ export function validar(d) {
   const ent = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
   if (!d || typeof d !== 'object' || d.v !== 2 || !Array.isArray(d.jug) || d.jug.length < 2 || d.jug.length > 4) return null;
   const n = d.jug.length, r = d.reglas || {};
-  const reglas = { bote: !!r.bote, subasta: !!r.subasta, dinero: ent(r.dinero, 500, 5000) ? r.dinero : REGLAS.dinero, rondas: ent(r.rondas, 0, 500) ? r.rondas : 0 };
+  const reglas = { bote: !!r.bote, subasta: !!r.subasta, dinero: ent(r.dinero, 500, 5000) ? r.dinero : REGLAS.dinero, rondas: ent(r.rondas, 0, 500) ? r.rondas : 0, dobleEmbarque: !!r.dobleEmbarque, unosPremio: !!r.unosPremio, mejoraLibre: !!r.mejoraLibre };
   const jug = d.jug.map(p => p && typeof p === 'object' && typeof p.nombre === 'string' && ent(p.k, 0, 3) && ent(p.dinero, 0, 1e7) && ent(p.pos, 0, TOTAL - 1) && ent(p.intentos, 0, 3)
     && Array.isArray(p.libres) && p.libres.length <= 2 && (p.gratis === undefined || ent(p.gratis, 0, 99)) && p.libres.every(m => Object.hasOwn(MAZOS, m))
     ? { nombre: p.nombre.slice(0, 14), k: p.k, bot: !!p.bot, dinero: p.dinero, pos: p.pos, espera: !!p.espera, intentos: p.intentos, libres: p.libres.slice(), gratis: p.gratis || 0, pierde: !!p.pierde, huelga: !!p.huelga, fuera: !!p.fuera } : null);
