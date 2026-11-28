@@ -46,7 +46,9 @@
 
 /* centro: imagen, los dos mazos enfrentados y los mandos del turno */
 .juego-magnateurbano .mtcentro{grid-area:2/2/13/7;position:relative;contain:size;overflow:hidden;border-radius:8px;border:1px solid var(--tb-line);background:var(--tb-alt) url(../../../img/aeropuerto/centro.webp) center/cover no-repeat}
-.juego-magnateurbano .mtcentro .dorso{position:absolute;width:24%;border-radius:5px;box-shadow:0 3px 8px rgba(0,0,0,.45);pointer-events:none}
+.juego-magnateurbano .mtcentro .dorso{position:absolute;width:24%;padding:0;margin:0;border:0;background:none;border-radius:5px;box-shadow:0 3px 8px rgba(0,0,0,.45);cursor:pointer;transition:filter .15s}
+.juego-magnateurbano .mtcentro .dorso img{display:block;width:100%;border-radius:5px;pointer-events:none}
+.juego-magnateurbano .mtcentro .dorso:active{filter:brightness(1.15)}
 .juego-magnateurbano .mtcentro .dorso.r{left:4%;top:2.5%;transform:rotate(7deg)}
 .juego-magnateurbano .mtcentro .dorso.s{right:4%;bottom:2.5%;transform:rotate(-8deg)}
 .juego-magnateurbano .mtmid{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 6px}
@@ -158,3 +160,32 @@
 .mtk .ins.bil{display:grid;place-items:center;font-size:46px;background:var(--tb-alt)}
 .mtk .mtpm{width:52px;height:52px;padding:0;font-size:28px;line-height:1;flex:none;display:grid;place-items:center}
 .mtk .bd>.btn{width:100%}
+
+/* Grupos por color, Negociar con miniaturas y ventanas de los mazos */
+.mtmodal .mtgrp{margin:6px 0 10px}
+.mtmodal .mtgh{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;margin:0 0 4px;color:var(--tb-ink)}
+.mtmodal .mtgh>i{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid rgba(0,0,0,.3)}
+.mtmodal .mtgh>i.tj{background:#7A3FC8}
+.mtmodal .mtgh small{margin-left:auto;font-weight:800;opacity:.65;text-transform:none;letter-spacing:0}
+.mtmodal .mtgr{margin:0}
+.mtmodal .mtgr.c3{grid-template-columns:repeat(3,1fr)}
+.mtmodal .mtgr.c4{grid-template-columns:repeat(4,1fr)}
+.mtmodal .mtlado{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mtmodal .mtmin.sel{border-color:var(--tb-acc);box-shadow:0 0 0 3px var(--tb-acc)}
+.mtmodal .mtmin.sel::before{content:"✓";position:absolute;z-index:2;left:2px;top:2px;width:22cqw;height:22cqw;border-radius:50%;background:var(--tb-acc);color:#fff;font-size:15cqw;font-weight:900;line-height:22cqw;text-align:center}
+.mtmodal .mtmin.hip.sel::after{display:none}
+.mtmodal .mtjh{font-size:13px}
+.mtmodal .mtjf{display:inline-flex;width:24px;height:24px}
+.mtmodal .mth{font-size:14px;margin:12px 0 4px;font-weight:900}
+.mtmodal .mtdorsoarr{display:flex;justify-content:center;margin:2px 0 6px}
+.mtmodal .mtdorsoarr img{width:min(38%,150px);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.mtmodal .mtc{text-align:center}
+.mtmodal .mtgr .mtcm{padding:0;border:2px solid var(--tb-line);border-radius:8px;overflow:hidden;background:var(--tb-cell);cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.mtmodal .mtcm img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.mtmodal .mtcm span{font-size:10px;font-weight:800;line-height:1.1;padding:2px 2px 3px;color:var(--tb-ink);display:block;min-height:2.3em;overflow:hidden}
+.mtmodal .mtges{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--line)}
+.mtmodal .mtges>i{width:12px;height:12px;border-radius:3px;flex:none}
+.mtmodal .mtges>span{flex:1;font-weight:800}
+.mtmodal .mttrato>div{max-height:none;overflow:visible}
+.mtmodal .mtlado{padding:0 3px}
+.mtmodal .mtdorsoarr img{width:min(30%,130px)}

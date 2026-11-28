@@ -97,11 +97,11 @@ export class Partida {
     this.c = CASILLAS.map((s, i) => ({ ...s, id: i, dueno: null, of: 0, hip: false }));     // estado propio, sin tocar CASILLAS
     this.mazos = { souvenirs: barajar(MAZOS.souvenirs.map((_, i) => i)), retrasos: barajar(MAZOS.retrasos.map((_, i) => i)) };
     this.turno = 0; this.ronda = 1; this.terminada = false; this.ganador = -1; this.motivo = '';
-    this.bote = 0; this.mejoras = MEJORAS; this.jets = JETS; this.otra = false; this.ia = new IA(this);
+    this.bote = 0; this.mejoras = MEJORAS; this.jets = JETS; this.hist = { souvenirs: [], retrasos: [] }; this.otra = false; this.ia = new IA(this);
   }
   toJSON() {
     return { v: 2, jug: this.jug.map(p => ({ ...p, libres: p.libres.slice() })), c: this.c.map(s => [s.dueno, s.of, s.hip]), reglas: this.reglas, mazos: this.mazos,
-      turno: this.turno, ronda: this.ronda, terminada: this.terminada, ganador: this.ganador, motivo: this.motivo, bote: this.bote, mejoras: this.mejoras, jets: this.jets };
+      turno: this.turno, ronda: this.ronda, terminada: this.terminada, ganador: this.ganador, motivo: this.motivo, bote: this.bote, mejoras: this.mejoras, jets: this.jets, hist: { souvenirs: this.hist.souvenirs.map(x => x.slice()), retrasos: this.hist.retrasos.map(x => x.slice()) } };
   }
   static desde(d, h) {
     const g = new Partida(d.jug, h, d.reglas);
@@ -109,6 +109,7 @@ export class Partida {
     d.c.forEach(([dueno, of, hip], i) => Object.assign(g.c[i], { dueno, of, hip }));
     Object.assign(g, { mazos: { souvenirs: d.mazos.souvenirs.slice(), retrasos: d.mazos.retrasos.slice() }, turno: d.turno, ronda: d.ronda, terminada: d.terminada,
       ganador: d.ganador, motivo: d.motivo, bote: d.bote, mejoras: d.mejoras, jets: d.jets });
+    g.hist = { souvenirs: (d.hist ? d.hist.souvenirs : []).map(x => x.slice()), retrasos: (d.hist ? d.hist.retrasos : []).map(x => x.slice()) };
     return g;
   }
   p() { return this.jug[this.turno]; }
@@ -330,6 +331,7 @@ export class Partida {
   }
   async robar(p, mazo) {
     const lista = this.mazos[mazo], k = lista.shift(), c = MAZOS[mazo][k];
+    this.hist[mazo].push([this.idx(p), k]); if (this.hist[mazo].length > 300) this.hist[mazo].shift();       // historial de cartas robadas (jugador, carta)
     if (!c.libre) lista.push(k);                       // la tarjeta de «sal de la Prisión» se queda en la mano hasta que se use o se negocie
     await this.h.carta(mazo, c, p.bot); this.log(`${this.n(p)} roba «${esc(c.t)}»: ${esc(c.e)}`);
     if (c.d > 0) this.cobrar(p, c.d);
@@ -387,6 +389,7 @@ export function validar(d) {
   const mej = c.reduce((t, [, of]) => t + (of < 5 ? of : 0), 0), jets = c.filter(([, of]) => of === 5).length;
   if (!ent(d.turno, 0, n - 1) || jug[d.turno].fuera && !d.terminada || !ent(d.ronda, 1, 1e5) || !ent(d.bote, 0, 1e7) || d.mejoras !== MEJORAS - mej || d.jets !== JETS - jets) return null;
   if (jug.filter(p => !p.fuera).length < 1) return null;
-  return { v: 2, jug, c, reglas, mazos, turno: d.turno, ronda: d.ronda, terminada: !!d.terminada, ganador: ent(d.ganador, -1, n - 1) ? d.ganador : -1,
+  const hist = Object.fromEntries(Object.keys(MAZOS).map(m => [m, (d.hist && Array.isArray(d.hist[m]) ? d.hist[m] : []).filter(x => Array.isArray(x) && x.length === 2 && ent(x[0], 0, n - 1) && ent(x[1], 0, MAZOS[m].length - 1)).slice(-300).map(x => [x[0], x[1]])]));
+  return { v: 2, jug, c, reglas, mazos, hist, turno: d.turno, ronda: d.ronda, terminada: !!d.terminada, ganador: ent(d.ganador, -1, n - 1) ? d.ganador : -1,
     motivo: typeof d.motivo === 'string' ? d.motivo.slice(0, 120) : '', bote: d.bote, mejoras: d.mejoras, jets: d.jets };
 }

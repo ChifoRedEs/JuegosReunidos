@@ -5,7 +5,7 @@ import { grupoTableroDN, coloresTablero } from '../../core/aspectos.js';
 import { FIGURAS, fondoFigura, urlFigura } from '../../core/figuras.js';
 import { COLORES, IDS_POCOS } from '../../core/fichas.js';
 import { crearDado3D } from '../../core/dado3d.js';
-import { ZONAS, TIPOS, NIVELES, MULT, SALARIO, FIANZA, MEJORAS, JETS, TERMINAL, SERVICIO, CASILLAS, MAZOS, MAZO_NOMBRE, IMG, TOTAL } from './datos.js';
+import { ZONAS, TIPOS, NIVELES, MULT, SALARIO, FIANZA, MEJORAS, JETS, TERMINAL, SERVICIO, CASILLAS, MAZOS, MAZO_NOMBRE, LIBRE, IMG, TOTAL } from './datos.js';
 import { Partida, REGLAS, validar as validarPartida } from './motor.js';
 
 const ABORTO = Symbol('aborto');                 // al salir del juego a mitad de turno
@@ -149,7 +149,7 @@ function armar() {
         <img class="f" src="${IMG(s.img)}" alt="" draggable="false"><i class="ow"></i><span class="ins up" hidden><img alt="" draggable="false"></span><span class="tk"></span>
         <span class="pl${dos ? ' d' : ''}" style="background:${t.color};color:${t.tinta}">${esc(s.corto).replace('|', '<br>')}</span></button>`; }).join('')}
       <div class="mtcentro" id="mtCentro">
-        <img class="dorso r" src="${IMG('dorso-retrasos')}" alt="Mazo de Retrasos" draggable="false"><img class="dorso s" src="${IMG('dorso-souvenirs')}" alt="Mazo de Souvenirs" draggable="false">
+        <button type="button" class="dorso r" data-ac="mazo" data-mz="retrasos" aria-label="Retrasos: historial de cartas"><img src="${IMG('dorso-retrasos')}" alt="" draggable="false"></button><button type="button" class="dorso s" data-ac="mazo" data-mz="souvenirs" aria-label="Souvenirs: historial de cartas"><img src="${IMG('dorso-souvenirs')}" alt="" draggable="false"></button>
         <button type="button" class="mtlnk dest" id="mtGes" data-ac="gestionar" aria-label="Mis destinos"><img src="${IMG('enlace-destinos')}" alt="" draggable="false"></button>
         <button type="button" class="mtlnk trat" id="mtTrato" data-ac="trato" aria-label="Negociar"><img src="${IMG('enlace-negociar')}" alt="" draggable="false"></button>
         <div class="mtmid"><div class="dadozona" id="mtDado"></div><div class="mtst"><div class="mtturno" id="mtTurno"></div><small class="mtbote" id="mtBote"></small></div>
@@ -351,6 +351,19 @@ async function jugar() {
   if (vivo) { pintar(); if (G && G.terminada) guardar(); }
 }
 
+/* ---------- miniaturas de destinos (Mis destinos y Negociar), agrupadas por color ---------- */
+const miniatura = (s, extra = '') => { const t = tiraDe(s), dos = s.corto.includes('|');
+  return `<button type="button" class="mtmin ${s.hip ? 'hip' : ''} ${extra}" data-s="${s.id}" aria-label="${esc(s.nombre)}${s.of ? ' · ' + NIVELES[s.of].nombre : ''}${s.hip ? ' · hipotecado' : ''}"><img class="f" src="${IMG(s.img)}" alt="" draggable="false">${s.of ? insignia(NIVELES[s.of].id, 'up') : ''}<span class="pl${dos ? ' d' : ''}" style="background:${t.color};color:${t.tinta}">${esc(s.corto).replace('|', '<br>')}</span></button>`; };
+const claveGrupo = s => s.tipo === 'destino' ? s.g : s.tipo;
+const ORDEN_GRUPOS = [...Object.keys(ZONAS), 'terminal', 'servicio'];
+const nombreGrupo = k => ZONAS[k] ? ZONAS[k].nombre : k === 'terminal' ? 'Terminales' : 'Servicios';
+const colorGrupo = k => ZONAS[k] ? ZONAS[k].color : TIPOS[k].color;
+// Casillas agrupadas por color (zona), en el orden del tablero dentro de cada grupo; cada grupo con su cabecera y su cuadrícula de «cols» columnas
+function gruposHtml(lista, cols, extra = () => '') {
+  const g = {}; lista.forEach(s => (g[claveGrupo(s)] = g[claveGrupo(s)] || []).push(s));
+  return ORDEN_GRUPOS.filter(k => g[k]).map(k => `<div class="mtgrp"><div class="mtgh"><i style="background:${colorGrupo(k)}"></i>${esc(nombreGrupo(k))}</div><div class="mtgr c${cols}">${g[k].map(s => miniatura(s, extra(s))).join('')}</div></div>`).join('');
+}
+
 /* ---------- mis destinos (mejorar vuelos, hipotecar) ---------- */
 // Cuadrícula de 4 columnas con todo lo que tienes; al tocar una miniatura se abre su tarjeta. Las mejoras se
 // preparan con ＋/－ y solo se pagan o cobran al pulsar «Aceptar» (antes no se mueve ni un euro).
@@ -401,9 +414,7 @@ async function gestionar(p, sid = sesion) {
   const dibujar = () => {
     const mias = G.propias(i);
     cont.innerHTML = `<p class="note">Dinero: <b>${p.dinero} M</b>${p.gratis ? ` · 🎁 Mejoras gratis: <b>${p.gratis}</b>` : ''} · el banco tiene ${G.mejoras} mejoras de vuelo y ${G.jets} jets privados.</p>${filasMano(p)}`
-      + (mias.length ? `<div class="mtgr">${mias.map(s => { const t = tiraDe(s), dos = s.corto.includes('|');
-        return `<button type="button" class="mtmin ${s.hip ? 'hip' : ''}" data-s="${s.id}" aria-label="${esc(s.nombre)}${s.of ? ' · ' + NIVELES[s.of].nombre : ''}${s.hip ? ' · hipotecado' : ''}"><img class="f" src="${IMG(s.img)}" alt="" draggable="false">${s.of ? insignia(NIVELES[s.of].id, 'up') : ''}<span class="pl${dos ? ' d' : ''}" style="background:${t.color};color:${t.tinta}">${esc(s.corto).replace('|', '<br>')}</span></button>`; }).join('')}</div>`
-        : '<p>Todavía no tienes ningún destino.</p>')
+      + (mias.length ? gruposHtml(mias, 4) : '<p>Todavía no tienes ningún destino.</p>')
       + '<p class="note">Toca un destino para mejorarlo, venderle categorías o hipotecarlo. Para mejorar los vuelos necesitas todos los destinos de la zona, sin hipotecas, y hay que mejorar de forma pareja. Tras la Primera Clase llega el ✈️ Jet Privado.</p>';
   };
   cont.addEventListener('click', async e => {
@@ -420,6 +431,34 @@ async function gestionarDesdeBoton() {
   guardar(); pintar();
 }
 
+/* ---------- ventanas de los mazos: historial de cartas por jugador y tarjetas de beneficio guardadas ---------- */
+const BENEFICIO_GRATIS = MAZOS.souvenirs.findIndex(c => c.mejora);           // «Bufanda artesanal»: mejora de vuelo gratis guardada
+function ventanaMazo(m) {
+  if (!G || !MAZOS[m]) return;
+  const cont = document.createElement('div'), t = TIPOS[m], cartas = MAZOS[m];
+  const mini = (k, pie, extra = '') => `<button type="button" class="mtcm ${extra}" data-m="${m}" data-k="${k}" aria-label="${esc(cartas[k].t)}"><img src="${IMG(cartas[k].img)}" alt="" draggable="false"><span>${esc(pie || cartas[k].t)}</span></button>`;
+  const porJug = G.jug.map((p, i) => ({ p, i, l: G.hist[m].filter(x => x[0] === i).map(x => x[1]) }));
+  const hist = porJug.some(x => x.l.length)
+    ? porJug.filter(x => x.l.length).map(({ p, l }) => `<div class="mtgrp"><div class="mtgh mtjh"><span class="mtjf">${figuraFicha(p.k, 'mini')}</span>${esc(p.nombre)}<small>${l.length} carta${l.length > 1 ? 's' : ''}</small></div><div class="mtgr c4">${l.map(k => mini(k)).join('')}</div></div>`).join('')
+    : '<p class="note">Todavía no ha salido ninguna carta de este mazo.</p>';
+  const guardadas = [];
+  G.jug.forEach((p, i) => {
+    p.libres.filter(x => x === m).forEach(() => guardadas.push(mini(LIBRE[m], p.nombre, '')));
+    if (m === 'souvenirs') for (let n = 0; n < (p.gratis || 0); n++) guardadas.push(mini(BENEFICIO_GRATIS, p.nombre + ' · mejora gratis'));
+  });
+  cont.innerHTML = `<div class="mtdorsoarr"><img src="${IMG(m === 'souvenirs' ? 'dorso-souvenirs' : 'dorso-retrasos')}" alt="" draggable="false"></div>
+    <p class="note mtc">${m === 'souvenirs' ? 'Casi siempre son buenas noticias.' : 'Los imprevistos del viaje.'} Cartas que han salido: <b>${G.hist[m].length}</b>. Toca una carta para verla.</p>
+    <h3 class="mth">Historial por jugador</h3>${hist}
+    <h3 class="mth">Tarjetas de beneficio guardadas</h3>
+    ${guardadas.length ? `<div class="mtgr c4">${guardadas.join('')}</div>` : '<p class="note">Ahora mismo nadie guarda ninguna.</p>'}
+    <p class="note">${m === 'souvenirs' ? 'La «sal de la Prisión» y la mejora de vuelo gratis se quedan con su dueño hasta que las use o las negocie.' : 'La tarjeta «sal de la Prisión» se queda con su dueño hasta que la use o la negocie.'}</p>`;
+  cont.addEventListener('click', async e => {
+    const b = e.target.closest('.mtcm'); if (!b) return;
+    try { await dialogo('', fichaCarta(m, cartas[+b.dataset.k]), ['Cerrar'], { tarjeta: true, cancelable: true }); } catch { /* aborto */ }
+  });
+  dialogo(`${m === 'souvenirs' ? '🎁' : '⏳'} ${m === 'souvenirs' ? 'Souvenirs' : 'Retrasos'}`, cont, ['Cerrar'], { cancelable: true }).catch(() => {});
+}
+
 /* ---------- negociar (destinos, dinero y tarjetas «sal de la Prisión») ---------- */
 async function intercambioDesdeBoton() {
   if (!G || jugando || G.terminada || G.p().bot) return;
@@ -427,22 +466,30 @@ async function intercambioDesdeBoton() {
   const sid = sesion; jugando = true;
   try {
     const cont = document.createElement('div'); let b = otros[0];
+    const sel = { da: new Set(), pide: new Set(), daL: new Set(), pideL: new Set() }, din = { da: 0, pide: 0 };
     const libres = j => G.propias(G.idx(j)).filter(s => !G.zona(s).some(x => x.of));
     const dibujar = () => {
+      sel.pide.clear(); sel.pideL.clear(); din.pide = 0;
+      const lado = ([j, t, k]) => { const l = libres(j), tj = [...new Set(j.libres)];
+        return `<div class="mtlado"><b>${t}</b>${gruposHtml(l, 3, s => (sel[k].has(s.id) ? 'sel' : '')).replace(/class="mtmin /g, `data-lado="${k}" class="mtmin `)}
+          ${tj.length ? `<div class="mtgrp"><div class="mtgh"><i class="tj"></i>Tarjetas</div><div class="mtgr c3">${tj.map(m => `<button type="button" class="mtmin mtcartam ${sel[k + 'L'].has(m) ? 'sel' : ''}" data-lado="${k}L" data-tm="${m}" aria-label="${esc(nombreTarjeta(m))}"><img class="f" src="${IMG(MAZOS[m][LIBRE[m]].img)}" alt="" draggable="false"><span class="pl d" style="background:${TIPOS[m].color};color:${TIPOS[m].tinta}">${esc(nombreTarjeta(m))}</span></button>`).join('')}</div></div>` : ''}
+          ${l.length || tj.length ? '' : '<p class="note">Nada que ofrecer.</p>'}
+          <label class="mtdinero">Dinero <input class="pedir" type="number" inputmode="numeric" min="0" max="${j.dinero}" step="10" value="${din[k] || 0}" data-m="${k}"></label><small class="note">Tiene ${j.dinero} M</small></div>`; };
       cont.innerHTML = `<div class="bar"><span class="lbl">Con</span><div class="seg">${otros.map(q => `<button type="button" class="btn ${q === b ? 'on' : ''}" data-con="${G.idx(q)}">${figuraFicha(q.k, 'mini')} ${esc(q.nombre)}</button>`).join('')}</div></div>
-        <div class="mttrato">${[[a, 'Tú das', 'da'], [b, `Pides a ${esc(b.nombre)}`, 'pide']].map(([j, t, k]) => `<div><b>${t}</b>${libres(j).map(s => `<label class="mtop"><input type="checkbox" data-${k}="${s.id}"><i style="background:${tiraDe(s).color}"></i>${esc(s.nombre)}${s.hip ? ' <small>(hip.)</small>' : ''}</label>`).join('')}
-          ${[...new Set(j.libres)].map(m => `<label class="mtop"><input type="checkbox" data-${k}L="${m}"><i class="tj"></i>🎟️ ${esc(nombreTarjeta(m))}</label>`).join('')}${libres(j).length || j.libres.length ? '' : '<p class="note">Nada que ofrecer.</p>'}
-          <label class="mtdinero">Dinero <input class="pedir" type="number" inputmode="numeric" min="0" max="${j.dinero}" step="10" value="0" data-m="${k}"></label><small class="note">Tiene ${j.dinero} M</small></div>`).join('')}</div>`;
+        <p class="note">Toca las miniaturas que quieras dar o pedir.</p>
+        <div class="mttrato">${[[a, 'Tú das', 'da'], [b, `Pides a ${esc(b.nombre)}`, 'pide']].map(lado).join('')}</div>`;
       repintarFig(cont);
     };
-    cont.addEventListener('click', e => { const x = e.target.closest('[data-con]'); if (x) { b = G.jug[+x.dataset.con]; dibujar(); } });
+    cont.addEventListener('click', e => {
+      const x = e.target.closest('[data-con]'); if (x) { b = G.jug[+x.dataset.con]; dibujar(); return; }
+      const m = e.target.closest('.mtmin[data-lado]'); if (!m) return;
+      const k = m.dataset.lado, v = m.dataset.tm || +m.dataset.s, c = sel[k]; c.has(v) ? c.delete(v) : c.add(v); m.classList.toggle('sel', c.has(v)); api.sonido('click');
+    });
+    cont.addEventListener('input', e => { const i = e.target.closest('[data-m]'); if (i) din[i.dataset.m] = Math.max(0, Math.floor(+i.value || 0)); });
     dibujar();
     const r = await dialogo('🤝 Proponer un trato', cont, ['Proponer', 'Cancelar'], { cancelable: true }); if (r === ABORTO) return; vigilaSesion(sid);
     if (r !== 'Proponer') return;
-    const ids = k => [...cont.querySelectorAll(`[data-${k}]:checked`)].map(x => +x.dataset[k]);
-    const tj = k => [...cont.querySelectorAll(`[data-${k}L]:checked`)].map(x => x.dataset[k + 'L']);
-    const din = k => Math.max(0, Math.floor(+cont.querySelector(`[data-m="${k}"]`).value || 0));
-    await G.proponer(a, b, { da: ids('da'), daM: din('da'), daL: tj('da'), pide: ids('pide'), pideM: din('pide'), pideL: tj('pide') });
+    await G.proponer(a, b, { da: [...sel.da], daM: din.da, daL: [...sel.daL], pide: [...sel.pide], pideM: din.pide, pideL: [...sel.pideL] });
   } catch (e) { if (e !== ABORTO) throw e; return; } finally { if (sid === sesion) jugando = false; }
   guardar(); pintar();
 }
@@ -467,7 +514,7 @@ function clic(e) {
   if (d.j != null && G && b.classList.contains('mtj')) return verJugador(+d.j);
   if (d.c != null && G) { if (!jugando) dialogo('', fichaCasilla(G.c[+d.c]), ['Cerrar'], { tarjeta: true, cancelable: true }).catch(() => {}); return; }
   const a = d.ac;
-  if (a === 'start') empezar(); else if (a === 'tirar') jugar(); else if (a === 'gestionar') gestionarDesdeBoton(); else if (a === 'trato') intercambioDesdeBoton();
+  if (a === 'start') empezar(); else if (a === 'tirar') jugar(); else if (a === 'gestionar') gestionarDesdeBoton(); else if (a === 'trato') intercambioDesdeBoton(); else if (a === 'mazo') ventanaMazo(d.mz);
   else if (a === 'aspecto') asp.abrir(); else if (a === 'reglas') reglas(); else if (a === 'nueva') nuevaSetup();
 }
 function reglas() {

@@ -492,6 +492,7 @@ for (const nv of Object.keys(NAh)) assert.ok(candAh(nv, 'mezcla').length > 100);
       for (const m of Object.keys(MTMAZOS)) assert.equal(g.mazos[m].length + g.jug.reduce((a, p) => a + p.libres.filter(x => x === m).length, 0), MTMAZOS[m].length);   // las tarjetas «sal de la Prisión» no se duplican
       if (t % 40 === 0) { const v = validarMT(JSON.parse(JSON.stringify(g))); assert.ok(v); assert.equal(JSON.stringify(MTPartida.desde(v, mudo)), JSON.stringify(g)); }
     }
+    assert.ok(g.hist.souvenirs.length + g.hist.retrasos.length > 0 && g.hist.souvenirs.every(x => x[0] < n && x[1] < MTMAZOS.souvenirs.length), 'historial de cartas');
     if (g.terminada) { terminadas++; assert.ok(g.ganador >= 0 && !g.jug[g.ganador].fuera); }
   }
   assert.ok(terminadas >= 36, 'partidas terminadas: ' + terminadas);
