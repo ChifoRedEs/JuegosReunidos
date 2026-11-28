@@ -233,7 +233,9 @@ function crearApi(j, ent, mod, root) {
       cerrar = hoja([el('h2', {}, '🎓 ¿Quieres un tutorial rápido?'), el('p', { class: 'note' }, `Te explico cómo se juega a ${j.nombre} paso a paso, con ejercicios cortos. Lo tendrás siempre en «Reglas».`), el('div', { style: 'display:flex;flex-wrap:wrap;justify-content:center' }, b1, b2, b3)]);
     }, 700);
   }
-  function abrirConfig() {
+  const hayConfig = () => !!(defBarra && defBarra.config && defBarra.config.grupos && !defBarra.config.pantalla && defBarra.config.inicio !== false);   // inicio:false → el juego conserva su propia pantalla de inicio
+  // modo 'inicio': la misma ventana al abrir el juego sin partida o al pulsar «Jugar» en su pantalla de inicio (botón «Jugar» en vez de «Nueva partida»)
+  function abrirConfig(modo = 'menu', alCerrar = null) {
     const c = defBarra && defBarra.config; if (!c) return;
     if (c.pantalla) { c.pantalla(); return; }       // el juego usa su propia pantalla de configuración (la inicial)
     pausaTemp(volver => {
@@ -273,10 +275,49 @@ function crearApi(j, ent, mod, root) {
       });
       cont.addEventListener('change', e => { const sl = e.target.closest('select[data-ks]'); if (!sl) return; vals[sl.dataset.ks] = JSON.parse(sl.value); if (c.alCambiar) c.alCambiar(vals, sl.dataset.ks); pintar(); });
       pintar();
-      const emp = el('button', { class: 'btn on', onclick: () => { aplicado = true; cerrar(); c.aplicar({ ...vals }); } }, '▶️ ' + etiquetaNueva());
-      cerrar = hoja([el('h2', {}, '⚙️ Configurar partida'), el('p', { class: 'note' }, c.nota || 'Elige las opciones y empieza una partida nueva. La partida actual se abandona.'), cont,
-        el('div', { class: 'bar cfg-pie' }, el('button', { class: 'btn', onclick: () => cerrar() }, 'Cancelar'), emp)], () => { if (!aplicado) volver(); });
+      const emp = el('button', { class: 'btn on', onclick: () => { aplicado = true; cerrar(); c.aplicar({ ...vals }); } }, modo === 'inicio' ? '▶️ Jugar' : '▶️ ' + etiquetaNueva());
+      cerrar = hoja([el('h2', {}, '⚙️ Configurar partida'), el('p', { class: 'note' }, c.nota || (modo === 'inicio' ? 'Elige cómo quieres jugar y empieza.' : 'Elige las opciones y empieza una partida nueva. La partida actual se abandona.')), cont,
+        el('div', { class: 'bar cfg-pie' }, el('button', { class: 'btn', onclick: () => cerrar() }, modo === 'inicio' ? 'Ahora no' : 'Cancelar'), emp)], () => { if (!aplicado) volver(); if (alCerrar) alCerrar(aplicado); });
     });
+  }
+  // Al abrir el juego: con partida guardada sin terminar se ofrece «Continuar»; sin ella se abre Configurar partida (el mismo diseño que el del menú inferior).
+  function arranque() {
+    const sigue = () => setTimeout(ofrecerTutorial, 0);
+    let hay = null; try { hay = ent && !ent.fin ? mod.validar(ent.datos) : null; } catch { hay = null; }
+    if (hay) {
+      pausaTemp(volver => {
+        let cerrar, eleg = false;
+        const b1 = el('button', { class: 'btn on', onclick: () => { eleg = true; cerrar(); } }, '▶️ Continuar'),
+          b2 = el('button', { class: 'btn', onclick: () => { eleg = true; cerrar(); setTimeout(() => (hayConfig() ? abrirConfig('inicio') : defBarra && defBarra.nueva && defBarra.nueva()), 0); } }, `🆕 ${etiquetaNueva()}`);
+        cerrar = hoja([el('h2', {}, '⏯️ Partida en curso'), el('p', { class: 'note' }, ent.resumen ? `Tienes una partida a medias: ${ent.resumen}.` : 'Tienes una partida a medias.'), el('div', { class: 'bar cfg-pie' }, b2, b1)], () => { if (!eleg) { /* cerrada con Esc o fuera: sigue la partida */ } volver(); });
+      });
+      return;
+    }
+    if (hayConfig()) { abrirConfig('inicio', sigue); return; }
+    sigue();
+  }
+  // Pantallas de inicio antiguas: sus filas de ajustes (modo, nivel…) ya están en Configurar partida; se ocultan y se muestra un resumen.
+  function unificarInicio() {
+    if (!hayConfig() || !root.querySelector('.bar.pie')) return;
+    let ocultas = 0;
+    root.querySelectorAll('.bar:not(.pie), .cfg-g').forEach(b => { if (!b.classList.contains('cfg-oculto') && b.querySelector(':scope > .lbl') && b.querySelector(':scope > .seg, :scope > select, :scope > .desplegable, :scope > .dsp')) { b.classList.add('cfg-oculto'); ocultas++; } });
+    const nz = t => String(t).toLowerCase().replace(/[^a-záéíóúñ0-9 ]/g, '').trim();
+    let tit = []; try { tit = defBarra.config.grupos(defBarra.config.valores()).map(g => nz(g.titulo)); } catch { /* sin títulos */ }
+    root.querySelectorAll('label.chk').forEach(l => { const t = nz((l.querySelector('b') || l).textContent.split(':')[0]); if (t && !l.classList.contains('cfg-oculto') && tit.some(x => x === t || x.startsWith(t) || t.startsWith(x))) { l.classList.add('cfg-oculto'); ocultas++; } });
+    root.querySelectorAll('.jugfila > .seg').forEach(b => { if (!b.classList.contains('cfg-oculto')) { b.classList.add('cfg-oculto'); ocultas++; } });   // Persona/CPU/Nadie ya está en Configurar partida (los nombres se siguen escribiendo aquí)
+    const pie = root.querySelector('.bar.pie');
+    if (ocultas || (root.querySelector('.cfg-oculto') && !root.querySelector('.cfg-resumen'))) {
+      root.querySelector('.cfg-resumen') && root.querySelector('.cfg-resumen').remove();
+      try {
+        const c = defBarra.config, v = c.valores(), txt = c.grupos(v).filter(g => g.visible !== false && !g.desplegable).map(g => { const o = g.opciones.find(([x]) => String(v[g.clave]) === String(x)); return o ? `<span><small>${esc(g.titulo)}</small> ${esc(String(o[1]).split('\n')[0])}</span>` : ''; }).filter(Boolean).join('');
+        if (txt) { const d = el('div', { class: 'cfg-resumen' }); d.innerHTML = txt; pie.insertAdjacentElement('beforebegin', d); }
+      } catch (e) { /* sin resumen */ }
+    }
+  }
+  function vigilarInicio() {
+    let q = 0; const mo = new MutationObserver(() => { if (q) return; q = setTimeout(() => { q = 0; mo.disconnect(); try { unificarInicio(); } finally { mo.observe(root, { childList: true, subtree: true }); } }, 0); });
+    mo.disconnect(); try { unificarInicio(); } finally { mo.observe(root, { childList: true, subtree: true }); }
+    root.addEventListener('click', e => { const b = e.target.closest('[data-pie="nueva"]'); if (!b || !hayConfig()) return; e.preventDefault(); e.stopPropagation(); abrirConfig('inicio'); }, true);
   }
   function preguntarSalir() {
     const seguir = parar_();
@@ -306,7 +347,7 @@ function crearApi(j, ent, mod, root) {
       }
       else if (ac === 'salir') preguntarSalir();
     },
-    id, root, tutorial: () => lanzarTutorial(), ofrecerTutorial,
+    id, root, tutorial: () => lanzarTutorial(), ofrecerTutorial, arranque, vigilarInicio,
     cargar() { if (!ent) return null; try { return mod.validar(ent.datos) || null; } catch { return null; } },
     guardar: (datos, resumen = null, fin = false) => store.setJuego(id, datos, resumen, fin),
     borrar: () => store.borrarJuego(id),
@@ -589,7 +630,7 @@ async function abrirJuego(id, t) {
   actual = { j, mod, api };
   window.scrollTo(0, 0);                                    // arriba al entrar (antes de montar: un montaje lento no debe devolver al jugador arriba cuando ya ha bajado)
   try { await mod.mount(root, api); } catch (e) { console.error(e); root.innerHTML = '<p class="msg err">Error al abrir el juego.</p>'; return; }
-  api.ofrecerTutorial();
+  api.vigilarInicio(); api.arranque();
 }
 window.addEventListener('hashchange', render);
 /* Deslizar a izquierda/derecha cambia de pantalla en el orden del menú superior (Lógica → … → Ajustes).

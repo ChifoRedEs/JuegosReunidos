@@ -25,3 +25,7 @@
 .cfg-pie{position:sticky;bottom:0;margin-top:12px;padding:10px 0 2px;background:var(--card);box-shadow:0 -8px 10px -6px var(--card);z-index:2}
 .chk{display:flex;align-items:center;gap:8px;padding:10px;border:2px solid var(--borde,var(--line));border-radius:12px;white-space:normal;line-height:1.25}
 .chk:has(input:checked){border-color:var(--purple,#6c3fc5);background:color-mix(in srgb,var(--purple,#6c3fc5) 12%,var(--card))}
+.cfg-oculto{display:none!important}
+.cfg-resumen{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.cfg-resumen span{padding:6px 10px;border:2px solid var(--borde,var(--line));border-radius:12px;background:var(--card);font-weight:800;font-size:.82rem;line-height:1.2}
+.cfg-resumen small{display:block;font-size:.68rem;font-weight:700;color:var(--mut);letter-spacing:.03em}

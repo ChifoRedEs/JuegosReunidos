@@ -87,7 +87,7 @@ export async function mount(r, a) {
     salir: () => { enPausa = false; sesion++; if (pendiente) { pendiente(ABORTO); pendiente = null; } api.borrar(); location.hash = '#/cat/tablero'; },
     pausar: () => { enPausa = true; },
     reanudar: () => { enPausa = false; },
-    config: { valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], dinero: cfg.dinero, rondas: cfg.rondas, vel: cfg.vel, bote: cfg.bote, subasta: cfg.subasta, dobleEmbarque: !!cfg.dobleEmbarque, unosPremio: !!cfg.unosPremio, mejoraLibre: !!cfg.mejoraLibre }),
+    config: { inicio: false, valores: () => ({ j0: cfg.jug[0][1], j1: cfg.jug[1][1], j2: cfg.jug[2][1], j3: cfg.jug[3][1], dinero: cfg.dinero, rondas: cfg.rondas, vel: cfg.vel, bote: cfg.bote, subasta: cfg.subasta, dobleEmbarque: !!cfg.dobleEmbarque, unosPremio: !!cfg.unosPremio, mejoraLibre: !!cfg.mejoraLibre }),
       grupos: v => { const SN = [[true, 'Sí'], [false, 'No']]; return [...[0, 1, 2, 3].map(i => ({ seccion: 'Jugadores', icono: '👥', clave: 'j' + i, titulo: `Jugador ${i + 1} · ${cfg.jug[i][0]}`, opciones: [['h', 'Persona'], ['c', 'CPU'], ['n', 'Nadie']] })),
         { seccion: 'Partida', icono: '🎮', clave: 'dinero', titulo: 'Dinero inicial', opciones: [1200, 1600, 2000].map(x => [x, x + ' M']) }, { seccion: 'Partida', clave: 'rondas', titulo: 'Duración', opciones: [[0, 'Hasta la bancarrota'], [20, '20 rondas'], [40, '40 rondas']] },
         { seccion: 'Partida', clave: 'vel', titulo: 'Velocidad', opciones: Object.entries(VELOCIDAD).map(([k, x]) => [k, x.nombre]) },
@@ -164,7 +164,7 @@ function armar() {
         <button type="button" class="mtlnk dest" id="mtGes" data-ac="gestionar" aria-label="Mis destinos"><img src="${IMG('enlace-destinos')}" alt="" draggable="false"></button>
         <button type="button" class="mtlnk trat" id="mtTrato" data-ac="trato" aria-label="Negociar"><img src="${IMG('enlace-negociar')}" alt="" draggable="false"></button>
         <div class="mtmid"><div class="dadozona" id="mtDado"></div><div class="mtst"><div class="mtturno" id="mtTurno"></div><small class="mtbote" id="mtBote"></small></div>
-          <button type="button" class="btn on mtgo" id="mtGo" data-ac="tirar">🎲 Tirar</button></div>
+          <small class="mtgo" id="mtGo"></small></div>
       </div>
     </div>
     <div class="msg mtmsg" id="mtMsg" role="status" aria-live="polite"></div>
@@ -209,7 +209,7 @@ function pintar() {
   $('#mtTurno').innerHTML = G.terminada ? `🏆 Gana <b>${esc(G.jug[G.ganador].nombre)}</b>` : `Turno de <b style="color:${col(p)}">${esc(p.nombre)}</b>${p.espera ? '<small>retenido en la Prisión</small>' : p.pierde ? '<small>pierde este turno</small>' : ''}`;
   $('#mtBote').textContent = `${G.reglas.bote ? `Bote: ${G.bote} M · ` : ''}Ronda ${G.ronda}${G.reglas.rondas ? ` de ${G.reglas.rondas}` : ''}`;
   if (D3) D3.activar(libre && !G.terminada, '');
-  const go = $('#mtGo'); go.disabled = !libre || G.terminada; go.textContent = G.terminada ? '🏆 Fin' : p.bot ? '⏳ Juega ' + p.nombre : p.espera ? '🔓 Tu turno' : '🎲 Tirar';
+  $('#mtGo').textContent = G.terminada ? '🏆 Fin de la partida' : p.bot ? '⏳ Juega ' + p.nombre : libre ? (p.espera ? '🔓 Toca el tablero para intentar salir' : '🎲 Toca el tablero para tirar') : '';
   $('#mtGes').disabled = !libre; $('#mtTrato').disabled = !libre || G.jug.filter(q => !q.fuera).length < 2;
 }
 function log(html, clase = '') {
@@ -521,7 +521,9 @@ function verJugador(i) {
 function alSeccion(e) { const d = e.target; if (d.dataset && d.dataset.sec) { d.open ? secAb.add(d.dataset.sec) : secAb.delete(d.dataset.sec); } }
 function alEscribir(e) { const i = e.target.dataset.name; if (i != null) { cfg.jug[+i][0] = e.target.value; api.setPref('cfg', cfg); } }
 function clic(e) {
-  const b = e.target.closest('button,[data-op]'); if (!b) return; const d = b.dataset;
+  const b = e.target.closest('button,[data-op]');
+  if (!b) { if (G && !G.terminada && !G.p().bot && !jugando && e.target.closest('.mtcentro') && !e.target.closest('.mtdadoctl')) jugar(); return; }   // tocar el centro del tablero también tira los dados
+  const d = b.dataset;
   if (d.ficha != null) return elegirFicha(+d.ficha);
   if (d.tipo) { const [i, t] = d.tipo.split(','); cfg.jug[+i][1] = t; api.setPref('cfg', cfg); return setup(); }
   if (d.dinero) { cfg.dinero = +d.dinero; api.setPref('cfg', cfg); return setup(); }
